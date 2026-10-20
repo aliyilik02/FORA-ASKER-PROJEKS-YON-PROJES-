@@ -1,0 +1,65 @@
+# Tek ekranı 3 projeksiyona yayma
+
+Üç duvara (sol – orta – sağ) tek bir sahneyi kesintisiz yaymanın üç yolu vardır. Projede
+**Yöntem 1 (nDisplay)** hedeflenir; Yöntem 2 hızlı demo/prototip için, Yöntem 3 ise harici
+warp cihazı olan sahalar için uygundur.
+
+## Yöntem 1 – Unreal Engine nDisplay (hedef çözüm)
+
+Tek render bilgisayarı, 3 projektör, her projektör ayrı bir **viewport**. Kamera tektir;
+her viewport kendi duvarının fiziksel konumuna göre perspektifi hesaplar, bu yüzden köşelerde
+görüntü kırılmaz (sıradan "geniş masaüstü" yönteminden farkı budur).
+
+1. UE5 projesinde **Edit → Plugins → nDisplay** eklentisini açın, editörü yeniden başlatın.
+2. `unreal/nDisplay/uc-duvar.ndisplay` dosyasını Content Browser'a sürükleyin (nDisplay Config
+   Asset olarak içe aktarılır) ve sahneye **nDisplay Root Actor** olarak ekleyin.
+3. Config içindeki `screens` bloğunda duvar ölçülerini (cm) ve kameraya uzaklıkları saha keşfi
+   sonrasına göre düzeltin. Varsayılan: 6 m × 3,375 m duvarlar, kamera 1,7 m yükseklikte.
+4. `nodes.Render1.window` penceresi 3 projektörün toplam çözünürlüğüdür (3 × 1920 = 5760 × 1080).
+   Windows'ta projektörlerin aynı sanal masaüstünde yan yana olduğundan emin olun
+   (NVIDIA Mosaic / Surround ile tek 5760×1080 ekran yapmak en kararlı yoldur).
+5. Switchboard veya komut satırı ile çalıştırın:
+
+   ```
+   DuvarSimulasyonu.exe -dc_cfg="C:\DuvarSimulasyonu\uc-duvar.ndisplay" -dc_node=Render1 -fullscreen -windowed=0
+   ```
+
+6. Projektörler duvara eğik bakıyor veya kenarları bindiriyorsa `simple` politikasını
+   `mpcdi` ile değiştirin: bkz. `unreal/nDisplay/uc-duvar-mpcdi.ndisplay-notlar.md`.
+
+İki veya daha fazla render bilgisayarı gerekirse (ör. her duvara bir GPU), `nodes` altına
+`Render2`, `Render3` eklenir; her birine kendi `host` IP'si ve viewport'u verilir. nDisplay
+kareleri ağ üzerinden senkronlar (`renderSyncPolicy: ethernet`; NVIDIA Quadro Sync varsa
+`nvidia`).
+
+## Yöntem 2 – Windows / GPU sürücüsü ile tek geniş ekran (demo)
+
+Masaüstündeki örnek çalışma gibi tek bir uygulama penceresini 3 projektöre yaymak için
+UE'ye hiç dokunmadan:
+
+- **NVIDIA:** Control Panel → *Configure Surround, PhysX* → *Span displays with Surround* →
+  3 projektörü seçin → 5760×1080 tek ekran oluşur. Uygulamayı tam ekran açın.
+  Profesyonel kartlarda (RTX A serisi) aynı iş **Mosaic** ile yapılır ve kenar bindirme
+  (overlap) değeri de girilebilir.
+- **AMD:** Radeon Software → *Eyefinity* → *Quick Setup*.
+- **Intel / genel:** Windows Ekran Ayarları'nda "Genişlet" ile 3 ekran yan yana dizilir;
+  uygulama penceresi `-WinX=0 -WinY=0 -ResX=5760 -ResY=1080 -windowed` parametreleriyle
+  elle 3 ekrana yayılır (çerçevesiz pencere).
+
+Bu yöntem perspektifi düzeltmez: duvarlar kameraya açılı duruyorsa köşelerde görüntü
+"kırılır". Düz tek duvar veya hızlı demo için yeterlidir, nihai teslimat için nDisplay gerekir.
+
+## Yöntem 3 – Harici warp/blend cihazı
+
+Müşterinin mevcut bir warp cihazı varsa (ön fizibilite, risk tablosu): UE tek geniş görüntü
+üretir (Yöntem 1 `simple` veya Yöntem 2), cihaz görüntüyü 3 çıkışa böler, geometriyi düzeltir
+ve kenarları karıştırır. Cihazın beklediği giriş çözünürlüğü nDisplay `window` değerine yazılır.
+
+## Kontrol listesi (saha)
+
+- [ ] Projektör sayısı, çözünürlük ve çıkış tipi (HDMI/DP) alındı
+- [ ] Duvar ölçüleri ve kameraya mesafeler cm olarak config'e girildi
+- [ ] 3 projektör Windows'ta tek masaüstünde, doğru sırada (sol-orta-sağ)
+- [ ] GPU saniyede 60 kare veriyor (`stat fps`), gerekirse `bufferRatio` düşürülür
+- [ ] Kenar bindirmesi varsa MPCDI dosyası alındı ve `region` adları eşleşti
+- [ ] Köprü sunucusu `UNREAL_MOD=gercek` ile UE'ye bağlanıyor (panelde "Unreal bağlı")

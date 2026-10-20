@@ -1,0 +1,21 @@
+{
+  "name": "duvar-simulasyon",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Eğirdir Dağ Komando Okulu – Duvar Simülasyon Yazılımı (kontrol paneli + köprü sunucusu)",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:kopru": "npm run dev --workspace apps/kopru",
+    "dev:panel": "npm run dev --workspace apps/kontrol-paneli",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "start": "npm run start --workspace apps/kopru"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

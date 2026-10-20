@@ -1,0 +1,5 @@
+node_modules/
+dist/
+apps/kopru/veri/
+*.log
+.DS_Store
