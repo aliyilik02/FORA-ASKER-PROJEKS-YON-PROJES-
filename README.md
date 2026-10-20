@@ -18,9 +18,15 @@ raporundaki (Grit Teknoloji, 7 Eylül 2026) teknik mimariyi uygular.
 | Kontrol paneli | `apps/kontrol-paneli` | Eğitmenin tablet/bilgisayardan kullandığı Türkçe web arayüzü |
 | Köprü sunucusu | `apps/kopru` | Paneli UE5 Remote Control API'ye ve DMX/Art-Net'e bağlar; senaryo motoru, ön ayarlar |
 | Unreal yapılandırması | `unreal/` | nDisplay (3 projektör) örnek konfigürasyonu ve Remote Control preset tanımı |
-| Dokümantasyon | `docs/` | Mimari, UE kurulumu, 3 projeksiyona tek ekran yayma, şartname uyumluluk matrisi |
+| Dokümantasyon | `docs/` | Mimari, UE kurulumu, 3 projeksiyona tek ekran yayma, örnek çalışma incelemesi, şartname uyumluluk matrisi |
+| Yardımcı betikler | `kur.bat`, `baslat.bat`, `araclar/` | Tek tıkla kurulum/başlatma; örnek paketi geniş ekranda açma |
 
 ## Hızlı başlangıç
+
+Windows'ta tek tıkla: önce **`kur.bat`** (bir kez, `npm install`), sonra **`baslat.bat`**
+(köprü + panel ayrı pencerelerde açılır, tarayıcı http://localhost:5173 adresine gider).
+
+Elle:
 
 ```bash
 npm install
@@ -51,4 +57,7 @@ npm run typecheck
 - [Mimari](docs/mimari.md)
 - [Unreal Engine kurulumu ve Remote Control preset](docs/unreal-kurulum.md)
 - [Tek ekranı 3 projeksiyona yayma](docs/3-projeksiyon-tek-ekran.md)
+- [Örnek çalışma (TCCC paketi) incelemesi](docs/ornek-calisma-inceleme.md)
 - [Şartname uyumluluk matrisi](docs/sartname-uyumluluk.md)
+
+`araclar/` klasöründe örnek UE paketini 3 ekrana yaymayı deneyen `ornek-tccc-genis-ekran.bat` bulunur.
