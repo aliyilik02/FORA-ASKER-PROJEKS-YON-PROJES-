@@ -59,6 +59,7 @@ npm run typecheck
 - [Tek ekranı 3 projeksiyona yayma](docs/3-projeksiyon-tek-ekran.md)
 - [Örnek çalışma (TCCC paketi) incelemesi](docs/ornek-calisma-inceleme.md)
 - [Donanım önerileri ve elimizdekilerle demo planı](docs/donanim-onerileri.md)
+- [Kaynak proje talebi: ne, neden, nasıl istenir + hazır mesaj](docs/kaynak-proje-talebi.md)
 - [Şartname uyumluluk matrisi](docs/sartname-uyumluluk.md)
 
 `araclar/` klasörü:
