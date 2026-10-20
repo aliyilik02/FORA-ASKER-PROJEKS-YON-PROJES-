@@ -457,6 +457,111 @@ button.efekt.tehlike:hover:not(:disabled) {
   color: var(--kotu);
 }
 
+/* --- Unreal komutları --- */
+.unreal-liste {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px;
+  overflow: auto;
+  font-size: 13px;
+}
+.unreal-liste li {
+  display: grid;
+  grid-template-columns: 64px 118px 1fr 10px;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid #1d2129;
+}
+.unreal-liste time {
+  color: var(--metin-soluk);
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+.unreal-liste .fonksiyon {
+  font-weight: 600;
+}
+.unreal-liste code {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.unreal-liste li.basarisiz .fonksiyon {
+  color: var(--kotu);
+}
+.nokta {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--notr);
+}
+.nokta.iyi {
+  background: var(--iyi);
+}
+.nokta.kotu {
+  background: var(--kotu);
+}
+code.komut {
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: #0f1218;
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 6px;
+}
+details summary {
+  cursor: pointer;
+}
+
+/* --- Senaryo editörü --- */
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed var(--panel-kenar);
+  border-radius: 8px;
+  background: #11141a;
+}
+.adim-formu {
+  border: 1px solid var(--panel-kenar);
+  border-radius: 8px;
+  padding: 10px 12px 12px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.adim-formu legend {
+  font-size: 13px;
+  color: var(--metin-soluk);
+  padding: 0 6px;
+}
+.alanlar {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.alan {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--metin-soluk);
+}
+.alan input,
+.alan select {
+  font: inherit;
+  font-size: 14px;
+  color: var(--metin);
+  background: #0f1218;
+  border: 1px solid var(--panel-kenar);
+  border-radius: 6px;
+  padding: 6px 8px;
+  width: 100%;
+}
+
 .yukleniyor {
   min-height: 100vh;
   display: flex;

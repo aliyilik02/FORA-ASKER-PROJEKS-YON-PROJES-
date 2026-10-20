@@ -21,6 +21,8 @@ Node.js + Express + ws. Tek doğruluk kaynağı: `DurumDeposu` (`src/durum.ts`).
 | `artnet.ts` | ArtDmx paket üretimi, UDP gönderim, gün ışığı hesabı, patlama flaşı |
 | `senaryo.ts` | Zaman çizelgesi motoru: oynat / duraklat / durdur / adımı anında tetikle |
 | `depo.ts` | Ön ayar ve senaryoların JSON olarak diske yazılması |
+| `ornek.ts` | Paketlenmiş örnek UE oyununu (`ORNEK_PAKET`) panelden başlatma/durdurma; komut satırı üretimi |
+| `ayarlar.ts` | Ortam değişkenleri + `apps/kopru/.env` okuyucu (bağımlılık yok) |
 | `api.ts` | HTTP uç noktaları |
 | `index.ts` | Sunucu, WebSocket, UE bağlantı yoklaması, derlenmiş paneli sunma |
 
@@ -68,5 +70,20 @@ efekt düğmeleriyle araya girebilir.
 | GET/POST/DELETE | `/api/senaryolar[/:id]` | Senaryo listesi, kaydet, sil |
 | POST | `/api/senaryo/yukle` · `/oynat` · `/duraklat` · `/dur` · `/adim-tetikle` | Senaryo kontrolü |
 | GET/POST/DELETE | `/api/on-ayarlar[/:id]` · POST `/api/on-ayarlar/:id/yukle` | Ön ayarlar |
+
+| GET | `/api/unreal/son-istekler` | Köprünün UE'ye gönderdiği son 100 Remote Control çağrısı |
+| GET | `/api/ornek/durum` | Örnek paketin durumu (yapılandırıldı mı, çalışıyor mu, komut satırı) |
+| POST | `/api/ornek/baslat` · `/api/ornek/durdur` | Örnek paketi aç/kapat (`ORNEK_PAKET` ayarlıysa) |
+
+## WebSocket mesajları (`/ws`, sunucu → panel)
+
+| `tip` | İçerik | Ne zaman |
+|---|---|---|
+| `durum` | `SimulasyonDurumu` | Bağlanınca ve her değişiklikte |
+| `senaryo` | `SenaryoDurumu` | Bağlanınca, oynat/duraklat/durdur ve her tikte |
+| `baglanti` | `BaglantiDurumu` | Bağlanınca ve UE bağlantısı değişince |
+| `gunluk` | seviye, mesaj, zaman | Her günlük kaydında |
+| `unreal` | `UnrealIstekKaydi` | Her Remote Control çağrısından sonra (başarılı/başarısız) |
+| `ornek` | `OrnekDurumu` | Bağlanınca, örnek paket açılınca/kapanınca |
 
 Tipler: `apps/kopru/src/tipler.ts` (panelde birebir kopyası).

@@ -3,3 +3,4 @@ dist/
 apps/kopru/veri/
 *.log
 .DS_Store
+apps/kopru/.env

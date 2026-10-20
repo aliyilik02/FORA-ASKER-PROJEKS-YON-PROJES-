@@ -17,6 +17,7 @@ import type {
   Oda,
   Oda2Ayarlari,
   OrtamAyarlari,
+  UnrealIstekKaydi,
 } from "./tipler.js";
 
 export interface UnrealAyarlari {
@@ -48,6 +49,9 @@ export class UnrealIstemci {
   private _sonHata: string | undefined;
   /** Simülasyon modunda gönderilen istekler (testler için). */
   readonly gonderilen: UnrealIstek[] = [];
+  /** Son çağrı kayıtları (panelde "Unreal'a giden komutlar" görünümü). */
+  private readonly kayitlar: UnrealIstekKaydi[] = [];
+  private readonly dinleyiciler = new Set<(kayit: UnrealIstekKaydi) => void>();
 
   constructor(
     private readonly ayarlar: UnrealAyarlari,
@@ -66,6 +70,22 @@ export class UnrealIstemci {
   }
   get sonHata() {
     return this._sonHata;
+  }
+
+  /** Her çağrıdan sonra (başarılı ya da değil) bilgilendirilir. */
+  dinle(d: (kayit: UnrealIstekKaydi) => void): () => void {
+    this.dinleyiciler.add(d);
+    return () => this.dinleyiciler.delete(d);
+  }
+
+  sonIstekler(): UnrealIstekKaydi[] {
+    return [...this.kayitlar];
+  }
+
+  private kaydet(kayit: UnrealIstekKaydi) {
+    this.kayitlar.push(kayit);
+    if (this.kayitlar.length > 100) this.kayitlar.shift();
+    for (const d of this.dinleyiciler) d(kayit);
   }
 
   /** Bağlantıyı yoklar; UE'nin /remote/info uç noktası kullanılır. */
@@ -95,8 +115,11 @@ export class UnrealIstemci {
     this.gonderilen.push({ yol, govde });
     if (this.gonderilen.length > 500) this.gonderilen.shift();
 
+    const kayit: UnrealIstekKaydi = { fonksiyon: ad, parametreler, zaman: Date.now(), mod: this.ayarlar.mod, basarili: true };
+
     if (this.ayarlar.mod === "simulasyon") {
       this.gunluk.bilgi(`[UE simülasyon] ${ad}(${JSON.stringify(parametreler)})`);
+      this.kaydet(kayit);
       return;
     }
     try {
@@ -108,6 +131,8 @@ export class UnrealIstemci {
       if (!yanit.ok) {
         this._sonHata = `${ad}: HTTP ${yanit.status}`;
         this.gunluk.hata(`UE çağrısı başarısız: ${this._sonHata}`);
+        kayit.basarili = false;
+        kayit.hata = `HTTP ${yanit.status}`;
       } else {
         this._bagli = true;
       }
@@ -115,7 +140,10 @@ export class UnrealIstemci {
       this._bagli = false;
       this._sonHata = hata instanceof Error ? hata.message : String(hata);
       this.gunluk.hata(`UE'ye ulaşılamadı: ${this._sonHata}`);
+      kayit.basarili = false;
+      kayit.hata = this._sonHata;
     }
+    this.kaydet(kayit);
   }
 
   odaSec(oda: Oda) {

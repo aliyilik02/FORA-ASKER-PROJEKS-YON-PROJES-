@@ -42,8 +42,23 @@ UNREAL_MOD=gercek UNREAL_ADRES=http://192.168.10.10:30010 ARTNET_AKTIF=1 npm sta
 # panel + API aynı porttan sunulur → http://<kontrol-odasi-ip>:4000
 ```
 
-Tüm ayarlar için `apps/kopru/.env.example` dosyasına bakın. Sistem internet bağlantısı olmadan,
-kapalı yerel ağda çalışır (şartname §10).
+Tüm ayarlar `apps/kopru/.env.example` dosyasında açıklanmıştır; bu dosyayı `apps/kopru/.env`
+olarak kopyalayıp düzenleyin, köprü açılışta otomatik okur (ortam değişkeni verilirse o öncelikli).
+Sistem internet bağlantısı olmadan, kapalı yerel ağda çalışır (şartname §10).
+
+## Panel özellikleri
+
+- Oda 1 / Oda 2 sekmeleri; 5 bölge; mevsim, saat, bulut, sis, yağış, rüzgâr
+- Efektler (patlama, toz/duman, gürültü, bağırma, çağırma), izli mermi (duvar, yön, sıklık)
+- Ortam ışığı (DMX/Art-Net): gün ışığına ve patlamalara bağlı otomatik ya da elle
+- Oda 2: güvenli alan görüntüsü, helikopter dizisi, mesafe/yöne göre uzak sesler
+- Senaryo oynatıcı (oynat, duraklat, durdur, adımı anında tetikle) ve **senaryo editörü**
+  (adım ekle, "mevcut ortamı adım yap", kaydet → listeye düşer)
+- Ön ayarlar (mevcut durumu kaydet / yükle)
+- **Unreal'a giden komutlar** canlı listesi: UE ekibi hangi fonksiyonun hangi parametreyle
+  çağrıldığını görür (simülasyon modunda da çalışır)
+- **Örnek paket** düğmesi: `ORNEK_PAKET` ayarlıysa paketlenmiş UE oyununu panelden açar/kapatır
+- Olay günlüğü
 
 ## Testler
 

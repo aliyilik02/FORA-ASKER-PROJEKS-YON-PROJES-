@@ -1,7 +1,7 @@
 /** Köprü sunucusuyla WebSocket bağlantısı; durum, senaryo ve günlük akışını tutar. */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
-import type { BaglantiDurumu, SenaryoDurumu, SimulasyonDurumu, SunucuMesaji } from "./tipler";
+import type { BaglantiDurumu, OrnekDurumu, SenaryoDurumu, SimulasyonDurumu, SunucuMesaji, UnrealIstekKaydi } from "./tipler";
 
 export interface GunlukSatiri {
   seviye: "bilgi" | "uyari" | "hata";
@@ -14,6 +14,8 @@ export function useKopru() {
   const [senaryo, setSenaryo] = useState<SenaryoDurumu | null>(null);
   const [baglanti, setBaglanti] = useState<BaglantiDurumu | null>(null);
   const [gunluk, setGunluk] = useState<GunlukSatiri[]>([]);
+  const [unrealIstekler, setUnrealIstekler] = useState<UnrealIstekKaydi[]>([]);
+  const [ornek, setOrnek] = useState<OrnekDurumu | null>(null);
   const [soketAcik, setSoketAcik] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const yenidenDeneme = useRef<number | null>(null);
@@ -33,6 +35,10 @@ export function useKopru() {
           .gunluk()
           .then((kayitlar) => setGunluk([...kayitlar].reverse().slice(0, 150)))
           .catch(() => undefined);
+        void api
+          .unrealSonIstekler()
+          .then((kayitlar) => setUnrealIstekler([...kayitlar].reverse().slice(0, 60)))
+          .catch(() => undefined);
       };
       ws.onmessage = (olay) => {
         const mesaj = JSON.parse(olay.data) as SunucuMesaji;
@@ -48,6 +54,12 @@ export function useKopru() {
             break;
           case "gunluk":
             setGunluk((eski) => [{ seviye: mesaj.seviye, mesaj: mesaj.mesaj, zaman: mesaj.zaman }, ...eski].slice(0, 150));
+            break;
+          case "unreal":
+            setUnrealIstekler((eski) => [mesaj.istek, ...eski].slice(0, 60));
+            break;
+          case "ornek":
+            setOrnek(mesaj.ornek);
             break;
         }
       };
@@ -77,5 +89,5 @@ export function useKopru() {
     }
   }, []);
 
-  return { durum, senaryo, baglanti, gunluk, soketAcik, hata, calistir };
+  return { durum, senaryo, baglanti, gunluk, unrealIstekler, ornek, soketAcik, hata, calistir };
 }

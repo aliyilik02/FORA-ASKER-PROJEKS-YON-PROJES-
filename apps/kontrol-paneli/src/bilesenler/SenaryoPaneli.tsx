@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import type { Senaryo, SenaryoDurumu } from "../tipler";
+import type { Senaryo, SenaryoDurumu, SimulasyonDurumu } from "../tipler";
 import { Bolum, sureBicimi } from "./ortak";
+import { SenaryoEditoru } from "./SenaryoEditoru";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 
-export function SenaryoPaneli({ senaryoDurumu, calistir }: { senaryoDurumu: SenaryoDurumu | null; calistir: Calistir }) {
+export function SenaryoPaneli({
+  senaryoDurumu,
+  simDurumu,
+  calistir,
+}: {
+  senaryoDurumu: SenaryoDurumu | null;
+  simDurumu: SimulasyonDurumu;
+  calistir: Calistir;
+}) {
   const [senaryolar, setSenaryolar] = useState<Senaryo[]>([]);
   const [secili, setSecili] = useState<string>("");
+  const [editorAcik, setEditorAcik] = useState(false);
 
   const listeyiYenile = () => void calistir(() => api.senaryolar()).then((s) => s && setSenaryolar(s));
   useEffect(listeyiYenile, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -52,7 +62,24 @@ export function SenaryoPaneli({ senaryoDurumu, calistir }: { senaryoDurumu: Sena
         >
           Sil
         </button>
+        <button type="button" className={editorAcik ? "secili" : ""} onClick={() => setEditorAcik((a) => !a)}>
+          {editorAcik ? "Editörü kapat" : "+ Yeni senaryo"}
+        </button>
       </div>
+
+      {editorAcik && (
+        <SenaryoEditoru
+          durum={simDurumu}
+          calistir={calistir}
+          onVazgec={() => setEditorAcik(false)}
+          onKaydedildi={(s) => {
+            setEditorAcik(false);
+            setSecili(s.id);
+            listeyiYenile();
+            void calistir(() => api.senaryoYukle(s.id));
+          }}
+        />
+      )}
 
       {yuklu && (
         <>

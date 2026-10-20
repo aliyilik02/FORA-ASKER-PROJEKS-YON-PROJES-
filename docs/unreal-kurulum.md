@@ -80,3 +80,32 @@ göre bu fonksiyon düzenlenir. Patlamalarda kısa beyaz flaş otomatik gönderi
 
 Alternatif: UE DMX eklentisiyle ışığı doğrudan sahnedeki ışık kaynaklarına bağlayıp köprüde
 `ARTNET_AKTIF=0` bırakmak. İki yöntem aynı anda kullanılmamalıdır.
+
+## 5. Örnek (TCCC) kaynak projesine bağlama planı
+
+Kaynak proje geldiğinde (`docs/kaynak-proje-talebi.md`) `BP_SimulasyonYoneticisi` fonksiyonları
+örnekteki hazır sistemlere şöyle bağlanır. Varlık adları paketin manifestinden okundu
+(`docs/ornek-calisma-inceleme.md` §6); Blueprint değişken adları kaynak gelince doğrulanacak.
+
+| Köprü fonksiyonu | Örnekteki karşılığı | Not |
+|---|---|---|
+| `OdaSec` | Yok | Oda 2 için yeni içerik; Oda 1 mevcut haritalar |
+| `BolgeYukle(meskun_mahal / ormanlik / daglik)` | `Open Level` → `CitySuburbs` / `Orman` / `Mountain_5` | `Level Streaming` ile geçiş süresi kısalır; `us_bolgesi`, `kirsal_acik_arazi` yeni harita |
+| `OrtamAyarla` | **Ultra Dynamic Sky** aktörü (UDS 9.0B) | UDS değişkenleri: `Time of Day` (0–2400; köprüdeki `Saat`×100), `Season` (0–1 yıl döngüsü; mevsim → 0 kış, 0,25 ilkbahar, 0,5 yaz, 0,75 sonbahar), `Cloud Coverage` (0–10; `Bulut`×10), `Fog` (0–10; `Sis`×10), `Rain`/`Snow` (0–10; `Yagis`), **Ultra Dynamic Weather** varsa `Wind Intensity`, `Wind Direction`. Değer aralıkları UDS sürümüne göre teyit edilir |
+| `EfektTetikle(patlama)` | Oyun içi "El Bombası" (`GrenadePack` `VFX_GrenadeEXP_dirt` + ses) | `Yon` → kameradan o açıda 15–30 m ileride spawn |
+| `EfektTetikle(toz_duman)` | "Sis Bombası" (`NS_Smoke_Granade`) | |
+| `EfektTetikle(gurultu)` | "Çatışma" (silah sesi döngüsü, `Gun_Sounds_Pro_HD_Remake`) | |
+| `EfektTetikle(bagirma / cagirma)` | Yok | Türkçe ses kayıtları eklenecek (MetaSound, attenuation) |
+| `IzliMermiAyarla` | `BallisticsVFX` namlu alevi + çarpma; izli mermi için yeni Niagara emitter (ribbon) | `CikisNoktasi` → duvar başına bir `Arrow` bileşeni |
+| `Oda2Ayarla(helikopter)` | "Helikopter" menü öğesi: UH-60A + `HelicopterArrive` / `OrmanHelicopterArrive` sekansları, `NS_Heli_Ground_Dust` | `yaklasiyor` → sekans başlat; `iniyor` → iniş bölümü; `kalkiyor` → tersine oynat |
+| `Oda2Ayarla(guvenliAlan)` | Yok | 3 görüntü seti üretilecek |
+| `EfektTetikle(uzak_patlama / uzak_mermi_sesi)` | Mevcut sesler + `Mesafe`'ye göre attenuation | `Yon` konumlandırma, `Mesafe` ses seviyesi/alçak geçiren filtre |
+
+Paket içindeki oyun menüsü (Çatışma, Vurulma, Zırhlı Araç, Helikopter, Sis Bombası, El Bombası,
+Döngü Süresi) panelde zaten karşılığı olan işlevlerdir; kaynak projede bu menü kaldırılıp
+`TCCCGameMode` doğrudan eğitim haritasıyla açılır ve her şey Remote Control üzerinden tetiklenir.
+
+Performans notu: paket Lumen + VSM + Nanite + TSR "Epic" ile paketlenmiş (GTX 1650'de 8 FPS).
+Kaynak projede eğitim haritaları için **Lightmass ile pişirilmiş ışık + CSM** profili hazırlanır;
+Lumen yalnızca render PC'de (`docs/donanim-onerileri.md`) açılır. Teslimat **Shipping** paket,
+PSO önbelleği ile.

@@ -7,11 +7,13 @@ import type {
   Oda,
   Oda2Ayarlari,
   OnAyar,
+  OrnekDurumu,
   OrtamAyarlari,
   OrtamIsigi,
   Senaryo,
   SenaryoDurumu,
   SimulasyonDurumu,
+  UnrealIstekKaydi,
 } from "./tipler";
 
 async function istek<T>(yol: string, yontem: string, govde?: unknown): Promise<T> {
@@ -30,6 +32,10 @@ export const api = {
   baglanti: () => istek<BaglantiDurumu>("/baglanti", "GET"),
   gunluk: () => istek<Array<{ seviye: "bilgi" | "uyari" | "hata"; mesaj: string; zaman: number }>>("/gunluk", "GET"),
   yenidenSenkron: () => istek<{ tamam: boolean }>("/yeniden-senkron", "POST"),
+  unrealSonIstekler: () => istek<UnrealIstekKaydi[]>("/unreal/son-istekler", "GET"),
+  ornekDurum: () => istek<OrnekDurumu>("/ornek/durum", "GET"),
+  ornekBaslat: () => istek<OrnekDurumu>("/ornek/baslat", "POST"),
+  ornekDurdur: () => istek<OrnekDurumu>("/ornek/durdur", "POST"),
   odaSec: (oda: Oda) => istek<SimulasyonDurumu>("/oda", "PUT", { oda }),
   bolgeSec: (bolge: Bolge) => istek<SimulasyonDurumu>("/bolge", "PUT", { bolge }),
   ortam: (k: Partial<OrtamAyarlari>) => istek<SimulasyonDurumu>("/ortam", "PATCH", k),

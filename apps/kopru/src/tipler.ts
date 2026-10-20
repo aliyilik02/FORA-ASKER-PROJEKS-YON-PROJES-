@@ -142,12 +142,35 @@ export interface BaglantiDurumu {
   artnet: { aktif: boolean; hedef: string; evren: number; sonGonderim?: number };
 }
 
+/** Köprünün Unreal Engine'e gönderdiği bir Remote Control çağrısının kaydı (panelde canlı izlenir). */
+export interface UnrealIstekKaydi {
+  fonksiyon: string;
+  parametreler: Record<string, unknown>;
+  zaman: number;
+  mod: "gercek" | "simulasyon";
+  basarili: boolean;
+  hata?: string;
+}
+
+/** Panelden başlatılan örnek paketin (paketlenmiş UE oyunu) durumu. */
+export interface OrnekDurumu {
+  /** ORNEK_PAKET ayarı verilmiş ve UnrealGame.exe bulunmuş mu. */
+  yapilandirildi: boolean;
+  calisiyor: boolean;
+  pid?: number;
+  baslangic?: number;
+  komut: string;
+  sonCikis?: { kod: number | null; sinyal?: string; zaman: number; hata?: string };
+}
+
 /** Sunucu → istemci WebSocket mesajları. */
 export type SunucuMesaji =
   | { tip: "durum"; durum: SimulasyonDurumu }
   | { tip: "senaryo"; senaryo: SenaryoDurumu }
   | { tip: "baglanti"; baglanti: BaglantiDurumu }
-  | { tip: "gunluk"; seviye: "bilgi" | "uyari" | "hata"; mesaj: string; zaman: number };
+  | { tip: "gunluk"; seviye: "bilgi" | "uyari" | "hata"; mesaj: string; zaman: number }
+  | { tip: "unreal"; istek: UnrealIstekKaydi }
+  | { tip: "ornek"; ornek: OrnekDurumu };
 
 export const BOLGE_ETIKETLERI: Record<Bolge, string> = {
   meskun_mahal: "Meskûn Mahal",

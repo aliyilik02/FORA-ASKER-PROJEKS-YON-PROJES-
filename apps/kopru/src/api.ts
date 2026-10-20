@@ -7,6 +7,7 @@ import type { VeriDeposu } from "./depo.js";
 import { kimlikUret } from "./depo.js";
 import type { DurumDeposu } from "./durum.js";
 import type { Gunluk } from "./gunluk.js";
+import type { OrnekBaslatici } from "./ornek.js";
 import type { SenaryoMotoru } from "./senaryo.js";
 import type { BaglantiDurumu, OnAyar, Senaryo } from "./tipler.js";
 import type { UnrealIstemci } from "./unreal.js";
@@ -18,6 +19,7 @@ export interface ApiBagimliliklari {
   unreal: UnrealIstemci;
   artnet: ArtNetGonderici;
   gunluk: Gunluk;
+  ornek: OrnekBaslatici;
 }
 
 export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici): BaglantiDurumu {
@@ -44,6 +46,15 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
   r.get("/durum", (_req, res) => res.json(b.depo.al()));
   r.get("/baglanti", (_req, res) => res.json(baglantiDurumu(b.unreal, b.artnet)));
   r.get("/gunluk", (_req, res) => res.json(b.gunluk.sonKayitlar()));
+  r.get("/unreal/son-istekler", (_req, res) => res.json(b.unreal.sonIstekler()));
+
+  // --- Örnek paket (paketlenmiş UE oyunu) başlat/durdur ---
+  r.get("/ornek/durum", (_req, res) => res.json(b.ornek.durum()));
+  r.post(
+    "/ornek/baslat",
+    sarmala((_req, res) => res.json(b.ornek.baslat())),
+  );
+  r.post("/ornek/durdur", (_req, res) => res.json(b.ornek.durdur()));
 
   r.post(
     "/yeniden-senkron",
