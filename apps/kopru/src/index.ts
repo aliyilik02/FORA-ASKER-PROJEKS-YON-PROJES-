@@ -6,6 +6,7 @@
  */
 import { createServer } from "node:http";
 import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import { WebSocketServer, type WebSocket } from "ws";
 import { apiOlustur, baglantiDurumu } from "./api.js";
@@ -37,7 +38,7 @@ const uygulama = express();
 uygulama.use("/api", apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk }));
 
 // Derlenmiş panel varsa aynı porttan sun.
-const panelKlasoru = new URL("../../kontrol-paneli/dist/", import.meta.url).pathname;
+const panelKlasoru = fileURLToPath(new URL("../../kontrol-paneli/dist/", import.meta.url));
 if (existsSync(panelKlasoru)) {
   uygulama.use(express.static(panelKlasoru));
   uygulama.get(/^\/(?!api|ws).*/, (_req, res) => res.sendFile("index.html", { root: panelKlasoru }));

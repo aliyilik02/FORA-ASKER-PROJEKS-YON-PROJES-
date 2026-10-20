@@ -2,6 +2,8 @@
  * Ortam değişkenlerinden okunan sunucu ayarları.
  * Sistem tamamen çevrimdışı çalışır; tüm adresler yerel ağ içindir.
  */
+import { fileURLToPath } from "node:url";
+
 export interface SunucuAyarlari {
   port: number;
   /** Unreal Engine Remote Control API adresi (varsayılan port 30010). */
@@ -40,6 +42,7 @@ export function ayarlariOku(env: NodeJS.ProcessEnv = process.env): SunucuAyarlar
     artnetPort: sayi(env.ARTNET_PORT, 6454),
     artnetEvren: sayi(env.ARTNET_EVREN, 0),
     artnetAktif: bool(env.ARTNET_AKTIF, false),
-    veriKlasoru: env.VERI_KLASORU ?? new URL("../veri/", import.meta.url).pathname,
+    // fileURLToPath: Windows'ta URL.pathname "/C:/..." döndürür ve "C:\C:\..." hatasına yol açar.
+    veriKlasoru: env.VERI_KLASORU ?? fileURLToPath(new URL("../veri/", import.meta.url)),
   };
 }
