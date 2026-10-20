@@ -27,6 +27,15 @@ görüntü kırılmaz (sıradan "geniş masaüstü" yönteminden farkı budur).
 6. Projektörler duvara eğik bakıyor veya kenarları bindiriyorsa `simple` politikasını
    `mpcdi` ile değiştirin: bkz. `unreal/nDisplay/uc-duvar-mpcdi.ndisplay-notlar.md`.
 
+**Projektör olmadan tek ekranda deneme:** `unreal/nDisplay/uc-duvar-onizleme.ndisplay` aynı
+duvar geometrisini 1920×360'lık pencerede üç 640×360 viewport olarak çizer (1/3 ölçek). Dizüstü
+veya tek monitörde perspektifin köşelerde kırılmadığı, duvar ölçülerinin doğru girildiği
+burada görülür; sahada `uc-duvar.ndisplay` kullanılır:
+
+```
+DuvarSimulasyonu.exe -dc_cfg="...\uc-duvar-onizleme.ndisplay" -dc_node=Render1 -windowed
+```
+
 İki veya daha fazla render bilgisayarı gerekirse (ör. her duvara bir GPU), `nodes` altına
 `Render2`, `Render3` eklenir; her birine kendi `host` IP'si ve viewport'u verilir. nDisplay
 kareleri ağ üzerinden senkronlar (`renderSyncPolicy: ethernet`; NVIDIA Quadro Sync varsa
@@ -67,7 +76,12 @@ Engine\Binaries\Win64\UnrealGame.exe ..\..\..\<Proje>\<Proje>.uproject ^
   `r.SetRes 5760x1080f` (tam ekran) ile çalışırken de geçiş yapılabilir. Shipping yapıda konsol kapalıdır.
 - UMG menü/HUD 16:9 için tasarlandıysa 48:9'da bozulur; simülasyonda menü yerine doğrudan sahne
   açılışı ve panelden kontrol tercih edilmelidir.
-- Hazır betik: `araclar/ornek-tccc-genis-ekran.bat` (geniş pencere / tam ekran / tek ekran deneme).
+- Hazır betik: `araclar/ornek-tccc-genis-ekran.bat`. Seçenekler: 1 geniş pencere, 2 tam ekran,
+  3 tek ekran 1920×1080, **4 tek ekranda 48:9 önizleme** (1920×360 pencere, üç duvarın oranı),
+  **5 düşük kalite** (`-ExecCmds="sg.* 1, r.ScreenPercentage 75"`, zayıf GPU için).
+- `-ExecCmds="..."` ile başlangıçta konsol komutu verilebilir (Development yapı). PowerShell'den
+  başlatırken parametreyi tek bir dize olarak verin; dizi olarak verilirse tırnaklar bozulur ve
+  UE komut satırını boş alır (log: `LogInit: Command Line:` boş).
 
 Bu yöntem perspektifi düzeltmez: duvarlar kameraya açılı duruyorsa köşelerde görüntü
 "kırılır". Düz tek duvar veya hızlı demo için yeterlidir, nihai teslimat için nDisplay gerekir.
@@ -90,6 +104,8 @@ Masaüstündeki örnek paket incelendi (`docs/ornek-calisma-inceleme.md`). Bu pr
 | Tek kamera, birinci şahıs pawn | Yöntem 2'de FOV kısıtı (`MaintainYFOV`) zorunlu; U-şekilli duvarda nDisplay şart |
 | Lumen + VSM + Ray Tracing açık | 3×1080p için RTX 4070 sınıfı ve üstü; nDisplay `bufferRatio` ile ölçeklenebilir |
 | Ultra Dynamic Sky, Niagara efektleri, helikopter sekansları mevcut | Kaynak proje alınırsa `OrtamAyarla`, `EfektTetikle`, `Oda2Ayarla` doğrudan bunlara bağlanır |
+| GTX 1650 4 GB dizüstünde Meskûn Mahal ~8 FPS; en düşük ayarda bile ~19 FPS (GPU 52 ms) | Darboğaz VRAM (doku havuzu 158 MB'a düşüyor); kalite kademesi değil. Render PC şart: bkz. `docs/donanim-onerileri.md` |
+| PSO disk önbelleği kapalı (`r.D3D12.PSO.DiskCache=0`), her açılışta 50–100 PSO derleniyor | İlk dakikalardaki takılma bundan; kendi paketimizde PSO cache toplanıp Shipping ile paketlenmeli |
 
 Paketin nDisplay içerip içermediğini anlamak için `Manifest_UFSFiles_Win64.txt` içinde
 `Engine/Plugins/Runtime/nDisplay` ve `Engine/Plugins/VirtualProduction/RemoteControl` satırları

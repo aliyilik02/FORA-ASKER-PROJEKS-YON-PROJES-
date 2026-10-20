@@ -58,6 +58,11 @@ npm run typecheck
 - [Unreal Engine kurulumu ve Remote Control preset](docs/unreal-kurulum.md)
 - [Tek ekranı 3 projeksiyona yayma](docs/3-projeksiyon-tek-ekran.md)
 - [Örnek çalışma (TCCC paketi) incelemesi](docs/ornek-calisma-inceleme.md)
+- [Donanım önerileri ve elimizdekilerle demo planı](docs/donanim-onerileri.md)
 - [Şartname uyumluluk matrisi](docs/sartname-uyumluluk.md)
 
-`araclar/` klasöründe örnek UE paketini 3 ekrana yaymayı deneyen `ornek-tccc-genis-ekran.bat` bulunur.
+`araclar/` klasörü:
+
+- `ornek-tccc-genis-ekran.bat` – örnek UE paketini geniş ekranda / tek ekranda / düşük kalitede açar
+- `artnet-dinle.mjs` – ışık kontrolcüsü olmadan köprünün Art-Net (DMX) çıkışını ekranda gösterir:
+  `node araclar/artnet-dinle.mjs` + köprü `ARTNET_AKTIF=1 ARTNET_HEDEF=127.0.0.1` ile

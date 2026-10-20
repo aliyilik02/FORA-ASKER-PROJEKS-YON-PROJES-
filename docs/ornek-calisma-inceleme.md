@@ -167,3 +167,45 @@ lisans sahibinin Epic/Fab hesabında olmalıdır.
 - UI 16:9; geniş ekranda yeniden düzenlenmeli (ya da eğitmen panelinden yönetildiği için kaldırılmalı).
 - Pak şifresiz; içerik lisansları müşteriye devredilemez, hesap gerekir.
 - `Saved/` paket klasörüne yazıldığı için salt okunur konumdan (ağ paylaşımı, USB) çalışmayabilir.
+
+## 9. Çalıştırma sonucu (20 Ekim 2026, kopyadan, onayla)
+
+Paket `robocopy` ile `Desktop\Projeler\ornek-tccc-kopya` klasörüne kopyalandı (3,24 GB, 15 sn);
+orijinal klasöre dokunulmadı. Tüm denemeler kopyadaki `Engine\Binaries\Win64\UnrealGame.exe`
+ile yapıldı; günlükler kopyanın `TCCC\Saved\Logs\` altına yazıldı.
+
+**Komut satırı doğrulandı.** `UnrealGame.exe ..\..\..\TCCC\TCCC.uproject -windowed -ResX=1920
+-ResY=1080 -WinX=0 -WinY=0 -ForceRes -ini:Engine:[/Script/Engine.LocalPlayer]:AspectRatioAxisConstraint=AspectRatio_MaintainYFOV -log`
+ile açıldı; log `LogInit: Command Line:` satırında parametrelerin tamamını gösterdi, pencere
+1920×1080 oldu, adaptör 0 (GTX 1650) seçildi, Menu haritası 0,5 sn'de yüklendi. Harita adı
+parametre olarak verilince (`... TCCC.uproject /Game/Maps/CitySuburbs ...`) menüsüz doğrudan
+eğitim haritası açıldı (1,1 sn). `-ExecCmds="stat fps,sg.GlobalIlluminationQuality 1,..."`
+çalıştı (Development yapı; log: `[GlobalIlluminationQuality@1]`). Dolayısıyla betikteki
+seçenek 1/2 sahada 3 ekranlı masaüstünde çalışacaktır.
+
+**Oyunun içeriği (ekranda görülen):** ana menü "FORA GRUP EĞİTİM SİMÜLASYON" – Meskûn Mahal /
+Dağlık Alan / Orman / Çıkış (sağ-sol ile seçim, Enter ile başlat; "model değişimi için yukarı
+aşağı"), sürüm "OCTAGON 2025 V1B". Oyun içi efekt menüsü: Çatışma, Vurulma, Zırhlı Araç,
+Helikopter (pasif), Sis Bombası, El Bombası, Döngü Süresi, Menü. Ayar menüsü: Current Res,
+Overall Scalability, Post Process / VFX / Reflection / Texture / GI / View Distance / AA /
+Foliage / Texture Stream Pool kademeleri. Bu liste panelimizdeki `EfektTetikle` türleriyle
+doğrudan eşleşiyor: El Bombası → `patlama`, Sis Bombası → `toz_duman`, Çatışma → `gurultu`
+(silah sesleri), Zırhlı Araç → Kirpi, Helikopter → Oda 2 `helikopter`.
+
+**Performans (GTX 1650 4 GB, `stat fps` / `stat unit`):**
+
+| Ayar | Sahne | FPS |
+|---|---|---|
+| Paket varsayılanı (tüm kademeler 3, 1920×1080) | Meskûn Mahal | ~8 |
+| `sg.*` 1, `r.ScreenPercentage 75`, 1920×1080 | Ana menü | ~46 |
+| `sg.*` 1, `r.ScreenPercentage 75`, 1920×1080 | Meskûn Mahal | ~7 |
+| `sg.*` 0, `r.ScreenPercentage 60`, `r.Shadow.Virtual.Enable 0`, 1280×720 | Meskûn Mahal | ~19 (Game 5,7 ms, Draw 53 ms, GPU 52 ms, 816 draw, 1,25 M üçgen) |
+
+Ekranda "TEXTURE STREAMING POOL OVER 157.6 MiB BUDGET" uyarısı; süreç Epic ayarda 6,2 GB
+bellek kullandı. Darboğaz hesap gücü değil **ekran kartı belleği** (Nanite + VSM + Lumen
+tamponları 4 GB'ı dolduruyor, dokulara 158 MB kalıyor). Kalite kademesi düşürmek bu yüzden
+neredeyse hiç kazandırmıyor. Ayrıca `r.D3D12.PSO.DiskCache=0`: her açılışta 50–100 PSO derleniyor,
+ilk 1–2 dakika takılma bundan. Sonuç ve donanım önerileri: `docs/donanim-onerileri.md`.
+
+Ray tracing: "Ray tracing is disabled. Reason: not supported by current RHI" (GTX 1650'de DXR
+yok) → Lumen yazılımsal yolda çalıştı; bu sorun değil, RTX kartta donanımsal yola geçer.
