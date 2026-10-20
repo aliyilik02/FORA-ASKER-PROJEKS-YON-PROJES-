@@ -15,6 +15,13 @@ sonucu"). Ölçümler (GTX 1650, `stat fps`):
 | Düşük: `sg.*` 1, `r.ScreenPercentage 75`, 1920×1080 | Ana menü | ~46 |
 | Düşük: `sg.*` 1, `r.ScreenPercentage 75`, 1920×1080 | Meskûn Mahal | ~7 (değişmedi) |
 | En düşük: `sg.*` 0, `r.ScreenPercentage 60`, VSM kapalı, 1280×720 | Meskûn Mahal | ~19 (GPU 52 ms) |
+| Epic korunup TSR ölçekleme `r.ScreenPercentage 67` + yarım doku `r.Streaming.MipBias 1` | Meskûn Mahal | ~8, 3 sn takılmalar |
+
+**"Kaliteyi düşürmeden gereksinimi düşürmek" bu pakette mümkün değil.** `stat rhi` GPU bellek
+sayaçları: UAV texture (Lumen/VSM/Nanite tamponları) 2,8 GB + render target 0,9 GB + buffer
+1,6 GB + doku 0,17 GB ≈ **5,7 GB**; kart 3,9 GB. Bu tamponlar kalite kademesinden bağımsız;
+ancak kaynak projede Lumen/VSM/Nanite kapatılarak küçülür. Alt sınır 8 GB VRAM (RTX 4060 8 GB /
+ikinci el RTX 3060 12 GB bile bu paketi 1080p'de akıcı açar). Ayrıntı: inceleme §11.
 
 Sebep "stabilizasyon" değil; paketin kullandığı özellikler + ekran kartı belleği:
 
@@ -24,9 +31,10 @@ Sebep "stabilizasyon" değil; paketin kullandığı özellikler + ekran kartı b
   hedefli bir oyundur; GTX 1650 o oyunun hedef sınıfıdır, UE5 Lumen'in değil. Epic'in Lumen
   için önerdiği sınıf RTX 20xx/30xx ve üstüdür.
 - **4 GB VRAM** yetmiyor. Ekranda "TEXTURE STREAMING POOL OVER 157.6 MiB BUDGET" uyarısı
-  çıkıyor: Nanite, VSM ve Lumen tamponları belleği doldurunca dokulara 158 MB kalıyor, dokular
-  her kare sistem belleğinden taşınıyor (log: "3935MB dedicated, 8086MB shared"). Kalite
-  kademelerini düşürmek bu yüzden tek başına çözmüyor; darboğaz hesap gücü değil **bellek**.
+  çıkıyor: Nanite, VSM ve Lumen tamponları belleği doldurunca dokulara 173 MB kalıyor
+  (`stat rhi`), doku havuzu bütçeyi 158 MB aşıyor ve dokular her kare sistem belleğinden
+  taşınıyor (log: "3935MB dedicated, 8086MB shared"). Kalite kademelerini düşürmek bu yüzden
+  tek başına çözmüyor; darboğaz hesap gücü değil **bellek**.
   `stat unit` ölçümü (720p, en düşük): Game 5,7 ms, Draw 53 ms, GPU 52 ms → iş tamamen GPU tarafında.
 - Ray tracing kapandı (log: "Ray tracing is disabled. Reason: not supported by current RHI")
   → Lumen yazılımsal (software) yolda; bu zaten daha ucuz, sorun değil.

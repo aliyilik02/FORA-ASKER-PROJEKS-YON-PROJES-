@@ -64,5 +64,7 @@ npm run typecheck
 `araclar/` klasörü:
 
 - `ornek-tccc-genis-ekran.bat` – örnek UE paketini geniş ekranda / tek ekranda / düşük kalitede açar
+- `ornek-kisisellestir.ps1` – örnek paketin kopyasına kendi splash görselimizi, pencere başlığını,
+  grafik profilini ve masaüstü kısayolunu ekler (kaynak proje gerekmez)
 - `artnet-dinle.mjs` – ışık kontrolcüsü olmadan köprünün Art-Net (DMX) çıkışını ekranda gösterir:
   `node araclar/artnet-dinle.mjs` + köprü `ARTNET_AKTIF=1 ARTNET_HEDEF=127.0.0.1` ile

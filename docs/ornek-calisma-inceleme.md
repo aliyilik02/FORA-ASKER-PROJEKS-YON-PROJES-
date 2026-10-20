@@ -209,3 +209,47 @@ ilk 1–2 dakika takılma bundan. Sonuç ve donanım önerileri: `docs/donanim-o
 
 Ray tracing: "Ray tracing is disabled. Reason: not supported by current RHI" (GTX 1650'de DXR
 yok) → Lumen yazılımsal yolda çalıştı; bu sorun değil, RTX kartta donanımsal yola geçer.
+
+## 10. Kaynak proje olmadan kişiselleştirme (kopyada denendi)
+
+Pak dosyasına dokunmadan, yalnızca diskteki gevşek dosyalarla yapılabilenler. Hepsi
+`araclar/ornek-kisisellestir.ps1` ile tek komutta uygulanır (orijinal klasörü reddeder, kopyaya yazar).
+
+| Dokunuş | Nasıl | Durum |
+|---|---|---|
+| Açılış splash görseli (kendi başlık/logomuz) | `TCCC\Content\Splash\Splash.bmp` (24 bit BMP; UE pak dışındaki bu dosyayı okur) | ✔ denendi, açılışta 3–4 sn görünüyor |
+| Pencere başlığı | `TCCC\Saved\Config\Windows\Game.ini` → `[/Script/EngineSettings.GeneralProjectSettings] ProjectDisplayedTitle=...` | ✔ denendi: "Duvar Simülasyonu – Eğirdir Dağ Komando Okulu (64-bit Development PCD3D_SM6)" |
+| Telif / açıklama metni | aynı dosyada `CopyrightNotice`, `Description` | ✔ yazılıyor (görünür yeri sınırlı) |
+| Başlangıç grafik profili | `GameUserSettings.ini` `[ScalabilityGroups]` (epic / orta / düşük) | ✔ |
+| Doğrudan eğitim haritasıyla açılış (menüsüz) | komut satırında `/Game/Maps/CitySuburbs` (veya `Mountain_5`, `Orman`) | ✔ denendi |
+| Masaüstü kısayolu: kendi simgemiz + adımız + doğru parametreler | `.lnk` + üretilen `simge.ico` | ✔ (`-Kisayol`) |
+| Panelden "Örneği başlat" düğmesi | köprü `POST /api/ornek/baslat` → `UnrealGame.exe` parametrelerle (aynı PC) | yapılabilir, ~1 saatlik iş |
+
+Yapılamayanlar (kaynak proje gerekir): ana menü yazıları ve logosu ("FORA GRUP EĞİTİM
+SİMÜLASYON" UMG widget'ı pak içinde), giriş videosu (WindowsMoviePlayer eklentisi pakette yok),
+harita/efekt içeriği, pencere başlığındaki "(64-bit Development PCD3D_SM6)" eki (Shipping
+paket gerekir). `TCCC.exe` simgesini değiştirmek binary düzenleme ister; kısayol simgesi yeterli.
+
+## 11. "Kaliteyi düşürmeden" çalıştırma denemesi
+
+Epic kademe korunup yalnızca TSR ölçekleme (`r.ScreenPercentage 67`) ve yarım doku
+(`r.Streaming.MipBias 1`) verildi: yine ~8 FPS, anlık 3 sn'lik takılmalar. `stat rhi` GPU
+bellek sayaçları (1920×1080, Meskûn Mahal):
+
+| Sayaç | MB |
+|---|---|
+| UAV Texture Memory (Lumen / VSM / Nanite tamponları) | 2785 |
+| Render Target 2D | 917 |
+| Structured Buffer | 575 |
+| Reserved Buffer (committed) | 528 |
+| Reserved Texture (committed) | 512 |
+| Texture 2D (dokular) | 173 |
+| Vertex + Index + diğer | ~290 |
+| **Toplam** | **≈ 5,7 GB** (kart: 3,9 GB) |
+
+Sonuç: paketin bu haliyle GPU bellek ihtiyacı ≈ 6 GB; 4 GB kartta dokulara 173 MB kalıyor ve her
+kare sistem belleğinden taşınıyor. Kalite kademesi, ölçekleme veya doku küçültme bunu çözmüyor;
+Lumen/VSM/Nanite tamponları sabit. Kaynak olmadan "aynı görüntü, daha az gereksinim" mümkün
+değil. Alt sınır: **8 GB VRAM** (ör. ikinci el RTX 3060 12 GB / RTX 4060 8 GB bile 1080p'de
+bu paketi akıcı açar); kaynak proje gelirse pişirilmiş ışık + Nanite kapalı sürümle GTX 1650'de
+de 1080p 60 FPS alınabilir.
