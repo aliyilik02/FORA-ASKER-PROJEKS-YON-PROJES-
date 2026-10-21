@@ -24,8 +24,10 @@ raporundaki (Grit Teknoloji, 7 Eylül 2026) teknik mimariyi uygular.
 
 ## Hızlı başlangıç
 
-Windows'ta tek tıkla: önce **`kur.bat`** (bir kez, `npm install`), sonra **`baslat.bat`**
-(köprü + panel ayrı pencerelerde açılır, tarayıcı http://localhost:5173 adresine gider).
+Windows'ta tek tıkla **demo**: **`demo.bat`** (gerekirse kurar ve derler, köprüyü başlatır,
+tarayıcıda paneli `http://localhost:4000` ve oynatıcıyı `http://localhost:4000/oynatici/?hud=1`
+açar; yalnızca Node.js gerekir). Geliştirme için: **`kur.bat`** (bir kez, `npm install`), sonra
+**`baslat.bat`** (köprü + panel geliştirme sunucuları, `http://localhost:5173`).
 
 Elle:
 
