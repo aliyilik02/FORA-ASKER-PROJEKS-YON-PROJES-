@@ -69,6 +69,7 @@ npm run typecheck
 
 ## Belgeler
 
+- [Şartname analizi ve motor bağımsız çözüm yaklaşımı (hibrit öneri)](docs/sartname-analizi-ve-yaklasim.md)
 - [Mimari](docs/mimari.md)
 - [Unreal Engine kurulumu ve Remote Control preset](docs/unreal-kurulum.md)
 - [Tek ekranı 3 projeksiyona yayma](docs/3-projeksiyon-tek-ekran.md)
