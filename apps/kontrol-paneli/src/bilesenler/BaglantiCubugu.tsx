@@ -47,6 +47,12 @@ export function BaglantiCubugu({
         >
           Unreal {ueMod === "simulasyon" ? "simülasyon modu" : ueBagli ? "bağlı" : "bağlı değil"}
         </span>
+        <span
+          className={`rozet ${baglanti?.oynatici?.bagli ? "iyi" : "kotu"}`}
+          title="Duvar Oynatıcı: görüntüyü üreten tarayıcı tabanlı oynatıcı (hibrit yol). /oynatici/ adresinde açılır."
+        >
+          Oynatıcı {baglanti?.oynatici?.bagli ? `bağlı (${baglanti.oynatici.sayi})` : "bağlı değil"}
+        </span>
         <span className={`rozet ${baglanti?.artnet.aktif ? "iyi" : "notr"}`} title={baglanti ? `${baglanti.artnet.hedef} · evren ${baglanti.artnet.evren}` : ""}>
           Art-Net {baglanti?.artnet.aktif ? "aktif" : "kapalı"}
         </span>

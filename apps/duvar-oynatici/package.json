@@ -1,0 +1,19 @@
+{
+  "name": "@duvar/duvar-oynatici",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Duvar Oynatıcı – 3 duvara görüntü üreten tarayıcı tabanlı oynatıcı (hibrit yol): video döngüleri + parametrik yer tutucu sahne + efektler + konumsal ses",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}

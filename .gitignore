@@ -4,3 +4,7 @@ apps/kopru/veri/
 *.log
 .DS_Store
 apps/kopru/.env
+apps/duvar-oynatici/public/icerik/**/*.mp4
+apps/duvar-oynatici/public/icerik/**/*.webm
+apps/duvar-oynatici/public/icerik/**/*.ogg
+apps/duvar-oynatici/public/icerik/**/*.mp3

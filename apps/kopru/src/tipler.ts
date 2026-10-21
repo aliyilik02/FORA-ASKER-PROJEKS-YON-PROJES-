@@ -12,8 +12,8 @@ export type Mevsim = "ilkbahar" | "yaz" | "sonbahar" | "kis";
 
 export type Yagis = "yok" | "hafif_yagmur" | "siddetli_yagmur" | "kar";
 
-/** Şartname §7: Oda 2 güvenli alan görüntüleri. */
-export type GuvenliAlanTipi = "kaya_sutre_arkasi" | "cukur" | "meskun_mahal_ici";
+/** Şartname §7 / idare metni 1.2: Oda 2 güvenli alan görüntüleri. */
+export type GuvenliAlanTipi = "operasyonel_bolge" | "meskun_mahal_ici" | "kaya_sutre_arkasi" | "cukur";
 
 export type HelikopterDurumu = "yok" | "yaklasiyor" | "iniyor" | "yerde" | "kalkiyor";
 
@@ -140,7 +140,12 @@ export interface OnAyar {
 export interface BaglantiDurumu {
   unreal: { mod: "gercek" | "simulasyon"; bagli: boolean; adres: string; sonHata?: string };
   artnet: { aktif: boolean; hedef: string; evren: number; sonGonderim?: number };
+  /** Bağlı Duvar Oynatıcı sayısı (hibrit yol: görüntüyü tarayıcı tabanlı oynatıcı üretir). */
+  oynatici: { bagli: boolean; sayi: number };
 }
+
+/** İstemci → sunucu WebSocket mesajları. */
+export type IstemciMesaji = { tip: "merhaba"; rol: "panel" | "oynatici"; ad?: string };
 
 /** Köprünün Unreal Engine'e gönderdiği bir Remote Control çağrısının kaydı (panelde canlı izlenir). */
 export interface UnrealIstekKaydi {
@@ -170,7 +175,9 @@ export type SunucuMesaji =
   | { tip: "baglanti"; baglanti: BaglantiDurumu }
   | { tip: "gunluk"; seviye: "bilgi" | "uyari" | "hata"; mesaj: string; zaman: number }
   | { tip: "unreal"; istek: UnrealIstekKaydi }
-  | { tip: "ornek"; ornek: OrnekDurumu };
+  | { tip: "ornek"; ornek: OrnekDurumu }
+  /** Tetiklenen efekt olayı (oynatıcı ve paneller için). */
+  | { tip: "efekt"; efekt: EfektIstegi & { zaman: number } };
 
 export const BOLGE_ETIKETLERI: Record<Bolge, string> = {
   meskun_mahal: "Meskûn Mahal",
@@ -195,9 +202,10 @@ export const YAGIS_ETIKETLERI: Record<Yagis, string> = {
 };
 
 export const GUVENLI_ALAN_ETIKETLERI: Record<GuvenliAlanTipi, string> = {
+  operasyonel_bolge: "Operasyonel bölge",
+  meskun_mahal_ici: "Meskûn mahal içi",
   kaya_sutre_arkasi: "Kaya / sütre arkası",
   cukur: "Çukur",
-  meskun_mahal_ici: "Meskûn mahal içi",
 };
 
 export const HELIKOPTER_ETIKETLERI: Record<HelikopterDurumu, string> = {

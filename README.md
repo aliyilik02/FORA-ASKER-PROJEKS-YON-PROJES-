@@ -16,6 +16,7 @@ raporundaki (Grit Teknoloji, 7 Eylül 2026) teknik mimariyi uygular.
 | Bileşen | Klasör | Açıklama |
 |---|---|---|
 | Kontrol paneli | `apps/kontrol-paneli` | Eğitmenin tablet/bilgisayardan kullandığı Türkçe web arayüzü |
+| **Duvar Oynatıcı** | `apps/duvar-oynatici` | Hibrit yol: 3 duvara görüntüyü üreten tarayıcı tabanlı oynatıcı (video döngüleri + parametrik sahne + efektler + ses) |
 | Köprü sunucusu | `apps/kopru` | Paneli UE5 Remote Control API'ye ve DMX/Art-Net'e bağlar; senaryo motoru, ön ayarlar |
 | Unreal yapılandırması | `unreal/` | nDisplay (3 projektör) örnek konfigürasyonu ve Remote Control preset tanımı |
 | Dokümantasyon | `docs/` | Mimari, UE kurulumu, 3 projeksiyona tek ekran yayma, örnek çalışma incelemesi, şartname uyumluluk matrisi |
@@ -32,7 +33,11 @@ Elle:
 npm install
 npm run dev:kopru     # köprü sunucusu → http://localhost:4000 (UE olmadan "simülasyon" modunda)
 npm run dev:panel     # kontrol paneli → http://localhost:5173
+npm run dev:oynatici  # duvar oynatıcı → http://localhost:5174/?hud=1 (tek ekranda 48:9 önizleme)
 ```
+
+Sahada: `npm run build` sonrası `npm start` ile panel (`/`) ve oynatıcı (`/oynatici/`) aynı porttan
+sunulur; `oynatici-baslat.bat 5760 1080` oynatıcıyı 3 projektöre yayılmış kiosk penceresinde açar.
 
 Üretim (sistem kontrol odası bilgisayarı):
 
@@ -70,6 +75,7 @@ npm run typecheck
 ## Belgeler
 
 - [Şartname analizi ve motor bağımsız çözüm yaklaşımı (hibrit öneri)](docs/sartname-analizi-ve-yaklasim.md)
+- [Duvar Oynatıcı: çalıştırma, katmanlar, içerik ekleme](docs/duvar-oynatici.md)
 - [Mimari](docs/mimari.md)
 - [Unreal Engine kurulumu ve Remote Control preset](docs/unreal-kurulum.md)
 - [Tek ekranı 3 projeksiyona yayma](docs/3-projeksiyon-tek-ekran.md)

@@ -18,12 +18,14 @@ import {
 import type { UnrealIstemci } from "./unreal.js";
 
 type Dinleyici = (durum: SimulasyonDurumu) => void;
+type EfektDinleyici = (efekt: EfektIstegi & { zaman: number }) => void;
 
 const sinirla = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
 export class DurumDeposu {
   private durum: SimulasyonDurumu = varsayilanDurum();
   private dinleyiciler = new Set<Dinleyici>();
+  private efektDinleyiciler = new Set<EfektDinleyici>();
 
   constructor(
     private readonly unreal: UnrealIstemci,
@@ -38,6 +40,12 @@ export class DurumDeposu {
   dinle(d: Dinleyici): () => void {
     this.dinleyiciler.add(d);
     return () => this.dinleyiciler.delete(d);
+  }
+
+  /** Her efekt tetiklemesinde (durum yayınından ayrı, olay olarak) bilgilendirilir. */
+  efektDinle(d: EfektDinleyici): () => void {
+    this.efektDinleyiciler.add(d);
+    return () => this.efektDinleyiciler.delete(d);
   }
 
   private yayinla() {
@@ -150,8 +158,10 @@ export class DurumDeposu {
     if (istek.tur === "patlama" && this.durum.isik.senaryoyaBagli) {
       this.artnet.patlamaFlasi(istek.siddet ?? 1);
     }
-    this.durum.sonEfektler.unshift({ ...istek, zaman: Date.now() });
+    const olay = { ...istek, zaman: Date.now() };
+    this.durum.sonEfektler.unshift(olay);
     if (this.durum.sonEfektler.length > 50) this.durum.sonEfektler.pop();
+    for (const d of this.efektDinleyiciler) d(olay);
     this.yayinla();
   }
 

@@ -10,6 +10,7 @@
     "dev": "npm run dev --workspaces --if-present",
     "dev:kopru": "npm run dev --workspace apps/kopru",
     "dev:panel": "npm run dev --workspace apps/kontrol-paneli",
+    "dev:oynatici": "npm run dev --workspace apps/duvar-oynatici",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",

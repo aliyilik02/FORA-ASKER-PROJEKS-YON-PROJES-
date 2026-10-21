@@ -26,9 +26,15 @@ Node.js + Express + ws. Tek doğruluk kaynağı: `DurumDeposu` (`src/durum.ts`).
 | `api.ts` | HTTP uç noktaları |
 | `index.ts` | Sunucu, WebSocket, UE bağlantı yoklaması, derlenmiş paneli sunma |
 
-### Unreal Engine 5
+### Duvar Oynatıcı (`apps/duvar-oynatici`) – hibrit yolun çalışma zamanı
+Tarayıcı tabanlı; köprüye WebSocket ile bağlanır (`merhaba` ile rolünü bildirir), `durum` ve
+`efekt` mesajlarını 3 duvara çizer: video döngüleri (manifest) veya parametrik sahne, Oda 2 ön
+planları, hava, izli mermi, patlama, helikopter, konumsal ses. Ayrıntı: `docs/duvar-oynatici.md`.
+
+### Unreal Engine 5 (isteğe bağlı gerçek zamanlı yol / içerik üretim aracı)
 Görüntü üretimi, efektler, ses ve nDisplay dağıtımı. Köprüden gelen fonksiyon çağrılarını
-`BP_SimulasyonYoneticisi` karşılar. Ayrıntı: `docs/unreal-kurulum.md`.
+`BP_SimulasyonYoneticisi` karşılar. Ayrıntı: `docs/unreal-kurulum.md`. Hibrit yolda UE yalnızca
+döngü/efekt klipleri render etmek için kullanılır.
 
 ## Veri akışı
 
@@ -85,5 +91,9 @@ efekt düğmeleriyle araya girebilir.
 | `gunluk` | seviye, mesaj, zaman | Her günlük kaydında |
 | `unreal` | `UnrealIstekKaydi` | Her Remote Control çağrısından sonra (başarılı/başarısız) |
 | `ornek` | `OrnekDurumu` | Bağlanınca, örnek paket açılınca/kapanınca |
+| `efekt` | `EfektIstegi` + zaman | Her efekt tetiklemesinde (oynatıcı bunu çizer ve seslendirir) |
+
+İstemci → sunucu: `{tip:"merhaba", rol:"panel" | "oynatici"}`; köprü oynatıcı sayısını
+`baglanti.oynatici` içinde panellere bildirir.
 
 Tipler: `apps/kopru/src/tipler.ts` (panelde birebir kopyası).

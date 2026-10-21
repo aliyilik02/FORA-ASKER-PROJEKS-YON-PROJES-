@@ -30,6 +30,7 @@ export function useKopru() {
       ws.onopen = () => {
         setSoketAcik(true);
         setHata(null);
+        ws?.send(JSON.stringify({ tip: "merhaba", rol: "panel" }));
         void api.baglanti().then(setBaglanti).catch(() => undefined);
         void api
           .gunluk()

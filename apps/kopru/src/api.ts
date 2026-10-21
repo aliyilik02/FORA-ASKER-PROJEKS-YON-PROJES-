@@ -20,9 +20,11 @@ export interface ApiBagimliliklari {
   artnet: ArtNetGonderici;
   gunluk: Gunluk;
   ornek: OrnekBaslatici;
+  /** Bağlı Duvar Oynatıcı sayısını döndürür. */
+  oynaticiSayisi?: () => number;
 }
 
-export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici): BaglantiDurumu {
+export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici, oynaticiSayisi = 0): BaglantiDurumu {
   return {
     unreal: { mod: unreal.mod, bagli: unreal.bagli, adres: unreal.adres, sonHata: unreal.sonHata },
     artnet: {
@@ -31,6 +33,7 @@ export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici): 
       evren: artnet.evren,
       sonGonderim: artnet.sonGonderimZamani || undefined,
     },
+    oynatici: { bagli: oynaticiSayisi > 0, sayi: oynaticiSayisi },
   };
 }
 
@@ -44,7 +47,7 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
   r.use(express.json({ limit: "1mb" }));
 
   r.get("/durum", (_req, res) => res.json(b.depo.al()));
-  r.get("/baglanti", (_req, res) => res.json(baglantiDurumu(b.unreal, b.artnet)));
+  r.get("/baglanti", (_req, res) => res.json(baglantiDurumu(b.unreal, b.artnet, b.oynaticiSayisi?.() ?? 0)));
   r.get("/gunluk", (_req, res) => res.json(b.gunluk.sonKayitlar()));
   r.get("/unreal/son-istekler", (_req, res) => res.json(b.unreal.sonIstekler()));
 
@@ -80,6 +83,7 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
     sarmala(async (req, res) => {
       const bolge = req.body?.bolge;
       const gecerli = ["meskun_mahal", "ormanlik", "daglik", "us_bolgesi", "kirsal_acik_arazi"];
+      // Not: 5. bölge olarak "kırsal açık arazi" seçildi (docs/sartname-analizi-ve-yaklasim.md §10).
       if (!gecerli.includes(bolge)) return res.status(400).json({ hata: `bolge şunlardan biri olmalı: ${gecerli.join(", ")}` });
       await b.depo.bolgeSec(bolge);
       res.json(b.depo.al());

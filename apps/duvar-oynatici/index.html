@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Duvar Oynatıcı</title>
+    <link rel="icon" href="data:," />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #000;
+        overflow: hidden;
+        cursor: none;
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+      #tuval {
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      #uyari {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 14px 22px;
+        border-radius: 10px;
+        font-size: 18px;
+        display: none;
+        cursor: default;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="tuval"></canvas>
+    <div id="uyari"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

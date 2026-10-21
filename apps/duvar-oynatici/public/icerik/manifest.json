@@ -1,0 +1,32 @@
+{
+  "_aciklama": "Duvar Oynatıcı içerik manifesti. 'dongu' listesine bir klip eklendiğinde oynatıcı o bölge/mevsim/zaman dilimi için videoyu kullanır; eşleşme yoksa parametrik yer tutucu sahne çizilir. Dosya yolları bu klasöre görelidir. Klipler 5760x1080 (3 duvar yan yana, sol-orta-sağ), kusursuz döngü, H.264/H.265 MP4 veya VP9 WebM olmalıdır.",
+  "dongu": [
+    {
+      "_ornek": true,
+      "bolge": "kirsal_acik_arazi",
+      "mevsim": "yaz",
+      "zaman": "gunduz",
+      "dosya": "kirsal_acik_arazi/yaz_gunduz.mp4",
+      "_not": "Örnek satır: dosya henüz yok, oynatıcı yer tutucuya düşer. Gerçek klip koyunca _ornek alanını silin."
+    }
+  ],
+  "katmanlar": {
+    "_aciklama": "Alfa kanallı hava/efekt katmanları (VP9 alpha WebM). Boşsa prosedürel katman çizilir.",
+    "yagmur": null,
+    "kar": null,
+    "sis": null,
+    "patlama": null,
+    "toz_duman": null
+  },
+  "sesler": {
+    "_aciklama": "Ses dosyaları (OGG/MP3). Boşsa sentezlenmiş yer tutucu sesler kullanılır.",
+    "patlama": [],
+    "uzak_patlama": [],
+    "gurultu": [],
+    "bagirma": [],
+    "cagirma": [],
+    "mermi_vizilti": [],
+    "helikopter_rotor": null,
+    "ortam": {}
+  }
+}
