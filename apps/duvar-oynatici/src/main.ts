@@ -13,6 +13,7 @@ import { EfektSistemi } from "./efektler/patlama";
 import { Helikopter } from "./efektler/helikopter";
 import { IzliMermiSistemi } from "./efektler/izliMermi";
 import { hudCiz, kalibrasyonCiz, uyariCiz } from "./hud";
+import { KlipKatmani } from "./klipler";
 import { azimutPan, duvarYerlesimleri, duvarlariOlustur, type Yerlesim, yonAzimut, zamanDilimi } from "./projeksiyon";
 import { araziCiz, araziGuncelle, ufukY as bolgeUfukY } from "./sahne/arazi";
 import { gokyuzuCiz, gokyuzuGuncelle, gokyuzuRenkleri } from "./sahne/gokyuzu";
@@ -48,6 +49,7 @@ const heli = new Helikopter();
 const hava = new HavaSistemi();
 const video = new VideoKatmani("icerik/"); // belge tabanına göreli: /oynatici/icerik/ veya dev'de /icerik/
 const panorama = new PanoramaKatmani();
+const klipler = new KlipKatmani();
 /** ?panorama=<url> ile hızlı deneme: manifestten bağımsız, her bölgede bu 360° kaynak gösterilir. */
 const testPanorama = params.get("panorama");
 const testYaw = Number(params.get("yaw") ?? 0);
@@ -93,13 +95,21 @@ function efektUygula(e: EfektIstegi) {
   const azimut = yonAzimut(e.yon ?? 0);
   const pan = azimutPan(azimut);
   const siddet = e.siddet ?? 1;
+  // Gerçek plaka varsa (manifest "klipler": patlama_*, toz_*) onu kullan, yoksa prosedürel efekt.
+  const plaka = (onek: string, yukseklik: number, olcek: number) => {
+    const ad = klipler.rastgele(onek);
+    if (!ad) return false;
+    klipler.oynat({ klip: ad, azimut, yukseklik, olcek, yansit: Math.random() < 0.5 });
+    return true;
+  };
   switch (e.tur) {
     case "patlama":
-      efektler.patlama(azimut, siddet, yerlesimler, ufuk(), H);
+      if (plaka("patlama", -3, 0.7 + siddet * 0.6)) efektler.flasVeSarsinti(siddet);
+      else efektler.patlama(azimut, siddet, yerlesimler, ufuk(), H);
       void ses.patlama(pan, siddet);
       break;
     case "toz_duman":
-      efektler.tozDuman(azimut, siddet, yerlesimler, ufuk(), H);
+      if (!plaka("toz", -3, 0.7 + siddet * 0.6)) efektler.tozDuman(azimut, siddet, yerlesimler, ufuk(), H);
       break;
     case "gurultu":
       void ses.gurultu(pan, siddet);
@@ -111,7 +121,8 @@ function efektUygula(e: EfektIstegi) {
       void ses.cagirma(pan);
       break;
     case "uzak_patlama":
-      efektler.uzakPatlama(azimut, siddet, yerlesimler, ufuk(), H);
+      if (!plaka("uzak_patlama", 0.5, 0.25 + siddet * 0.15)) efektler.uzakPatlama(azimut, siddet, yerlesimler, ufuk(), H);
+      else efektler.flasVeSarsinti(siddet * 0.2);
       void ses.patlama(pan, siddet, true, e.mesafe ?? 800);
       break;
     case "uzak_mermi_sesi":
@@ -134,6 +145,12 @@ const kopru = new KopruBaglantisi(
   (m) => {
     if (m.tip === "durum") durumUygula(m.durum);
     else if (m.tip === "efekt") efektUygula(m.efekt);
+    else if (m.tip === "figur") {
+      const k = m.komut;
+      if (k.islem === "temizle") klipler.temizle();
+      else if (k.islem === "durdur") klipler.durdur(k.id);
+      else if (k.klip) klipler.oynat({ id: k.id, klip: k.klip, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, dongu: k.dongu, yansit: k.yansit });
+    }
   },
   (d) => {
     baglanti = d;
@@ -191,6 +208,7 @@ void ses.etkinlestir().then((tamam) => {
 
 void video.yukle().then((m) => {
   if (m.sesler) ses.manifestAyarla(m.sesler, `${video.kok}sesler/`);
+  klipler.ayarla(m.klipler, video.kok);
   video.secim(durum.bolge, durum.ortam.mevsim, zamanDilimi(durum.ortam.saat));
   panoramayiGuncelle();
 });
@@ -221,6 +239,7 @@ function kare(simdi: number) {
   efektler.guncelle(dt);
   heli.guncelle(dt);
   video.guncelle(dt);
+  klipler.guncelle(dt);
   ses.helikopter(heli.mevcutDurum, heli.tozSiddeti);
 
   // Çiz
@@ -241,12 +260,23 @@ function kare(simdi: number) {
       araziCiz(ctx, y, H, durum.bolge, durum.ortam, gok);
     }
     if (durum.oda === "oda2") oda2OnPlanCiz(ctx, y, H, durum.oda2.guvenliAlan, gok.isik);
+    ctx.restore();
+  }
+  // Figürler ve diğer klipler sahnenin içinde: sisin altında kalır
+  klipler.ciz(ctx, yerlesimler, ufukYy, H, gok.isik, ["figur", "diger", "hava"]);
+  for (const y of yerlesimler) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(y.x, 0, y.genislik, H);
+    ctx.clip();
     sisCiz(ctx, y, ufukYy, H, durum.ortam, gok);
     ctx.restore();
   }
   heli.ciz(ctx, yerlesimler, ufukYy, H, gok.isik);
   kararmaCiz(ctx, W, H, durum.ortam, gok.isik);
   hava.ciz(ctx, durum.ortam, gok.isik);
+  // Efekt plakaları (patlama, toz) kendi ışığıyla en üstte
+  klipler.ciz(ctx, yerlesimler, ufukYy, H, gok.isik, ["efekt"]);
   efektler.ciz(ctx);
   izli.ciz(ctx, H);
   if (efektler.flasAlfa > 0.01) {
@@ -265,7 +295,7 @@ function kare(simdi: number) {
         `${durum.oda === "oda1" ? "Oda 1" : "Oda 2"} · ${BOLGE_ETIKETLERI[durum.bolge]} · ${durum.ortam.mevsim} · saat ${durum.ortam.saat.toFixed(2)} (${zamanDilimi(durum.ortam.saat)}) · ışık ${gok.isik.toFixed(2)}`,
         `bulut ${durum.ortam.bulut.toFixed(2)} · sis ${durum.ortam.sis.toFixed(2)} · yağış ${durum.ortam.yagis} · rüzgâr ${durum.ortam.ruzgarSiddeti.toFixed(2)} @ ${durum.ortam.ruzgarYonu}°`,
         `izli mermi ${durum.izliMermi.aktif ? `açık (duvar ${durum.izliMermi.cikisNoktasi}, ${durum.izliMermi.yon}°, ${durum.izliMermi.siklik}/sn)` : "kapalı"} · oda2 ${GUVENLI_ALAN_ETIKETLERI[durum.oda2.guvenliAlan]} · helikopter ${HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}`,
-        `içerik: ${panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""} · fov ${duvarlar[0].fov}° · H hud · K kalibrasyon · F tam ekran · M sessiz · 1/2/3 test`,
+        `içerik: ${panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""} · aktif klip ${klipler.aktifSayisi} · fov ${duvarlar[0].fov}° · H hud · K kalibrasyon · F tam ekran · M sessiz · 1/2/3 test`,
       ],
       H,
     );

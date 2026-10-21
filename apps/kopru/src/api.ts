@@ -6,6 +6,7 @@ import type { ArtNetGonderici } from "./artnet.js";
 import type { VeriDeposu } from "./depo.js";
 import { kimlikUret } from "./depo.js";
 import type { DurumDeposu } from "./durum.js";
+import type { FigurYoneticisi } from "./figur.js";
 import type { Gunluk } from "./gunluk.js";
 import type { OrnekBaslatici } from "./ornek.js";
 import type { SenaryoMotoru } from "./senaryo.js";
@@ -22,6 +23,7 @@ export interface ApiBagimliliklari {
   ornek: OrnekBaslatici;
   /** Bağlı Duvar Oynatıcı sayısını döndürür. */
   oynaticiSayisi?: () => number;
+  figur?: FigurYoneticisi;
 }
 
 export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici, oynaticiSayisi = 0): BaglantiDurumu {
@@ -130,6 +132,22 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
       if (!gecerli.includes(tur)) return res.status(400).json({ hata: `tur şunlardan biri olmalı: ${gecerli.join(", ")}` });
       await b.depo.efektTetikle(req.body);
       res.json({ tamam: true });
+    }),
+  );
+
+  // --- Figürler / klipler (alfa kanallı asker, araç, efekt plakaları) ---
+  r.get("/klipler", (_req, res) => res.json(b.figur?.klipleriOku() ?? []));
+  r.get("/figurler", (_req, res) => res.json(b.figur?.aktifListe() ?? []));
+  r.post(
+    "/figur",
+    sarmala((req, res) => {
+      if (!b.figur) return res.status(501).json({ hata: "figür yöneticisi yok" });
+      try {
+        const k = b.figur.komut(req.body ?? {});
+        res.json({ komut: k, aktifler: b.figur.aktifListe() });
+      } catch (hata) {
+        res.status(400).json({ hata: hata instanceof Error ? hata.message : String(hata) });
+      }
     }),
   );
 

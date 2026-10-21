@@ -168,6 +168,35 @@ export interface OrnekDurumu {
   sonCikis?: { kod: number | null; sinyal?: string; zaman: number; hata?: string };
 }
 
+/**
+ * Figür / klip komutu: oynatıcıdaki alfa kanallı klip katmanına (asker, araç, efekt plakası)
+ * bir klibi belirli bir azimuta yerleştirir veya kaldırır. Klip adları içerik manifestinden gelir.
+ */
+export interface FigurKomutu {
+  islem: "oynat" | "durdur" | "temizle";
+  /** Örnek (instance) kimliği; verilmezse köprü üretir. */
+  id?: string;
+  /** Manifestteki klip adı (ör. asker_yarali_yerde). */
+  klip?: string;
+  /** -180..180; 0 = orta duvarın ortası. */
+  azimut?: number;
+  /** Ufka göre derece; negatif = ufkun altı (daha yakın zemin). */
+  yukseklik?: number;
+  /** Boyut çarpanı (1 = manifestteki genişlik). */
+  olcek?: number;
+  dongu?: boolean;
+  /** Yatay ayna. */
+  yansit?: boolean;
+}
+
+/** Panelde listelenen klip özeti (içerik manifestinden). */
+export interface KlipOzeti {
+  ad: string;
+  baslik: string;
+  kategori: string;
+  dongu: boolean;
+}
+
 /** Sunucu → istemci WebSocket mesajları. */
 export type SunucuMesaji =
   | { tip: "durum"; durum: SimulasyonDurumu }
@@ -177,7 +206,9 @@ export type SunucuMesaji =
   | { tip: "unreal"; istek: UnrealIstekKaydi }
   | { tip: "ornek"; ornek: OrnekDurumu }
   /** Tetiklenen efekt olayı (oynatıcı ve paneller için). */
-  | { tip: "efekt"; efekt: EfektIstegi & { zaman: number } };
+  | { tip: "efekt"; efekt: EfektIstegi & { zaman: number } }
+  /** Figür / klip komutu (oynatıcı uygular, paneller aktif listeyi günceller). */
+  | { tip: "figur"; komut: FigurKomutu & { id: string }; aktifler: Array<FigurKomutu & { id: string }> };
 
 export const BOLGE_ETIKETLERI: Record<Bolge, string> = {
   meskun_mahal: "Meskûn Mahal",

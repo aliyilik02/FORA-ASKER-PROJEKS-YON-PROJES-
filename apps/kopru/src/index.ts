@@ -19,6 +19,7 @@ import { ArtNetGonderici } from "./artnet.js";
 import { ayarlariOku, envDosyasiniYukle, varsayilanEnvYolu } from "./ayarlar.js";
 import { VeriDeposu } from "./depo.js";
 import { DurumDeposu } from "./durum.js";
+import { FigurYoneticisi } from "./figur.js";
 import { Gunluk } from "./gunluk.js";
 import { OrnekBaslatici, ornekKomutuOlustur } from "./ornek.js";
 import { ORNEK_SENARYOLAR } from "./ornekSenaryolar.js";
@@ -47,11 +48,17 @@ const ornek = new OrnekBaslatici(ornekKomutuOlustur(ayarlar.ornek), gunluk);
 const istemciRolleri = new Map<WebSocket, IstemciMesaji["rol"]>();
 const oynaticiSayisi = () => [...istemciRolleri.values()].filter((r) => r === "oynatici").length;
 
-const uygulama = express();
-uygulama.use("/api", apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi }));
-
 // Derlenmiş oynatıcı ve panel varsa aynı porttan sun.
 const oynaticiKlasoru = fileURLToPath(new URL("../../duvar-oynatici/dist/", import.meta.url));
+const icerikAdaylari = [
+  ...(process.env.ICERIK_KLASORU ? [process.env.ICERIK_KLASORU] : []),
+  fileURLToPath(new URL("../../duvar-oynatici/dist/icerik/", import.meta.url)),
+  fileURLToPath(new URL("../../duvar-oynatici/public/icerik/", import.meta.url)),
+];
+const figur = new FigurYoneticisi(gunluk, icerikAdaylari);
+
+const uygulama = express();
+uygulama.use("/api", apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, figur }));
 if (existsSync(oynaticiKlasoru)) {
   uygulama.use("/oynatici", express.static(oynaticiKlasoru));
 }
@@ -79,6 +86,7 @@ senaryo.dinle((s) => herkeseGonder({ tip: "senaryo", senaryo: s }));
 gunluk.dinle((k) => herkeseGonder({ tip: "gunluk", seviye: k.seviye, mesaj: k.mesaj, zaman: k.zaman }));
 unreal.dinle((istek) => herkeseGonder({ tip: "unreal", istek }));
 ornek.dinle((o) => herkeseGonder({ tip: "ornek", ornek: o }));
+figur.dinle((komut, aktifler) => herkeseGonder({ tip: "figur", komut, aktifler }));
 
 wss.on("connection", (ws: WebSocket) => {
   istemciRolleri.set(ws, "panel");
@@ -86,6 +94,11 @@ wss.on("connection", (ws: WebSocket) => {
   ws.send(JSON.stringify({ tip: "senaryo", senaryo: senaryo.al() } satisfies SunucuMesaji));
   ws.send(JSON.stringify({ tip: "baglanti", baglanti: baglantiDurumu(unreal, artnet, oynaticiSayisi()) } satisfies SunucuMesaji));
   ws.send(JSON.stringify({ tip: "ornek", ornek: ornek.durum() } satisfies SunucuMesaji));
+  // Yeniden bağlanan oynatıcı sahnedeki figürleri geri alsın (aynı id ile oynat → varsa yerine geçer)
+  const aktifFigurler = figur.aktifListe();
+  for (const f of aktifFigurler) {
+    ws.send(JSON.stringify({ tip: "figur", komut: { ...f, islem: "oynat" }, aktifler: aktifFigurler } satisfies SunucuMesaji));
+  }
 
   ws.on("message", (ham) => {
     let mesaj: IstemciMesaji | null = null;

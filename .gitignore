@@ -8,3 +8,6 @@ apps/duvar-oynatici/public/icerik/**/*.mp4
 apps/duvar-oynatici/public/icerik/**/*.webm
 apps/duvar-oynatici/public/icerik/**/*.ogg
 apps/duvar-oynatici/public/icerik/**/*.mp3
+# Küçük sentetik test klipleri (klip katmanını içerik gelmeden denemek için) depoda kalır
+!apps/duvar-oynatici/public/icerik/klipler/patlama_test_1.webm
+!apps/duvar-oynatici/public/icerik/klipler/asker_test_ayakta.webm

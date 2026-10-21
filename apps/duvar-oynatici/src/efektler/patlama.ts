@@ -52,6 +52,12 @@ export class EfektSistemi {
     }
   }
 
+  /** Gerçek plaka (alfa klip) kullanıldığında yalnızca flaş ve sarsıntı eklenir. */
+  flasVeSarsinti(siddet: number) {
+    this.flas = Math.max(this.flas, 0.4 + siddet * 0.4);
+    this.sallanti = Math.max(this.sallanti, 8 + siddet * 20);
+  }
+
   uzakPatlama(azimut: number, siddet: number, yerlesimler: Yerlesim[], ufukY: number, H: number) {
     const konum = azimutKonum(azimut, yerlesimler, 20);
     if (!konum) {

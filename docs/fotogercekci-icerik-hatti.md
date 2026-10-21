@@ -40,11 +40,71 @@ canlı katmanları (hava, ışık, efektler, ses). Sabit bakış noktalı bir od
 2. **Üs bölgesi ve meskûn mahal içi:** düzen önemli olduğundan UE5'te kendi sahnemiz (Megascans +
    Türkiye'ye özgü varlıklar) → equirect render; varyantlar motorda.
 3. **Efektler:** gerçek çekilmiş VFX plakaları (ActionVFX, ProductionCrate, BigFilms: patlama, toz,
-   izli mermi, namlu alevi, yağmur, kar, sis; alfa kanallı 4K). Oynatıcı bunları katman olarak oynatır.
-   Prosedürel efektler yalnızca yedek.
-4. **Helikopter inişi:** yapay zekâ video (panoramadan alınan kareyi başlangıç karesi yaparak,
+   izli mermi, namlu alevi, yağmur, kar, sis; alfa kanallı 4K). Oynatıcı bunları manifest `klipler`
+   bölümünden (`patlama_*`, `toz_*`, `uzak_patlama_*`) panel efektlerine bağlı olarak otomatik oynatır;
+   prosedürel efektler yalnızca yedek. Bir paket seçilip 5–8 patlama, 3–4 toz, 2 namlu alevi varyantı
+   ile başlanır (bkz. §2.5 biçim).
+4. **Askerler ve figürler:** okulda **yeşil perde** önünde gerçek personelle çekim (en inandırıcı ve
+   en ucuz yol; §2.5). Yapay zekâ video ve UE MetaHuman yalnızca çekilemeyen durumlar için takviye.
+5. **Helikopter inişi:** yapay zekâ video (panoramadan alınan kareyi başlangıç karesi yaparak,
    10–15 sn) veya stok helikopter plakası; rotor tozu VFX plakası.
-5. **Ses:** profesyonel kütüphaneler (BOOM, Pro Sound Effects) + Türkçe bağırma/çağırma stüdyo kaydı.
+6. **Ses:** profesyonel kütüphaneler (BOOM, Pro Sound Effects) + Türkçe bağırma/çağırma stüdyo kaydı.
+
+### 2.5 Asker ve figür klipleri (yeşil perde çekimi)
+
+Oynatıcı, alfa kanallı bir klibi sahneye **azimut + yükseklik + ölçek** ile yerleştirir
+(`src/klipler.ts`; panelde **Figürler**). Gerçekçilik için en güçlü kaynak, okulun kendi personeliyle
+yapılan yeşil perde çekimidir: üniforma, teçhizat, duruş ve hareket birebir doğru olur, yapay zekânın
+"yabancı asker / yanlış teçhizat" sorunu olmaz, hiçbir lisans gerekmez.
+
+**Çekim düzeni**
+
+- Kapalı spor salonu / depo; 6×4 m yeşil perde (zemin de yeşil, figür yerde yatacaksa şart),
+  perde ile oyuncu arası ≥ 2,5 m, perde eşit aydınlatılmış (2 softbox), oyuncuya arkadan hafif
+  kenar ışığı (yeşil sızmayı azaltır).
+- Kamera **1,7 m yükseklikte, yatay** (izleyicinin göz hizası; panoramalar da bu yükseklikten),
+  4K, **50 fps** (ağır çekim/hız ayarı payı), düşük sıkıştırma (log profil varsa açık), sabit
+  tripod; odak kilitli. Oyuncu 5–7 m mesafede, tam boy kadrajda.
+- Her hareket **döngüye uygun** çekilir: başlangıç pozu = bitiş pozu (örn. siperde ateş: nişan →
+  3 atış → nişan). Tek seferlik hareketler (yere düşme, koşup geçme) ayrı çekilir.
+- Işık koşulu için iki set: "gündüz" (nötr, güçlü ana ışık) ve "alacakaranlık/gece" (sıcak, düşük);
+  oynatıcı gece karartmasını kendi uygular, ama kontrast uyumu çekimde iyi olursa sonuç çok daha
+  inandırıcıdır.
+
+**Klip listesi (ilk set, Oda 1 "Ateş altında yaralıya müdahale")**
+
+| Klip adı | İçerik | Döngü |
+|---|---|---|
+| `asker_yarali_yerde` | yaralı yerde, bacağını tutuyor, el kaldırıp yardım istiyor | evet |
+| `asker_yarali_surunuyor` | yaralı siper yönüne sürünüyor | hayır |
+| `asker_siper_ates` | siperden/diz üstü nişan alıp ateş ediyor | evet |
+| `asker_koşuyor_sagdan_sola` | sütreden sütreye koşu (aynalama ile ters yön) | hayır |
+| `asker_el_isareti_dur` / `_ilerle` | el-kol işaretleri | hayır |
+| `sihhiyeci_turnike` | yaralının yanında diz çökmüş turnike uyguluyor | evet |
+| `tahliye_ikili_tasima` | iki asker yaralıyı sürükleyerek/sırtta götürüyor | hayır |
+| `asker_nobet_ayakta` | ayakta gözetleme, hafif hareket | evet |
+
+**İşleme (keying → alfa WebM)**
+
+1. DaVinci Resolve (ücretsiz) / After Effects: 3D keyer veya Keylight; yeşil sızma giderme
+   (spill suppression), kenar yumuşatma 1–2 px, zemin gölgesini **ayrı katman** olarak koruyun ya da
+   oynatıcının çizdiği gölgeye bırakın.
+2. Kadrajı figüre göre kırpın (kenar boşluğu 5–10 px); yükseklik 1080–1440 px yeterlidir (duvarda
+   figür en fazla ~900 px olur).
+3. Dışa aktarma: ProRes 4444 (alfa) → FFmpeg ile VP9 alpha WebM (§6 tarifi). Dosya adı manifest
+   anahtarıyla aynı; `genislikDerece` için figürün gerçek genişliği / hedef mesafe:
+   `derece ≈ 2·atan(genişlik / (2·mesafe))` (0,6 m genişlik, 10 m → 3,4°; yerde yatan 1,8 m, 8 m → 12,8°).
+4. Oynatıcıda deneme: panel → Figürler → klip, azimut, yükseklik (ufka göre; −6 ≈ 10 m, −12 ≈ 5 m),
+   ölçek; gece/gündüz değiştirip kontrast uyumunu kontrol edin.
+
+**Takviye kaynaklar (çekilemeyen durumlar için)**
+
+- Yapay zekâ video (Kling, Veo, Runway) ile "yeşil arka planda, tam boy, sabit kamera, göz hizası"
+  istemi; sonra aynı keying hattı. Türk askeri üniforma/teçhizat doğruluğu düşük kalır, referans
+  görsel şart; kabul için gerçek çekim tercih edilir.
+- UE5 MetaHuman + Fab asker varlıkları: istenen hareketi (Mixamo / motion capture) alfa kanallı
+  render; teçhizat kontrolü tam, emek daha yüksek. Üs bölgesi gibi UE'de kurulan sahnelerde
+  figürler doğrudan sahnenin içine konup panorama ile birlikte render edilebilir.
 
 ## 3. Yapay zekâ ile panorama üretimi (adım adım)
 
@@ -116,10 +176,24 @@ Kusursuz döngü (başı-sonu çapraz geçişle birleştirme, 60 sn klip, 2 sn g
 ffmpeg -i klip.mp4 -filter_complex "[0]split[a][b];[a]trim=0:58,setpts=PTS-STARTPTS[a1];[b]trim=58:60,setpts=PTS-STARTPTS[b1];[a1][b1]xfade=transition=fade:duration=2:offset=56" dongu.mp4
 ```
 
-Alfa kanallı efekt plakası (ProRes 4444 → VP9 alpha WebM, oynatıcı katmanı):
+Alfa kanallı efekt plakası veya figür klibi (ProRes 4444 → VP9 alpha WebM, manifest `klipler`):
 
 ```
-ffmpeg -i patlama_prores4444.mov -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 8M patlama.webm
+ffmpeg -i patlama_prores4444.mov -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 8M -auto-alt-ref 0 patlama_yakin_1.webm
+ffmpeg -i asker_yarali_yerde_prores4444.mov -vf "scale=-2:1440" -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 6M -auto-alt-ref 0 asker_yarali_yerde.webm
+```
+
+Siyah arka planlı (alfasız) plakayı alfaya çevirme (parlaklık → alfa; patlama/ateş/duman gibi
+ışık yayan efektler için yeterlidir):
+
+```
+ffmpeg -i patlama_siyah.mp4 -filter_complex "[0]split[c][a];[a]format=gray,geq=lum='clip(lum(X,Y)*1.4,0,255)'[al];[c][al]alphamerge" -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 8M -auto-alt-ref 0 patlama_1.webm
+```
+
+Yeşil perde kabaca keying (ince iş Resolve/AE'de; hızlı deneme için):
+
+```
+ffmpeg -i asker.mp4 -vf "chromakey=0x00b140:0.18:0.08,despill=type=green,crop=1000:1440:460:0" -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 6M -auto-alt-ref 0 asker_test.webm
 ```
 
 ## 7. Kabul stratejisi
@@ -134,7 +208,8 @@ ffmpeg -i patlama_prores4444.mov -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 8M patla
 - [ ] Bölge referans fotoğrafları (5 bölge)
 - [ ] Kırsal açık arazi: 6–10 AI panorama adayı → seçim → 5 varyant → 12K
 - [ ] Oynatıcıda deneme (`?panorama=`), yaw/ufuk ayarı, manifeste kayıt
-- [ ] VFX plaka paketi seçimi ve lisans (patlama, toz, izli mermi, yağmur, kar, sis)
+- [ ] VFX plaka paketi seçimi ve lisans (patlama, toz, izli mermi, yağmur, kar, sis) → `klipler/`
+- [ ] Yeşil perde çekim günü (okul personeli, §2.5 klip listesi) → keying → `klipler/asker_*.webm`
 - [ ] Helikopter iniş klibi (AI i2v veya stok)
 - [ ] Türkçe ses metni (30 cümle) + stüdyo günü
 - [ ] Diğer 4 bölge; üs bölgesi için UE5 sahnesi kararı

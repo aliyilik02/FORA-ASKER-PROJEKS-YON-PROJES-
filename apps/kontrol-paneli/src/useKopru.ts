@@ -1,7 +1,7 @@
 /** Köprü sunucusuyla WebSocket bağlantısı; durum, senaryo ve günlük akışını tutar. */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
-import type { BaglantiDurumu, OrnekDurumu, SenaryoDurumu, SimulasyonDurumu, SunucuMesaji, UnrealIstekKaydi } from "./tipler";
+import type { BaglantiDurumu, FigurKomutu, OrnekDurumu, SenaryoDurumu, SimulasyonDurumu, SunucuMesaji, UnrealIstekKaydi } from "./tipler";
 
 export interface GunlukSatiri {
   seviye: "bilgi" | "uyari" | "hata";
@@ -16,6 +16,7 @@ export function useKopru() {
   const [gunluk, setGunluk] = useState<GunlukSatiri[]>([]);
   const [unrealIstekler, setUnrealIstekler] = useState<UnrealIstekKaydi[]>([]);
   const [ornek, setOrnek] = useState<OrnekDurumu | null>(null);
+  const [figurler, setFigurler] = useState<Array<FigurKomutu & { id: string }>>([]);
   const [soketAcik, setSoketAcik] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const yenidenDeneme = useRef<number | null>(null);
@@ -40,6 +41,7 @@ export function useKopru() {
           .unrealSonIstekler()
           .then((kayitlar) => setUnrealIstekler([...kayitlar].reverse().slice(0, 60)))
           .catch(() => undefined);
+        void api.figurler().then(setFigurler).catch(() => undefined);
       };
       ws.onmessage = (olay) => {
         const mesaj = JSON.parse(olay.data) as SunucuMesaji;
@@ -61,6 +63,9 @@ export function useKopru() {
             break;
           case "ornek":
             setOrnek(mesaj.ornek);
+            break;
+          case "figur":
+            setFigurler(mesaj.aktifler);
             break;
         }
       };
@@ -90,5 +95,5 @@ export function useKopru() {
     }
   }, []);
 
-  return { durum, senaryo, baglanti, gunluk, unrealIstekler, ornek, soketAcik, hata, calistir };
+  return { durum, senaryo, baglanti, gunluk, unrealIstekler, ornek, figurler, soketAcik, hata, calistir };
 }

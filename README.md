@@ -58,6 +58,9 @@ Sistem internet bağlantısı olmadan, kapalı yerel ağda çalışır (şartnam
 - Oda 1 / Oda 2 sekmeleri; 5 bölge; mevsim, saat, bulut, sis, yağış, rüzgâr
 - Efektler (patlama, toz/duman, gürültü, bağırma, çağırma), izli mermi (duvar, yön, sıklık)
 - Ortam ışığı (DMX/Art-Net): gün ışığına ve patlamalara bağlı otomatik ya da elle
+- **Figürler ve klipler**: alfa kanallı asker/figür kliplerini (yeşil perde çekimi) azimut, yükseklik,
+  ölçek ve aynalama ile sahneye koy/kaldır; efekt plakaları (`patlama_*`, `toz_*`) panel
+  efektlerine otomatik bağlanır (`apps/duvar-oynatici/public/icerik/manifest.json` → `klipler`)
 - Oda 2: güvenli alan görüntüsü, helikopter dizisi, mesafe/yöne göre uzak sesler
 - Senaryo oynatıcı (oynat, duraklat, durdur, adımı anında tetikle) ve **senaryo editörü**
   (adım ekle, "mevcut ortamı adım yap", kaydet → listeye düşer)

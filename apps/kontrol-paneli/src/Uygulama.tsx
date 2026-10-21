@@ -1,6 +1,7 @@
 import { api } from "./api";
 import { BaglantiCubugu } from "./bilesenler/BaglantiCubugu";
 import { EfektPaneli } from "./bilesenler/EfektPaneli";
+import { FigurPaneli } from "./bilesenler/FigurPaneli";
 import { GunlukPaneli } from "./bilesenler/GunlukPaneli";
 import { IsikPaneli } from "./bilesenler/IsikPaneli";
 import { Oda2Paneli } from "./bilesenler/Oda2Paneli";
@@ -12,7 +13,7 @@ import { UnrealKomutlariPaneli } from "./bilesenler/UnrealKomutlariPaneli";
 import { useKopru } from "./useKopru";
 
 export function Uygulama() {
-  const { durum, senaryo, baglanti, gunluk, unrealIstekler, ornek, soketAcik, hata, calistir } = useKopru();
+  const { durum, senaryo, baglanti, gunluk, unrealIstekler, ornek, figurler, soketAcik, hata, calistir } = useKopru();
 
   if (!durum) {
     return (
@@ -39,6 +40,7 @@ export function Uygulama() {
           <BolgePaneli durum={durum} calistir={calistir} />
           <OrtamPaneli durum={durum} calistir={calistir} />
           <IsikPaneli durum={durum} calistir={calistir} />
+          <FigurPaneli aktifler={figurler} calistir={calistir} />
         </div>
         <div className="sutun">
           {durum.oda === "oda1" ? <EfektPaneli durum={durum} calistir={calistir} /> : <Oda2Paneli durum={durum} calistir={calistir} />}

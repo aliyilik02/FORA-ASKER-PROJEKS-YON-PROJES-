@@ -40,6 +40,66 @@
     "patlama": null,
     "toz_duman": null
   },
+  "klipler": {
+    "_aciklama": "Sahneye azimutla yerleştirilen alfa kanallı klipler (VP9 alpha WebM ya da sprite PNG). kategori: efekt | figur | hava | diger. genislikDerece: klibin duvarda kapladığı yatay açı (ölçek 1 için). taban: zemin (alt kenar ufka/zemine oturur) | merkez. Efekt adları 'patlama_*', 'toz_*', 'uzak_patlama_*' ile başlarsa panelden gelen o efekt için rastgele biri seçilir. 'figur' klipleri panelin Figürler bölümünde listelenir. _ornek: true olan satırlar yok sayılır; test klipleri gerçek içerik gelince silinebilir.",
+    "patlama_test_1": {
+      "dosya": "klipler/patlama_test_1.webm",
+      "kategori": "efekt",
+      "ad": "Patlama (sentetik test)",
+      "genislikDerece": 14,
+      "taban": "zemin"
+    },
+    "asker_test_ayakta": {
+      "dosya": "klipler/asker_test_ayakta.webm",
+      "kategori": "figur",
+      "ad": "Asker siluet (sentetik test)",
+      "genislikDerece": 5,
+      "taban": "zemin",
+      "dongu": true,
+      "golge": true
+    },
+    "patlama_yakin_1": {
+      "_ornek": true,
+      "dosya": "klipler/patlama_yakin_1.webm",
+      "kategori": "efekt",
+      "ad": "Patlama – yakın, toprak",
+      "genislikDerece": 18,
+      "taban": "zemin",
+      "_not": "Gerçek çekilmiş VFX plakası (ActionVFX/ProductionCrate sınıfı), ProRes 4444 → VP9 alpha. Birkaç varyant koyun: patlama_yakin_2, patlama_uzak_1 ..."
+    },
+    "asker_yarali_yerde": {
+      "_ornek": true,
+      "dosya": "klipler/asker_yarali_yerde.webm",
+      "kategori": "figur",
+      "ad": "Yaralı asker – yerde, yardım istiyor",
+      "genislikDerece": 9,
+      "taban": "zemin",
+      "dongu": true,
+      "golge": true,
+      "_not": "Okulda yeşil perde önünde gerçek personelle çekim; kamera 1,7 m göz hizası, 4K 50 fps; keying sonrası VP9 alpha. Döngü için ilk ve son poz aynı."
+    },
+    "asker_siper_ates": {
+      "_ornek": true,
+      "dosya": "klipler/asker_siper_ates.webm",
+      "kategori": "figur",
+      "ad": "Asker – siperden ateş ediyor",
+      "genislikDerece": 7,
+      "taban": "zemin",
+      "dongu": true
+    },
+    "helikopter_inis_sprite": {
+      "_ornek": true,
+      "dosya": "klipler/helikopter_inis.png",
+      "kategori": "diger",
+      "tip": "sprite",
+      "kareler": 64,
+      "sutun": 8,
+      "fps": 24,
+      "genislikDerece": 20,
+      "taban": "merkez",
+      "_not": "Sprite sayfası örneği (8 sütun × 8 satır = 64 kare); video yerine kare dizisi gerektiğinde."
+    }
+  },
   "sesler": {
     "_aciklama": "Ses dosyaları (OGG/MP3), bu klasörün sesler/ alt klasörüne göre. Boşsa sentezlenmiş yer tutucu sesler kullanılır.",
     "patlama": [],

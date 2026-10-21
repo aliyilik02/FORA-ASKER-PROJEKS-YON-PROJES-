@@ -39,10 +39,18 @@ Katmanlar (arkadan öne):
    (bölge ön ayarı: tepe profili, zemin, nesneler; mevsim paleti; rüzgârla salınan ot).
 3. **Oda 2 ön planı**: operasyonel bölge (kum torbası hattı), kaya/sütre, çukur, meskûn mahal içi
    (pencere ve kapıdan dışarısı görünür).
-4. **Sis** (ufuktan yayılan katman), **bulut kararması**, **gece tonlaması**.
-5. **Helikopter** (yaklaşıyor → iniyor → yerde → kalkıyor; rotor tozu; gece konum ışığı).
-6. **Yağmur / kar** parçacıkları (rüzgâr eğimi), **patlama** (ateş topu, kıvılcım, duman, flaş,
-   sarsıntı), **toz/duman**, **izli mermi** (seçilen duvardan, yön ve sıklık panelden).
+4. **Figür klipleri** (`src/klipler.ts`, manifest `klipler`, kategori `figur`/`diger`/`hava`):
+   alfa kanallı video (VP9 WebM) ya da sprite sayfası; panelin **Figürler** bölümünden azimut,
+   yükseklik, ölçek ve aynalama ile sahneye konur. Alt kenar zemine oturur, zemin gölgesi çizilir,
+   gece karartması ve mavi tonlama sahneyle birlikte uygulanır. Asker klipleri (yeşil perde
+   çekimi) buradan gelir.
+5. **Sis** (ufuktan yayılan katman), **bulut kararması**, **gece tonlaması**.
+6. **Helikopter** (yaklaşıyor → iniyor → yerde → kalkıyor; rotor tozu; gece konum ışığı).
+7. **Yağmur / kar** parçacıkları (rüzgâr eğimi), **efekt plakaları** (manifest `klipler`,
+   kategori `efekt`: panelden "patlama" gelince adı `patlama_*` olan kliplerden rastgele biri o
+   yönde oynar; `toz_*`, `uzak_patlama_*` aynı şekilde; plaka yoksa prosedürel **patlama** (ateş
+   topu, kıvılcım, duman), **toz/duman**), flaş + sarsıntı, **izli mermi** (seçilen duvardan, yön ve
+   sıklık panelden). Efekt plakaları kendi ışığını yaydığından gece karartılmaz.
 
 Ses (`src/ses.ts`, Web Audio): patlama (yakın/uzak, mesafeye göre zayıflatma + alçak geçiren),
 çatışma gürültüsü, mermi vızıltısı/sekmesi, Türkçe bağırma/çağırma (manifestte kayıt yoksa
@@ -61,16 +69,44 @@ yükseklik (1,6–1,7 m); 3 × 1920×1080 kareler yan yana birleştirilir (5760�
 son kare aynı (kusursuz döngü). Duvar ölçüleri ve açıları saha keşfinde netleşince `?fov=` ve
 kamera açıları buna göre güncellenir.
 
+### Alfa klipler (figür ve efekt plakaları)
+
+`manifest.json` → `klipler` bölümü; her kayıt:
+
+| Alan | Anlam |
+|---|---|
+| `dosya` | `icerik/` köküne göre yol (`klipler/asker_yarali_yerde.webm`) |
+| `kategori` | `figur` (panelde listelenir, gece karartılır, gölge), `efekt` (panel efektleriyle otomatik, karartılmaz), `hava`, `diger` |
+| `ad` | Panelde görünen başlık |
+| `genislikDerece` | Ölçek 1 iken duvarda kapladığı yatay açı; 1,7 m boyunda insan 12 m uzakta ≈ 8°, 25 m'de ≈ 4° |
+| `taban` | `zemin`: alt kenar zemine oturur (yükseklik eksiye indikçe yaklaşır); `merkez`: klibin ortası verilen yüksekliğe gelir |
+| `dongu` | `true` ise sürekli oynar; yoksa bitince kaldırılır (patlama gibi tek seferlik) |
+| `golge` | Zemin gölgesi (figürlerde varsayılan açık) |
+| `tip` | `video` (varsayılan) ya da `sprite` (`kareler`, `sutun`, `fps` ile PNG sayfası) |
+
+Biçim: **VP9 alpha WebM** (`-pix_fmt yuva420p`), alfa dışı bölge tamamen saydam, kare kenarında
+içerik bitmeli (kesik kenar duvarda dikdörtgen olarak görünür). Üretim ve çekim rehberi:
+`docs/fotogercekci-icerik-hatti.md` §2.5 ve §6. Depodaki `klipler/*_test_*.webm` dosyaları sentetik
+test içeriğidir (`araclar/test-klipleri-uret.sh`).
+
+Panelden gelen figür komutları (`POST /api/figur`, `{islem: oynat|durdur|temizle, klip, azimut,
+yukseklik, olcek, dongu, yansit}`) köprüde tutulur ve `figur` WebSocket mesajıyla tüm oynatıcılara
+gider; yeniden bağlanan oynatıcıya köprü aktif figürleri bağlantı anında yeniden gönderir (sahne
+kaldığı yerden devam eder). Senaryo adımı olarak figür komutu bir sonraki adımda eklenecek.
+
 ## Köprü ile sözleşme
 
 - Bağlanınca `{tip:"merhaba", rol:"oynatici"}` gönderir; köprü `baglanti.oynatici` sayacını artırır.
-- `durum` mesajı → tüm sahne parametreleri; `efekt` mesajı → anlık efekt (`EfektIstegi` + zaman).
+- `durum` mesajı → tüm sahne parametreleri; `efekt` mesajı → anlık efekt (`EfektIstegi` + zaman);
+  `figur` mesajı → figür komutu + aktif figür listesi.
 - Oynatıcı hiçbir komut göndermez; tek yönlü ve durumsuzdur, yeniden bağlanınca son durumu alır.
 
 ## Sınırlamalar (prototip)
 
 - Yer tutucu sahne stilizedir; kabul için gerçek döngüler (render/çekim) gerekir.
-- Patlama, toz ve helikopter prosedüreldir; alfa kanallı video katmanları manifestle gelince
-  onlar kullanılacak (kod yolu hazır: `katmanlar`).
+- Patlama, toz ve helikopter prosedüreldir; manifest `klipler` bölümüne gerçek VFX plakaları
+  (`patlama_*`, `toz_*`, `uzak_patlama_*`) konunca oynatıcı otomatik olarak onları kullanır.
+  Depodaki test klipleri sentetiktir, yalnızca mekanizmayı gösterir.
+- Figür klipleri sahneye panelden elle konur; senaryo adımı tipi olarak henüz yok.
 - Ses çıkışı stereo; 4 kanal yerleşimi saha donanımına göre eklenecek.
 - Tarayıcı: Chrome/Edge (kiosk bayrakları). 5760×1080'de 60 fps için RTX 4060 sınıfı yeterli.

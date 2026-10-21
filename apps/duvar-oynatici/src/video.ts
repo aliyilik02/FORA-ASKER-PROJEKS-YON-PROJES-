@@ -2,6 +2,7 @@
  * İçerik manifesti ve video döngü katmanı. Eşleşen klip varsa iki <video> ile çapraz geçişli
  * oynatılır ve tuvale çizilir; yoksa çağıran taraf parametrik sahneye düşer.
  */
+import type { KlipTanimi } from "./klipler";
 import type { SesManifesti } from "./ses";
 import type { Bolge, Mevsim } from "./tipler";
 import type { ZamanDilimi } from "./projeksiyon";
@@ -33,6 +34,8 @@ export interface Manifest {
   /** 5760x1080 düz döngüler (3 duvar yan yana). */
   dongu?: DonguKaydi[];
   katmanlar?: Record<string, string | null>;
+  /** Alfa kanallı klipler: efekt plakaları, figürler (asker/araç), sprite sayfaları. */
+  klipler?: Record<string, KlipTanimi>;
   sesler?: SesManifesti;
 }
 
