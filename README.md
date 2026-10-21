@@ -76,6 +76,7 @@ npm run typecheck
 
 - [Şartname analizi ve motor bağımsız çözüm yaklaşımı (hibrit öneri)](docs/sartname-analizi-ve-yaklasim.md)
 - [Duvar Oynatıcı: çalıştırma, katmanlar, içerik ekleme](docs/duvar-oynatici.md)
+- [Fotogerçekçi içerik hattı: 360° panorama biçimi, yapay zekâ / UE5 / gerçek çekim, VFX plakaları, FFmpeg tarifleri](docs/fotogercekci-icerik-hatti.md)
 - [Mimari](docs/mimari.md)
 - [Unreal Engine kurulumu ve Remote Control preset](docs/unreal-kurulum.md)
 - [Tek ekranı 3 projeksiyona yayma](docs/3-projeksiyon-tek-ekran.md)

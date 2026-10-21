@@ -18,9 +18,10 @@ import { araziCiz, araziGuncelle, ufukY as bolgeUfukY } from "./sahne/arazi";
 import { gokyuzuCiz, gokyuzuGuncelle, gokyuzuRenkleri } from "./sahne/gokyuzu";
 import { HavaSistemi, kararmaCiz, sisCiz } from "./sahne/hava";
 import { oda2OnPlanCiz } from "./sahne/oda2";
+import { PanoramaKatmani } from "./panorama";
 import { SesMotoru } from "./ses";
 import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type EfektIstegi, type SimulasyonDurumu, varsayilanDurum } from "./tipler";
-import { VideoKatmani } from "./video";
+import { panoramaSec, VideoKatmani } from "./video";
 
 const tuval = document.getElementById("tuval") as HTMLCanvasElement;
 const ctx = tuval.getContext("2d", { alpha: false })!;
@@ -46,6 +47,19 @@ const efektler = new EfektSistemi();
 const heli = new Helikopter();
 const hava = new HavaSistemi();
 const video = new VideoKatmani("icerik/"); // belge tabanına göreli: /oynatici/icerik/ veya dev'de /icerik/
+const panorama = new PanoramaKatmani();
+/** ?panorama=<url> ile hızlı deneme: manifestten bağımsız, her bölgede bu 360° kaynak gösterilir. */
+const testPanorama = params.get("panorama");
+const testYaw = Number(params.get("yaw") ?? 0);
+
+function panoramayiGuncelle() {
+  if (testPanorama) {
+    panorama.sec({ dosya: testPanorama, yawKaydirma: testYaw }, video.kok);
+    return;
+  }
+  const kayit = panoramaSec(video.manifest, durum.bolge, durum.ortam.mevsim, zamanDilimi(durum.ortam.saat));
+  panorama.sec(kayit ? { dosya: kayit.dosya, tip: kayit.tip, yawKaydirma: kayit.yawKaydirma, yukseklikKaydirma: kayit.yukseklikKaydirma } : null, video.kok);
+}
 
 function boyutlandir() {
   const vw = innerWidth;
@@ -113,6 +127,7 @@ function durumUygula(d: SimulasyonDurumu) {
   heli.durumAyarla(d.oda === "oda2" ? d.oda2.helikopter : "yok");
   ses.ortamAyarla(d.ortam);
   video.secim(d.bolge, d.ortam.mevsim, zamanDilimi(d.ortam.saat));
+  panoramayiGuncelle();
 }
 
 const kopru = new KopruBaglantisi(
@@ -177,6 +192,7 @@ void ses.etkinlestir().then((tamam) => {
 void video.yukle().then((m) => {
   if (m.sesler) ses.manifestAyarla(m.sesler, `${video.kok}sesler/`);
   video.secim(durum.bolge, durum.ortam.mevsim, zamanDilimi(durum.ortam.saat));
+  panoramayiGuncelle();
 });
 
 kopru.baslat();
@@ -213,13 +229,14 @@ function kare(simdi: number) {
   if (s > 0.5) ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
   const gok = gokyuzuRenkleri(durum.ortam);
 
-  const videoVar = video.aktif && video.ciz(ctx, W, H);
+  // Arka plan önceliği: 360° panorama → düz video döngüsü → parametrik sahne
+  const arkaPlanVar = (panorama.aktif && panorama.ciz(ctx, yerlesimler, W, H)) || (video.aktif && video.ciz(ctx, W, H));
   for (const y of yerlesimler) {
     ctx.save();
     ctx.beginPath();
     ctx.rect(y.x, 0, y.genislik, H);
     ctx.clip();
-    if (!videoVar) {
+    if (!arkaPlanVar) {
       gokyuzuCiz(ctx, y, ufukYy, durum.ortam, gok);
       araziCiz(ctx, y, H, durum.bolge, durum.ortam, gok);
     }
@@ -248,7 +265,7 @@ function kare(simdi: number) {
         `${durum.oda === "oda1" ? "Oda 1" : "Oda 2"} · ${BOLGE_ETIKETLERI[durum.bolge]} · ${durum.ortam.mevsim} · saat ${durum.ortam.saat.toFixed(2)} (${zamanDilimi(durum.ortam.saat)}) · ışık ${gok.isik.toFixed(2)}`,
         `bulut ${durum.ortam.bulut.toFixed(2)} · sis ${durum.ortam.sis.toFixed(2)} · yağış ${durum.ortam.yagis} · rüzgâr ${durum.ortam.ruzgarSiddeti.toFixed(2)} @ ${durum.ortam.ruzgarYonu}°`,
         `izli mermi ${durum.izliMermi.aktif ? `açık (duvar ${durum.izliMermi.cikisNoktasi}, ${durum.izliMermi.yon}°, ${durum.izliMermi.siklik}/sn)` : "kapalı"} · oda2 ${GUVENLI_ALAN_ETIKETLERI[durum.oda2.guvenliAlan]} · helikopter ${HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}`,
-        `içerik: ${video.aktif ? "video döngüsü" : "parametrik yer tutucu"} · fov ${duvarlar[0].fov}° · H hud · K kalibrasyon · F tam ekran · M sessiz · 1/2/3 test`,
+        `içerik: ${panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""} · fov ${duvarlar[0].fov}° · H hud · K kalibrasyon · F tam ekran · M sessiz · 1/2/3 test`,
       ],
       H,
     );

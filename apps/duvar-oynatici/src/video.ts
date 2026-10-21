@@ -14,10 +14,37 @@ export interface DonguKaydi {
   _ornek?: boolean;
 }
 
+export interface PanoramaKaydiManifest {
+  bolge: Bolge;
+  /** Belirtilmezse tüm mevsimler. */
+  mevsim?: Mevsim | "yaz" | "kis";
+  /** Belirtilmezse tüm zaman dilimleri. */
+  zaman?: ZamanDilimi;
+  dosya: string;
+  tip?: "resim" | "video";
+  yawKaydirma?: number;
+  yukseklikKaydirma?: number;
+  _ornek?: boolean;
+}
+
 export interface Manifest {
+  /** 360° equirectangular kaynaklar (öncelikli): gerçek çekim, yapay zekâ panoraması veya motor render'ı. */
+  panorama?: PanoramaKaydiManifest[];
+  /** 5760x1080 düz döngüler (3 duvar yan yana). */
   dongu?: DonguKaydi[];
   katmanlar?: Record<string, string | null>;
   sesler?: SesManifesti;
+}
+
+/** Panorama eşleşmesi: bölge zorunlu; mevsim/zaman verilmişse eşleşmeli; en özel kayıt kazanır. */
+export function panoramaSec(manifest: Manifest, bolge: Bolge, mevsim: Mevsim, zaman: ZamanDilimi): PanoramaKaydiManifest | null {
+  const m: "yaz" | "kis" = mevsim === "kis" ? "kis" : "yaz";
+  const adaylar = (manifest.panorama ?? []).filter(
+    (p) => !p._ornek && p.bolge === bolge && (p.mevsim === undefined || p.mevsim === mevsim || p.mevsim === m) && (p.zaman === undefined || p.zaman === zaman),
+  );
+  if (adaylar.length === 0) return null;
+  const puan = (p: PanoramaKaydiManifest) => (p.mevsim ? 2 : 0) + (p.zaman ? 1 : 0);
+  return adaylar.sort((a, b) => puan(b) - puan(a))[0];
 }
 
 interface Katman {

@@ -30,8 +30,12 @@ görüntü kesintisiz devam eder (`src/projeksiyon.ts`, testleri `projeksiyon.te
 
 Katmanlar (arkadan öne):
 
+0. **360° panorama** (manifest `panorama`, en öncelikli): equirectangular resim veya video,
+   WebGL ile her duvara doğru perspektif (`src/panorama.ts`). Gerçek çekim, yapay zekâ panoraması
+   ve motor render'ı için ortak yol; `?panorama=dosya&yaw=0` ile anında deneme.
+   Üretim hattı: `docs/fotogercekci-icerik-hatti.md`.
 1. **Video döngüsü** (manifestte klip varsa) – 5760×1080, 3 duvar yan yana; çapraz geçişli.
-2. Yoksa **parametrik sahne**: gökyüzü (saat → renk, güneş/ay/yıldız, bulut örtüsü), arazi
+2. Yoksa **parametrik sahne** (yalnızca geliştirme/yer tutucu): gökyüzü (saat → renk, güneş/ay/yıldız, bulut örtüsü), arazi
    (bölge ön ayarı: tepe profili, zemin, nesneler; mevsim paleti; rüzgârla salınan ot).
 3. **Oda 2 ön planı**: operasyonel bölge (kum torbası hattı), kaya/sütre, çukur, meskûn mahal içi
    (pencere ve kapıdan dışarısı görünür).
