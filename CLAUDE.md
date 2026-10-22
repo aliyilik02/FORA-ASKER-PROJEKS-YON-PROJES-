@@ -110,11 +110,17 @@ belirteçleri ve desenler `apps/kontrol-paneli/.interface-design/system.md`; yen
 Kullanıcı UE öğrenmeye vakit ayıramıyor; "görsel şölen" için tam yetki verdi (ücretsiz içerik indir,
 otonom çalış). Donanım yok; dizüstü GTX 1650 + Iris Xe (Chrome Iris Xe kullanıyor).
 
+**Çatışma ve birlik (22 Ekim):** durum modelinde `catisma` (düşman yönü, şiddet, dost ateşi) ve
+`oda2.helikopterYonu`; oynatıcıda `sahne3b/catisma.ts` (3B izli mermi, çarpma/sekme, dost ateşi, uzak
+parıltı/patlama); figürler panelden yer seçilmeden hazır mevzi/tank noktalarına (`birlikNoktasiSec`,
+boş nokta) yerleşir; panelde "Birlik çağır". Tank modelleri (CC-BY / CC0) manifestte.
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 1. Poly Haven panoramaları (23) için yerleşim planı + `yawKaydirma`; güneş tahmini ve gece karartması
    gözle kontrol. Oda 2 için 3B sütre/kum torbası modelleri (2B ön plan 3B'de kapalı).
-2. Daha gerçekçi asker: Mixamo "Swat" + Rifle Idle/Walk/Run/Crouch/Crawl/Injured (Blender → GLB,
+2. Asker ateş/siper animasyonu (Mixamo Rifle klipleri; hesap gerekir) ve Oda 2 için 3B sütre/kum torbası;
+   daha gerçekçi asker: Mixamo "Swat" + Rifle Idle/Walk/Run/Crouch/Crawl/Injured (Blender → GLB,
    Mixamo iskeleti) ya da yeşil perde çekimi (docs §2.5). Yaralı yerde / sürünen figür.
 3. VFX plakaları (gerçek çekim, alfa) ve helikopter inişi için 3B toz + ses ayarı; izli mermiyi 3B'ye taşıma.
 4. Senaryo adımı tipi olarak figür komutu; 4 kanal ses; Türkçe bağırma kaydı; U duvar ölçüleri → `?fov=`.
