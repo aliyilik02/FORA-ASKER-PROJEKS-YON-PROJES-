@@ -3159,53 +3159,6 @@
       "_not": "Sprite sayfası örneği (8 sütun × 8 satır = 64 kare); video yerine kare dizisi gerektiğinde."
     },
     "_modeller_aciklama": "tip \"model\": glTF/GLB, 3B sahne katmanında panoramanın ışığıyla çizilir. animasyon: klip adı; boy: hedef boy (m); hiz: yana yürüme (m/s, yansıt=sola); mesafe: panelden yükseklik gelmezse (m); rotor: helikopter rotor düğümleri. \"helikopter\" adlı model Oda 2 helikopteridir. silah: true → çatışmada düşmana döner ve ateşle karşılık verir.",
-    "asker_bekleyen": {
-      "dosya": "modeller/asker_mixamo.glb",
-      "tip": "model",
-      "kategori": "figur",
-      "ad": "Asker – bekliyor (3B)",
-      "animasyon": "Idle",
-      "boy": 1.8,
-      "mesafe": 14,
-      "dongu": true,
-      "genislikDerece": 4,
-      "_kaynak": "three.js examples Soldier.glb (Mixamo karakteri; Mixamo lisansı projede kullanıma izin verir)",
-      "silah": true,
-      "yerlesim": [
-        "asker",
-        "figur"
-      ]
-    },
-    "asker_yuruyen": {
-      "dosya": "modeller/asker_mixamo.glb",
-      "tip": "model",
-      "kategori": "figur",
-      "ad": "Asker – yürüyor (3B, sağa; yansıt = sola)",
-      "animasyon": "Walk",
-      "boy": 1.8,
-      "hiz": 1.4,
-      "mesafe": 16,
-      "dongu": true,
-      "genislikDerece": 4,
-      "yerlesim": [
-        "figur"
-      ]
-    },
-    "asker_kosan": {
-      "dosya": "modeller/asker_mixamo.glb",
-      "tip": "model",
-      "kategori": "figur",
-      "ad": "Asker – koşuyor (3B, sağa; yansıt = sola)",
-      "animasyon": "Run",
-      "boy": 1.8,
-      "hiz": 4.5,
-      "mesafe": 14,
-      "dongu": true,
-      "genislikDerece": 4,
-      "yerlesim": [
-        "figur"
-      ]
-    },
     "asker_kamuflaj": {
       "dosya": "modeller/asker_kamuflaj.glb",
       "tip": "model",
@@ -3221,6 +3174,155 @@
         "asker",
         "figur"
       ]
+    },
+    "asker_bekleyen": {
+      "dosya": "modeller/asker_swat.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Asker – mevzide, tüfekli (3B)",
+      "animasyon": "Idle_Gun",
+      "animasyonlar": {
+        "ates": "Idle_Gun_Shoot"
+      },
+      "silahModeli": {
+        "dosya": "modeller/tufek.glb",
+        "kemik": "Wrist.R",
+        "konum": [
+          0,
+          0.05,
+          0.12
+        ],
+        "donus": [
+          0,
+          -90,
+          0
+        ],
+        "boy": 0.85
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ],
+      "genislikDerece": 4,
+      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt"
+    },
+    "asker_taktik": {
+      "dosya": "modeller/asker_taktik.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Asker – taktik yelek, tüfekli (3B)",
+      "animasyon": "Idle_Gun",
+      "animasyonlar": {
+        "ates": "Idle_Gun_Shoot"
+      },
+      "silahModeli": {
+        "dosya": "modeller/tufek.glb",
+        "kemik": "Wrist.R",
+        "konum": [
+          0,
+          0.05,
+          0.12
+        ],
+        "donus": [
+          0,
+          -90,
+          0
+        ],
+        "boy": 0.85
+      },
+      "boy": 1.75,
+      "mesafe": 14,
+      "dongu": true,
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ],
+      "genislikDerece": 4,
+      "_kaynak": "Quaternius Soldier (Poly Pizza, CC-BY 3.0) - LISANS_asker_quaternius.txt"
+    },
+    "asker_kosan": {
+      "dosya": "modeller/asker_swat.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Asker – koşarak ateş ediyor (3B, sağa; yansıt = sola)",
+      "animasyon": "Run_Shoot",
+      "silahModeli": {
+        "dosya": "modeller/tufek.glb",
+        "kemik": "Wrist.R",
+        "konum": [
+          0,
+          0.05,
+          0.12
+        ],
+        "donus": [
+          0,
+          -90,
+          0
+        ],
+        "boy": 0.85
+      },
+      "boy": 1.8,
+      "hiz": 4.5,
+      "mesafe": 14,
+      "dongu": true,
+      "yerlesim": [
+        "figur"
+      ],
+      "genislikDerece": 4,
+      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt"
+    },
+    "asker_yuruyen": {
+      "dosya": "modeller/asker_swat.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Asker – yürüyor (3B, sağa; yansıt = sola)",
+      "animasyon": "Walk",
+      "silahModeli": {
+        "dosya": "modeller/tufek.glb",
+        "kemik": "Wrist.R",
+        "konum": [
+          0,
+          0.05,
+          0.12
+        ],
+        "donus": [
+          0,
+          -90,
+          0
+        ],
+        "boy": 0.85
+      },
+      "boy": 1.8,
+      "hiz": 1.4,
+      "mesafe": 16,
+      "dongu": true,
+      "yerlesim": [
+        "figur"
+      ],
+      "genislikDerece": 4,
+      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt"
+    },
+    "asker_zirhli": {
+      "dosya": "modeller/asker_mixamo.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Asker – zırhlı (eski model, 3B)",
+      "animasyon": "Idle",
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ],
+      "genislikDerece": 4,
+      "_kaynak": "three.js examples Soldier.glb (Mixamo)"
     },
     "helikopter": {
       "dosya": "modeller/helikopter/scene.gltf",
@@ -3311,5 +3413,239 @@
       "yagmur": "ortam_yagmur.ogg"
     },
     "_kaynak": "Mixkit Free lisansı (ticari kullanım serbest): patlama, uzak patlama, bağırma (İngilizce yer tutucu; Türkçe kayıt gelecek), helikopter rotoru, ortam döngüleri (bölge adı / gece / kis / yagmur anahtarları). Silah: OpenGameArt Tabasco CC0 (tek atış; seri atış oynatıcıda art arda çalınır)."
+  },
+  "sutreler": {
+    "_aciklama": "Oda 2 sütre dizilimleri (3B, sahne3b/sutre.ts): guvenliAlan → eşyalar. Konum sahne koordinatında (azimut 0 = orta duvar, mesafe m), boy = hedef yükseklik (m); yonDerece modelin kendi dönüşü. Lisanslar modeller/sutre/LISANS_sutre.txt.",
+    "operasyonel_bolge": [
+      {
+        "dosya": "modeller/sutre/kum_torbasi_siper_quaternius.glb",
+        "azimut": -28,
+        "mesafe": 5.6,
+        "boy": 1.1,
+        "yonDerece": 0
+      },
+      {
+        "dosya": "modeller/sutre/kum_torbasi_siper_quaternius.glb",
+        "azimut": 0,
+        "mesafe": 5.2,
+        "boy": 1.1,
+        "yonDerece": 0
+      },
+      {
+        "dosya": "modeller/sutre/kum_torbasi_siper_quaternius.glb",
+        "azimut": 28,
+        "mesafe": 5.6,
+        "boy": 1.1,
+        "yonDerece": 0
+      },
+      {
+        "dosya": "modeller/sutre/kum_torbasi_siper_kucuk_quaternius.glb",
+        "azimut": -50,
+        "mesafe": 6.4,
+        "boy": 0.9,
+        "yonDerece": 20
+      },
+      {
+        "dosya": "modeller/sutre/kum_torbasi_siper_kucuk_quaternius.glb",
+        "azimut": 50,
+        "mesafe": 6.4,
+        "boy": 0.9,
+        "yonDerece": -20
+      },
+      {
+        "dosya": "modeller/sutre/jersey_bariyer_jtoastie.glb",
+        "azimut": -75,
+        "mesafe": 7.5,
+        "boy": 0.85,
+        "yonDerece": 10,
+        "renk": "#8d8a80"
+      },
+      {
+        "dosya": "modeller/sutre/jersey_bariyer_jtoastie.glb",
+        "azimut": 75,
+        "mesafe": 7.5,
+        "boy": 0.85,
+        "yonDerece": -10,
+        "renk": "#8d8a80"
+      },
+      {
+        "dosya": "modeller/sutre/muhimmat_kutusu_pichuliru.glb",
+        "azimut": -8,
+        "mesafe": 4.3,
+        "boy": 0.27,
+        "yonDerece": 30
+      },
+      {
+        "dosya": "modeller/sutre/muhimmat_kutusu_pichuliru.glb",
+        "azimut": -11,
+        "mesafe": 4.5,
+        "boy": 0.27,
+        "yonDerece": -15
+      },
+      {
+        "dosya": "modeller/sutre/sandik_ahsap_quaternius.glb",
+        "azimut": 14,
+        "mesafe": 4.6,
+        "boy": 0.6,
+        "yonDerece": 15
+      },
+      {
+        "dosya": "modeller/sutre/muhimmat_sandigi_ww2_pelley.glb",
+        "azimut": 20,
+        "mesafe": 4.4,
+        "boy": 0.45,
+        "yonDerece": -25
+      }
+    ],
+    "kaya_sutre_arkasi": [
+      {
+        "dosya": "modeller/sutre/kaya_yuzeyi_polyhaven_rock_face_01_1k.glb",
+        "azimut": 0,
+        "mesafe": 6.2,
+        "boy": 2.2,
+        "yonDerece": 0
+      },
+      {
+        "dosya": "modeller/sutre/kaya_buyuk_quaternius.glb",
+        "azimut": -38,
+        "mesafe": 7.5,
+        "boy": 2.6,
+        "yonDerece": 30,
+        "renk": "#7d7466"
+      },
+      {
+        "dosya": "modeller/sutre/kaya_google_poly.glb",
+        "azimut": 30,
+        "mesafe": 5.4,
+        "boy": 1.2,
+        "yonDerece": 0
+      },
+      {
+        "dosya": "modeller/sutre/kaya_col_garland.glb",
+        "azimut": -16,
+        "mesafe": 4.6,
+        "boy": 1,
+        "yonDerece": 45
+      },
+      {
+        "dosya": "modeller/sutre/kaya_col_garland.glb",
+        "azimut": 52,
+        "mesafe": 6.8,
+        "boy": 1.4,
+        "yonDerece": -30
+      },
+      {
+        "dosya": "modeller/sutre/kaya_google_poly.glb",
+        "azimut": -62,
+        "mesafe": 7.2,
+        "boy": 1.6,
+        "yonDerece": 60
+      }
+    ],
+    "cukur": [
+      {
+        "dosya": "modeller/sutre/toprak_yigini_kenney_detail_dirt_large.glb",
+        "azimut": -30,
+        "mesafe": 4.4,
+        "boy": 0.75,
+        "yonDerece": 0,
+        "renk": "#6b5a44"
+      },
+      {
+        "dosya": "modeller/sutre/toprak_yigini_kenney_detail_dirt_large.glb",
+        "azimut": -15,
+        "mesafe": 4.1,
+        "boy": 0.7,
+        "yonDerece": 40,
+        "renk": "#6b5a44"
+      },
+      {
+        "dosya": "modeller/sutre/toprak_yigini_kenney_detail_dirt_large.glb",
+        "azimut": 0,
+        "mesafe": 4,
+        "boy": 0.8,
+        "yonDerece": 80,
+        "renk": "#6b5a44"
+      },
+      {
+        "dosya": "modeller/sutre/toprak_yigini_kenney_detail_dirt_large.glb",
+        "azimut": 15,
+        "mesafe": 4.1,
+        "boy": 0.7,
+        "yonDerece": 120,
+        "renk": "#6b5a44"
+      },
+      {
+        "dosya": "modeller/sutre/toprak_yigini_kenney_detail_dirt_large.glb",
+        "azimut": 30,
+        "mesafe": 4.4,
+        "boy": 0.75,
+        "yonDerece": 160,
+        "renk": "#6b5a44"
+      },
+      {
+        "dosya": "modeller/sutre/toprak_tepe_kenney_tile_hill.glb",
+        "azimut": -48,
+        "mesafe": 5.2,
+        "boy": 0.9,
+        "yonDerece": 0,
+        "renk": "#6b5a44"
+      },
+      {
+        "dosya": "modeller/sutre/toprak_tepe_kenney_tile_hill.glb",
+        "azimut": 48,
+        "mesafe": 5.2,
+        "boy": 0.9,
+        "yonDerece": 0,
+        "renk": "#6b5a44"
+      },
+      {
+        "dosya": "modeller/sutre/kum_torbasi_yigini_jtoastie.glb",
+        "azimut": 6,
+        "mesafe": 3.8,
+        "boy": 0.7,
+        "yonDerece": 20
+      }
+    ],
+    "meskun_mahal_ici": [
+      {
+        "dosya": "modeller/sutre/jersey_bariyer_jtoastie.glb",
+        "azimut": -20,
+        "mesafe": 4.2,
+        "boy": 0.85,
+        "yonDerece": 0,
+        "renk": "#8d8a80"
+      },
+      {
+        "dosya": "modeller/sutre/jersey_bariyer_jtoastie.glb",
+        "azimut": 0,
+        "mesafe": 4,
+        "boy": 0.85,
+        "yonDerece": 0,
+        "renk": "#8d8a80"
+      },
+      {
+        "dosya": "modeller/sutre/jersey_bariyer_jtoastie.glb",
+        "azimut": 20,
+        "mesafe": 4.2,
+        "boy": 0.85,
+        "yonDerece": 0,
+        "renk": "#8d8a80"
+      },
+      {
+        "dosya": "modeller/sutre/kum_torbasi_yigini_jtoastie.glb",
+        "azimut": -40,
+        "mesafe": 4.8,
+        "boy": 0.7,
+        "yonDerece": 0
+      },
+      {
+        "dosya": "modeller/sutre/sandik_ahsap_quaternius.glb",
+        "azimut": 36,
+        "mesafe": 4.6,
+        "boy": 0.6,
+        "yonDerece": 20
+      }
+    ]
   }
 }

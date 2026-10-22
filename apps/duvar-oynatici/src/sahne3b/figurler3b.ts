@@ -34,6 +34,10 @@ export interface ModelTanimi {
   /** Kule ve namlu düğüm adları (glTF). Namlu kuleye bağlanır, kule düşmana döner. */
   kule?: string;
   namlu?: string;
+  /** Duruma göre klipler: çatışmada `ates` (nişan/atış döngüsü), aksi hâlde `animasyon`. Kısa ad yeter ("Idle_Gun_Shoot"). */
+  animasyonlar?: { ates?: string };
+  /** Elde silah: ayrı glTF, iskeletteki kemiğe bağlanır. konum metre, donus derece, boy = silah uzunluğu (m). */
+  silahModeli?: { dosya: string; kemik: string; konum?: [number, number, number]; donus?: [number, number, number]; boy?: number };
 }
 
 export interface AgirSilah {
@@ -70,6 +74,15 @@ interface Aktif {
   namlu: THREE.Object3D | null;
   /** Kule yaw ofseti: a=0 iken kulenin dünya yaw'ı ve işaret (deneysel ölçülür). */
   kuleAci: number;
+  eylemBekle: THREE.AnimationAction | null;
+  eylemAtes: THREE.AnimationAction | null;
+  atesPozu: boolean;
+}
+
+/** Klip adı tam ("CharacterArmature|Idle_Gun") ya da kısa ("Idle_Gun") eşleşir. */
+function klipBul(klipler: THREE.AnimationClip[], ad: string | undefined): THREE.AnimationClip | null {
+  if (!ad) return null;
+  return klipler.find((k) => k.name === ad || k.name.endsWith("|" + ad) || k.name.endsWith("/" + ad)) ?? null;
 }
 
 export class FigurKatmani {
@@ -219,15 +232,49 @@ export class FigurKatmani {
     sarmal.rotation.y = hiz > 0 ? yanaDonus(s.azimut, sola) : izleyiciyeDonus(s.azimut);
 
     let karistirici: THREE.AnimationMixer | null = null;
+    let eylemBekle: THREE.AnimationAction | null = null;
+    let eylemAtes: THREE.AnimationAction | null = null;
     const animasyonlar = gltf.animations ?? [];
     if (animasyonlar.length && tanim.animasyon !== "yok") {
-      const klip = (tanim.animasyon && THREE.AnimationClip.findByName(animasyonlar, tanim.animasyon)) || animasyonlar[0];
+      const klip = klipBul(animasyonlar, tanim.animasyon) ?? animasyonlar[0];
       karistirici = new THREE.AnimationMixer(nesne);
-      const eylem = karistirici.clipAction(klip);
+      eylemBekle = karistirici.clipAction(klip);
       const dongu = s.dongu ?? tanim.dongu ?? true;
-      eylem.setLoop(dongu ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
-      eylem.clampWhenFinished = true;
-      eylem.play();
+      eylemBekle.setLoop(dongu ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
+      eylemBekle.clampWhenFinished = true;
+      eylemBekle.play();
+      const atesKlip = klipBul(animasyonlar, tanim.animasyonlar?.ates);
+      if (atesKlip) {
+        eylemAtes = karistirici.clipAction(atesKlip);
+        eylemAtes.setLoop(THREE.LoopRepeat, Infinity);
+        eylemAtes.timeScale = 0.9 + Math.random() * 0.2;
+      }
+    }
+    // Elde silah: kemiğe bağla, metre cinsinden konum/boy → kemik yerel birimine çevir
+    if (tanim.silahModeli) {
+      const sm = tanim.silahModeli;
+      const silahUrl = /^(https?:|data:|blob:|\/)/.test(sm.dosya) ? sm.dosya : kok + sm.dosya;
+      const kemik = nesne.getObjectByName(sm.kemik);
+      const silahGltf = await this.yukle(silahUrl).catch(() => null);
+      if (kemik && silahGltf && !this.aktifler.some((a) => a.id === s.id)) {
+        const silah = silahGltf.scene.clone(true);
+        silah.updateMatrixWorld(true);
+        const kendiBoy = new THREE.Box3().setFromObject(silah).getSize(new THREE.Vector3());
+        const enUzun = Math.max(kendiBoy.x, kendiBoy.y, kendiBoy.z) || 1;
+        nesne.updateMatrixWorld(true);
+        const kemikOlcek = kemik.getWorldScale(new THREE.Vector3()).x || 1; // nesne-uzayında kemik ölçeği
+        const hedefBoy = (sm.boy ?? 0.85) / olcek; // nesne-uzayında metre
+        silah.scale.setScalar(hedefBoy / enUzun / kemikOlcek);
+        const k = sm.konum ?? [0, 0, 0];
+        silah.position.set(k[0] / olcek / kemikOlcek, k[1] / olcek / kemikOlcek, k[2] / olcek / kemikOlcek);
+        const d = sm.donus ?? [0, 0, 0];
+        silah.rotation.set(radyan(d[0]), radyan(d[1]), radyan(d[2]));
+        silah.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh) m.castShadow = true;
+        });
+        kemik.add(silah);
+      }
     }
     // Kule / namlu: namlu kuleye bağlanır (dünya dönüşümü korunarak), kule düşmana döner
     let kule: THREE.Object3D | null = null;
@@ -255,8 +302,23 @@ export class FigurKatmani {
       kuleTemel: kule ? kule.quaternion.clone() : null,
       namlu,
       kuleAci: 0,
+      eylemBekle,
+      eylemAtes,
+      atesPozu: false,
     });
     return true;
+  }
+
+  /** Çatışma durumuna göre bekleme ↔ ateş klipleri arasında yumuşak geçiş. */
+  private pozuGuncelle(a: Aktif) {
+    if (!a.eylemAtes || !a.eylemBekle) return;
+    const istenen = a.silah && a.hiz === 0 && this.dusmanAzimutu !== null;
+    if (istenen === a.atesPozu) return;
+    a.atesPozu = istenen;
+    const from = istenen ? a.eylemBekle : a.eylemAtes;
+    const to = istenen ? a.eylemAtes : a.eylemBekle;
+    to.reset().setEffectiveWeight(1).play();
+    from.crossFadeTo(to, 0.35, false);
   }
 
   durdur(id: string) {
@@ -271,6 +333,7 @@ export class FigurKatmani {
 
   guncelle(dt: number) {
     for (const a of this.aktifler) {
+      this.pozuGuncelle(a);
       a.karistirici?.update(dt);
       // Kuleli ağır silah: gövde yerinde, kule düşmana döner
       if (a.agirSilah && a.kule) this.kuleyiDondur(a, dt);

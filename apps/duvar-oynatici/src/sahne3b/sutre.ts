@@ -75,7 +75,9 @@ export class SutreKatmani {
           const boyut = kutu.getSize(new THREE.Vector3());
           const olcek = e.boy && boyut.y > 1e-4 ? e.boy / boyut.y : 1;
           nesne.scale.setScalar(olcek);
-          nesne.position.y = -kutu.min.y * olcek;
+          // Taban zemine, x/z merkezi yerleşim noktasına (orijinden uzak modeller için)
+          const merkez = kutu.getCenter(new THREE.Vector3());
+          nesne.position.set(-merkez.x * olcek, -kutu.min.y * olcek, -merkez.z * olcek);
           const sarmal = new THREE.Group();
           sarmal.add(nesne);
           sarmal.position.copy(yerKonumu(e.azimut, e.mesafe));
