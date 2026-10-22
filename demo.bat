@@ -42,11 +42,44 @@ if errorlevel 1 (
 )
 
 :baslat
+rem Kopru zaten calisiyorsa ikinci bir kopru baslatma; "yeniden" verildiyse eskisini durdurup yeni derlemeyi yukle.
+where curl >nul 2>nul
+if errorlevel 1 goto eskiBaslat
+curl -s -o NUL -m 2 http://localhost:4000/api/durum >nul 2>nul
+if errorlevel 1 goto kopruBaslat
+if "%~1"=="yeniden" goto kopruYenidenBaslat
+echo Kopru zaten calisiyor - port 4000 yanit veriyor, yeni kopru baslatilmadi.
+goto tarayici
+
+:kopruYenidenBaslat
+echo Calisan kopru durduruluyor - yeni derleme yuklenecek...
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":4000 " ^| findstr LISTENING') do taskkill /PID %%p /F >nul 2>nul
+timeout /t 2 /nobreak >nul
+
+:kopruBaslat
+echo Kopru sunucusu baslatiliyor - port 4000...
+start "Duvar Simulasyonu - Kopru 4000" cmd /k "cd /d "%~dp0" && npm start"
+set /a DENEME=0
+:bekle
+timeout /t 1 /nobreak >nul
+curl -s -o NUL -m 2 http://localhost:4000/api/durum >nul 2>nul
+if not errorlevel 1 goto hazir
+set /a DENEME+=1
+if %DENEME% lss 25 goto bekle
+echo [UYARI] Kopru 25 saniyede yanit vermedi - "Kopru 4000" penceresindeki hataya bakin.
+goto tarayici
+
+:hazir
+echo Kopru hazir.
+goto tarayici
+
+:eskiBaslat
 echo Kopru sunucusu baslatiliyor - port 4000...
 start "Duvar Simulasyonu - Kopru 4000" cmd /k "cd /d "%~dp0" && npm start"
 echo Sunucu bekleniyor...
 timeout /t 4 /nobreak >nul
 
+:tarayici
 echo Kontrol paneli:  http://localhost:4000
 echo Duvar oynatici:  http://localhost:4000/oynatici/?hud=1
 start "" "http://localhost:4000"
@@ -55,6 +88,7 @@ start "" "http://localhost:4000/oynatici/?hud=1"
 echo.
 echo Oynatici penceresinde: H bilgi katmani, K kalibrasyon, F tam ekran, M sessiz.
 echo Ayni agdaki tablet icin panel: http://^<bu-bilgisayarin-ip^>:4000
-echo Durdurmak icin "Kopru 4000" penceresini kapatin. Yeniden derlemek icin: demo.bat yeniden
+echo Durdurmak icin "Kopru 4000" penceresini kapatin.
+echo Yeniden derleyip kopruyu yeni kodla baslatmak icin: demo.bat yeniden
 timeout /t 10 >nul
 endlocal
