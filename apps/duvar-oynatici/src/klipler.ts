@@ -14,7 +14,17 @@ export interface KlipTanimi {
   dosya: string;
   kategori?: "efekt" | "figur" | "hava" | "diger";
   ad?: string;
-  tip?: "video" | "sprite";
+  /** video / sprite: 2B klip katmanı; model: glTF, 3B sahne katmanı (sahne3b/figurler3b.ts). */
+  tip?: "video" | "sprite" | "model";
+  /** 3B model alanları (tip "model"): animasyon adı, hedef boy (m), yön düzeltmesi, yana hız (m/s), varsayılan mesafe, yatık. */
+  animasyon?: string;
+  boy?: number;
+  yonDerece?: number;
+  hiz?: number;
+  mesafe?: number;
+  yatik?: boolean;
+  /** Helikopter modeli: döndürülecek rotor düğüm adları (ilki ana rotor). */
+  rotor?: string[];
   /** Klibin kapladığı yatay görsel açı (derece), ölçek 1 için. */
   genislikDerece: number;
   /** Kayıt noktası: zemin (alt kenar) veya merkez. */
@@ -26,6 +36,8 @@ export interface KlipTanimi {
   fps?: number;
   /** Zemin gölgesi çizilsin mi (figürler için). */
   golge?: boolean;
+  /** Yalnızca 3B sahne yokken kullanılacak yedek (ör. sentetik test plakası). */
+  yedek?: boolean;
   _ornek?: boolean;
 }
 
@@ -71,9 +83,18 @@ export class KlipKatmani {
     return ad in this.tanimlar;
   }
 
-  /** Verilen önekle başlayan kliplerden rastgele biri (ör. "patlama" → patlama_toprak_2). */
-  rastgele(onek: string): string | null {
-    const adaylar = Object.keys(this.tanimlar).filter((a) => a === onek || a.startsWith(onek + "_"));
+  tanim(ad: string): KlipTanimi | undefined {
+    return this.tanimlar[ad];
+  }
+
+  /** Tüm tanımlar (3B modellerin ön yüklemesi için). */
+  get tumTanimlar(): Record<string, KlipTanimi> {
+    return this.tanimlar;
+  }
+
+  /** Verilen önekle başlayan kliplerden rastgele biri (ör. "patlama" → patlama_toprak_2). `yedekleriAtla`: "yedek" işaretliler hariç. */
+  rastgele(onek: string, yedekleriAtla = false): string | null {
+    const adaylar = Object.keys(this.tanimlar).filter((a) => (a === onek || a.startsWith(onek + "_")) && !(yedekleriAtla && this.tanimlar[a].yedek));
     return adaylar.length ? adaylar[Math.floor(Math.random() * adaylar.length)] : null;
   }
 

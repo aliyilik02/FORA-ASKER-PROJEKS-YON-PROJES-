@@ -12,13 +12,258 @@
       "_not": "Skybox AI, 2912x1440 onizleme; 8K/12K surumu gelince ayni adla degistirin. yawKaydirma: panoramanin hangi azimutu orta duvarin ortasina gelsin (derece). yukseklikKaydirma: ufku kaydir (-1..1). mevsim/zaman verilmezse o bolgenin tum durumlarinda kullanilir."
     },
     {
-      "_ornek": true,
+      "bolge": "daglik",
+      "mevsim": "kis",
+      "zaman": "gunduz",
+      "dosya": "daglik/pano_kis_gunduz_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"lago_disola\" (CC0), tonemapped 8K JPG",
+      "_not": "Alp kis sahnesi, donmus gol ve ormanli kiyilar"
+    },
+    {
+      "bolge": "daglik",
+      "mevsim": "yaz",
+      "zaman": "alacakaranlik",
+      "dosya": "daglik/pano_yaz_alacakaranlik_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"toposcope_sunset\" (CC0), tonemapped 8K JPG",
+      "_not": "Kayalik tepe gun batimi, uzak vadiler; 24K"
+    },
+    {
+      "bolge": "daglik",
+      "mevsim": "yaz",
+      "zaman": "gece",
+      "dosya": "daglik/pano_yaz_gece_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"clarens_night_01\" (CC0), tonemapped 8K JPG",
+      "_not": "Ay isikli dag tepesi, vadide kasaba isiklari; 24K"
+    },
+    {
+      "bolge": "daglik",
+      "mevsim": "yaz",
+      "zaman": "gunduz",
+      "dosya": "daglik/pano_yaz_gunduz_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"pizzo_pernice\" (CC0), tonemapped 8K JPG",
+      "_not": "Alp tepesi, kuru ot, uzak zirveler; bayrak diregi var"
+    },
+    {
       "bolge": "kirsal_acik_arazi",
       "mevsim": "kis",
+      "zaman": "alacakaranlik",
+      "dosya": "kirsal_acik_arazi/pano_kis_alacakaranlik_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"farm_sunset\" (CC0), tonemapped 8K JPG",
+      "_not": "Karsiz kis gun batimi, kuru tarla; soguk mavi gok"
+    },
+    {
+      "bolge": "kirsal_acik_arazi",
+      "mevsim": "kis",
+      "zaman": "gunduz",
+      "dosya": "kirsal_acik_arazi/pano_kis_gunduz_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"passendorf_snow\" (CC0), tonemapped 8K JPG",
+      "_not": "Karli tarla, uzakta kiragi tutmus orman, acik gok; 29K kaynak"
+    },
+    {
+      "bolge": "kirsal_acik_arazi",
+      "mevsim": "yaz",
+      "zaman": "alacakaranlik",
+      "dosya": "kirsal_acik_arazi/pano_yaz_alacakaranlik_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"plains_sunset\" (CC0), tonemapped 8K JPG",
+      "_not": "Kuru sari otlak uzerinde gun batimi, acik gok; yumusak isik"
+    },
+    {
+      "bolge": "kirsal_acik_arazi",
+      "mevsim": "yaz",
       "zaman": "gece",
-      "dosya": "kirsal_acik_arazi/pano_kis_gece_8k.mp4",
-      "tip": "video",
-      "_not": "360° video döngüsü de olabilir (8K×4K, 30–90 sn)."
+      "dosya": "kirsal_acik_arazi/pano_yaz_gece_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"kloppenheim_02\" (CC0), tonemapped 8K JPG",
+      "_not": "Ay isikli otlu ova, yildizlar; en temiz kirsal gece adayi, 24K"
+    },
+    {
+      "bolge": "kirsal_acik_arazi",
+      "mevsim": "yaz",
+      "zaman": "gunduz",
+      "dosya": "kirsal_acik_arazi/pano_yaz_gunduz_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"rosendal_plains_1\" (CC0), tonemapped 8K JPG",
+      "_not": "Alternatif gerçek çekim; AI panorama yerine kullanmak için _ornek satırını silip AI kaydına _ornek ekleyin. Kuru sari ot ovasi, kumulus bulutlu ogle gunesi; Anadolu bozkiri gorunumune en yakin aday",
+      "_ornek": true
+    },
+    {
+      "bolge": "meskun_mahal",
+      "mevsim": "kis",
+      "zaman": "alacakaranlik",
+      "dosya": "meskun_mahal/pano_kis_alacakaranlik_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"braustuble_alley\" (CC0), tonemapped 8K JPG",
+      "_not": "Karli kis alacakaranligi, ahsap iskeletli evler; Noel suslemeleri var"
+    },
+    {
+      "bolge": "meskun_mahal",
+      "mevsim": "kis",
+      "zaman": "gece",
+      "dosya": "meskun_mahal/pano_kis_gece_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"blaubeuren_church_square\" (CC0), tonemapped 8K JPG",
+      "_not": "Karli kilise meydani gece; Noel isiklari var"
+    },
+    {
+      "bolge": "meskun_mahal",
+      "mevsim": "yaz",
+      "zaman": "alacakaranlik",
+      "dosya": "meskun_mahal/pano_yaz_alacakaranlik_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"twilight_sunset\" (CC0), tonemapped 8K JPG",
+      "_not": "Tugla doseli banliyo avlusu, alacakaranlik"
+    },
+    {
+      "bolge": "meskun_mahal",
+      "mevsim": "yaz",
+      "zaman": "gece",
+      "dosya": "meskun_mahal/pano_yaz_gece_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"cobblestone_street_night\" (CC0), tonemapped 8K JPG",
+      "_not": "Lamba isikli dar tas sokak; park halinde arac var, 24K"
+    },
+    {
+      "bolge": "meskun_mahal",
+      "mevsim": "yaz",
+      "zaman": "gunduz",
+      "dosya": "meskun_mahal/pano_yaz_gunduz_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"cobblestone_parish_road\" (CC0), tonemapped 8K JPG",
+      "_not": "Eski kasaba arnavut kaldirimi sokak, sicak tas binalar; arac/insan yok, 24K"
+    },
+    {
+      "bolge": "ormanlik",
+      "mevsim": "kis",
+      "zaman": "alacakaranlik",
+      "dosya": "ormanlik/pano_kis_alacakaranlik_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"forest_grove\" (CC0), tonemapped 8K JPG",
+      "_not": "Karsiz kis korusu, gun dogumu"
+    },
+    {
+      "bolge": "ormanlik",
+      "mevsim": "kis",
+      "zaman": "gunduz",
+      "dosya": "ormanlik/pano_kis_gunduz_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"snowy_forest\" (CC0), tonemapped 8K JPG",
+      "_not": "Kapali havada karli igne yaprakli orman; JPG 60MB"
+    },
+    {
+      "bolge": "ormanlik",
+      "mevsim": "yaz",
+      "zaman": "alacakaranlik",
+      "dosya": "ormanlik/pano_yaz_alacakaranlik_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"dark_autumn_forest\" (CC0), tonemapped 8K JPG",
+      "_not": "Karanlik orman patikasi, alcak gunes; sonbahar"
+    },
+    {
+      "bolge": "ormanlik",
+      "mevsim": "yaz",
+      "zaman": "gece",
+      "dosya": "ormanlik/pano_yaz_gece_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"narrow_moonlit_road\" (CC0), tonemapped 8K JPG",
+      "_not": "Ay isikli agacli dar yol; gercek orman gecesi yok, en yakin aday (asfalt yol)"
+    },
+    {
+      "bolge": "ormanlik",
+      "mevsim": "yaz",
+      "zaman": "gunduz",
+      "dosya": "ormanlik/pano_yaz_gunduz_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"je_gray_02\" (CC0), tonemapped 8K JPG",
+      "_not": "Gunesli cam ormani, otlu zemin, uzun golgeler; 24K, JPG 63MB (en iyi kalite)"
+    },
+    {
+      "bolge": "us_bolgesi",
+      "mevsim": "kis",
+      "zaman": "alacakaranlik",
+      "dosya": "us_bolgesi/pano_kis_alacakaranlik_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"abandoned_tank_farm_05\" (CC0), tonemapped 8K JPG",
+      "_not": "Kis gun batimi, toprak yiginlari ve terk edilmis binalar (karsiz)"
+    },
+    {
+      "bolge": "us_bolgesi",
+      "mevsim": "kis",
+      "zaman": "gunduz",
+      "dosya": "us_bolgesi/pano_kis_gunduz_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"pylons\" (CC0), tonemapped 8K JPG",
+      "_not": "Karli terk edilmis beton ayaklar; kapali kis havasi"
+    },
+    {
+      "bolge": "us_bolgesi",
+      "mevsim": "yaz",
+      "zaman": "alacakaranlik",
+      "dosya": "us_bolgesi/pano_yaz_alacakaranlik_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"rooftop_night\" (CC0), tonemapped 8K JPG",
+      "_not": "Alacakaranlikta projektorle aydinlatilmis beton cati otoparki; us gece aydinlatmasi hissi"
+    },
+    {
+      "bolge": "us_bolgesi",
+      "mevsim": "yaz",
+      "zaman": "gunduz",
+      "dosya": "us_bolgesi/pano_yaz_gunduz_foto_8k.jpg",
+      "tip": "resim",
+      "yawKaydirma": 0,
+      "yukseklikKaydirma": 0,
+      "_kaynak": "Poly Haven \"derelict_airfield_02\" (CC0), tonemapped 8K JPG",
+      "_not": "Terk edilmis havaalani: hangarlar, beton, otlar; 24K"
     }
   ],
   "dongu": [
@@ -46,7 +291,8 @@
       "kategori": "efekt",
       "ad": "Patlama (sentetik test)",
       "genislikDerece": 14,
-      "taban": "zemin"
+      "taban": "zemin",
+      "yedek": true
     },
     "asker_test_ayakta": {
       "dosya": "klipler/asker_test_ayakta.webm",
@@ -55,7 +301,8 @@
       "genislikDerece": 5,
       "taban": "zemin",
       "dongu": true,
-      "golge": true
+      "golge": true,
+      "yedek": true
     },
     "patlama_yakin_1": {
       "_ornek": true,
@@ -97,17 +344,98 @@
       "genislikDerece": 20,
       "taban": "merkez",
       "_not": "Sprite sayfası örneği (8 sütun × 8 satır = 64 kare); video yerine kare dizisi gerektiğinde."
+    },
+    "_modeller_aciklama": "tip \"model\": glTF/GLB, 3B sahne katmanında panoramanın ışığıyla çizilir. animasyon: klip adı; boy: hedef boy (m); hiz: yana yürüme (m/s, yansıt=sola); mesafe: panelden yükseklik gelmezse (m); rotor: helikopter rotor düğümleri. \"helikopter\" adlı model Oda 2 helikopteridir.",
+    "asker_bekleyen": {
+      "dosya": "modeller/asker_mixamo.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Asker – bekliyor (3B)",
+      "animasyon": "Idle",
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "three.js examples Soldier.glb (Mixamo karakteri; Mixamo lisansı projede kullanıma izin verir)"
+    },
+    "asker_yuruyen": {
+      "dosya": "modeller/asker_mixamo.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Asker – yürüyor (3B, sağa; yansıt = sola)",
+      "animasyon": "Walk",
+      "boy": 1.8,
+      "hiz": 1.4,
+      "mesafe": 16,
+      "dongu": true,
+      "genislikDerece": 4
+    },
+    "asker_kosan": {
+      "dosya": "modeller/asker_mixamo.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Asker – koşuyor (3B, sağa; yansıt = sola)",
+      "animasyon": "Run",
+      "boy": 1.8,
+      "hiz": 4.5,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4
+    },
+    "asker_kamuflaj": {
+      "dosya": "modeller/asker_kamuflaj.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Asker – kamuflaj, nöbet (3B)",
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Poly Pizza \"Soldier\" – J-Toastie, CC-BY 3.0"
+    },
+    "helikopter": {
+      "dosya": "modeller/helikopter/scene.gltf",
+      "tip": "model",
+      "kategori": "diger",
+      "ad": "Helikopter (3B, Oda 2)",
+      "boy": 5.2,
+      "genislikDerece": 20,
+      "_kaynak": "OpenGameArt \"Rescue Helicopter (low poly)\" – blueskinrulez, CC-BY 4.0"
     }
   },
   "sesler": {
     "_aciklama": "Ses dosyaları (OGG/MP3), bu klasörün sesler/ alt klasörüne göre. Boşsa sentezlenmiş yer tutucu sesler kullanılır.",
-    "patlama": [],
-    "uzak_patlama": [],
+    "patlama": [
+      "patlama_1.ogg",
+      "patlama_2.ogg",
+      "patlama_3.ogg",
+      "patlama_4.ogg",
+      "patlama_5.ogg"
+    ],
+    "uzak_patlama": [
+      "uzak_patlama_1.ogg",
+      "uzak_patlama_2.ogg",
+      "uzak_patlama_3.ogg",
+      "uzak_patlama_4.ogg"
+    ],
     "gurultu": [],
-    "bagirma": [],
+    "bagirma": [
+      "bagirma_1.ogg",
+      "bagirma_2.ogg",
+      "bagirma_3.ogg"
+    ],
     "cagirma": [],
     "mermi_vizilti": [],
-    "helikopter_rotor": null,
-    "ortam": {}
+    "helikopter_rotor": "helikopter_rotor.ogg",
+    "ortam": {
+      "kirsal_acik_arazi": "ortam_kirsal_acik_arazi.ogg",
+      "daglik": "ortam_daglik.ogg",
+      "ormanlik": "ortam_ormanlik.ogg",
+      "meskun_mahal": "ortam_meskun_mahal.ogg",
+      "gece": "ortam_gece.ogg",
+      "kis": "ortam_kis_ruzgar.ogg",
+      "yagmur": "ortam_yagmur.ogg"
+    },
+    "_kaynak": "Mixkit Free lisansı (ticari kullanım serbest): patlama, uzak patlama, bağırma (İngilizce yer tutucu; Türkçe kayıt gelecek), helikopter, ortam döngüleri. helikopter_rotor ve ortam dosyaları henüz ses motoruna bağlı değil (ses.ts yalnızca sentez kullanıyor)."
   }
 }
