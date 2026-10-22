@@ -222,6 +222,9 @@ function durumUygula(d: SimulasyonDurumu) {
   ses.ortamAyarla(d.ortam);
   void ses.ortamDongusu(ortamSesAnahtari(d));
   sahne3b.ortamAyarla(d.ortam, gokyuzuRenkleri(d.ortam).isik);
+  // Oda 2 sütre (3B eşya dizilimi): manifest sutreler[guvenliAlan]
+  const sutreTipi = d.oda === "oda2" ? d.oda2.guvenliAlan : null;
+  sahne3b.sutreAyarla(sutreTipi, sutreTipi ? video.manifest.sutreler?.[sutreTipi] : undefined, video.kok);
   video.secim(d.bolge, d.ortam.mevsim, zamanDilimi(d.ortam.saat));
   panoramayiGuncelle();
 }

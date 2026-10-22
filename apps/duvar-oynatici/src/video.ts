@@ -39,6 +39,8 @@ export interface Manifest {
   katmanlar?: Record<string, string | null>;
   /** Alfa kanallı klipler: efekt plakaları, figürler (asker/araç), sprite sayfaları. */
   klipler?: Record<string, KlipTanimi>;
+  /** Oda 2 sütre dizilimleri: güvenli alan tipi → 3B eşyalar (sahne3b/sutre.ts). */
+  sutreler?: Record<string, Array<{ dosya: string; azimut: number; mesafe: number; yonDerece?: number; boy?: number; renk?: string }>>;
   sesler?: SesManifesti;
 }
 

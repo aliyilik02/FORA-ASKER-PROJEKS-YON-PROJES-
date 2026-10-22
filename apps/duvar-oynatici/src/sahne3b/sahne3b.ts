@@ -19,6 +19,7 @@ import { gunesTahmin, panoramadanSahneAzimutu, type GunesTahmini } from "./gunes
 import { HasarKatmani } from "./hasar";
 import { Helikopter3B } from "./helikopter3b";
 import { ParcacikSistemi } from "./parcaciklar";
+import { SutreKatmani, type SutreEsyasi } from "./sutre";
 import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu, yukseklikMesafe } from "./uzay";
 import { birlikNoktasiSec, noktaSec, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 
@@ -66,7 +67,9 @@ export class Sahne3B {
   private readonly figurler = new FigurKatmani();
   private readonly heli: Helikopter3B;
   private readonly catisma: CatismaSistemi;
+  private readonly sutre = new SutreKatmani();
   private catismaSesleri: CatismaSesleri = { carpma: () => undefined, atis: () => undefined };
+  private yagisKararma = 1;
   private gunesIsareti: THREE.Mesh | null = null;
   hazir = false;
   hata = "";
@@ -125,7 +128,7 @@ export class Sahne3B {
     zemin.renderOrder = 1;
     this.sahne.add(zemin);
 
-    this.sahne.add(this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.parcaciklar.grup);
+    this.sahne.add(this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
 
     if (hataAyiklama) {
       this.gunesIsareti = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffee55 }));
@@ -306,13 +309,21 @@ export class Sahne3B {
   ortamAyarla(ortam: OrtamAyarlari, isik: number) {
     this.saat = ortam.saat;
     this.isik = isik;
+    // Güneşli panoramada yağmur/kar: sahneyi kıs, güneşi yumuşat (yağışlı panorama yoksa inandırıcılık için)
+    this.yagisKararma = ortam.yagis === "siddetli_yagmur" ? 0.62 : ortam.yagis === "hafif_yagmur" ? 0.8 : ortam.yagis === "kar" ? 0.85 : 1;
+    this.yagisKararma *= 1 - ortam.bulut * 0.18;
     this.isikGuncelle();
+  }
+
+  /** Oda 2 sütre dizilimi (güvenli alan tipi); null → kaldır. */
+  sutreAyarla(tip: string | null, esyalar: SutreEsyasi[] | undefined, kok: string) {
+    this.sutre.ayarla(tip, esyalar, kok);
   }
 
   private isikGuncelle() {
     // Panorama kendi zamanını taşıyorsa (gece çekimi) karartma yok; gündüz/genel panorama gece saatinde karartılır.
     const z = this.kaynak?.zaman;
-    const faktor = z === "gece" ? 1 : z === "alacakaranlik" ? Math.min(1, 0.55 + this.isik * 0.45) : 0.08 + 0.92 * this.isik;
+    const faktor = (z === "gece" ? 1 : z === "alacakaranlik" ? Math.min(1, 0.55 + this.isik * 0.45) : 0.08 + 0.92 * this.isik) * this.yagisKararma;
     this.sahne.backgroundIntensity = faktor;
     this.sahne.environmentIntensity = faktor;
     this.parcaciklar.isik = faktor;
@@ -342,8 +353,10 @@ export class Sahne3B {
     // Alçak güneş sıcak renk; kapalı gökte zayıf ve yumuşak
     const sicaklik = Math.max(0, Math.min(1, 1 - yukseklik / 18));
     this.gunes.color.setRGB(1, 0.96 - sicaklik * 0.22, 0.9 - sicaklik * 0.4);
-    this.gunes.intensity = (0.35 + guc * 2.4) * faktor;
-    this.gunes.shadow.radius = 2 + (1 - guc) * 8;
+    // Yağışta güneş zayıf ve gölge yumuşak
+    const yagisGunes = 0.3 + 0.7 * this.yagisKararma;
+    this.gunes.intensity = (0.35 + guc * 2.4) * faktor * yagisGunes;
+    this.gunes.shadow.radius = 2 + (1 - guc * yagisGunes) * 8;
   }
 
   /** Yer patlaması: ateş, toprak sütunu, moloz, anlık aydınlatma, kalıcı krater + tüten duman. */
