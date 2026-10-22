@@ -1082,6 +1082,55 @@ hr {
   transition: opacity var(--gecis);
 }
 
+/* Birlik çağırma */
+.birlik-dugmeleri {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+button.birlik {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 64px;
+  padding: 12px 14px;
+  background: var(--masa-ust);
+  text-align: left;
+}
+button.birlik small {
+  color: var(--murekkep-3);
+}
+.birlik-ad {
+  font-weight: 600;
+  font-size: 15px;
+}
+button.birlik.asker,
+button.birlik.cephe {
+  border-color: rgba(116, 212, 140, 0.35);
+}
+button.birlik.cephe {
+  background: var(--nvg-sis);
+}
+button.birlik.tank {
+  border-color: rgba(201, 181, 138, 0.4);
+  background: rgba(201, 181, 138, 0.1);
+}
+.gelismis summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--murekkep-3);
+  padding: 4px 0;
+}
+.gelismis[open] summary {
+  color: var(--murekkep-2);
+}
+.gelismis-govde {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 10px;
+}
+
 /* Figür */
 .klip-kartlari {
   display: flex;

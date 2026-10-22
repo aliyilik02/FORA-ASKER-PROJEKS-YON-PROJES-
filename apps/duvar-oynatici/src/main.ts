@@ -60,7 +60,11 @@ const klipler = new KlipKatmani();
 /** 3B sahne katmanı: panorama resmi arka plan + IBL, 3B figür/efekt/helikopter. Video panoramada 2B yol kalır. */
 const sahne3b = new Sahne3B(tuval3b, params.get("gunes") === "1");
 const ucAktifOlabilir = ucBoyut && sahne3b.destekli;
-sahne3b.catismaSesleriAyarla({ carpma: (pan) => ses.carpma(pan), atis: (pan, uzak) => ses.tekAtis(pan, uzak) });
+sahne3b.catismaSesleriAyarla({
+  carpma: (pan) => ses.carpma(pan),
+  atis: (pan, uzak) => ses.tekAtis(pan, uzak),
+  uzakPatlama: (az) => void ses.patlama(azimutPan(az), 0.7, true, 600),
+});
 // Hata ayıklama: tarayıcı konsolundan sahneye erişim (window.duvar.sahne3b, window.duvar.THREE)
 (window as unknown as { duvar: unknown }).duvar = { sahne3b, THREE };
 /** ?panorama=<url> ile hızlı deneme: manifestten bağımsız, her bölgede bu 360° kaynak gösterilir. */

@@ -20,7 +20,7 @@ import { HasarKatmani } from "./hasar";
 import { Helikopter3B } from "./helikopter3b";
 import { ParcacikSistemi } from "./parcaciklar";
 import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu, yukseklikMesafe } from "./uzay";
-import { noktaSec, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
+import { birlikNoktasiSec, noktaSec, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 
 export interface PanoramaKaynagi {
   url: string;
@@ -82,7 +82,14 @@ export class Sahne3B {
     this.parcaciklar = new ParcacikSistemi(dumanDokusu(128, 1), atesDokusu(128, 7), kivilcimDokusu(32));
     this.hasar = new HasarKatmani([kraterDokusu(256, 3), kraterDokusu(256, 9), kraterDokusu(256, 21)], this.parcaciklar);
     this.heli = new Helikopter3B(this.parcaciklar);
-    this.catisma = new CatismaSistemi(this.parcaciklar, { carpma: (p) => this.catismaSesleri.carpma(p), atis: (p, u) => this.catismaSesleri.atis(p, u) });
+    this.catisma = new CatismaSistemi(this.parcaciklar, {
+      carpma: (p) => this.catismaSesleri.carpma(p),
+      atis: (p, u) => this.catismaSesleri.atis(p, u),
+      uzakPatlama: (az) => {
+        this.patlama(az, 0.7, true, false);
+        this.catismaSesleri.uzakPatlama?.(az);
+      },
+    });
     this.catisma.dostlar = () => this.figurler.silahliKonumlar();
     if (!r) return;
     this.renderer = r;
@@ -347,8 +354,8 @@ export class Sahne3B {
       this.flasGuc = Math.max(this.flasGuc, 0.15 * s);
       return;
     }
-    // Yerleşim planı: yön en yakın patlama noktasına yapışır (ağaç/bina içinde patlama olmaz)
-    const secim = this.noktaSec(azimut, "patlama", 30 - 16 * s);
+    // Yerleşim planı: patlama her zaman hazır bir noktaya düşer (yön yalnız tercih); plan yoksa serbest
+    const secim = this.noktaSec(azimut, "patlama", 30 - 16 * s, 180);
     const mesafe = secim.mesafe * (secim.nokta ? 0.92 + Math.random() * 0.16 : 0.85 + Math.random() * 0.3);
     const p = yerKonumu(secim.azimut, mesafe);
     const r = 1.2 + s * 2.4;
@@ -378,10 +385,14 @@ export class Sahne3B {
   }
 
   figurOynat(tanim: ModelTanimi, s: FigurSecenekleri, kok: string) {
-    // Figür noktaları: panelin yönü en yakın figür noktasına (35° içinde) yapışır, mesafe noktadan
+    // Birlik yerleşimi: panelin yönü yalnızca tercih; model türüne uygun en yakın BOŞ hazır nokta seçilir
+    // (tank → tank noktası, asker → mevzi). Nokta yoksa yön + mesafe serbest kalır.
     const varsayilan = s.yukseklik !== undefined ? yukseklikMesafe(s.yukseklik) : (tanim.mesafe ?? 20);
-    const secim = this.noktaSec(s.azimut, "figur", varsayilan, 35);
-    void this.figurler.oynat(tanim, { ...s, azimut: secim.azimut, mesafe: secim.nokta ? secim.mesafe : undefined }, kok);
+    const k = this.kaynak?.yawKaydirma ?? 0;
+    const turler = tanim.yerlesim ?? ["asker", "figur"];
+    const secim = birlikNoktasiSec(this.kaynak?.plan, s.azimut + k, turler, varsayilan, (az, m) => this.figurler.doluMu(yerKonumu(panoramadanSahneAzimutu(az, k), m)));
+    const azimut = panoramadanSahneAzimutu(secim.azimut, k);
+    void this.figurler.oynat(tanim, { ...s, azimut, mesafe: secim.nokta ? secim.mesafe : undefined }, kok);
   }
   figurDurdur(id: string) {
     this.figurler.durdur(id);

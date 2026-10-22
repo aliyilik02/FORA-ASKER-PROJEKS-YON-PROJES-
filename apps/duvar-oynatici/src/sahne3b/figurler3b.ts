@@ -27,6 +27,8 @@ export interface ModelTanimi {
   silah?: boolean;
   /** Malzemeleri tek renge boya (ör. "#4b5a3c" haki); çiğ renkli düşük poligon modeller için. */
   renk?: string;
+  /** Yerleşim türleri sırayla (ör. ["tank", "figur"]); verilmezse ["asker", "figur"]. */
+  yerlesim?: Array<"asker" | "tank" | "figur">;
 }
 
 export interface FigurSecenekleri {
@@ -66,6 +68,11 @@ export class FigurKatmani {
   /** Silahlı figürlerin dünya konumları (ayak hizası). */
   silahliKonumlar(): THREE.Vector3[] {
     return this.aktifler.filter((a) => a.silah && a.hiz === 0).map((a) => a.nesne.position.clone());
+  }
+
+  /** Verilen zemin noktasının `yaricap` m içinde figür var mı (yerleşimde üst üste binmeyi önler). */
+  doluMu(konum: THREE.Vector3, yaricap = 2.2): boolean {
+    return this.aktifler.some((a) => a.nesne.position.distanceTo(konum) < yaricap);
   }
 
   private yukle(url: string): Promise<GLTF> {

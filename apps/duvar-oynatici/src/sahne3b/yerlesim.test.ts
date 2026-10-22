@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aralikta, noktaSec, yasakMi, yasaktanKacin, type YerlesimPlani } from "./yerlesim";
+import { aralikta, birlikNoktasiSec, noktaSec, yasakMi, yasaktanKacin, type YerlesimPlani } from "./yerlesim";
 
 const plan: YerlesimPlani = {
   noktalar: [
@@ -60,5 +60,30 @@ describe("noktaSec", () => {
 
   it("helikopter noktası", () => {
     expect(noktaSec(plan, 12, "helikopter", 38, 180).nokta?.ad).toBe("iniş");
+  });
+});
+
+describe("birlikNoktasiSec", () => {
+  const p: YerlesimPlani = {
+    noktalar: [
+      { ad: "mevzi 1", azimut: -30, mesafe: 14, tur: ["asker", "figur"] },
+      { ad: "mevzi 2", azimut: 10, mesafe: 16, tur: ["asker", "figur"] },
+      { ad: "tank yeri", azimut: 40, mesafe: 30, tur: ["tank"] },
+    ],
+  };
+  it("türü sırayla dener: tank için tank noktası, yoksa figür", () => {
+    expect(birlikNoktasiSec(p, 0, ["tank", "figur"], 20, () => false).nokta?.ad).toBe("tank yeri");
+    expect(birlikNoktasiSec({ noktalar: p.noktalar!.slice(0, 2) }, 0, ["tank", "figur"], 20, () => false).nokta?.ad).toBe("mevzi 2");
+  });
+  it("dolu noktayı atlar, hepsi doluysa yana kaydırır", () => {
+    const dolu = (az: number) => Math.abs(az - 10) < 0.5;
+    expect(birlikNoktasiSec(p, 5, ["asker"], 20, dolu).nokta?.ad).toBe("mevzi 1");
+    const hepsiDolu = birlikNoktasiSec(p, 5, ["asker"], 20, (az, m) => Math.abs(az - 10) < 0.5 && Math.abs(m - 16) < 0.1 || Math.abs(az + 30) < 0.5);
+    expect(hepsiDolu.nokta?.ad).toBe("mevzi 2");
+    expect(Math.abs(hepsiDolu.azimut - 10)).toBeGreaterThan(5);
+    expect(hepsiDolu.mesafe).toBeGreaterThan(16);
+  });
+  it("plan yoksa serbest yön", () => {
+    expect(birlikNoktasiSec(undefined, 33, ["asker"], 18, () => false)).toEqual({ azimut: 33, mesafe: 18, degisti: false });
   });
 });

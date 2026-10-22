@@ -25,6 +25,8 @@ export interface CatismaSesleri {
   carpma: (pan: number) => void;
   /** Tek atış sesi; uzak = düşman tarafı. */
   atis: (pan: number, uzak: boolean) => void;
+  /** Ağır çatışmada düşman hattında rastgele uzak patlama (azimut, sahne). */
+  uzakPatlama?: (azimut: number) => void;
 }
 
 export interface CatismaAyari {
@@ -60,6 +62,7 @@ export class CatismaSistemi {
   private dusmanSalvoSayac = 0;
   private dusmanSalvoKalan = 0;
   private dusmanAtisSayac = 0;
+  private uzakPatlamaSayac = 20;
   private dostSayaclar = new Map<number, number>();
   /** Silahlı dost figürlerin dünya konumları (ayak hizası). Dışarıdan her karede sağlanır. */
   dostlar: () => THREE.Vector3[] = () => [];
@@ -125,7 +128,8 @@ export class CatismaSistemi {
     }
     const v = hedef.clone().sub(kaynak).normalize().multiplyScalar(rnd(140, 190));
     this.izEkle(kaynak, v, false);
-    // Uzak atış sesi: her salvoda birkaç kez
+    // Düşman hattında namlu parıltısı (uzak, kısa) ve uzak atış sesi
+    if (Math.random() < 0.6) this.parcaciklar.parlama(kaynak, rnd(1.5, 2.5));
     if (Math.random() < 0.35) this.sesler.atis(Math.sin(radyan(kaynakAzimut)), true);
   }
 
@@ -188,6 +192,14 @@ export class CatismaSistemi {
     // --- Düşman ateşi: çatışma salvoları ---
     if (this.ayar.aktif && this.ayar.siddet > 0.02) {
       const s = this.ayar.siddet;
+      // Ağır çatışmada düşman hattında ara sıra uzak patlama (havan/top)
+      if (s > 0.45 && this.sesler.uzakPatlama) {
+        this.uzakPatlamaSayac -= dt;
+        if (this.uzakPatlamaSayac <= 0) {
+          this.uzakPatlamaSayac = rnd(14, 45) * (1.5 - s);
+          this.sesler.uzakPatlama(this.ayar.azimut + rnd(-40, 40));
+        }
+      }
       if (this.dusmanSalvoKalan > 0) {
         this.dusmanAtisSayac -= dt;
         if (this.dusmanAtisSayac <= 0) {
