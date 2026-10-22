@@ -9,10 +9,10 @@ import type { HelikopterDurumu } from "../tipler";
 import type { ParcacikSistemi } from "./parcaciklar";
 import { ZEMIN_Y, azimutYon, radyan } from "./uzay";
 
-const INIS_AZIMUT = 12;
-const INIS_MESAFE = 38;
-
 export class Helikopter3B {
+  /** İniş noktası (panorama yerleşim planından; varsayılan azimut 12°, 38 m). */
+  private inisAzimut = 12;
+  private inisMesafe = 38;
   readonly grup = new THREE.Group();
   private model: THREE.Object3D | null = null;
   private rotorlar: Array<{ nesne: THREE.Object3D; eksen: "y" | "x" }> = [];
@@ -29,6 +29,11 @@ export class Helikopter3B {
     this.grup.visible = false;
   }
 
+  inisNoktasi(azimut: number, mesafe: number) {
+    this.inisAzimut = azimut;
+    this.inisMesafe = mesafe;
+  }
+
   get hazir() {
     return this.model !== null;
   }
@@ -41,18 +46,30 @@ export class Helikopter3B {
    * adı rotor/blade/prop içerenler bulunur. Modelin kendi animasyonu varsa (çoğu Sketchfab helikopteri
    * rotorları animasyonla döndürür) o da oynatılır.
    */
-  yukle(url: string, boy = 5.1, rotorAdlari?: string[]) {
+  yukle(url: string, boy = 5.1, rotorAdlari?: string[], renk?: string) {
     if (this.model || this.yukleniyor) return;
     this.yukleniyor = true;
     new GLTFLoader().load(
       url,
       (gltf) => {
         const m = gltf.scene;
+        const boya = renk ? new THREE.Color(renk) : null;
         m.traverse((o) => {
           const mesh = o as THREE.Mesh;
           if (mesh.isMesh) {
             mesh.castShadow = true;
             mesh.frustumCulled = false;
+            // Askeri renk: parlak sivil modelleri (beyaz/kırmızı kurtarma helikopteri) haki tona boyar
+            if (boya) {
+              const boyaUygula = (mal: THREE.Material) => {
+                const k = mal.clone() as THREE.MeshStandardMaterial;
+                if (k.color) k.color.copy(boya);
+                if ("roughness" in k) k.roughness = 0.85;
+                if ("metalness" in k) k.metalness = 0.1;
+                return k;
+              };
+              mesh.material = Array.isArray(mesh.material) ? mesh.material.map(boyaUygula) : boyaUygula(mesh.material);
+            }
           }
           if (rotorAdlari) {
             const i = rotorAdlari.indexOf(o.name);
@@ -88,7 +105,7 @@ export class Helikopter3B {
       this.mesafe = 420;
       this.irtifa = 70;
     } else if (d === "yerde") {
-      this.mesafe = INIS_MESAFE;
+      this.mesafe = this.inisMesafe;
       this.irtifa = 0;
     } else if (d === "iniyor" && this.mesafe > 200) {
       this.mesafe = 120;
@@ -107,11 +124,11 @@ export class Helikopter3B {
     const yaklas = (hedef: number, deger: number, sure: number) => deger + (hedef - deger) * Math.min(1, dt / sure);
     switch (this.durum) {
       case "yaklasiyor":
-        this.mesafe = yaklas(INIS_MESAFE, this.mesafe, 9);
+        this.mesafe = yaklas(this.inisMesafe, this.mesafe, 9);
         this.irtifa = yaklas(22, this.irtifa, 10);
         break;
       case "iniyor":
-        this.mesafe = yaklas(INIS_MESAFE, this.mesafe, 3);
+        this.mesafe = yaklas(this.inisMesafe, this.mesafe, 3);
         this.irtifa = yaklas(0, this.irtifa, 7);
         break;
       case "yerde":
@@ -122,11 +139,11 @@ export class Helikopter3B {
         this.mesafe = yaklas(500, this.mesafe, 16);
         break;
     }
-    const yon = azimutYon(INIS_AZIMUT);
+    const yon = azimutYon(this.inisAzimut);
     const sallanti = this.irtifa > 0.3 ? Math.sin(this.faz * 1.1) * 0.6 : 0;
     this.grup.position.set(yon.x * this.mesafe, ZEMIN_Y + this.irtifa + sallanti, yon.z * this.mesafe);
     // Burun izleyiciye doğru hafif çapraz; uçuşta öne eğik
-    this.grup.rotation.y = radyan(-INIS_AZIMUT + 150);
+    this.grup.rotation.y = radyan(-this.inisAzimut + 150);
     this.grup.rotation.x = this.durum === "yaklasiyor" || this.durum === "kalkiyor" ? -0.08 : -0.02;
     const rotorHiz = this.durum === "yerde" && this.faz > 25 ? Math.max(8, 40 - (this.faz - 25) * 2) : 40;
     this.karistirici?.update(dt * (rotorHiz / 40) * 2);

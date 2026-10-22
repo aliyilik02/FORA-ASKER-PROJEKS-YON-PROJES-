@@ -28,12 +28,13 @@ void main() {
 `;
 const FRAGMENT = `
 uniform sampler2D doku;
+uniform float renkOlcek; // doku gri ise (Kenney ~0.42) rengi normalize eder
 varying vec2 vUv;
 varying float vAlfa;
 varying vec3 vRenk;
 void main() {
   vec4 t = texture2D(doku, vUv);
-  gl_FragColor = vec4(t.rgb * vRenk, t.a * vAlfa);
+  gl_FragColor = vec4(min(vec3(1.0), t.rgb * renkOlcek) * vRenk, t.a * vAlfa);
   if (gl_FragColor.a < 0.004) discard;
 }
 `;
@@ -91,7 +92,7 @@ export class ParcacikGrubu {
     g.instanceCount = 0;
     this.geometri = g;
     const m = new THREE.ShaderMaterial({
-      uniforms: { doku: { value: doku } },
+      uniforms: { doku: { value: doku }, renkOlcek: { value: 1 } },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
       transparent: true,
@@ -109,8 +110,30 @@ export class ParcacikGrubu {
     this.parcaciklar.push(p);
   }
 
+  /** Dokuyu değiştirir; görünür piksellerin ortalama parlaklığı ölçülüp renk ona göre normalize edilir. */
   dokuAyarla(doku: THREE.Texture) {
-    (this.mesh.material as THREE.ShaderMaterial).uniforms.doku.value = doku;
+    const u = (this.mesh.material as THREE.ShaderMaterial).uniforms;
+    u.doku.value = doku;
+    try {
+      const img = doku.image as HTMLImageElement;
+      const c = document.createElement("canvas");
+      c.width = c.height = 32;
+      const ctx = c.getContext("2d", { willReadFrequently: true })!;
+      ctx.drawImage(img, 0, 0, 32, 32);
+      const d = ctx.getImageData(0, 0, 32, 32).data;
+      let t = 0;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i + 3] > 40) {
+          t += (d[i] + d[i + 1] + d[i + 2]) / 3;
+          n++;
+        }
+      }
+      const ort = n ? t / n / 255 : 1;
+      u.renkOlcek.value = ort > 0.05 ? Math.min(3, 0.9 / ort) : 1;
+    } catch {
+      u.renkOlcek.value = 1;
+    }
   }
 
   get sayi() {
@@ -228,11 +251,12 @@ export class ParcacikSistemi {
         surtunme: 2,
       });
     }
-    // Toprak sütunu: kuru toprak rengi (tan) hızlı fışkıran topaklar + daha koyu is dumanı
+    // Toprak sütunu: kuru toprak rengi (tan) hızlı fışkıran topaklar + az miktarda koyu is;
+    // yarı saydam ve hızla seyrelen, gökyüzünde kara leke gibi asılı kalmayan
     for (let i = 0; i < 70; i++) {
       const yukari = rnd(4, 14) * r * 0.5;
-      const isMi = i % 4 === 0;
-      const t = rnd(0.75, 1);
+      const isMi = i % 7 === 0;
+      const t = rnd(0.8, 1);
       this.duman.ekle({
         x: p.x + rnd(-r * 0.4, r * 0.4),
         y: p.y + rnd(0, r * 0.3),
@@ -241,13 +265,13 @@ export class ParcacikSistemi {
         vy: yukari,
         vz: rnd(-1.5, 1.5) * r,
         boyut: r * rnd(0.6, 1.4),
-        buyume: r * rnd(0.6, 1.4),
-        alfa: rnd(0.5, 0.9),
+        buyume: r * rnd(0.8, 1.6),
+        alfa: rnd(0.25, 0.5),
         aci: rnd(0, 6.28),
         donus: rnd(-0.8, 0.8),
         t: 0,
-        sure: rnd(2.5, 7),
-        renk: isMi ? [0.2 * t, 0.19 * t, 0.18 * t] : [0.58 * t, 0.48 * t, 0.34 * t],
+        sure: rnd(2, 5),
+        renk: isMi ? [0.3 * t, 0.28 * t, 0.26 * t] : [0.66 * t, 0.56 * t, 0.42 * t],
         yercekimi: rnd(0.5, 2.5),
         surtunme: 0.9,
       });
@@ -288,12 +312,12 @@ export class ParcacikSistemi {
       vz: rnd(-0.3, 0.3),
       boyut: yaricap * rnd(0.3, 0.6),
       buyume: yaricap * rnd(0.25, 0.5),
-      alfa: rnd(0.15, 0.35) * siddet,
+      alfa: rnd(0.08, 0.2) * siddet,
       aci: rnd(0, 6.28),
       donus: rnd(-0.4, 0.4),
       t: 0,
       sure: rnd(4, 9),
-      renk: [0.42, 0.39, 0.35],
+      renk: [0.5, 0.47, 0.43],
       yercekimi: -0.15,
       surtunme: 0.3,
     });

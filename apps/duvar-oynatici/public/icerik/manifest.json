@@ -9,7 +9,102 @@
       "tip": "resim",
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
-      "_not": "Skybox AI, 2912x1440 onizleme; 8K/12K surumu gelince ayni adla degistirin. yawKaydirma: panoramanin hangi azimutu orta duvarin ortasina gelsin (derece). yukseklikKaydirma: ufku kaydir (-1..1). mevsim/zaman verilmezse o bolgenin tum durumlarinda kullanilir."
+      "_not": "Skybox AI, 2912x1440 onizleme; 8K/12K surumu gelince ayni adla degistirin. yawKaydirma: panoramanin hangi azimutu orta duvarin ortasina gelsin (derece). yukseklikKaydirma: ufku kaydir (-1..1). mevsim/zaman verilmezse o bolgenin tum durumlarinda kullanilir.",
+      "noktalar": [
+        {
+          "ad": "tarla sol uzak",
+          "azimut": -60,
+          "mesafe": 22,
+          "tur": [
+            "patlama",
+            "figur"
+          ]
+        },
+        {
+          "ad": "tarla sol",
+          "azimut": -35,
+          "mesafe": 17,
+          "tur": [
+            "patlama",
+            "figur"
+          ]
+        },
+        {
+          "ad": "koy onu",
+          "azimut": -12,
+          "mesafe": 26,
+          "tur": [
+            "patlama",
+            "figur"
+          ]
+        },
+        {
+          "ad": "yol",
+          "azimut": 3,
+          "mesafe": 20,
+          "tur": [
+            "figur",
+            "toz"
+          ]
+        },
+        {
+          "ad": "yol uzak",
+          "azimut": 5,
+          "mesafe": 34,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sag bozkir",
+          "azimut": 95,
+          "mesafe": 16,
+          "tur": [
+            "patlama",
+            "figur",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sag bozkir uzak",
+          "azimut": 120,
+          "mesafe": 24,
+          "tur": [
+            "patlama",
+            "figur"
+          ]
+        },
+        {
+          "ad": "arka sol tarla",
+          "azimut": -110,
+          "mesafe": 18,
+          "tur": [
+            "patlama",
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis alani",
+          "azimut": -80,
+          "mesafe": 42,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "kavak kumesi",
+          "baslangic": 7,
+          "bitis": 68
+        },
+        {
+          "ad": "on cali",
+          "baslangic": -26,
+          "bitis": -18
+        }
+      ],
+      "_plan_not": "noktalar: patlama/figur/helikopter icin acik alanlar; yasak: kavak kumesi (az 7–68) ve yakin cali. Panelden gelen yon en yakin noktaya yapisir."
     },
     {
       "bolge": "daglik",
@@ -400,7 +495,8 @@
       "ad": "Helikopter (3B, Oda 2)",
       "boy": 5.2,
       "genislikDerece": 20,
-      "_kaynak": "OpenGameArt \"Rescue Helicopter (low poly)\" – blueskinrulez, CC-BY 4.0"
+      "_kaynak": "OpenGameArt \"Rescue Helicopter (low poly)\" – blueskinrulez, CC-BY 4.0",
+      "renk": "#4f5a40"
     }
   },
   "sesler": {

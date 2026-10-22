@@ -28,6 +28,8 @@ export interface ModelTanimi {
 export interface FigurSecenekleri {
   id: string;
   azimut: number;
+  /** Verilirse yükseklik yerine doğrudan mesafe (m) kullanılır (yerleşim planından). */
+  mesafe?: number;
   yukseklik?: number;
   olcek?: number;
   yansit?: boolean;
@@ -107,7 +109,7 @@ export class FigurKatmani {
     }
     sarmal.add(nesne);
 
-    const mesafe = s.yukseklik !== undefined ? yukseklikMesafe(s.yukseklik) : (tanim.mesafe ?? 20);
+    const mesafe = s.mesafe ?? (s.yukseklik !== undefined ? yukseklikMesafe(s.yukseklik) : (tanim.mesafe ?? 20));
     sarmal.position.copy(yerKonumu(s.azimut, mesafe));
     const hiz = tanim.hiz ?? 0;
     const sola = Boolean(s.yansit);

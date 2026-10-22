@@ -72,7 +72,7 @@ function videoMu(dosya: string, tip?: string) {
 
 function panoramayiGuncelle() {
   const kayit = testPanorama
-    ? { dosya: testPanorama, tip: undefined, yawKaydirma: testYaw, yukseklikKaydirma: 0, zaman: undefined }
+    ? { dosya: testPanorama, tip: undefined, yawKaydirma: testYaw, yukseklikKaydirma: 0, zaman: undefined, noktalar: undefined, yasak: undefined }
     : panoramaSec(video.manifest, durum.bolge, durum.ortam.mevsim, zamanDilimi(durum.ortam.saat));
   if (!kayit) {
     panorama.sec(null, video.kok);
@@ -83,7 +83,13 @@ function panoramayiGuncelle() {
     // Resim panorama → 3B katman (arka plan + ışık); eski WebGL panorama katmanı kapalı
     panorama.sec(null, video.kok);
     const url = /^(https?:|data:|blob:|\/)/.test(kayit.dosya) ? kayit.dosya : video.kok + kayit.dosya;
-    sahne3b.panoramaAyarla({ url, yawKaydirma: kayit.yawKaydirma ?? 0, yukseklikKaydirma: kayit.yukseklikKaydirma ?? 0, zaman: kayit.zaman });
+    sahne3b.panoramaAyarla({
+      url,
+      yawKaydirma: kayit.yawKaydirma ?? 0,
+      yukseklikKaydirma: kayit.yukseklikKaydirma ?? 0,
+      zaman: kayit.zaman,
+      plan: { noktalar: kayit.noktalar, yasak: kayit.yasak },
+    });
     return;
   }
   sahne3b.panoramaAyarla(null);
@@ -130,7 +136,10 @@ function efektUygula(e: EfektIstegi) {
   const plaka = (onek: string, yukseklik: number, olcek: number) => {
     const ad = klipler.rastgele(onek, sahne3b.hazir);
     if (!ad) return false;
-    klipler.oynat({ klip: ad, azimut, yukseklik, olcek, yansit: Math.random() < 0.5 });
+    // 2B plaka da yerleşim planına uyar (ağaç/bina içinde oynamasın)
+    const tur = onek.startsWith("toz") ? "toz" : "patlama";
+    const plakaAzimut = sahne3b.hazir ? sahne3b.noktaSec(azimut, tur, 0).azimut : azimut;
+    klipler.oynat({ klip: ad, azimut: plakaAzimut, yukseklik, olcek, yansit: Math.random() < 0.5 });
     return true;
   };
   const uc = sahne3b.hazir;
@@ -298,7 +307,7 @@ void video.yukle().then((m) => {
     for (const [ad, t] of Object.entries(klipler.tumTanimlar)) {
       if (t.tip !== "model") continue;
       const url = /^(https?:|data:|blob:|\/)/.test(t.dosya) ? t.dosya : video.kok + t.dosya;
-      if (ad === "helikopter") sahne3b.helikopterYukle(url, t.boy, t.rotor);
+      if (ad === "helikopter") sahne3b.helikopterYukle(url, t.boy, t.rotor, t.renk);
       else sahne3b.figurOnYukle(url);
     }
   }
@@ -362,7 +371,8 @@ function kare(simdi: number) {
       gokyuzuCiz(ctx, y, ufukYy, durum.ortam, gok);
       araziCiz(ctx, y, H, durum.bolge, durum.ortam, gok);
     }
-    if (durum.oda === "oda2") oda2OnPlanCiz(ctx, y, H, durum.oda2.guvenliAlan, gok.isik);
+    // Oda 2'nin 2B ön planı (kum torbası, kaya) 3B sahneyle uyuşmaz; 3B'de çizilmez (3B sütre modelleri gelecek)
+    if (durum.oda === "oda2" && !ucCizildi) oda2OnPlanCiz(ctx, y, H, durum.oda2.guvenliAlan, gok.isik);
     ctx.restore();
   }
   // Figürler ve diğer klipler sahnenin içinde: sisin altında kalır

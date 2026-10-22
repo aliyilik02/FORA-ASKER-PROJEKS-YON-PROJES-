@@ -18,7 +18,8 @@ import { gunesTahmin, panoramadanSahneAzimutu, type GunesTahmini } from "./gunes
 import { HasarKatmani } from "./hasar";
 import { Helikopter3B } from "./helikopter3b";
 import { ParcacikSistemi } from "./parcaciklar";
-import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu } from "./uzay";
+import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu, yukseklikMesafe } from "./uzay";
+import { noktaSec, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 
 export interface PanoramaKaynagi {
   url: string;
@@ -26,6 +27,8 @@ export interface PanoramaKaynagi {
   yukseklikKaydirma?: number;
   /** Manifestteki zaman dilimi: gece panoraması ayrıca karartılmaz. */
   zaman?: "gunduz" | "alacakaranlik" | "gece";
+  /** Panoramaya özel yerleşim noktaları ve yasak aralıklar. */
+  plan?: YerlesimPlani;
 }
 
 /**
@@ -209,6 +212,8 @@ export class Sahne3B {
     }
     const yawDegisti = this.kaynak && (this.kaynak.yawKaydirma !== kaynak.yawKaydirma || this.kaynak.yukseklikKaydirma !== kaynak.yukseklikKaydirma);
     this.kaynak = kaynak;
+    const inis = noktaSec(kaynak.plan, 12, "helikopter", 38, 180);
+    this.heli.inisNoktasi(inis.azimut, inis.mesafe);
     if (kaynak.url === this.yuklenen) {
       if (yawDegisti) this.yonelimUygula();
       return;
@@ -335,8 +340,10 @@ export class Sahne3B {
       this.flasGuc = Math.max(this.flasGuc, 0.15 * s);
       return;
     }
-    const mesafe = (30 - 16 * s) * (0.85 + Math.random() * 0.3);
-    const p = yerKonumu(azimut, mesafe);
+    // Yerleşim planı: yön en yakın patlama noktasına yapışır (ağaç/bina içinde patlama olmaz)
+    const secim = this.noktaSec(azimut, "patlama", 30 - 16 * s);
+    const mesafe = secim.mesafe * (secim.nokta ? 0.92 + Math.random() * 0.16 : 0.85 + Math.random() * 0.3);
+    const p = yerKonumu(secim.azimut, mesafe);
     const r = 1.2 + s * 2.4;
     // Gerçek çekilmiş plaka 2B katmanda oynuyorsa 3B ateş topu çizilmez; krater, moloz ve ışık yine eklenir.
     if (!plakaVar) this.parcaciklar.patlama(p, r);
@@ -347,12 +354,21 @@ export class Sahne3B {
   }
 
   tozDuman(azimut: number, siddet: number) {
-    const p = yerKonumu(azimut, 9 + Math.random() * 9);
+    const secim = this.noktaSec(azimut, "toz", 9 + Math.random() * 9);
+    const p = yerKonumu(secim.azimut, secim.mesafe);
     this.parcaciklar.tozBulutu(p, 3.5, Math.max(0.2, siddet));
   }
 
+  /** Panoramanın yerleşim planına göre yön/mesafe seçimi (2B plakalar için de kullanılır). */
+  noktaSec(azimut: number, tur: YerlesimTuru, varsayilanMesafe: number, tolerans?: number): YerlesimSecimi {
+    return noktaSec(this.kaynak?.plan, azimut, tur, varsayilanMesafe, tolerans);
+  }
+
   figurOynat(tanim: ModelTanimi, s: FigurSecenekleri, kok: string) {
-    void this.figurler.oynat(tanim, s, kok);
+    // Figür noktaları: panelin yönü en yakın figür noktasına (35° içinde) yapışır, mesafe noktadan
+    const varsayilan = s.yukseklik !== undefined ? yukseklikMesafe(s.yukseklik) : (tanim.mesafe ?? 20);
+    const secim = this.noktaSec(s.azimut, "figur", varsayilan, 35);
+    void this.figurler.oynat(tanim, { ...s, azimut: secim.azimut, mesafe: secim.nokta ? secim.mesafe : undefined }, kok);
   }
   figurDurdur(id: string) {
     this.figurler.durdur(id);
@@ -364,8 +380,8 @@ export class Sahne3B {
     this.figurler.onYukle(url);
   }
 
-  helikopterYukle(url: string, boy?: number, rotor?: string[]) {
-    this.heli.yukle(url, boy, rotor);
+  helikopterYukle(url: string, boy?: number, rotor?: string[], renk?: string) {
+    this.heli.yukle(url, boy, rotor, renk);
   }
   helikopterAyarla(d: HelikopterDurumu) {
     this.heli.durumAyarla(d);

@@ -25,6 +25,9 @@ export interface PanoramaKaydiManifest {
   tip?: "resim" | "video";
   yawKaydirma?: number;
   yukseklikKaydirma?: number;
+  /** Panoramaya özel yerleşim noktaları ve yasak açı aralıkları (sahne3b/yerlesim.ts). */
+  noktalar?: Array<{ ad?: string; azimut: number; mesafe: number; tur?: Array<"patlama" | "figur" | "helikopter" | "toz"> }>;
+  yasak?: Array<{ ad?: string; baslangic: number; bitis: number }>;
   _ornek?: boolean;
 }
 

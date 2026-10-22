@@ -90,8 +90,10 @@ Panel API'si (`apps/kopru/src/api.ts`): `/api/durum`, `/oda`, `/bolge`, `/ortam`
 Çalışan: panel, köprü, oynatıcı, senaryo editörü, ön ayarlar, Art-Net çıkışı (donanımsız
 doğrulandı), figür paneli, demo.bat. **Oynatıcıda 3B sahne katmanı** (`apps/duvar-oynatici/src/sahne3b/`,
 Three.js): panorama = arka plan + ışık (IBL), güneş yönü panoramadan, gölgeli zemin, patlamada kalıcı
-krater + moloz + tüten duman, parçacık efektleri, glTF figürler, 3B helikopter. Tarayıcıda doğrulandı
-(figürler, patlama, krater); helikopter 3B görsel testi bekliyor. Ayrıntı `docs/duvar-oynatici.md`.
+krater + moloz + tüten duman, parçacık efektleri, glTF figürler, 3B helikopter. Panorama başına **yerleşim planı**
+(`noktalar`/`yasak`: patlama ve figür ağaç/bina içine düşmez, helikopter iniş noktası). Tarayıcıda
+doğrulandı (figürler, patlama, krater, helikopter iniş/kalkış). Plan şimdilik yalnızca AI kırsal
+panoramada; Poly Haven panoramaları için yazılacak. Ayrıntı `docs/duvar-oynatici.md`.
 
 Gerçek içerik (kullanıcının makinesinde, depoda değil): kırsal yaz gündüz Skybox AI panoraması
 (2912×1440 önizleme, varsayılan) + **23 Poly Haven CC0 gerçek çekim panorama** (5 bölge × mevsim ×
@@ -105,8 +107,8 @@ otonom çalış). Donanım yok; dizüstü GTX 1650 + Iris Xe (Chrome Iris Xe kul
 
 ## Sıradaki işler (öncelik sırasıyla)
 
-1. Oda 2 helikopter 3B testi (ölçek, rotor yönü, iniş noktası); diğer 4 bölgede panorama + güneş
-   tahmini + gece karartması gözle kontrol; `yawKaydirma` ile ilgi çeken yönü ortaya alma.
+1. Poly Haven panoramaları (23) için yerleşim planı + `yawKaydirma`; güneş tahmini ve gece karartması
+   gözle kontrol. Oda 2 için 3B sütre/kum torbası modelleri (2B ön plan 3B'de kapalı).
 2. Daha gerçekçi asker: Mixamo "Swat" + Rifle Idle/Walk/Run/Crouch/Crawl/Injured (Blender → GLB,
    Mixamo iskeleti) ya da yeşil perde çekimi (docs §2.5). Yaralı yerde / sürünen figür.
 3. VFX plakaları (gerçek çekim, alfa) ve helikopter inişi için 3B toz + ses ayarı; izli mermiyi 3B'ye taşıma.

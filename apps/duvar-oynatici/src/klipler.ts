@@ -25,6 +25,8 @@ export interface KlipTanimi {
   yatik?: boolean;
   /** Helikopter modeli: döndürülecek rotor düğüm adları (ilki ana rotor). */
   rotor?: string[];
+  /** Model malzemelerini tek renge boya (ör. "#55603f" haki); sivil modeller için. */
+  renk?: string;
   /** Klibin kapladığı yatay görsel açı (derece), ölçek 1 için. */
   genislikDerece: number;
   /** Kayıt noktası: zemin (alt kenar) veya merkez. */
