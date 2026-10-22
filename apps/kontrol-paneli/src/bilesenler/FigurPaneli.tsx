@@ -95,6 +95,30 @@ export function FigurPaneli({ aktifler, calistir }: { aktifler: Array<FigurKomut
             <div className="satir">
               <button
                 type="button"
+                className="buyuk ikonlu"
+                title="Pusuladaki yöne üç silahlı asker yerleştirir ve düşman yönünü oraya ayarlar"
+                onClick={() =>
+                  void calistir(async () => {
+                    const askerler = klipler.filter((k) => k.kategori === "figur" && /asker/.test(k.ad)).map((k) => k.ad);
+                    const secim = askerler.length ? askerler : [klip];
+                    const yerler: Array<[number, number]> = [
+                      [-22, -7],
+                      [0, -9],
+                      [22, -7],
+                    ];
+                    for (let i = 0; i < yerler.length; i++) {
+                      const [sapma, y] = yerler[i];
+                      await api.figur({ islem: "oynat", klip: secim[i % secim.length], azimut: yonAzimut(seciliYon + sapma), yukseklik: y, olcek: 1, yansit: false, dongu: true });
+                    }
+                    await api.catisma({ yon: seciliYon });
+                    return true;
+                  }).then((r) => r && bildir({ tur: "basari", baslik: "Cephe kuruldu", metin: `${yonMetni(seciliYon)} · 3 asker, düşman yönü ayarlandı` }))
+                }
+              >
+                <Ikon.figur /> Cephe kur
+              </button>
+              <button
+                type="button"
                 className="birincil buyuk"
                 disabled={!klip}
                 onClick={() =>

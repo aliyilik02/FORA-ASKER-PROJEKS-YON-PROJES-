@@ -124,6 +124,14 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
     }),
   );
 
+  r.patch(
+    "/catisma",
+    sarmala(async (req, res) => {
+      await b.depo.catismaGuncelle(req.body ?? {});
+      res.json(b.depo.al());
+    }),
+  );
+
   r.post(
     "/efekt",
     sarmala(async (req, res) => {

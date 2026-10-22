@@ -2484,7 +2484,7 @@
       "taban": "merkez",
       "_not": "Sprite sayfası örneği (8 sütun × 8 satır = 64 kare); video yerine kare dizisi gerektiğinde."
     },
-    "_modeller_aciklama": "tip \"model\": glTF/GLB, 3B sahne katmanında panoramanın ışığıyla çizilir. animasyon: klip adı; boy: hedef boy (m); hiz: yana yürüme (m/s, yansıt=sola); mesafe: panelden yükseklik gelmezse (m); rotor: helikopter rotor düğümleri. \"helikopter\" adlı model Oda 2 helikopteridir.",
+    "_modeller_aciklama": "tip \"model\": glTF/GLB, 3B sahne katmanında panoramanın ışığıyla çizilir. animasyon: klip adı; boy: hedef boy (m); hiz: yana yürüme (m/s, yansıt=sola); mesafe: panelden yükseklik gelmezse (m); rotor: helikopter rotor düğümleri. \"helikopter\" adlı model Oda 2 helikopteridir. silah: true → çatışmada düşmana döner ve ateşle karşılık verir.",
     "asker_bekleyen": {
       "dosya": "modeller/asker_mixamo.glb",
       "tip": "model",
@@ -2495,7 +2495,8 @@
       "mesafe": 14,
       "dongu": true,
       "genislikDerece": 4,
-      "_kaynak": "three.js examples Soldier.glb (Mixamo karakteri; Mixamo lisansı projede kullanıma izin verir)"
+      "_kaynak": "three.js examples Soldier.glb (Mixamo karakteri; Mixamo lisansı projede kullanıma izin verir)",
+      "silah": true
     },
     "asker_yuruyen": {
       "dosya": "modeller/asker_mixamo.glb",
@@ -2530,7 +2531,8 @@
       "mesafe": 14,
       "dongu": true,
       "genislikDerece": 4,
-      "_kaynak": "Poly Pizza \"Soldier\" – J-Toastie, CC-BY 3.0"
+      "_kaynak": "Poly Pizza \"Soldier\" – J-Toastie, CC-BY 3.0",
+      "silah": true
     },
     "helikopter": {
       "dosya": "modeller/helikopter/scene.gltf",
@@ -2541,6 +2543,32 @@
       "genislikDerece": 20,
       "_kaynak": "OpenGameArt \"Rescue Helicopter (low poly)\" – blueskinrulez, CC-BY 4.0",
       "renk": "#4f5a40"
+    },
+    "tank_mbt": {
+      "dosya": "modeller/tank_mbt.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Tank – ana muharebe (3B)",
+      "animasyon": "yok",
+      "boy": 3,
+      "mesafe": 30,
+      "silah": true,
+      "renk": "#55603f",
+      "genislikDerece": 8,
+      "_kaynak": "Poly Pizza \"Tank\" – Zsky, CC-BY 3.0 (modeller/LISANS_tank.txt)"
+    },
+    "tank_eski": {
+      "dosya": "modeller/tank_quaternius.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Tank – eski tip, hareketli palet (3B)",
+      "boy": 2.8,
+      "mesafe": 30,
+      "yonDerece": -90,
+      "silah": true,
+      "genislikDerece": 8,
+      "_kaynak": "Quaternius Ultimate Animated Tanks (Poly Pizza), CC0",
+      "renk": "#55603f"
     }
   },
   "sesler": {

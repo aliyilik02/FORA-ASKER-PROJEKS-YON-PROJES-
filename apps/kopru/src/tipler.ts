@@ -59,10 +59,24 @@ export interface IzliMermiAyarlari {
 export interface Oda2Ayarlari {
   guvenliAlan: GuvenliAlanTipi;
   helikopter: HelikopterDurumu;
+  /** İniş yönü, 0–360 derece (0 = karşı); oynatıcı panoramanın en yakın iniş noktasına yapıştırır. */
+  helikopterYonu: number;
   /** Uzaktan gelen seslerin mesafesi (metre). Ses bu mesafeye göre zayıflatılır. */
   uzakSesMesafesi: number;
   /** Uzaktan gelen seslerin yönü, 0–360 derece. */
   uzakSesYonu: number;
+}
+
+/**
+ * Çatışma: sürekli düşman ateşi (uzaktan gelen izli mermiler, yere çarpma, sekme) ve dost
+ * figürlerin karşılık vermesi (namlu alevi, atış sesi). Şiddet 0–1; yön düşman cephesi (0–360).
+ */
+export interface CatismaAyarlari {
+  aktif: boolean;
+  siddet: number;
+  yon: number;
+  /** Sahnedeki silahlı figürler ateşle karşılık versin mi. */
+  dostAtes: boolean;
 }
 
 export type EfektTuru =
@@ -91,6 +105,7 @@ export interface SimulasyonDurumu {
   isik: OrtamIsigi;
   izliMermi: IzliMermiAyarlari;
   oda2: Oda2Ayarlari;
+  catisma: CatismaAyarlari;
   /** Son tetiklenen efektler (panelde günlük için). */
   sonEfektler: Array<EfektIstegi & { zaman: number }>;
 }
@@ -107,7 +122,8 @@ export interface SenaryoAdimi {
     | { tip: "bolge"; bolge: Bolge }
     | { tip: "izli_mermi"; izliMermi: Partial<IzliMermiAyarlari> }
     | { tip: "isik"; isik: Partial<OrtamIsigi> }
-    | { tip: "oda2"; oda2: Partial<Oda2Ayarlari> };
+    | { tip: "oda2"; oda2: Partial<Oda2Ayarlari> }
+    | { tip: "catisma"; catisma: Partial<CatismaAyarlari> };
 }
 
 export interface Senaryo {
@@ -272,7 +288,23 @@ export function varsayilanDurum(): SimulasyonDurumu {
     },
     isik: { parlaklik: 0.8, r: 255, g: 244, b: 224, senaryoyaBagli: true },
     izliMermi: { aktif: false, cikisNoktasi: 1, yon: 0, siklik: 3 },
-    oda2: { guvenliAlan: "kaya_sutre_arkasi", helikopter: "yok", uzakSesMesafesi: 800, uzakSesYonu: 45 },
+    oda2: { guvenliAlan: "kaya_sutre_arkasi", helikopter: "yok", helikopterYonu: 12, uzakSesMesafesi: 800, uzakSesYonu: 45 },
+    catisma: { aktif: false, siddet: 0.5, yon: 0, dostAtes: true },
     sonEfektler: [],
+  };
+}
+
+/** Eski kayıtlarda (ön ayar, disk) eksik alanları varsayılanla tamamlar. */
+export function durumuTamamla(d: Partial<SimulasyonDurumu>): SimulasyonDurumu {
+  const v = varsayilanDurum();
+  return {
+    ...v,
+    ...d,
+    ortam: { ...v.ortam, ...d.ortam },
+    isik: { ...v.isik, ...d.isik },
+    izliMermi: { ...v.izliMermi, ...d.izliMermi },
+    oda2: { ...v.oda2, ...d.oda2 },
+    catisma: { ...v.catisma, ...d.catisma },
+    sonEfektler: d.sonEfektler ?? [],
   };
 }

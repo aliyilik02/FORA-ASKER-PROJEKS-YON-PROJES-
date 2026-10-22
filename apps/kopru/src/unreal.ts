@@ -12,6 +12,7 @@
 import type { Gunluk } from "./gunluk.js";
 import type {
   Bolge,
+  CatismaAyarlari,
   EfektIstegi,
   IzliMermiAyarlari,
   Oda,
@@ -36,6 +37,7 @@ export const UE_ISIMLERI = {
     izliMermiAyarla: "IzliMermiAyarla",
     oda2Ayarla: "Oda2Ayarla",
     helikopter: "HelikopterDurumuAyarla",
+    catismaAyarla: "CatismaAyarla",
   },
 } as const;
 
@@ -188,8 +190,18 @@ export class UnrealIstemci {
     return this.fonksiyonCagir(UE_ISIMLERI.fonksiyonlar.oda2Ayarla, {
       GuvenliAlan: ayar.guvenliAlan,
       Helikopter: ayar.helikopter,
+      HelikopterYonu: ayar.helikopterYonu,
       UzakSesMesafesi: ayar.uzakSesMesafesi,
       UzakSesYonu: ayar.uzakSesYonu,
+    });
+  }
+
+  catismaAyarla(ayar: CatismaAyarlari) {
+    return this.fonksiyonCagir(UE_ISIMLERI.fonksiyonlar.catismaAyarla, {
+      Aktif: ayar.aktif,
+      Siddet: ayar.siddet,
+      Yon: ayar.yon,
+      DostAtes: ayar.dostAtes,
     });
   }
 }

@@ -60,6 +60,7 @@ const klipler = new KlipKatmani();
 /** 3B sahne katmanı: panorama resmi arka plan + IBL, 3B figür/efekt/helikopter. Video panoramada 2B yol kalır. */
 const sahne3b = new Sahne3B(tuval3b, params.get("gunes") === "1");
 const ucAktifOlabilir = ucBoyut && sahne3b.destekli;
+sahne3b.catismaSesleriAyarla({ carpma: (pan) => ses.carpma(pan), atis: (pan, uzak) => ses.tekAtis(pan, uzak) });
 // Hata ayıklama: tarayıcı konsolundan sahneye erişim (window.duvar.sahne3b, window.duvar.THREE)
 (window as unknown as { duvar: unknown }).duvar = { sahne3b, THREE };
 /** ?panorama=<url> ile hızlı deneme: manifestten bağımsız, her bölgede bu 360° kaynak gösterilir. */
@@ -196,14 +197,21 @@ function durumUygula(d: SimulasyonDurumu) {
   if (d.bolge !== durum.bolge) sahne3b.sahneyiSifirla(); // kraterler ve duman bölgeyle birlikte gider
   durum = d;
   durumGeldi = true;
-  izli.ayarla(d.izliMermi);
+  // İzli mermi ve çatışma: 3B sahne açıkken 3B izler, değilse 2B çizgiler
+  const uc = sahne3b.hazir;
+  izli.ayarla({ ...d.izliMermi, aktif: d.izliMermi.aktif && !uc });
+  sahne3b.izliMermiAyarla(d.izliMermi, duvarlar.map((x) => x.yaw));
+  const catisma = d.catisma ?? { aktif: false, siddet: 0.5, yon: 0, dostAtes: true };
+  sahne3b.catismaAyarla(catisma, yonAzimut(catisma.yon));
   const heliDurumu = d.oda === "oda2" ? d.oda2.helikopter : "yok";
+  const heliYon = yonAzimut(d.oda2.helikopterYonu ?? 12);
   // 3B model varsa helikopter 3B sahnede uçar; yoksa 2B siluet
   if (sahne3b.helikopterHazir && sahne3b.hazir) {
-    sahne3b.helikopterAyarla(heliDurumu);
+    sahne3b.helikopterAyarla(heliDurumu, heliYon);
     heli.durumAyarla("yok");
   } else {
     sahne3b.helikopterAyarla("yok");
+    heli.azimutAyarla(heliYon);
     heli.durumAyarla(heliDurumu);
   }
   ses.ortamAyarla(d.ortam);
@@ -409,7 +417,7 @@ function kare(simdi: number) {
         `bulut ${durum.ortam.bulut.toFixed(2)} · sis ${durum.ortam.sis.toFixed(2)} · yağış ${durum.ortam.yagis} · rüzgâr ${durum.ortam.ruzgarSiddeti.toFixed(2)} @ ${durum.ortam.ruzgarYonu}°`,
         `izli mermi ${durum.izliMermi.aktif ? `açık (duvar ${durum.izliMermi.cikisNoktasi}, ${durum.izliMermi.yon}°, ${durum.izliMermi.siklik}/sn)` : "kapalı"} · oda2 ${GUVENLI_ALAN_ETIKETLERI[durum.oda2.guvenliAlan]} · helikopter ${HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}`,
         `içerik: ${ucCizildi ? "3B sahne + panorama" : panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""}${sahne3b.hata ? ` · 3B hatası: ${sahne3b.hata}` : ""} · aktif klip ${klipler.aktifSayisi} · fov ${duvarlar[0].fov}° · H hud · K kalibrasyon · F tam ekran · M sessiz · 1/2/3 test`,
-        `3B: ${ucAktifOlabilir ? (sahne3b.hazir ? "açık" : "bekliyor") : ucBoyut ? "desteklenmiyor" : "kapalı (?uc=0)"} · ${sahne3b.gunesBilgisi} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi} · parçacık ${sahne3b.parcacikSayisi} · helikopter modeli ${sahne3b.helikopterHazir ? "var" : "yok"}`,
+        `3B: ${ucAktifOlabilir ? (sahne3b.hazir ? "açık" : "bekliyor") : ucBoyut ? "desteklenmiyor" : "kapalı (?uc=0)"} · ${sahne3b.gunesBilgisi} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi} · parçacık ${sahne3b.parcacikSayisi} · iz ${sahne3b.izSayisi} · çatışma ${durum.catisma?.aktif ? `%${Math.round(durum.catisma.siddet * 100)} @ ${durum.catisma.yon}°` : "kapalı"} · helikopter ${sahne3b.helikopterHazir ? `model, iniş ${sahne3b.helikopterAzimutu.toFixed(0)}°` : "siluet"}`,
       ],
       H,
     );

@@ -42,6 +42,8 @@ export function Pusula({
   figurler,
   efektler,
   helikopter,
+  helikopterYonu = 12,
+  dusmanYonu = null,
   simdi,
 }: {
   yon: number;
@@ -50,6 +52,9 @@ export function Pusula({
   figurler: Array<FigurKomutu & { id: string }>;
   efektler: Array<EfektIstegi & { zaman: number }>;
   helikopter: HelikopterDurumu;
+  helikopterYonu?: number;
+  /** Çatışma aktifse düşman cephesi yönü; dış halkada kızıl yay. */
+  dusmanYonu?: number | null;
   simdi: number;
 }) {
   const svg = useRef<SVGSVGElement>(null);
@@ -118,6 +123,16 @@ export function Pusula({
         <circle cx={CX} cy={CY} r={R_DUVAR} className="pusula-halka" />
         {/* arka (duvarsız) bölge */}
         <path d={`${yay(135, 225, R_DUVAR)} L ${CX} ${CY} Z`} className="pusula-arka" />
+        {/* düşman cephesi */}
+        {dusmanYonu !== null && (
+          <g className="pusula-dusman">
+            <path d={yay(dusmanYonu - 28, dusmanYonu + 28, R_DUVAR + 30)} />
+            {(() => {
+              const p = nokta(dusmanYonu, R_DUVAR + 30);
+              return <circle cx={p.x} cy={p.y} r="4" />;
+            })()}
+          </g>
+        )}
         {/* seçili yön kaması */}
         <path d={`M ${secIc.x} ${secIc.y} L ${secN.x} ${secN.y}`} className={`pusula-sec-cizgi ${duvarDisi ? "disi" : ""}`} />
         <circle cx={secN.x} cy={secN.y} r="7" className={`pusula-sec-nokta ${duvarDisi ? "disi" : ""}`} />
@@ -167,7 +182,7 @@ export function Pusula({
         {/* helikopter */}
         {helikopter !== "yok" && (() => {
           const uzak = helikopter === "yaklasiyor" || helikopter === "kalkiyor";
-          const p = nokta(12, R_DUVAR * (uzak ? 1.1 : 0.9));
+          const p = nokta(helikopterYonu, R_DUVAR * (uzak ? 1.1 : 0.9));
           return (
             <g className={`pusula-heli ${uzak ? "ucusta" : ""}`} transform={`translate(${p.x} ${p.y})`}>
               <circle r="7" />

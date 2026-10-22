@@ -6,6 +6,7 @@ import { ArtNetGonderici, gunIsigiHesapla } from "./artnet.js";
 import type { Gunluk } from "./gunluk.js";
 import {
   type Bolge,
+  type CatismaAyarlari,
   type EfektIstegi,
   type IzliMermiAyarlari,
   type Oda,
@@ -13,6 +14,7 @@ import {
   type OrtamAyarlari,
   type OrtamIsigi,
   type SimulasyonDurumu,
+  durumuTamamla,
   varsayilanDurum,
 } from "./tipler.js";
 import type { UnrealIstemci } from "./unreal.js";
@@ -134,10 +136,24 @@ export class DurumDeposu {
     this.durum.oda2 = {
       guvenliAlan: kismi.guvenliAlan ?? o.guvenliAlan,
       helikopter: kismi.helikopter ?? o.helikopter,
+      helikopterYonu: ((Math.round(kismi.helikopterYonu ?? o.helikopterYonu ?? 12) % 360) + 360) % 360,
       uzakSesMesafesi: sinirla(kismi.uzakSesMesafesi ?? o.uzakSesMesafesi, 0, 10000),
       uzakSesYonu: ((kismi.uzakSesYonu ?? o.uzakSesYonu) % 360 + 360) % 360,
     };
     await this.unreal.oda2Ayarla(this.durum.oda2);
+    this.yayinla();
+  }
+
+  async catismaGuncelle(kismi: Partial<CatismaAyarlari>) {
+    const c = this.durum.catisma ?? varsayilanDurum().catisma;
+    this.durum.catisma = {
+      aktif: kismi.aktif ?? c.aktif,
+      siddet: sinirla(kismi.siddet ?? c.siddet, 0, 1),
+      yon: ((Math.round(kismi.yon ?? c.yon) % 360) + 360) % 360,
+      dostAtes: kismi.dostAtes ?? c.dostAtes,
+    };
+    await this.unreal.catismaAyarla(this.durum.catisma);
+    this.gunluk.bilgi(this.durum.catisma.aktif ? `Çatışma: %${Math.round(this.durum.catisma.siddet * 100)}, yön ${this.durum.catisma.yon}°` : "Çatışma durdu");
     this.yayinla();
   }
 
@@ -167,7 +183,7 @@ export class DurumDeposu {
 
   /** Ön ayar yüklerken tüm durumu tek seferde uygular. */
   async durumuYukle(yeni: Omit<SimulasyonDurumu, "sonEfektler">) {
-    this.durum = { ...structuredClone(yeni), sonEfektler: this.durum.sonEfektler };
+    this.durum = { ...durumuTamamla(structuredClone(yeni)), sonEfektler: this.durum.sonEfektler };
     await this.tumunuGonder();
     this.yayinla();
   }

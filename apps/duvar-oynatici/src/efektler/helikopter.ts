@@ -14,6 +14,10 @@ export class Helikopter {
   private uzaklik = 1;
   private azimut = 10;
 
+  azimutAyarla(a: number) {
+    this.azimut = a;
+  }
+
   durumAyarla(d: HelikopterDurumu) {
     if (d === this.durum) return;
     this.durum = d;

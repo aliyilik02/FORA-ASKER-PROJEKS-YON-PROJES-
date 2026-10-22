@@ -821,6 +821,17 @@ button.efekt.tetiklendi {
 .pusula-efekt.patlama .dolu {
   fill: var(--izli);
 }
+.pusula-dusman path {
+  fill: none;
+  stroke: var(--izli);
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.8;
+  animation: nefes 1.2s ease-in-out infinite;
+}
+.pusula-dusman circle {
+  fill: var(--izli);
+}
 .pusula-figur circle {
   fill: var(--nvg);
   stroke: #0b0d0a;

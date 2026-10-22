@@ -23,6 +23,10 @@ export interface ModelTanimi {
   /** Yere yatık figür (yaralı): modelin y ekseni ileri yatırılır. */
   yatik?: boolean;
   dongu?: boolean;
+  /** Silahlı figür: çatışmada düşman yönüne döner ve ateşle karşılık verir. */
+  silah?: boolean;
+  /** Malzemeleri tek renge boya (ör. "#4b5a3c" haki); çiğ renkli düşük poligon modeller için. */
+  renk?: string;
 }
 
 export interface FigurSecenekleri {
@@ -43,6 +47,8 @@ interface Aktif {
   hiz: number;
   sola: boolean;
   bitti: boolean;
+  silah: boolean;
+  temelDonus: number;
 }
 
 export class FigurKatmani {
@@ -50,9 +56,16 @@ export class FigurKatmani {
   private readonly yukleyici = new GLTFLoader();
   private readonly onbellek = new Map<string, Promise<GLTF>>();
   private aktifler: Aktif[] = [];
+  /** Çatışmada silahlı figürlerin döneceği düşman azimutu (null: izleyiciye dönük kal). */
+  dusmanAzimutu: number | null = null;
 
   get sayi() {
     return this.aktifler.length;
+  }
+
+  /** Silahlı figürlerin dünya konumları (ayak hizası). */
+  silahliKonumlar(): THREE.Vector3[] {
+    return this.aktifler.filter((a) => a.silah && a.hiz === 0).map((a) => a.nesne.position.clone());
   }
 
   private yukle(url: string): Promise<GLTF> {
@@ -81,12 +94,27 @@ export class FigurKatmani {
     // Aynı id için bu arada yeni komut geldiyse eskisini uygulama
     if (this.aktifler.some((a) => a.id === s.id)) return false;
     const nesne = iskeletKopyala(gltf.scene) as THREE.Object3D;
+    const boya = tanim.renk ? new THREE.Color(tanim.renk) : null;
     nesne.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.isMesh) {
         m.castShadow = true;
         m.receiveShadow = true;
         m.frustumCulled = false;
+        if (boya) {
+          // Haki boya: modelin kendi renk farklarını (koyu/açık parça) koruyarak tona çeker
+          const boyaUygula = (mal: THREE.Material) => {
+            const k = mal.clone() as THREE.MeshStandardMaterial;
+            if (k.color) {
+              const l = (k.color.r + k.color.g + k.color.b) / 3;
+              k.color.copy(boya).multiplyScalar(0.55 + l * 0.9);
+            }
+            if ("roughness" in k) k.roughness = 0.9;
+            if ("metalness" in k) k.metalness = 0.05;
+            return k;
+          };
+          m.material = Array.isArray(m.material) ? m.material.map(boyaUygula) : boyaUygula(m.material);
+        }
       }
     });
     // Boy normalizasyonu. precise=true şart: iskeletli (skinned) modellerde kaba kutu bind-pose
@@ -127,7 +155,7 @@ export class FigurKatmani {
       eylem.play();
     }
     this.grup.add(sarmal);
-    this.aktifler.push({ id: s.id, nesne: sarmal, karistirici, hiz, sola, bitti: false });
+    this.aktifler.push({ id: s.id, nesne: sarmal, karistirici, hiz, sola, bitti: false, silah: Boolean(tanim.silah), temelDonus: sarmal.rotation.y });
     return true;
   }
 
@@ -144,6 +172,14 @@ export class FigurKatmani {
   guncelle(dt: number) {
     for (const a of this.aktifler) {
       a.karistirici?.update(dt);
+      // Çatışmada silahlı, sabit figürler düşmana döner (yumuşak)
+      if (a.silah && a.hiz === 0) {
+        // Modelin ön yüzü (+z) düşman yönüne (sin a, 0, -cos a) baksın: θ = π − a
+        const hedef = this.dusmanAzimutu === null ? a.temelDonus : Math.PI - radyan(this.dusmanAzimutu);
+        let fark = hedef - a.nesne.rotation.y;
+        fark = Math.atan2(Math.sin(fark), Math.cos(fark));
+        a.nesne.rotation.y += fark * Math.min(1, dt * 3);
+      }
       if (a.hiz > 0) {
         // Yana hareket: izleyici etrafında teğet yönde (sağa, yansıt ise sola)
         const az = konumAzimutu(a.nesne.position);

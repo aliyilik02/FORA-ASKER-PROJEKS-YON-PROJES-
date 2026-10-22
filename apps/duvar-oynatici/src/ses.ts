@@ -164,6 +164,34 @@ export class SesMotoru {
     }
   }
 
+  /** Tek atış (çatışma): manifest kaydı varsa rastgele perde ile, yoksa kısa gürültü vuruşu. */
+  tekAtis(pan: number, uzak = false) {
+    if (!this.hazir || !this.ctx) return;
+    const liste = this.manifest.gurultu;
+    if (liste?.length) {
+      const yol = liste[Math.floor(Math.random() * liste.length)];
+      const onbellek = this.tamponlar.get(yol);
+      const cal = (b: AudioBuffer) => {
+        const s = this.ctx!.createBufferSource();
+        s.buffer = b;
+        s.playbackRate.value = 0.9 + Math.random() * 0.25;
+        s.connect(this.cikis(pan, uzak ? 0.22 : 0.55, uzak));
+        s.start();
+      };
+      if (onbellek) cal(onbellek);
+      else void this.tampon(yol).then((b) => b && cal(b));
+      return;
+    }
+    this.gurultuPatlamasi(pan, uzak ? 0.2 : 0.5, 0.09, uzak ? 900 : 2500, uzak, "bandpass");
+  }
+
+  /** Yakına çarpan mermi: kısa tok vuruş + vızıltı. */
+  carpma(pan: number) {
+    if (!this.hazir) return;
+    this.gurultuPatlamasi(pan, 0.35, 0.06, 1400, false, "bandpass");
+    if (Math.random() < 0.5) this.vizilti(pan);
+  }
+
   async mermi(pan: number, uzak = true) {
     if (!this.hazir) return;
     if (await this.dosyaCal(this.manifest.mermi_vizilti, pan, 0.6, uzak)) return;

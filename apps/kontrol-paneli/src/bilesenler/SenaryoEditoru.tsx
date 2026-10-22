@@ -30,6 +30,7 @@ const TIP_ETIKETLERI: Record<AdimTipi, string> = {
   izli_mermi: "İzli mermi",
   oda2: "Oda 2 (güvenli alan / helikopter)",
   isik: "Ortam ışığı",
+  catisma: "Çatışma (düşman ateşi)",
 };
 
 interface YeniAdim {
@@ -51,6 +52,9 @@ interface YeniAdim {
   guvenliAlan: GuvenliAlanTipi;
   helikopter: HelikopterDurumu;
   parlaklik: number;
+  catismaAktif: boolean;
+  catismaSiddet: number;
+  catismaYon: number;
 }
 
 function varsayilanYeni(d: SimulasyonDurumu): YeniAdim {
@@ -73,6 +77,9 @@ function varsayilanYeni(d: SimulasyonDurumu): YeniAdim {
     guvenliAlan: d.oda2.guvenliAlan,
     helikopter: d.oda2.helikopter,
     parlaklik: d.isik.parlaklik,
+    catismaAktif: true,
+    catismaSiddet: d.catisma?.siddet ?? 0.5,
+    catismaYon: d.catisma?.yon ?? 0,
   };
 }
 
@@ -120,6 +127,15 @@ function adimUret(y: YeniAdim, id: string): SenaryoAdimi {
         aciklama: `Ortam ışığı ${yuzde(y.parlaklik)} (elle)`,
         islem: { tip: "isik", isik: { parlaklik: y.parlaklik, senaryoyaBagli: false } },
       };
+    case "catisma":
+      return y.catismaAktif
+        ? {
+            id,
+            gecikmeMs,
+            aciklama: `Çatışma başlar (${yuzde(y.catismaSiddet)}, düşman ${y.catismaYon}°)`,
+            islem: { tip: "catisma", catisma: { aktif: true, siddet: y.catismaSiddet, yon: y.catismaYon } },
+          }
+        : { id, gecikmeMs, aciklama: "Çatışma durur", islem: { tip: "catisma", catisma: { aktif: false } } };
   }
 }
 
@@ -279,6 +295,23 @@ export function SenaryoEditoru({
         {yeni.tip === "isik" && (
           <div className="alanlar">
             <Sayi etiket="Parlaklık (0–1)" deger={yeni.parlaklik} min={0} max={1} adim={0.05} onChange={(parlaklik) => g({ parlaklik })} />
+          </div>
+        )}
+        {yeni.tip === "catisma" && (
+          <div className="alanlar">
+            <label className="alan">
+              <span>Durum</span>
+              <select value={yeni.catismaAktif ? "basla" : "dur"} onChange={(e) => g({ catismaAktif: e.target.value === "basla" })}>
+                <option value="basla">Başlat</option>
+                <option value="dur">Durdur</option>
+              </select>
+            </label>
+            {yeni.catismaAktif && (
+              <>
+                <Sayi etiket="Şiddet (0–1)" deger={yeni.catismaSiddet} min={0.05} max={1} adim={0.05} onChange={(catismaSiddet) => g({ catismaSiddet })} />
+                <Sayi etiket="Düşman yönü (°)" deger={yeni.catismaYon} min={0} max={359} onChange={(catismaYon) => g({ catismaYon })} />
+              </>
+            )}
           </div>
         )}
 

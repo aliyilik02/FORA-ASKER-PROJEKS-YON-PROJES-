@@ -11,7 +11,8 @@
  */
 import * as THREE from "three";
 import { gunesKonumu, type Yerlesim } from "../projeksiyon";
-import type { HelikopterDurumu, OrtamAyarlari } from "../tipler";
+import type { CatismaAyarlari, HelikopterDurumu, IzliMermiAyarlari, OrtamAyarlari } from "../tipler";
+import { CatismaSistemi, type CatismaSesleri } from "./catisma";
 import { atesDokusu, dumanDokusu, kivilcimDokusu, kraterDokusu } from "./dokular";
 import { FigurKatmani, type FigurSecenekleri, type ModelTanimi } from "./figurler3b";
 import { gunesTahmin, panoramadanSahneAzimutu, type GunesTahmini } from "./gunes";
@@ -64,6 +65,8 @@ export class Sahne3B {
   private readonly hasar: HasarKatmani;
   private readonly figurler = new FigurKatmani();
   private readonly heli: Helikopter3B;
+  private readonly catisma: CatismaSistemi;
+  private catismaSesleri: CatismaSesleri = { carpma: () => undefined, atis: () => undefined };
   private gunesIsareti: THREE.Mesh | null = null;
   hazir = false;
   hata = "";
@@ -79,6 +82,8 @@ export class Sahne3B {
     this.parcaciklar = new ParcacikSistemi(dumanDokusu(128, 1), atesDokusu(128, 7), kivilcimDokusu(32));
     this.hasar = new HasarKatmani([kraterDokusu(256, 3), kraterDokusu(256, 9), kraterDokusu(256, 21)], this.parcaciklar);
     this.heli = new Helikopter3B(this.parcaciklar);
+    this.catisma = new CatismaSistemi(this.parcaciklar, { carpma: (p) => this.catismaSesleri.carpma(p), atis: (p, u) => this.catismaSesleri.atis(p, u) });
+    this.catisma.dostlar = () => this.figurler.silahliKonumlar();
     if (!r) return;
     this.renderer = r;
     r.outputColorSpace = THREE.SRGBColorSpace;
@@ -111,7 +116,7 @@ export class Sahne3B {
     zemin.renderOrder = 1;
     this.sahne.add(zemin);
 
-    this.sahne.add(this.hasar.grup, this.figurler.grup, this.heli.grup, this.parcaciklar.grup);
+    this.sahne.add(this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.parcaciklar.grup);
 
     if (hataAyiklama) {
       this.gunesIsareti = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffee55 }));
@@ -286,6 +291,7 @@ export class Sahne3B {
   sahneyiSifirla() {
     this.hasar.temizle();
     this.parcaciklar.temizle();
+    this.catisma.temizle();
   }
 
   ortamAyarla(ortam: OrtamAyarlari, isik: number) {
@@ -301,6 +307,7 @@ export class Sahne3B {
     this.sahne.backgroundIntensity = faktor;
     this.sahne.environmentIntensity = faktor;
     this.parcaciklar.isik = faktor;
+    this.catisma.isik = this.isik;
     this.dolgu.intensity = 0.15 * faktor;
 
     let azimut: number;
@@ -389,12 +396,38 @@ export class Sahne3B {
   helikopterYukle(url: string, boy?: number, rotor?: string[], renk?: string) {
     this.heli.yukle(url, boy, rotor, renk);
   }
-  helikopterAyarla(d: HelikopterDurumu) {
+  /** `yon`: panelden iniş yönü (sahne azimutu, derece); planın iniş noktasına 70° içinde yapışır. */
+  helikopterAyarla(d: HelikopterDurumu, yon?: number) {
+    if (yon !== undefined) {
+      const secim = this.noktaSec(yon, "helikopter", 38, 70);
+      this.heli.inisNoktasi(secim.azimut, secim.mesafe);
+    }
     this.heli.durumAyarla(d);
+  }
+  get helikopterAzimutu() {
+    return this.heli.inisAzimutu;
+  }
+
+  catismaSesleriAyarla(s: CatismaSesleri) {
+    this.catismaSesleri = s;
+  }
+  /** Çatışma durumu; `azimut` düşman cephesinin sahne azimutu. */
+  catismaAyarla(c: CatismaAyarlari, azimut: number) {
+    this.catisma.catismaAyarla({ aktif: c.aktif, siddet: c.siddet, azimut, dostAtes: c.dostAtes });
+    this.figurler.dusmanAzimutu = c.aktif ? azimut : null;
+  }
+  /** Klasik izli mermi ayarı 3B'de: duvar yaw'ı + yön → kaynak azimutu. */
+  izliMermiAyarla(a: IzliMermiAyarlari, duvarYawlari: number[]) {
+    const yaw = duvarYawlari[a.cikisNoktasi] ?? 0;
+    this.catisma.izliAyarla({ aktif: a.aktif, azimut: yaw + a.yon * 0.5, siklik: a.siklik });
+  }
+  get izSayisi() {
+    return this.catisma.aktifIzSayisi;
   }
 
   guncelle(dt: number) {
     if (!this.renderer) return;
+    this.catisma.guncelle(dt);
     this.parcaciklar.guncelle(dt);
     this.hasar.guncelle(dt);
     this.figurler.guncelle(dt);

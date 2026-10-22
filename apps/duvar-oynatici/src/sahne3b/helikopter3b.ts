@@ -33,6 +33,9 @@ export class Helikopter3B {
     this.inisAzimut = azimut;
     this.inisMesafe = mesafe;
   }
+  get inisAzimutu() {
+    return this.inisAzimut;
+  }
 
   get hazir() {
     return this.model !== null;

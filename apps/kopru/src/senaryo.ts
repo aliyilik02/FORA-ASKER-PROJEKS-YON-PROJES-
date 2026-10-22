@@ -127,6 +127,9 @@ export class SenaryoMotoru {
       case "oda2":
         await this.depo.oda2Guncelle(islem.oda2);
         break;
+      case "catisma":
+        await this.depo.catismaGuncelle(islem.catisma);
+        break;
     }
   }
 

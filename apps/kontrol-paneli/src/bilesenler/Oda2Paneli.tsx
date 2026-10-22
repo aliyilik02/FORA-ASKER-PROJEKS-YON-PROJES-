@@ -79,6 +79,13 @@ export function Oda2Paneli({ durum, calistir }: { durum: SimulasyonDurumu; calis
           </button>
         </div>
         <div className="satir">
+          <span className="etiket">İniş yönü</span>
+          <span className="rozet uyari">{yonMetni(o.helikopterYonu ?? 12)}</span>
+          <button type="button" className="kucuk" disabled={(o.helikopterYonu ?? 12) === seciliYon} onClick={() => guncelle({ helikopterYonu: seciliYon })}>
+            Pusuladaki yöne indir ({seciliYon}°)
+          </button>
+        </div>
+        <div className="satir">
           <span className="etiket">Elle</span>
           <SecenekGrubu secenekler={HELIKOPTER_ETIKETLERI} deger={o.helikopter} onChange={(helikopter) => guncelle({ helikopter })} />
         </div>

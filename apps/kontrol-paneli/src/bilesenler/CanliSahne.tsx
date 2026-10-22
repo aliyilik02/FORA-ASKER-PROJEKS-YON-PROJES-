@@ -72,6 +72,7 @@ export function CanliSahne({
           </Rozet>
           {havaMetni && <Rozet>{havaMetni}</Rozet>}
           {durum.izliMermi.aktif && <Rozet tur="kotu">izli mermi {durum.izliMermi.siklik}/sn</Rozet>}
+          {durum.catisma?.aktif && <Rozet tur="kotu">çatışma %{Math.round(durum.catisma.siddet * 100)} · {yonMetni(durum.catisma.yon)}</Rozet>}
           {durum.oda === "oda2" && durum.oda2.helikopter !== "yok" && (
             <Rozet tur="uyari">
               <Ikon.helikopter /> {HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}
@@ -86,7 +87,17 @@ export function CanliSahne({
         </div>
       </header>
 
-      <Pusula yon={seciliYon} onYon={setSeciliYon} ortam={o} figurler={figurler} efektler={durum.sonEfektler} helikopter={durum.oda === "oda2" ? durum.oda2.helikopter : "yok"} simdi={simdi} />
+      <Pusula
+        yon={seciliYon}
+        onYon={setSeciliYon}
+        ortam={o}
+        figurler={figurler}
+        efektler={durum.sonEfektler}
+        helikopter={durum.oda === "oda2" ? durum.oda2.helikopter : "yok"}
+        helikopterYonu={durum.oda2.helikopterYonu ?? 12}
+        dusmanYonu={durum.catisma?.aktif ? durum.catisma.yon : null}
+        simdi={simdi}
+      />
 
       <div className="hizli-yonler">
         {[

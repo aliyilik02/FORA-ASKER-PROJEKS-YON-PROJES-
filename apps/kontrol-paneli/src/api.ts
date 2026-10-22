@@ -2,6 +2,7 @@
 import type {
   BaglantiDurumu,
   Bolge,
+  CatismaAyarlari,
   EfektIstegi,
   FigurKomutu,
   KlipOzeti,
@@ -47,6 +48,7 @@ export const api = {
   isik: (k: Partial<OrtamIsigi>) => istek<SimulasyonDurumu>("/isik", "PATCH", k),
   izliMermi: (k: Partial<IzliMermiAyarlari>) => istek<SimulasyonDurumu>("/izli-mermi", "PATCH", k),
   oda2: (k: Partial<Oda2Ayarlari>) => istek<SimulasyonDurumu>("/oda2", "PATCH", k),
+  catisma: (k: Partial<CatismaAyarlari>) => istek<SimulasyonDurumu>("/catisma", "PATCH", k),
   efekt: (e: EfektIstegi) => istek<{ tamam: boolean }>("/efekt", "POST", e),
 
   senaryolar: () => istek<Senaryo[]>("/senaryolar", "GET"),
