@@ -89,8 +89,10 @@ Panel API'si (`apps/kopru/src/api.ts`): `/api/durum`, `/oda`, `/bolge`, `/ortam`
 
 Çalışan: panel, köprü, oynatıcı (yer tutucu sahne + panorama ve klip katmanları), senaryo
 editörü, ön ayarlar, Art-Net çıkışı (donanımsız doğrulandı), figür paneli, demo.bat (Windows'ta
-doğrulandı). Gerçek içerik **henüz yok**: panoramalar, VFX plakaları, asker klipleri, Türkçe
-sesler bekliyor. Donanım (render PC, projektörler, Art-Net node) yok; kullanıcının dizüstü GTX 1650.
+doğrulandı). Gerçek içerik: kırsal açık arazi yaz/gündüz için ilk Skybox AI panoraması
+(`icerik/kirsal_acik_arazi/pano_yaz_gunduz_8k.jpg`, şimdilik 2912×1440 önizleme; manifeste bağlı,
+oynatıcıda doğrulandı; 8K/12K sürümü aynı adla değiştirilecek). Diğer varyantlar, VFX plakaları,
+asker klipleri, Türkçe sesler bekliyor. Donanım (render PC, projektörler, Art-Net node) yok; kullanıcının dizüstü GTX 1650.
 
 ## Sıradaki işler (öncelik sırasıyla)
 
