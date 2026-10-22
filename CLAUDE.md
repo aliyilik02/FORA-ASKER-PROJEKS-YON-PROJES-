@@ -113,15 +113,19 @@ otonom çalış). Donanım yok; dizüstü GTX 1650 + Iris Xe (Chrome Iris Xe kul
 **Çatışma ve birlik (22 Ekim):** durum modelinde `catisma` (düşman yönü, şiddet, dost ateşi) ve
 `oda2.helikopterYonu`; oynatıcıda `sahne3b/catisma.ts` (3B izli mermi, çarpma/sekme, dost ateşi, uzak
 parıltı/patlama); figürler panelden yer seçilmeden hazır mevzi/tank noktalarına (`birlikNoktasiSec`,
-boş nokta) yerleşir; panelde "Birlik çağır". Tank modelleri (CC-BY / CC0) manifestte.
+boş nokta) yerleşir; panelde "Birlik çağır". Tank modelleri (CC-BY / CC0) manifestte; kuleli tank
+(`kule`/`namlu`) düşmana döner ve top atar. Asker: Quaternius SWAT (CC0, `modeller/asker_swat.glb`)
+Idle_Gun ↔ Idle_Gun_Shoot geçişi, elde tüfek (`silahModeli`, kemik adı GLTFLoader'da "WristR").
+Oda 2 sütreleri: manifest `sutreler` (kum torbası, kaya, toprak yığını, bariyer; `modeller/sutre/`).
+Bone/klip adları: GLTFLoader noktayı siler; kısa klip adı `klipBul` ile eşleşir.
 
 ## Sıradaki işler (öncelik sırasıyla)
 
 1. Poly Haven panoramaları (23) için yerleşim planı + `yawKaydirma`; güneş tahmini ve gece karartması
    gözle kontrol. Oda 2 için 3B sütre/kum torbası modelleri (2B ön plan 3B'de kapalı).
-2. Asker ateş/siper animasyonu (Mixamo Rifle klipleri; hesap gerekir) ve Oda 2 için 3B sütre/kum torbası;
-   daha gerçekçi asker: Mixamo "Swat" + Rifle Idle/Walk/Run/Crouch/Crawl/Injured (Blender → GLB,
-   Mixamo iskeleti) ya da yeşil perde çekimi (docs §2.5). Yaralı yerde / sürünen figür.
+2. Çömelme/yere yatma/yaralı figür (ücretsiz CC0 rigde yok: Quaternius UAL "Crouch" klipleri UE5
+   iskeletli UBC modeline uygulanıp üniforma boyanabilir, scratchpad'de indirildi) ya da yeşil perde
+   çekimi (docs §2.5). HESCO modeli yok (prosedürel kutu + doku yapılabilir).
 3. VFX plakaları (gerçek çekim, alfa) ve helikopter inişi için 3B toz + ses ayarı; izli mermiyi 3B'ye taşıma.
 4. Senaryo adımı tipi olarak figür komutu; 4 kanal ses; Türkçe bağırma kaydı; U duvar ölçüleri → `?fov=`.
 5. İdareye gösterim: kırsal 4 varyant + patlama/krater + 3 asker + helikopter.
