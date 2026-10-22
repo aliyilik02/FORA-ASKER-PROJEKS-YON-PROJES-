@@ -59,6 +59,11 @@ stereo pan; sahada 4+ kanal için ChannelMerger'a geçilir.
 
 ## İçerik ekleme
 
+İçerik klasörü `apps/duvar-oynatici/public/icerik/`; köprü bu klasörü doğrudan
+`/oynatici/icerik/` yolundan sunar, yani dosya koyup manifesti düzenleyince **derleme gerekmez**,
+oynatıcıyı yenilemek yeter (köprü, `ICERIK_KLASORU` ortam değişkeni verilirse önce onu, sonra
+`public/icerik`, en son derleme kopyası `dist/icerik` klasörünü kullanır; sahada içerik ayrı diskte
+tutulabilir). Manifest:
 `apps/duvar-oynatici/public/icerik/manifest.json` (bkz. `icerik/OKU.md`). `dongu` listesine
 `{bolge, mevsim, zaman, dosya}` satırı eklenince oynatıcı o durum için videoyu kullanır; eksik
 kombinasyonlar yer tutucuya düşer, yani içerik parça parça gelebilir. `sesler` altındaki listeler

@@ -50,15 +50,20 @@ const oynaticiSayisi = () => [...istemciRolleri.values()].filter((r) => r === "o
 
 // Derlenmiş oynatıcı ve panel varsa aynı porttan sun.
 const oynaticiKlasoru = fileURLToPath(new URL("../../duvar-oynatici/dist/", import.meta.url));
+// İçerik klasörü önceliği: ICERIK_KLASORU (sahada ayrı disk) > public/icerik (kaynak; dosya koyunca
+// derleme gerekmez) > dist/icerik (derleme kopyası). Hem oynatıcıya sunulur hem köprü manifesti okur.
 const icerikAdaylari = [
   ...(process.env.ICERIK_KLASORU ? [process.env.ICERIK_KLASORU] : []),
-  fileURLToPath(new URL("../../duvar-oynatici/dist/icerik/", import.meta.url)),
   fileURLToPath(new URL("../../duvar-oynatici/public/icerik/", import.meta.url)),
-];
+  fileURLToPath(new URL("../../duvar-oynatici/dist/icerik/", import.meta.url)),
+].filter((k) => existsSync(k));
 const figur = new FigurYoneticisi(gunluk, icerikAdaylari);
 
 const uygulama = express();
 uygulama.use("/api", apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, figur }));
+for (const klasor of icerikAdaylari) {
+  uygulama.use("/oynatici/icerik", express.static(klasor));
+}
 if (existsSync(oynaticiKlasoru)) {
   uygulama.use("/oynatici", express.static(oynaticiKlasoru));
 }

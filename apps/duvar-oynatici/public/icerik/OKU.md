@@ -22,7 +22,12 @@ icerik/
   sesler/      patlama_1.ogg, bagirma_yarali_var.ogg ...
 ```
 
-Video dosyaları depoya eklenmez (`.gitignore`); saha bilgisayarına klasör olarak kopyalanır.
+Köprü bu klasörü doğrudan sunar: dosya koyup `manifest.json`'u düzenledikten sonra **derleme
+gerekmez**, oynatıcı sayfasını yenilemek yeter. Sahada içerik ayrı bir diskte duracaksa köprüye
+`ICERIK_KLASORU=D:\icerik` verilir (`apps/kopru/.env`).
+
+Görüntü ve ses dosyaları (jpg/png/webp/mp4/webm/mov/ogg/mp3/wav) depoya eklenmez (`.gitignore`);
+saha bilgisayarına klasör olarak kopyalanır.
 İstisna: `klipler/patlama_test_1.webm` ve `klipler/asker_test_ayakta.webm` küçük **sentetik test
 klipleridir** (`araclar/test-klipleri-uret.sh` ile üretilir); panelin Figürler bölümünü ve efekt
 plakası yolunu gerçek içerik gelmeden denemek içindir, gerçek klipler gelince silinebilir.
