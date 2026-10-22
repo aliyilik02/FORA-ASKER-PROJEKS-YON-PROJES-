@@ -104,7 +104,7 @@
           "bitis": -18
         }
       ],
-      "_plan_not": "noktalar: patlama/figur/helikopter icin acik alanlar; yasak: kavak kumesi (az 7–68) ve yakin cali. Panelden gelen yon en yakin noktaya yapisir."
+      "_plan_not": "noktalar/yasak azimutlari PANORAMA koordinatindadir (yawKaydirma uygulanmadan; equirect x -> (x/genislik-0.5)*360). Oynatici yaw farkini kendisi uygular."
     },
     {
       "bolge": "daglik",
@@ -112,10 +112,84 @@
       "zaman": "gunduz",
       "dosya": "daglik/pano_kis_gunduz_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": 30,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"lago_disola\" (CC0), tonemapped 8K JPG",
-      "_not": "Alp kis sahnesi, donmus gol ve ormanli kiyilar"
+      "_not": "Alp kis sahnesi, donmus gol ve ormanli kiyilar",
+      "noktalar": [
+        {
+          "ad": "cakil yol",
+          "azimut": 15,
+          "mesafe": 24,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "kiyi camuru",
+          "azimut": 80,
+          "mesafe": 28,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "kiyi uzak",
+          "azimut": 130,
+          "mesafe": 30,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "yol on",
+          "azimut": 12,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "kiyi on",
+          "azimut": 60,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "kiyi sag",
+          "azimut": 120,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "kayalar",
+          "azimut": -140,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 100,
+          "mesafe": 45,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "agac kumesi",
+          "baslangic": -130,
+          "bitis": -8
+        }
+      ]
     },
     {
       "bolge": "daglik",
@@ -126,7 +200,83 @@
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"toposcope_sunset\" (CC0), tonemapped 8K JPG",
-      "_not": "Kayalik tepe gun batimi, uzak vadiler; 24K"
+      "_not": "Kayalik tepe gun batimi, uzak vadiler; 24K",
+      "noktalar": [
+        {
+          "ad": "sirt sol",
+          "azimut": -30,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sirt sag",
+          "azimut": 30,
+          "mesafe": 18,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "patika",
+          "azimut": 90,
+          "mesafe": 24,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka",
+          "azimut": -120,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "on",
+          "azimut": -10,
+          "mesafe": 13,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag",
+          "azimut": 40,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "patika on",
+          "azimut": 90,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "arka sol",
+          "azimut": -100,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": -60,
+          "mesafe": 40,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": []
     },
     {
       "bolge": "daglik",
@@ -137,7 +287,89 @@
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"clarens_night_01\" (CC0), tonemapped 8K JPG",
-      "_not": "Ay isikli dag tepesi, vadide kasaba isiklari; 24K"
+      "_not": "Ay isikli dag tepesi, vadide kasaba isiklari; 24K",
+      "noktalar": [
+        {
+          "ad": "cayir sol",
+          "azimut": -20,
+          "mesafe": 22,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "cayir sag",
+          "azimut": 40,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "iz sol",
+          "azimut": -135,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "iz sag",
+          "azimut": 150,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "on",
+          "azimut": 0,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol",
+          "azimut": -40,
+          "mesafe": 13,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag",
+          "azimut": 60,
+          "mesafe": 15,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "arka sol",
+          "azimut": -130,
+          "mesafe": 15,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 150,
+          "mesafe": 42,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "tabela",
+          "baslangic": 74,
+          "bitis": 84
+        }
+      ]
     },
     {
       "bolge": "daglik",
@@ -148,7 +380,89 @@
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"pizzo_pernice\" (CC0), tonemapped 8K JPG",
-      "_not": "Alp tepesi, kuru ot, uzak zirveler; bayrak diregi var"
+      "_not": "Alp tepesi, kuru ot, uzak zirveler; bayrak diregi var",
+      "noktalar": [
+        {
+          "ad": "yamac on",
+          "azimut": -20,
+          "mesafe": 18,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sirt sag",
+          "azimut": 60,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sirt sag uzak",
+          "azimut": 110,
+          "mesafe": 24,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sol yamac",
+          "azimut": -90,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "on",
+          "azimut": -10,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag",
+          "azimut": 40,
+          "mesafe": 15,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag arka",
+          "azimut": 100,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol arka",
+          "azimut": -120,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 60,
+          "mesafe": 40,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "bayrak diregi",
+          "baslangic": -160,
+          "bitis": -148
+        }
+      ]
     },
     {
       "bolge": "kirsal_acik_arazi",
@@ -159,7 +473,108 @@
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"farm_sunset\" (CC0), tonemapped 8K JPG",
-      "_not": "Karsiz kis gun batimi, kuru tarla; soguk mavi gok"
+      "_not": "Karsiz kis gun batimi, kuru tarla; soguk mavi gok",
+      "noktalar": [
+        {
+          "ad": "on sol",
+          "azimut": -25,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "on sag",
+          "azimut": 25,
+          "mesafe": 22,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sol",
+          "azimut": -70,
+          "mesafe": 18,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sag",
+          "azimut": 70,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka sol",
+          "azimut": -120,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka sag",
+          "azimut": 120,
+          "mesafe": 24,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "figur on",
+          "azimut": 0,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sol",
+          "azimut": -40,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sag",
+          "azimut": 45,
+          "mesafe": 15,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sag arka",
+          "azimut": 95,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sol arka",
+          "azimut": -95,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 40,
+          "mesafe": 42,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": []
     },
     {
       "bolge": "kirsal_acik_arazi",
@@ -170,7 +585,108 @@
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"passendorf_snow\" (CC0), tonemapped 8K JPG",
-      "_not": "Karli tarla, uzakta kiragi tutmus orman, acik gok; 29K kaynak"
+      "_not": "Karli tarla, uzakta kiragi tutmus orman, acik gok; 29K kaynak",
+      "noktalar": [
+        {
+          "ad": "on sol",
+          "azimut": -25,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "on sag",
+          "azimut": 25,
+          "mesafe": 22,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sol",
+          "azimut": -70,
+          "mesafe": 18,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sag",
+          "azimut": 70,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka sol",
+          "azimut": -120,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka sag",
+          "azimut": 120,
+          "mesafe": 24,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "figur on",
+          "azimut": 0,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sol",
+          "azimut": -40,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sag",
+          "azimut": 45,
+          "mesafe": 15,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sag arka",
+          "azimut": 95,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sol arka",
+          "azimut": -95,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 40,
+          "mesafe": 42,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": []
     },
     {
       "bolge": "kirsal_acik_arazi",
@@ -181,7 +697,108 @@
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"plains_sunset\" (CC0), tonemapped 8K JPG",
-      "_not": "Kuru sari otlak uzerinde gun batimi, acik gok; yumusak isik"
+      "_not": "Kuru sari otlak uzerinde gun batimi, acik gok; yumusak isik",
+      "noktalar": [
+        {
+          "ad": "on sol",
+          "azimut": -25,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "on sag",
+          "azimut": 25,
+          "mesafe": 22,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sol",
+          "azimut": -70,
+          "mesafe": 18,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sag",
+          "azimut": 70,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka sol",
+          "azimut": -120,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka sag",
+          "azimut": 120,
+          "mesafe": 24,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "figur on",
+          "azimut": 0,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sol",
+          "azimut": -40,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sag",
+          "azimut": 45,
+          "mesafe": 15,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sag arka",
+          "azimut": 95,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sol arka",
+          "azimut": -95,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 40,
+          "mesafe": 42,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": []
     },
     {
       "bolge": "kirsal_acik_arazi",
@@ -189,10 +806,111 @@
       "zaman": "gece",
       "dosya": "kirsal_acik_arazi/pano_yaz_gece_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": -40,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"kloppenheim_02\" (CC0), tonemapped 8K JPG",
-      "_not": "Ay isikli otlu ova, yildizlar; en temiz kirsal gece adayi, 24K"
+      "_not": "Ay isikli otlu ova, yildizlar; en temiz kirsal gece adayi, 24K",
+      "noktalar": [
+        {
+          "ad": "on sol",
+          "azimut": -25,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "on sag",
+          "azimut": 25,
+          "mesafe": 22,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sol",
+          "azimut": -70,
+          "mesafe": 18,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sag",
+          "azimut": 70,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka sol",
+          "azimut": -120,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka sag",
+          "azimut": 120,
+          "mesafe": 24,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "figur on",
+          "azimut": 0,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sol",
+          "azimut": -40,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sag",
+          "azimut": 45,
+          "mesafe": 15,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sag arka",
+          "azimut": 95,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "figur sol arka",
+          "azimut": -95,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 40,
+          "mesafe": 42,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": []
     },
     {
       "bolge": "kirsal_acik_arazi",
@@ -204,7 +922,91 @@
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"rosendal_plains_1\" (CC0), tonemapped 8K JPG",
       "_not": "Alternatif gerçek çekim; AI panorama yerine kullanmak için _ornek satırını silip AI kaydına _ornek ekleyin. Kuru sari ot ovasi, kumulus bulutlu ogle gunesi; Anadolu bozkiri gorunumune en yakin aday",
-      "_ornek": true
+      "_ornek": true,
+      "noktalar": [
+        {
+          "ad": "ova sag",
+          "azimut": 60,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "figur"
+          ]
+        },
+        {
+          "ad": "ova sag uzak",
+          "azimut": 100,
+          "mesafe": 18,
+          "tur": [
+            "patlama",
+            "figur",
+            "toz"
+          ]
+        },
+        {
+          "ad": "ova sag arka",
+          "azimut": 130,
+          "mesafe": 22,
+          "tur": [
+            "patlama",
+            "figur"
+          ]
+        },
+        {
+          "ad": "calinin otesi",
+          "azimut": -10,
+          "mesafe": 30,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sol yamac",
+          "azimut": -100,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "figur"
+          ]
+        },
+        {
+          "ad": "on sag",
+          "azimut": 45,
+          "mesafe": 14,
+          "tur": [
+            "figur",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sol on",
+          "azimut": -60,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 100,
+          "mesafe": 45,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "yakin yanik cali",
+          "baslangic": -22,
+          "bitis": 34
+        },
+        {
+          "ad": "tepe agaclari ve tas duvar",
+          "baslangic": -150,
+          "bitis": -60
+        }
+      ]
     },
     {
       "bolge": "meskun_mahal",
@@ -212,10 +1014,86 @@
       "zaman": "alacakaranlik",
       "dosya": "meskun_mahal/pano_kis_alacakaranlik_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": 44,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"braustuble_alley\" (CC0), tonemapped 8K JPG",
-      "_not": "Karli kis alacakaranligi, ahsap iskeletli evler; Noel suslemeleri var"
+      "_not": "Karli kis alacakaranligi, ahsap iskeletli evler; Noel suslemeleri var",
+      "noktalar": [
+        {
+          "ad": "sokak",
+          "azimut": 44,
+          "mesafe": 30,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sol ara sokak",
+          "azimut": -157,
+          "mesafe": 28,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sokak on",
+          "azimut": 44,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol ara sokak on",
+          "azimut": -157,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "kirmizi ev onu",
+          "azimut": -40,
+          "mesafe": 9,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "kose",
+          "azimut": 20,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 44,
+          "mesafe": 50,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "kirmizi ev",
+          "baslangic": -108,
+          "bitis": 16
+        },
+        {
+          "ad": "yesil bina",
+          "baslangic": 52,
+          "bitis": 180
+        },
+        {
+          "ad": "krem ev",
+          "baslangic": -153,
+          "bitis": -108
+        }
+      ]
     },
     {
       "bolge": "meskun_mahal",
@@ -223,10 +1101,94 @@
       "zaman": "gece",
       "dosya": "meskun_mahal/pano_kis_gece_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": -10,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"blaubeuren_church_square\" (CC0), tonemapped 8K JPG",
-      "_not": "Karli kilise meydani gece; Noel isiklari var"
+      "_not": "Karli kilise meydani gece; Noel isiklari var",
+      "noktalar": [
+        {
+          "ad": "sokak",
+          "azimut": -40,
+          "mesafe": 28,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sag sokak",
+          "azimut": 165,
+          "mesafe": 26,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "meydan",
+          "azimut": 0,
+          "mesafe": 15,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "meydan on",
+          "azimut": -5,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "meydan sag",
+          "azimut": 30,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sokak on",
+          "azimut": -45,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag on",
+          "azimut": 120,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": -30,
+          "mesafe": 40,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "dukkan binasi",
+          "baslangic": -180,
+          "bitis": -74
+        },
+        {
+          "ad": "kilise",
+          "baslangic": 11,
+          "bitis": 74
+        },
+        {
+          "ad": "ahsap ev",
+          "baslangic": 97,
+          "bitis": 157
+        }
+      ]
     },
     {
       "bolge": "meskun_mahal",
@@ -237,7 +1199,112 @@
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"twilight_sunset\" (CC0), tonemapped 8K JPG",
-      "_not": "Tugla doseli banliyo avlusu, alacakaranlik"
+      "_not": "Tugla doseli banliyo avlusu, alacakaranlik",
+      "noktalar": [
+        {
+          "ad": "uzak evler",
+          "azimut": 0,
+          "mesafe": 24,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "uzak evler sol",
+          "azimut": -10,
+          "mesafe": 30,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sag yol",
+          "azimut": 73,
+          "mesafe": 26,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sol yol",
+          "azimut": -140,
+          "mesafe": 24,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "avlu on",
+          "azimut": 5,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "avlu sol",
+          "azimut": -20,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "avlu sag",
+          "azimut": 40,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag yol on",
+          "azimut": 75,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol yol on",
+          "azimut": -140,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 0,
+          "mesafe": 45,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "sol ev ve agac",
+          "baslangic": -142,
+          "bitis": -34
+        },
+        {
+          "ad": "duvar ve ev",
+          "baslangic": 16,
+          "bitis": 68
+        },
+        {
+          "ad": "garajlar",
+          "baslangic": 84,
+          "bitis": 180
+        },
+        {
+          "ad": "sol garaj",
+          "baslangic": -180,
+          "bitis": -146
+        }
+      ]
     },
     {
       "bolge": "meskun_mahal",
@@ -245,10 +1312,99 @@
       "zaman": "gece",
       "dosya": "meskun_mahal/pano_yaz_gece_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": -20,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"cobblestone_street_night\" (CC0), tonemapped 8K JPG",
-      "_not": "Lamba isikli dar tas sokak; park halinde arac var, 24K"
+      "_not": "Lamba isikli dar tas sokak; park halinde arac var, 24K",
+      "noktalar": [
+        {
+          "ad": "sol sokak",
+          "azimut": -137,
+          "mesafe": 28,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sag sokak",
+          "azimut": 74,
+          "mesafe": 26,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "ara sokak",
+          "azimut": -18,
+          "mesafe": 30,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sol sokak on",
+          "azimut": -137,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag sokak on",
+          "azimut": 74,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "ara sokak on",
+          "azimut": -18,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "kaldirim",
+          "azimut": 40,
+          "mesafe": 9,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": -137,
+          "mesafe": 45,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "buyuk bina",
+          "baslangic": -128,
+          "bitis": -22
+        },
+        {
+          "ad": "bina ve araclar",
+          "baslangic": -14,
+          "bitis": 56
+        },
+        {
+          "ad": "tas bina",
+          "baslangic": 81,
+          "bitis": 180
+        },
+        {
+          "ad": "araclar sol",
+          "baslangic": -180,
+          "bitis": -146
+        }
+      ]
     },
     {
       "bolge": "meskun_mahal",
@@ -256,10 +1412,94 @@
       "zaman": "gunduz",
       "dosya": "meskun_mahal/pano_yaz_gunduz_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": 45,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"cobblestone_parish_road\" (CC0), tonemapped 8K JPG",
-      "_not": "Eski kasaba arnavut kaldirimi sokak, sicak tas binalar; arac/insan yok, 24K"
+      "_not": "Eski kasaba arnavut kaldirimi sokak, sicak tas binalar; arac/insan yok, 24K",
+      "noktalar": [
+        {
+          "ad": "avlu",
+          "azimut": 55,
+          "mesafe": 16,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sokak sonu",
+          "azimut": -118,
+          "mesafe": 30,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sag sokak",
+          "azimut": 92,
+          "mesafe": 25,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "avlu on",
+          "azimut": 60,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sokak",
+          "azimut": -118,
+          "mesafe": 18,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "kilise onu",
+          "azimut": -30,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag sokak on",
+          "azimut": 95,
+          "mesafe": 15,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 55,
+          "mesafe": 50,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "sol bina",
+          "baslangic": -180,
+          "bitis": -128
+        },
+        {
+          "ad": "kilise",
+          "baslangic": -112,
+          "bitis": 22
+        },
+        {
+          "ad": "sag bina",
+          "baslangic": 97,
+          "bitis": 180
+        }
+      ]
     },
     {
       "bolge": "ormanlik",
@@ -267,10 +1507,102 @@
       "zaman": "alacakaranlik",
       "dosya": "ormanlik/pano_kis_alacakaranlik_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": -20,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"forest_grove\" (CC0), tonemapped 8K JPG",
-      "_not": "Karsiz kis korusu, gun dogumu"
+      "_not": "Karsiz kis korusu, gun dogumu",
+      "noktalar": [
+        {
+          "ad": "orman zemini sol",
+          "azimut": -40,
+          "mesafe": 18,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "orman zemini sag",
+          "azimut": 60,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka sag",
+          "azimut": 120,
+          "mesafe": 18,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka sol",
+          "azimut": -150,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "on sol",
+          "azimut": -30,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "on sag",
+          "azimut": 50,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag",
+          "azimut": 100,
+          "mesafe": 13,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol arka",
+          "azimut": -140,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 60,
+          "mesafe": 40,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "buyuk agac sol",
+          "baslangic": -115,
+          "bitis": -80
+        },
+        {
+          "ad": "ikiz govde",
+          "baslangic": 0,
+          "bitis": 30
+        },
+        {
+          "ad": "buyuk agac sag",
+          "baslangic": 142,
+          "bitis": 180
+        }
+      ]
     },
     {
       "bolge": "ormanlik",
@@ -281,7 +1613,104 @@
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"snowy_forest\" (CC0), tonemapped 8K JPG",
-      "_not": "Kapali havada karli igne yaprakli orman; JPG 60MB"
+      "_not": "Kapali havada karli igne yaprakli orman; JPG 60MB",
+      "noktalar": [
+        {
+          "ad": "on",
+          "azimut": 0,
+          "mesafe": 18,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sag",
+          "azimut": 100,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sol",
+          "azimut": -90,
+          "mesafe": 18,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka",
+          "azimut": 160,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "on sol",
+          "azimut": -10,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "on sag",
+          "azimut": 25,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag figur",
+          "azimut": 100,
+          "mesafe": 13,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol figur",
+          "azimut": -100,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 0,
+          "mesafe": 40,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "govde on sol",
+          "baslangic": -47,
+          "bitis": -33
+        },
+        {
+          "ad": "buyuk govde sag",
+          "baslangic": 52,
+          "bitis": 67
+        },
+        {
+          "ad": "govde sag arka",
+          "baslangic": 119,
+          "bitis": 132
+        },
+        {
+          "ad": "govde sol",
+          "baslangic": -122,
+          "bitis": -112
+        }
+      ]
     },
     {
       "bolge": "ormanlik",
@@ -292,7 +1721,104 @@
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"dark_autumn_forest\" (CC0), tonemapped 8K JPG",
-      "_not": "Karanlik orman patikasi, alcak gunes; sonbahar"
+      "_not": "Karanlik orman patikasi, alcak gunes; sonbahar",
+      "noktalar": [
+        {
+          "ad": "patika",
+          "azimut": -22,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "patika sag",
+          "azimut": 62,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "patika arka",
+          "azimut": 155,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "on",
+          "azimut": 10,
+          "mesafe": 16,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "patika on",
+          "azimut": -22,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "patika sag on",
+          "azimut": 62,
+          "mesafe": 13,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "on figur",
+          "azimut": 20,
+          "mesafe": 11,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "arka sag",
+          "azimut": 130,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 0,
+          "mesafe": 45,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "govde",
+          "baslangic": -118,
+          "bitis": -96
+        },
+        {
+          "ad": "buyuk govde",
+          "baslangic": -48,
+          "bitis": -24
+        },
+        {
+          "ad": "govde sag",
+          "baslangic": 76,
+          "bitis": 92
+        },
+        {
+          "ad": "govde sag 2",
+          "baslangic": 102,
+          "bitis": 114
+        }
+      ]
     },
     {
       "bolge": "ormanlik",
@@ -300,10 +1826,89 @@
       "zaman": "gece",
       "dosya": "ormanlik/pano_yaz_gece_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": 25,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"narrow_moonlit_road\" (CC0), tonemapped 8K JPG",
-      "_not": "Ay isikli agacli dar yol; gercek orman gecesi yok, en yakin aday (asfalt yol)"
+      "_not": "Ay isikli agacli dar yol; gercek orman gecesi yok, en yakin aday (asfalt yol)",
+      "noktalar": [
+        {
+          "ad": "yol uzak",
+          "azimut": 30,
+          "mesafe": 30,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "yol arka",
+          "azimut": -160,
+          "mesafe": 28,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "yol",
+          "azimut": 15,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "yol on",
+          "azimut": 30,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "yol arka on",
+          "azimut": -160,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "yakin",
+          "azimut": 5,
+          "mesafe": 10,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "yol uzak figur",
+          "azimut": 40,
+          "mesafe": 18,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 30,
+          "mesafe": 45,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "sol calilar",
+          "baslangic": -142,
+          "bitis": 2
+        },
+        {
+          "ad": "sag calilar",
+          "baslangic": 58,
+          "bitis": 180
+        }
+      ]
     },
     {
       "bolge": "ormanlik",
@@ -314,7 +1919,86 @@
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"je_gray_02\" (CC0), tonemapped 8K JPG",
-      "_not": "Gunesli cam ormani, otlu zemin, uzun golgeler; 24K, JPG 63MB (en iyi kalite)"
+      "_not": "Gunesli cam ormani, otlu zemin, uzun golgeler; 24K, JPG 63MB (en iyi kalite)",
+      "noktalar": [
+        {
+          "ad": "acik cim",
+          "azimut": 20,
+          "mesafe": 18,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "acik cim sag",
+          "azimut": 70,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "acik cim sol",
+          "azimut": -30,
+          "mesafe": 16,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "cim on",
+          "azimut": 10,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "cim sag",
+          "azimut": 60,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "cim sol",
+          "azimut": -40,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "cim arka sag",
+          "azimut": 110,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 30,
+          "mesafe": 45,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "buyuk govde",
+          "baslangic": -82,
+          "bitis": -62
+        },
+        {
+          "ad": "govde sag",
+          "baslangic": 118,
+          "bitis": 128
+        }
+      ]
     },
     {
       "bolge": "us_bolgesi",
@@ -325,7 +2009,89 @@
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"abandoned_tank_farm_05\" (CC0), tonemapped 8K JPG",
-      "_not": "Kis gun batimi, toprak yiginlari ve terk edilmis binalar (karsiz)"
+      "_not": "Kis gun batimi, toprak yiginlari ve terk edilmis binalar (karsiz)",
+      "noktalar": [
+        {
+          "ad": "kum on",
+          "azimut": 0,
+          "mesafe": 24,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "kum sag",
+          "azimut": 40,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "kum sol",
+          "azimut": -30,
+          "mesafe": 26,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka sag",
+          "azimut": 120,
+          "mesafe": 24,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "on",
+          "azimut": 0,
+          "mesafe": 13,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag",
+          "azimut": 30,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol",
+          "azimut": -40,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "arka",
+          "azimut": 150,
+          "mesafe": 15,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 60,
+          "mesafe": 42,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "tugla bina",
+          "baslangic": -80,
+          "bitis": -45
+        }
+      ]
     },
     {
       "bolge": "us_bolgesi",
@@ -333,10 +2099,114 @@
       "zaman": "gunduz",
       "dosya": "us_bolgesi/pano_kis_gunduz_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": -60,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"pylons\" (CC0), tonemapped 8K JPG",
-      "_not": "Karli terk edilmis beton ayaklar; kapali kis havasi"
+      "_not": "Karli terk edilmis beton ayaklar; kapali kis havasi",
+      "noktalar": [
+        {
+          "ad": "kar sol",
+          "azimut": -80,
+          "mesafe": 24,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "kar sag",
+          "azimut": 60,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "arka",
+          "azimut": 150,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sol on",
+          "azimut": -90,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol yakin",
+          "azimut": -50,
+          "mesafe": 10,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag on",
+          "azimut": 70,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "on",
+          "azimut": 10,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": -80,
+          "mesafe": 40,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "sutun",
+          "baslangic": -133,
+          "bitis": -126
+        },
+        {
+          "ad": "sutun",
+          "baslangic": -79,
+          "bitis": -72
+        },
+        {
+          "ad": "sutun",
+          "baslangic": -61,
+          "bitis": -50
+        },
+        {
+          "ad": "buyuk sutun",
+          "baslangic": 31,
+          "bitis": 43
+        },
+        {
+          "ad": "sutun",
+          "baslangic": 74,
+          "bitis": 79
+        },
+        {
+          "ad": "sutun",
+          "baslangic": 112,
+          "bitis": 117
+        },
+        {
+          "ad": "sutun",
+          "baslangic": 144,
+          "bitis": 153
+        }
+      ]
     },
     {
       "bolge": "us_bolgesi",
@@ -347,7 +2217,94 @@
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"rooftop_night\" (CC0), tonemapped 8K JPG",
-      "_not": "Alacakaranlikta projektorle aydinlatilmis beton cati otoparki; us gece aydinlatmasi hissi"
+      "_not": "Alacakaranlikta projektorle aydinlatilmis beton cati otoparki; us gece aydinlatmasi hissi",
+      "noktalar": [
+        {
+          "ad": "beton on",
+          "azimut": 0,
+          "mesafe": 26,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "beton sag",
+          "azimut": 30,
+          "mesafe": 24,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "beton sol",
+          "azimut": -20,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "cit onu",
+          "azimut": 120,
+          "mesafe": 28,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "on",
+          "azimut": 5,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol",
+          "azimut": -25,
+          "mesafe": 12,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag",
+          "azimut": 40,
+          "mesafe": 15,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag arka",
+          "azimut": 100,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": 10,
+          "mesafe": 45,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "hangar",
+          "baslangic": -146,
+          "bitis": -54
+        },
+        {
+          "ad": "kulube",
+          "baslangic": 58,
+          "bitis": 81
+        }
+      ]
     },
     {
       "bolge": "us_bolgesi",
@@ -355,10 +2312,97 @@
       "zaman": "gunduz",
       "dosya": "us_bolgesi/pano_yaz_gunduz_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": 30,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"derelict_airfield_02\" (CC0), tonemapped 8K JPG",
-      "_not": "Terk edilmis havaalani: hangarlar, beton, otlar; 24K"
+      "_not": "Terk edilmis havaalani: hangarlar, beton, otlar; 24K",
+      "noktalar": [
+        {
+          "ad": "apron on",
+          "azimut": 0,
+          "mesafe": 24,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "apron sol",
+          "azimut": -60,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "hangar onu",
+          "azimut": 80,
+          "mesafe": 30,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "apron arka",
+          "azimut": 150,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "on",
+          "azimut": 10,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol",
+          "azimut": -45,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "hangar on",
+          "azimut": 70,
+          "mesafe": 18,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag",
+          "azimut": 120,
+          "mesafe": 16,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis",
+          "azimut": -20,
+          "mesafe": 40,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ],
+      "yasak": [
+        {
+          "ad": "sag agaclar",
+          "baslangic": 126,
+          "bitis": 180
+        },
+        {
+          "ad": "sol agaclar",
+          "baslangic": -180,
+          "bitis": -135
+        }
+      ]
     }
   ],
   "dongu": [

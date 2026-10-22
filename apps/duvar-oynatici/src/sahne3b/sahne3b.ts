@@ -359,9 +359,15 @@ export class Sahne3B {
     this.parcaciklar.tozBulutu(p, 3.5, Math.max(0.2, siddet));
   }
 
-  /** Panoramanın yerleşim planına göre yön/mesafe seçimi (2B plakalar için de kullanılır). */
+  /**
+   * Panoramanın yerleşim planına göre yön/mesafe seçimi (2B plakalar için de kullanılır).
+   * Plan azimutları panorama koordinatındadır (yawKaydirma'dan bağımsız); sahne azimutu ile
+   * panorama azimutu arasında k = yawKaydirma kadar fark vardır (sahne = panorama − k).
+   */
   noktaSec(azimut: number, tur: YerlesimTuru, varsayilanMesafe: number, tolerans?: number): YerlesimSecimi {
-    return noktaSec(this.kaynak?.plan, azimut, tur, varsayilanMesafe, tolerans);
+    const k = this.kaynak?.yawKaydirma ?? 0;
+    const secim = noktaSec(this.kaynak?.plan, azimut + k, tur, varsayilanMesafe, tolerans);
+    return { ...secim, azimut: panoramadanSahneAzimutu(secim.azimut, k) };
   }
 
   figurOynat(tanim: ModelTanimi, s: FigurSecenekleri, kok: string) {
