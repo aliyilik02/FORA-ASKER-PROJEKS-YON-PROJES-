@@ -26,7 +26,9 @@ raporundaki (Grit Teknoloji, 7 Eylül 2026) teknik mimariyi uygular.
 
 Windows'ta tek tıkla **demo**: **`demo.bat`** (gerekirse kurar ve derler, köprüyü başlatır,
 tarayıcıda paneli `http://localhost:4000` ve oynatıcıyı `http://localhost:4000/oynatici/?hud=1`
-açar; yalnızca Node.js gerekir). Geliştirme için: **`kur.bat`** (bir kez, `npm install`), sonra
+açar; yalnızca Node.js gerekir). **`kisayol-olustur.bat`** masaüstüne ve Başlat menüsüne
+"Duvar Simulasyonu - Demo" ve "Duvar Simulasyonu - Claude Code" kısayollarını koyar; proje
+klasörü OneDrive dışında kısa bir yolda (ör. `C:\Projeler\duvar-simulasyonu`) olmalıdır. Geliştirme için: **`kur.bat`** (bir kez, `npm install`), sonra
 **`baslat.bat`** (köprü + panel geliştirme sunucuları, `http://localhost:5173`).
 
 Elle:
