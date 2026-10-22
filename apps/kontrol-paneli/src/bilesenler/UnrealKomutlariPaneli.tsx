@@ -1,5 +1,5 @@
 import type { BaglantiDurumu, UnrealIstekKaydi } from "../tipler";
-import { Bolum } from "./ortak";
+import { Bolum, Ikon } from "./ortak";
 
 function parametreMetni(p: Record<string, unknown>): string {
   return Object.entries(p)
@@ -7,24 +7,18 @@ function parametreMetni(p: Record<string, unknown>): string {
     .join("  ");
 }
 
-/**
- * Köprünün Unreal Engine'e gönderdiği Remote Control çağrılarını canlı listeler.
- * UE ekibi, Blueprint fonksiyonlarına hangi parametrelerin geldiğini buradan görür.
- */
+/** Köprünün Unreal Engine'e gönderdiği Remote Control çağrıları (UE yolu isteğe bağlı; simülasyon modunda yalnız listelenir). */
 export function UnrealKomutlariPaneli({ istekler, baglanti }: { istekler: UnrealIstekKaydi[]; baglanti: BaglantiDurumu | null }) {
   const mod = baglanti?.unreal.mod;
   return (
     <Bolum
-      baslik="Unreal'a Giden Komutlar"
-      altBaslik={
-        mod === "simulasyon"
-          ? "Simülasyon modu: çağrılar UE'ye gitmiyor, yalnızca burada gösteriliyor"
-          : `Remote Control → ${baglanti?.unreal.adres ?? ""}`
-      }
+      baslik="Unreal Komutları"
+      altBaslik={mod === "simulasyon" ? "Simülasyon modu: çağrılar UE'ye gitmiyor, yalnızca listeleniyor" : `Remote Control → ${baglanti?.unreal.adres ?? ""}`}
+      ikon={<Ikon.sistem />}
       sag={<span className="rozet notr">{istekler.length} kayıt</span>}
     >
       <ul className="unreal-liste">
-        {istekler.length === 0 && <li className="aciklama">Henüz çağrı yok. Bölge, ortam veya efekt değiştirin.</li>}
+        {istekler.length === 0 && <li className="aciklama">Henüz çağrı yok.</li>}
         {istekler.map((i, n) => (
           <li key={`${i.zaman}-${n}`} className={i.basarili ? "" : "basarisiz"} title={i.hata}>
             <time>{new Date(i.zaman).toLocaleTimeString("tr-TR")}</time>

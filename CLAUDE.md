@@ -102,6 +102,11 @@ parçacık dokuları (`icerik/dokular/`). Depoda: asker modelleri (three.js Sold
 helikopter (OGA CC-BY). Kaynak/lisans notları manifestte `_kaynak`. Araştırma listeleri (128 HDRI,
 modeller, VFX/ses adayları) oturum scratchpad'indeydi; yeniden gerekirse Poly Haven API ile üretilir.
 
+**Kontrol paneli yeniden tasarlandı** (22 Ekim): "harekât masası" teması, sahne pusulası (yön seçimi
+pusuladan; figür/patlama/helikopter/güneş/rüzgâr üzerinde), sol görev rayı (F1–F5), canlı sahne kartı +
+hızlı efektler (1–5), bildirimler, gecikmeli kaydırıcılar, iki aşamalı onay, tablet düzeni. Tasarım
+belirteçleri ve desenler `apps/kontrol-paneli/.interface-design/system.md`; yeni bileşen eklerken ona uy.
+
 Kullanıcı UE öğrenmeye vakit ayıramıyor; "görsel şölen" için tam yetki verdi (ücretsiz içerik indir,
 otonom çalış). Donanım yok; dizüstü GTX 1650 + Iris Xe (Chrome Iris Xe kullanıyor).
 
