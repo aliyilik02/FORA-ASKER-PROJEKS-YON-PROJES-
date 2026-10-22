@@ -3248,7 +3248,8 @@
         "tank",
         "patlama",
         "figur"
-      ]
+      ],
+      "agirSilah": true
     },
     "tank_eski": {
       "dosya": "modeller/tank_quaternius.glb",
@@ -3257,7 +3258,7 @@
       "ad": "Tank – eski tip, hareketli palet (3B)",
       "boy": 2.8,
       "mesafe": 30,
-      "yonDerece": -90,
+      "yonDerece": 90,
       "silah": true,
       "genislikDerece": 8,
       "_kaynak": "Quaternius Ultimate Animated Tanks (Poly Pizza), CC0",
@@ -3266,7 +3267,11 @@
         "tank",
         "patlama",
         "figur"
-      ]
+      ],
+      "agirSilah": true,
+      "kule": "Tank_Turret",
+      "namlu": "Tank_Gun",
+      "animasyon": "yok"
     }
   },
   "sesler": {

@@ -27,6 +27,14 @@ export interface CatismaSesleri {
   atis: (pan: number, uzak: boolean) => void;
   /** Ağır çatışmada düşman hattında rastgele uzak patlama (azimut, sahne). */
   uzakPatlama?: (azimut: number) => void;
+  /** Tank top atışı sesi (pan). */
+  topAtisi?: (pan: number) => void;
+}
+
+export interface AgirSilahKonumu {
+  konum: THREE.Vector3;
+  namlu: THREE.Vector3;
+  yon: THREE.Vector3;
 }
 
 export interface CatismaAyari {
@@ -66,6 +74,10 @@ export class CatismaSistemi {
   private dostSayaclar = new Map<number, number>();
   /** Silahlı dost figürlerin dünya konumları (ayak hizası). Dışarıdan her karede sağlanır. */
   dostlar: () => THREE.Vector3[] = () => [];
+  /** Ağır silahlar (tank): namlu ucu ve yönüyle. */
+  agirSilahlar: () => AgirSilahKonumu[] = () => [];
+  private topSayaclar = new Map<number, number>();
+  private mermiler: Array<{ p: THREE.Vector3; v: THREE.Vector3; kalan: number; hedefAz: number }> = [];
   /** Gündüz izler soluk, gece parlak (0 gece – 1 gündüz). */
   set isik(v: number) {
     (this.mesh.material as THREE.MeshBasicMaterial).opacity = 1 - v * 0.5;
@@ -146,6 +158,38 @@ export class CatismaSistemi {
     this.sesler.atis(Math.sin(radyan(konumAzimutu(konum))), false);
   }
 
+  /** Tank top atışı: büyük parlama + namlu dumanı + hızlı parlak mermi; düşman hattında patlama ile biter. */
+  private topAtisi(t: AgirSilahKonumu) {
+    const yonDuz = t.yon.clone().setY(0).normalize();
+    const hedefAz = (Math.atan2(yonDuz.x, -yonDuz.z) * 180) / Math.PI;
+    this.parcaciklar.parlama(t.namlu, 2.2);
+    for (let i = 0; i < 10; i++) {
+      this.parcaciklar.duman.ekle({
+        x: t.namlu.x + rnd(-0.3, 0.3),
+        y: t.namlu.y + rnd(-0.2, 0.3),
+        z: t.namlu.z + rnd(-0.3, 0.3),
+        vx: yonDuz.x * rnd(4, 9) + rnd(-1, 1),
+        vy: rnd(0.5, 2),
+        vz: yonDuz.z * rnd(4, 9) + rnd(-1, 1),
+        boyut: rnd(0.6, 1.2),
+        buyume: rnd(1.2, 2.2),
+        alfa: rnd(0.3, 0.5),
+        aci: rnd(0, 6.28),
+        donus: rnd(-1, 1),
+        t: 0,
+        sure: rnd(1.5, 3),
+        renk: [0.75, 0.7, 0.62],
+        yercekimi: -0.2,
+        surtunme: 1.6,
+      });
+    }
+    const v = yonDuz.clone().multiplyScalar(320);
+    v.y = 2;
+    this.mermiler.push({ p: t.namlu.clone(), v, kalan: rnd(0.55, 0.8), hedefAz });
+    this.izEkle(t.namlu, v, true);
+    this.sesler.topAtisi?.(Math.sin(radyan(konumAzimutu(t.konum))));
+  }
+
   private carpma(iz: Iz) {
     const p = iz.p;
     const pan = Math.sin(radyan(konumAzimutu(p)));
@@ -214,6 +258,16 @@ export class CatismaSistemi {
           this.dusmanSalvoSayac = rnd(0.4, 3.2) * (1.3 - s);
         }
       }
+      // --- Tank top atışları (7–16 sn arayla, şiddete göre) ---
+      if (this.ayar.dostAtes) {
+        this.agirSilahlar().forEach((t, i) => {
+          const kalan = (this.topSayaclar.get(i) ?? rnd(2, 6)) - dt;
+          if (kalan <= 0) {
+            this.topAtisi(t);
+            this.topSayaclar.set(i, rnd(7, 16) * (1.3 - s * 0.6));
+          } else this.topSayaclar.set(i, kalan);
+        });
+      }
       // --- Dost ateşi ---
       if (this.ayar.dostAtes) {
         const dostlar = this.dostlar();
@@ -242,6 +296,13 @@ export class CatismaSistemi {
         this.dusmanAtis(this.izli.azimut, 20);
       }
     } else this.izliBirikim = 0;
+
+    // --- Top mermileri: uçuş bitince düşman hattında patlama ---
+    for (const m of this.mermiler) {
+      m.kalan -= dt;
+      if (m.kalan <= 0) this.sesler.uzakPatlama?.(m.hedefAz + rnd(-3, 3));
+    }
+    this.mermiler = this.mermiler.filter((m) => m.kalan > 0);
 
     // --- İzleri ilerlet ---
     const canli: Iz[] = [];

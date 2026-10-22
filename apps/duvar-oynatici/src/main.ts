@@ -64,6 +64,7 @@ sahne3b.catismaSesleriAyarla({
   carpma: (pan) => ses.carpma(pan),
   atis: (pan, uzak) => ses.tekAtis(pan, uzak),
   uzakPatlama: (az) => void ses.patlama(azimutPan(az), 0.7, true, 600),
+  topAtisi: (pan) => void ses.patlama(pan, 0.55),
 });
 // Hata ayıklama: tarayıcı konsolundan sahneye erişim (window.duvar.sahne3b, window.duvar.THREE)
 (window as unknown as { duvar: unknown }).duvar = { sahne3b, THREE };

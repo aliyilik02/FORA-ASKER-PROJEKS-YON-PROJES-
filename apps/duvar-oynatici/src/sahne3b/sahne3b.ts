@@ -89,8 +89,10 @@ export class Sahne3B {
         this.patlama(az, 0.7, true, false);
         this.catismaSesleri.uzakPatlama?.(az);
       },
+      topAtisi: (pan) => this.catismaSesleri.topAtisi?.(pan),
     });
     this.catisma.dostlar = () => this.figurler.silahliKonumlar();
+    this.catisma.agirSilahlar = () => this.figurler.agirSilahlar();
     if (!r) return;
     this.renderer = r;
     r.outputColorSpace = THREE.SRGBColorSpace;

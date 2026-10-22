@@ -29,6 +29,19 @@ export interface ModelTanimi {
   renk?: string;
   /** Yerleşim türleri sırayla (ör. ["tank", "figur"]); verilmezse ["asker", "figur"]. */
   yerlesim?: Array<"asker" | "tank" | "figur">;
+  /** Ağır silah (tank/top): gövde yerinde kalır, varsa kule düşmana döner, top atışı yapar. */
+  agirSilah?: boolean;
+  /** Kule ve namlu düğüm adları (glTF). Namlu kuleye bağlanır, kule düşmana döner. */
+  kule?: string;
+  namlu?: string;
+}
+
+export interface AgirSilah {
+  /** Ayak hizası dünya konumu. */
+  konum: THREE.Vector3;
+  /** Namlu ucu dünya konumu ve atış yönü (birim). */
+  namlu: THREE.Vector3;
+  yon: THREE.Vector3;
 }
 
 export interface FigurSecenekleri {
@@ -51,6 +64,12 @@ interface Aktif {
   bitti: boolean;
   silah: boolean;
   temelDonus: number;
+  agirSilah: boolean;
+  kule: THREE.Object3D | null;
+  kuleTemel: THREE.Quaternion | null;
+  namlu: THREE.Object3D | null;
+  /** Kule yaw ofseti: a=0 iken kulenin dünya yaw'ı ve işaret (deneysel ölçülür). */
+  kuleAci: number;
 }
 
 export class FigurKatmani {
@@ -65,14 +84,63 @@ export class FigurKatmani {
     return this.aktifler.length;
   }
 
-  /** Silahlı figürlerin dünya konumları (ayak hizası). */
+  /** Hafif silahlı (tüfekli) figürlerin dünya konumları (ayak hizası); ağır silahlar ayrı. */
   silahliKonumlar(): THREE.Vector3[] {
-    return this.aktifler.filter((a) => a.silah && a.hiz === 0).map((a) => a.nesne.position.clone());
+    return this.aktifler.filter((a) => a.silah && !a.agirSilah && a.hiz === 0).map((a) => a.nesne.position.clone());
   }
 
   /** Verilen zemin noktasının `yaricap` m içinde figür var mı (yerleşimde üst üste binmeyi önler). */
   doluMu(konum: THREE.Vector3, yaricap = 2.2): boolean {
     return this.aktifler.some((a) => a.nesne.position.distanceTo(konum) < yaricap);
+  }
+
+  /** Ağır silahlar (tank): namlu ucu ve yönü ile. Kule yoksa yön = düşman azimutu. */
+  agirSilahlar(): AgirSilah[] {
+    const sonuc: AgirSilah[] = [];
+    for (const a of this.aktifler) {
+      if (!a.agirSilah) continue;
+      const konum = a.nesne.position.clone();
+      let yon: THREE.Vector3;
+      let namlu: THREE.Vector3;
+      if (a.namlu) {
+        a.nesne.updateMatrixWorld(true);
+        const kutu = new THREE.Box3().setFromObject(a.namlu);
+        const merkez = new THREE.Vector3();
+        kutu.getCenter(merkez);
+        // Namlu yönü: namlunun en uzun ekseni boyunca, gövde merkezinden dışa doğru
+        yon = merkez.clone().sub(konum.clone().setY(merkez.y)).normalize();
+        const uzunluk = kutu.getSize(new THREE.Vector3()).length() * 0.5;
+        namlu = merkez.clone().addScaledVector(yon, uzunluk);
+      } else {
+        const az = this.dusmanAzimutu ?? 0;
+        yon = new THREE.Vector3(Math.sin(radyan(az)), 0, -Math.cos(radyan(az)));
+        namlu = konum.clone().addScaledVector(yon, 3.5);
+        namlu.y += 2.2;
+      }
+      sonuc.push({ konum, namlu, yon });
+    }
+    return sonuc;
+  }
+
+  private kuleyiDondur(a: Aktif, dt: number) {
+    if (!a.kule || !a.kuleTemel || this.dusmanAzimutu === null) return;
+    // Hedef: namlu dünya yönü düşman azimutuna baksın. Kule, temel dönüşünün yerel z'si (dünya yukarı) etrafında döner.
+    const hedef = radyan(this.dusmanAzimutu);
+    const eksen = new THREE.Vector3(0, 0, 1);
+    const deneme = (aci: number) => {
+      a.kule!.quaternion.copy(a.kuleTemel!).multiply(new THREE.Quaternion().setFromAxisAngle(eksen, aci));
+      a.kule!.updateMatrixWorld(true);
+      const ileri = new THREE.Vector3(-1, 0, 0).applyQuaternion(a.kule!.getWorldQuaternion(new THREE.Quaternion()));
+      return Math.atan2(ileri.x, -ileri.z); // sahne azimutu (rad)
+    };
+    const simdi = deneme(a.kuleAci);
+    let fark = hedef - simdi;
+    fark = Math.atan2(Math.sin(fark), Math.cos(fark));
+    // İşaret: küçük bir adımın azimutu hangi yöne götürdüğünü ölç
+    const sonra = deneme(a.kuleAci + 0.01);
+    const isaret = Math.atan2(Math.sin(sonra - simdi), Math.cos(sonra - simdi)) >= 0 ? 1 : -1;
+    a.kuleAci += isaret * fark * Math.min(1, dt * 1.5);
+    deneme(a.kuleAci);
   }
 
   private yukle(url: string): Promise<GLTF> {
@@ -161,8 +229,33 @@ export class FigurKatmani {
       eylem.clampWhenFinished = true;
       eylem.play();
     }
+    // Kule / namlu: namlu kuleye bağlanır (dünya dönüşümü korunarak), kule düşmana döner
+    let kule: THREE.Object3D | null = null;
+    let namlu: THREE.Object3D | null = null;
+    if (tanim.kule) {
+      kule = nesne.getObjectByName(tanim.kule) ?? null;
+      if (tanim.namlu) namlu = nesne.getObjectByName(tanim.namlu) ?? null;
+      if (kule && namlu && namlu.parent !== kule) {
+        nesne.updateMatrixWorld(true);
+        kule.attach(namlu);
+      }
+    }
     this.grup.add(sarmal);
-    this.aktifler.push({ id: s.id, nesne: sarmal, karistirici, hiz, sola, bitti: false, silah: Boolean(tanim.silah), temelDonus: sarmal.rotation.y });
+    this.aktifler.push({
+      id: s.id,
+      nesne: sarmal,
+      karistirici,
+      hiz,
+      sola,
+      bitti: false,
+      silah: Boolean(tanim.silah),
+      temelDonus: sarmal.rotation.y,
+      agirSilah: Boolean(tanim.agirSilah),
+      kule,
+      kuleTemel: kule ? kule.quaternion.clone() : null,
+      namlu,
+      kuleAci: 0,
+    });
     return true;
   }
 
@@ -179,8 +272,10 @@ export class FigurKatmani {
   guncelle(dt: number) {
     for (const a of this.aktifler) {
       a.karistirici?.update(dt);
-      // Çatışmada silahlı, sabit figürler düşmana döner (yumuşak)
-      if (a.silah && a.hiz === 0) {
+      // Kuleli ağır silah: gövde yerinde, kule düşmana döner
+      if (a.agirSilah && a.kule) this.kuleyiDondur(a, dt);
+      // Çatışmada silahlı, sabit figürler (kulesiz) düşmana döner (yumuşak)
+      if (a.silah && a.hiz === 0 && !(a.agirSilah && a.kule)) {
         // Modelin ön yüzü (+z) düşman yönüne (sin a, 0, -cos a) baksın: θ = π − a
         const hedef = this.dusmanAzimutu === null ? a.temelDonus : Math.PI - radyan(this.dusmanAzimutu);
         let fark = hedef - a.nesne.rotation.y;
