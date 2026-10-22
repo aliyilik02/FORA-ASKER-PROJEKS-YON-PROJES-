@@ -3511,35 +3511,39 @@
         "mesafe": 7.5,
         "boy": 2.6,
         "yonDerece": 30,
-        "renk": "#7d7466"
+        "renk": "#6f6a60"
       },
       {
         "dosya": "modeller/sutre/kaya_google_poly.glb",
         "azimut": 30,
         "mesafe": 5.4,
         "boy": 1.2,
-        "yonDerece": 0
+        "yonDerece": 0,
+        "renk": "#7a7268"
       },
       {
         "dosya": "modeller/sutre/kaya_col_garland.glb",
         "azimut": -16,
         "mesafe": 4.6,
         "boy": 1,
-        "yonDerece": 45
+        "yonDerece": 45,
+        "renk": "#857c6c"
       },
       {
         "dosya": "modeller/sutre/kaya_col_garland.glb",
         "azimut": 52,
         "mesafe": 6.8,
         "boy": 1.4,
-        "yonDerece": -30
+        "yonDerece": -30,
+        "renk": "#857c6c"
       },
       {
         "dosya": "modeller/sutre/kaya_google_poly.glb",
         "azimut": -62,
         "mesafe": 7.2,
         "boy": 1.6,
-        "yonDerece": 60
+        "yonDerece": 60,
+        "renk": "#7a7268"
       }
     ],
     "cukur": [

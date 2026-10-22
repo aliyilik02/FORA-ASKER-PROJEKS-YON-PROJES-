@@ -254,7 +254,8 @@ export class FigurKatmani {
     if (tanim.silahModeli) {
       const sm = tanim.silahModeli;
       const silahUrl = /^(https?:|data:|blob:|\/)/.test(sm.dosya) ? sm.dosya : kok + sm.dosya;
-      const kemik = nesne.getObjectByName(sm.kemik);
+      // GLTFLoader düğüm adlarındaki nokta/boşluğu siler ("Wrist.R" → "WristR"); iki biçimi de dene
+      const kemik = nesne.getObjectByName(sm.kemik) ?? nesne.getObjectByName(sm.kemik.replace(/[^\w]/g, ""));
       const silahGltf = await this.yukle(silahUrl).catch(() => null);
       if (kemik && silahGltf && !this.aktifler.some((a) => a.id === s.id)) {
         const silah = silahGltf.scene.clone(true);
