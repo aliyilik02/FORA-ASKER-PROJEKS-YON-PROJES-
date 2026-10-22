@@ -175,6 +175,14 @@ function efektUygula(e: EfektIstegi) {
   }
 }
 
+/** Ortam ses döngüsü anahtarı (manifest `sesler.ortam`): yağmur > gece > kış > bölge. */
+function ortamSesAnahtari(d: SimulasyonDurumu): string {
+  if (d.ortam.yagis === "hafif_yagmur" || d.ortam.yagis === "siddetli_yagmur") return "yagmur";
+  if (zamanDilimi(d.ortam.saat) === "gece") return "gece";
+  if (d.ortam.mevsim === "kis") return "kis";
+  return d.bolge;
+}
+
 function durumUygula(d: SimulasyonDurumu) {
   if (d.bolge !== durum.bolge) sahne3b.sahneyiSifirla(); // kraterler ve duman bölgeyle birlikte gider
   durum = d;
@@ -190,6 +198,7 @@ function durumUygula(d: SimulasyonDurumu) {
     heli.durumAyarla(heliDurumu);
   }
   ses.ortamAyarla(d.ortam);
+  void ses.ortamDongusu(ortamSesAnahtari(d));
   sahne3b.ortamAyarla(d.ortam, gokyuzuRenkleri(d.ortam).isik);
   video.secim(d.bolge, d.ortam.mevsim, zamanDilimi(d.ortam.saat));
   panoramayiGuncelle();
@@ -232,6 +241,7 @@ async function sesiAc() {
   if (tamam) {
     uyariKutusu.style.display = "none";
     ses.ortamAyarla(durum.ortam);
+    void ses.ortamDongusu(ortamSesAnahtari(durum));
   }
 }
 
@@ -277,7 +287,10 @@ void ses.etkinlestir().then((tamam) => {
 });
 
 void video.yukle().then((m) => {
-  if (m.sesler) ses.manifestAyarla(m.sesler, `${video.kok}sesler/`);
+  if (m.sesler) {
+    ses.manifestAyarla(m.sesler, `${video.kok}sesler/`);
+    void ses.ortamDongusu(ortamSesAnahtari(durum));
+  }
   klipler.ayarla(m.klipler, video.kok);
   // 3B modeller: ön yükleme; "helikopter" adlı model Oda 2 helikopteri olur
   if (ucAktifOlabilir) {

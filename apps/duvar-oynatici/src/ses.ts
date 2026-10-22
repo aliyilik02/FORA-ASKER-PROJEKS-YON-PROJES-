@@ -28,6 +28,11 @@ export class SesMotoru {
   private kokYol = "icerik/sesler/";
   private ortamKaynak: { kaynak: AudioBufferSourceNode; filtre: BiquadFilterNode; kazanc: GainNode } | null = null;
   private rotor: { osc: OscillatorNode; kazanc: GainNode; lfo: OscillatorNode } | null = null;
+  /** Manifestten gelen döngülü ortam kaydı (bölge/gece/yağmur) ve rotor kaydı; yoksa sentez kalır. */
+  private ortamDosya: { anahtar: string; kaynak: AudioBufferSourceNode; kazanc: GainNode } | null = null;
+  private ortamAnahtar: string | null = null;
+  private rotorDosya: { kaynak: AudioBufferSourceNode; kazanc: GainNode } | null = null;
+  private rotorDosyaYukleniyor = false;
   sessiz = false;
 
   get hazir() {
@@ -146,7 +151,12 @@ export class SesMotoru {
 
   async gurultu(pan: number, siddet: number, uzak = false) {
     if (!this.hazir) return;
-    if (await this.dosyaCal(this.manifest.gurultu, pan, siddet, uzak)) return;
+    // Manifestteki kayıtlar tek atış; seri atış için 6–10 kez hızla art arda çalınır
+    if (this.manifest.gurultu?.length) {
+      const adet = 6 + Math.floor(Math.random() * 5);
+      for (let i = 0; i < adet; i++) setTimeout(() => void this.dosyaCal(this.manifest.gurultu, pan + (Math.random() - 0.5) * 0.2, siddet * 0.8, uzak), i * (85 + Math.random() * 35));
+      return;
+    }
     // Seri atış: 8–14 kısa patlama
     const adet = 8 + Math.floor(Math.random() * 7);
     for (let i = 0; i < adet; i++) {
@@ -230,9 +240,71 @@ export class SesMotoru {
     this.ortamKaynak.filtre.frequency.setTargetAtTime(200 + ortam.ruzgarSiddeti * 900 + yagisSeviye * 6000, c.currentTime, 1.5);
   }
 
+  /**
+   * Döngülü ortam kaydı: anahtar manifest `ortam` sözlüğünde (bölge adı, "gece", "kis", "yagmur").
+   * Çapraz geçişle değişir; anahtar yoksa dosya katmanı susar, sentezlenmiş rüzgâr sürer.
+   */
+  async ortamDongusu(anahtar: string | null) {
+    this.ortamAnahtar = anahtar;
+    if (!this.hazir) return;
+    const c = this.ctx!;
+    const dosya = anahtar ? this.manifest.ortam?.[anahtar] : undefined;
+    if (this.ortamDosya && this.ortamDosya.anahtar === anahtar) return;
+    if (this.ortamDosya) {
+      const eski = this.ortamDosya;
+      this.ortamDosya = null;
+      eski.kazanc.gain.setTargetAtTime(0, c.currentTime, 2);
+      setTimeout(() => eski.kaynak.stop(), 7000);
+    }
+    if (!dosya || !anahtar) return;
+    const b = await this.tampon(dosya);
+    if (!b || this.ortamAnahtar !== anahtar || !this.ctx) return;
+    const kaynak = c.createBufferSource();
+    kaynak.buffer = b;
+    kaynak.loop = true;
+    const kazanc = c.createGain();
+    kazanc.gain.value = 0;
+    kaynak.connect(kazanc).connect(this.ana!);
+    kaynak.start();
+    kazanc.gain.setTargetAtTime(0.35, c.currentTime, 2.5);
+    this.ortamDosya = { anahtar, kaynak, kazanc };
+  }
+
   helikopter(durum: HelikopterDurumu, tozSiddeti: number) {
     if (!this.hazir) return;
     const c = this.ctx!;
+    // Gerçek rotor kaydı varsa onu döngüle (sentez devreye girmez)
+    if (this.manifest.helikopter_rotor) {
+      if (durum === "yok") {
+        if (this.rotorDosya) {
+          const r = this.rotorDosya;
+          this.rotorDosya = null;
+          r.kazanc.gain.setTargetAtTime(0, c.currentTime, 2);
+          setTimeout(() => r.kaynak.stop(), 7000);
+        }
+        return;
+      }
+      if (!this.rotorDosya) {
+        if (this.rotorDosyaYukleniyor) return;
+        this.rotorDosyaYukleniyor = true;
+        void this.tampon(this.manifest.helikopter_rotor).then((b) => {
+          this.rotorDosyaYukleniyor = false;
+          if (!b || !this.ctx || this.rotorDosya) return;
+          const kaynak = this.ctx.createBufferSource();
+          kaynak.buffer = b;
+          kaynak.loop = true;
+          const kazanc = this.ctx.createGain();
+          kazanc.gain.value = 0;
+          kaynak.connect(kazanc).connect(this.ana!);
+          kaynak.start();
+          this.rotorDosya = { kaynak, kazanc };
+        });
+        return;
+      }
+      const seviye = 0.12 + tozSiddeti * 0.6 + (durum === "yerde" ? 0.1 : 0);
+      this.rotorDosya.kazanc.gain.setTargetAtTime(seviye, c.currentTime, 0.8);
+      return;
+    }
     if (durum === "yok") {
       if (this.rotor) {
         this.rotor.kazanc.gain.setTargetAtTime(0, c.currentTime, 2);

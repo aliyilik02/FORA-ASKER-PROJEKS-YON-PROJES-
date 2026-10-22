@@ -87,22 +87,31 @@ Panel API'si (`apps/kopru/src/api.ts`): `/api/durum`, `/oda`, `/bolge`, `/ortam`
 
 ## Mevcut durum (22 Ekim 2026)
 
-Çalışan: panel, köprü, oynatıcı (yer tutucu sahne + panorama ve klip katmanları), senaryo
-editörü, ön ayarlar, Art-Net çıkışı (donanımsız doğrulandı), figür paneli, demo.bat (Windows'ta
-doğrulandı). Gerçek içerik: kırsal açık arazi yaz/gündüz için ilk Skybox AI panoraması
-(`icerik/kirsal_acik_arazi/pano_yaz_gunduz_8k.jpg`, şimdilik 2912×1440 önizleme; manifeste bağlı,
-oynatıcıda doğrulandı; 8K/12K sürümü aynı adla değiştirilecek). Diğer varyantlar, VFX plakaları,
-asker klipleri, Türkçe sesler bekliyor. Donanım (render PC, projektörler, Art-Net node) yok; kullanıcının dizüstü GTX 1650.
+Çalışan: panel, köprü, oynatıcı, senaryo editörü, ön ayarlar, Art-Net çıkışı (donanımsız
+doğrulandı), figür paneli, demo.bat. **Oynatıcıda 3B sahne katmanı** (`apps/duvar-oynatici/src/sahne3b/`,
+Three.js): panorama = arka plan + ışık (IBL), güneş yönü panoramadan, gölgeli zemin, patlamada kalıcı
+krater + moloz + tüten duman, parçacık efektleri, glTF figürler, 3B helikopter. Tarayıcıda doğrulandı
+(figürler, patlama, krater); helikopter 3B görsel testi bekliyor. Ayrıntı `docs/duvar-oynatici.md`.
+
+Gerçek içerik (kullanıcının makinesinde, depoda değil): kırsal yaz gündüz Skybox AI panoraması
+(2912×1440 önizleme, varsayılan) + **23 Poly Haven CC0 gerçek çekim panorama** (5 bölge × mevsim ×
+zaman, 8K, `pano_<mevsim>_<zaman>_foto_8k.jpg`), Mixkit/OGA sesler (`icerik/sesler/`), Kenney CC0
+parçacık dokuları (`icerik/dokular/`). Depoda: asker modelleri (three.js Soldier, Poly Pizza CC-BY),
+helikopter (OGA CC-BY). Kaynak/lisans notları manifestte `_kaynak`. Araştırma listeleri (128 HDRI,
+modeller, VFX/ses adayları) oturum scratchpad'indeydi; yeniden gerekirse Poly Haven API ile üretilir.
+
+Kullanıcı UE öğrenmeye vakit ayıramıyor; "görsel şölen" için tam yetki verdi (ücretsiz içerik indir,
+otonom çalış). Donanım yok; dizüstü GTX 1650 + Iris Xe (Chrome Iris Xe kullanıyor).
 
 ## Sıradaki işler (öncelik sırasıyla)
 
-1. Kırsal açık arazi için yapay zekâ 360° panorama: 6–10 aday → seçim → kış/alacakaranlık/gece
-   varyantları → `icerik/kirsal_acik_arazi/` + manifest `panorama` satırı. Promptlar
-   `docs/fotogercekci-icerik-hatti.md` §3'te.
-2. VFX plaka paketi (patlama, toz, namlu alevi) → VP9 alpha → `icerik/klipler/` + manifest `klipler`.
-3. Yeşil perde asker çekimi (okul personeli; klip listesi ve çekim düzeni §2.5) → keying → klipler.
-4. Senaryo adımı tipi olarak figür komutu; 4 kanal ses; U duvar ölçüleri gelince `?fov=`.
-5. İdareye 1 bölge + 4 varyant + 2 efekt + 3 asker ile "kabul standardı" gösterimi.
+1. Oda 2 helikopter 3B testi (ölçek, rotor yönü, iniş noktası); diğer 4 bölgede panorama + güneş
+   tahmini + gece karartması gözle kontrol; `yawKaydirma` ile ilgi çeken yönü ortaya alma.
+2. Daha gerçekçi asker: Mixamo "Swat" + Rifle Idle/Walk/Run/Crouch/Crawl/Injured (Blender → GLB,
+   Mixamo iskeleti) ya da yeşil perde çekimi (docs §2.5). Yaralı yerde / sürünen figür.
+3. VFX plakaları (gerçek çekim, alfa) ve helikopter inişi için 3B toz + ses ayarı; izli mermiyi 3B'ye taşıma.
+4. Senaryo adımı tipi olarak figür komutu; 4 kanal ses; Türkçe bağırma kaydı; U duvar ölçüleri → `?fov=`.
+5. İdareye gösterim: kırsal 4 varyant + patlama/krater + 3 asker + helikopter.
 
 ## Belgeler
 

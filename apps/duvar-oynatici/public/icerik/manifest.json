@@ -418,7 +418,10 @@
       "uzak_patlama_3.ogg",
       "uzak_patlama_4.ogg"
     ],
-    "gurultu": [],
+    "gurultu": [
+      "silah_mosin.ogg",
+      "silah_sks.ogg"
+    ],
     "bagirma": [
       "bagirma_1.ogg",
       "bagirma_2.ogg",
@@ -436,6 +439,6 @@
       "kis": "ortam_kis_ruzgar.ogg",
       "yagmur": "ortam_yagmur.ogg"
     },
-    "_kaynak": "Mixkit Free lisansı (ticari kullanım serbest): patlama, uzak patlama, bağırma (İngilizce yer tutucu; Türkçe kayıt gelecek), helikopter, ortam döngüleri. helikopter_rotor ve ortam dosyaları henüz ses motoruna bağlı değil (ses.ts yalnızca sentez kullanıyor)."
+    "_kaynak": "Mixkit Free lisansı (ticari kullanım serbest): patlama, uzak patlama, bağırma (İngilizce yer tutucu; Türkçe kayıt gelecek), helikopter rotoru, ortam döngüleri (bölge adı / gece / kis / yagmur anahtarları). Silah: OpenGameArt Tabasco CC0 (tek atış; seri atış oynatıcıda art arda çalınır)."
   }
 }
