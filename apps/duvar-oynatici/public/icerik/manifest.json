@@ -2,15 +2,14 @@
   "_aciklama": "Duvar Oynatıcı içerik manifesti. Öncelik: 'panorama' (360° equirectangular resim/video) > 'dongu' (5760x1080 düz klip) > parametrik yer tutucu. Dosya yolları bu klasöre görelidir. Gerçek dosya koyunca ilgili satırdaki _ornek alanını silin.",
   "panorama": [
     {
-      "_ornek": true,
       "bolge": "kirsal_acik_arazi",
       "mevsim": "yaz",
       "zaman": "gunduz",
-      "dosya": "kirsal_acik_arazi/pano_yaz_gunduz_12k.jpg",
+      "dosya": "kirsal_acik_arazi/pano_yaz_gunduz_8k.jpg",
       "tip": "resim",
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
-      "_not": "12K×6K equirectangular (2:1). yawKaydirma: panoramanın hangi azimutu orta duvarın ortasına gelsin (derece). yukseklikKaydirma: ufku kaydır (-1..1). mevsim/zaman verilmezse o bölgenin tüm durumlarında kullanılır."
+      "_not": "Skybox AI, 2912x1440 onizleme; 8K/12K surumu gelince ayni adla degistirin. yawKaydirma: panoramanin hangi azimutu orta duvarin ortasina gelsin (derece). yukseklikKaydirma: ufku kaydir (-1..1). mevsim/zaman verilmezse o bolgenin tum durumlarinda kullanilir."
     },
     {
       "_ornek": true,

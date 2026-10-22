@@ -103,7 +103,9 @@ export class PanoramaKatmani {
       for (const ad of ["doku", "boyut", "duvarSayisi", "duvarlar", "yawKaydirma", "yukseklikKaydirma"]) this.konumlar[ad] = gl.getUniformLocation(p, ad);
       this.doku = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, this.doku);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+      // WebGL 1: ikinin kuvveti olmayan dokular (2912x1440, 12288x6144 ...) REPEAT ile "eksik" sayılır ve
+      // siyah örneklenir. Yatay sarma shader'da fract(uv.x) ile yapıldığından CLAMP_TO_EDGE yeterli.
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
