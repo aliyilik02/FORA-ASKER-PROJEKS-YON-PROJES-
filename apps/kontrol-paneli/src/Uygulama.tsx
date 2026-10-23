@@ -117,7 +117,7 @@ function Govde() {
               </>
             )}
             {sekme === "efektler" && (durum.oda === "oda1" ? <EfektPaneli durum={durum} calistir={calistir} /> : <Oda2Paneli durum={durum} calistir={calistir} />)}
-            {sekme === "figurler" && <FigurPaneli aktifler={figurler} calistir={calistir} />}
+            {sekme === "figurler" && <FigurPaneli aktifler={figurler} calistir={calistir} oda={durum.oda} />}
             {sekme === "senaryo" && (
               <>
                 <SenaryoPaneli senaryoDurumu={senaryo} simDurumu={durum} calistir={calistir} />

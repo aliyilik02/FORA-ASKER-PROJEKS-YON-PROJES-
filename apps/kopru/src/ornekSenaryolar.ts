@@ -142,7 +142,7 @@ export const ORNEK_SENARYOLAR: Senaryo[] = [
       { id: "g21", gecikmeMs: 205000, aciklama: "Yaz öğlene dönüş", islem: { tip: "ortam", ortam: { mevsim: "yaz", saat: 12, bulut: 0.15, sis: 0, yagis: "yok" } } },
       { id: "g22", gecikmeMs: 210000, aciklama: "Oda 2: üs bölgesi güvenli alanı (HESCO, kum torbası)", islem: { tip: "oda", oda: "oda2" } },
       { id: "g23", gecikmeMs: 210500, aciklama: "Güvenli alan: operasyonel bölge; uzak sesler 800 m", islem: { tip: "oda2", oda2: { guvenliAlan: "operasyonel_bolge", helikopter: "yok", uzakSesMesafesi: 800, uzakSesYonu: 45, helikopterYonu: 12 } } },
-      { id: "g24", gecikmeMs: 215000, aciklama: "Yaralı güvenli alanda, sıhhiyeci başında", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_g24", klip: "asker_yarali_3b", azimut: -10, yukseklik: -12, olcek: 1, dongu: true } } },
+      { id: "g24", gecikmeMs: 215000, aciklama: "Yaralı güvenli alanda, sıhhiyeci başında", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_g24", klip: "asker_yarali_3b", azimut: -10, yukseklik: -26, olcek: 1, dongu: true } } },
       { id: "g25", gecikmeMs: 217000, aciklama: "Sıhhiyeci", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_g25", klip: "asker_sihhiyeci", yaninda: "senaryo_g24", azimut: -10, olcek: 1, dongu: true } } },
       { id: "g26", gecikmeMs: 220000, aciklama: "Uzaktan mermi sesi", islem: { tip: "efekt", efekt: { tur: "uzak_mermi_sesi", siddet: 0.7 } } },
       { id: "g27", gecikmeMs: 228000, aciklama: "Helikopter yaklaşıyor", islem: { tip: "oda2", oda2: { helikopter: "yaklasiyor" } } },

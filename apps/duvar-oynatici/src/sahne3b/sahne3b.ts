@@ -21,7 +21,7 @@ import { Helikopter3B } from "./helikopter3b";
 import { ParcacikSistemi } from "./parcaciklar";
 import { SutreKatmani, type SutreEsyasi } from "./sutre";
 import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu, yukseklikMesafe } from "./uzay";
-import { birlikNoktasiSec, noktaSec, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
+import { birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
 /** Kalite kademeleri: dizüstü/entegre GPU'da "dusuk", sahadaki RTX sınıfı makinede "yuksek". */
@@ -440,6 +440,12 @@ export class Sahne3B {
     if (s.yaninda) {
       // Başka figürün yanına: yerleşim planı atlanır, konum oynatıcıda o figüre göre hesaplanır
       void this.figurler.oynat(tanim, { ...s, mesafe: undefined }, kok);
+      return;
+    }
+    if (tanim.serbestYerlesim) {
+      // Yaralı vb.: panelin yönü ve mesafesi aynen (Oda 2'de sütrenin içine, Oda 1'de yakına); yalnız ağaç/bina içine değil
+      const az = panoramadanSahneAzimutu(yasaktanKacin(s.azimut + k, this.kaynak?.plan?.yasak), k);
+      void this.figurler.oynat(tanim, { ...s, azimut: az, mesafe: varsayilan }, kok);
       return;
     }
     const turler = tanim.yerlesim ?? ["asker", "figur"];

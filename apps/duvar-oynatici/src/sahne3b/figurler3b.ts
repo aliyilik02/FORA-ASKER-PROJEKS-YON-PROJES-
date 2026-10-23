@@ -43,6 +43,8 @@ export interface ModelTanimi {
   silahModeli?: { dosya: string; kemik: string; konum?: [number, number, number]; donus?: [number, number, number]; boy?: number };
   /** Başlangıç duruşu (manifest); panel komutu `poz` ile değişir. */
   poz?: FigurPozu;
+  /** Yerleşim planı atlanır: yön + mesafe aynen (yasak aralıktan kaçınarak). Yaralı gibi yakın konması gereken figürler. */
+  serbestYerlesim?: boolean;
   /**
    * Prosedürel duruş (diz çökme, yerde nefes/yardım işareti) için kemik adları. Verilmezse Quaternius
    * rigi varsayılır (Hips, Chest, UpperLeg.L/R, LowerLeg.L/R, UpperArm.R; GLTFLoader noktaları siler).

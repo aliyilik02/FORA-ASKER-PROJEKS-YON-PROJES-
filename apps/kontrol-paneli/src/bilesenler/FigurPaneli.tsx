@@ -19,7 +19,7 @@ const MESAFELER: Array<[number, string]> = [
  * hazır mevzi/tank noktalarından pusuladaki yöne en yakın BOŞ olanı kullanır (üst üste binmez).
  * Elle yerleştirme "Gelişmiş" altında saklı kalır.
  */
-export function FigurPaneli({ aktifler, calistir }: { aktifler: Array<FigurKomutu & { id: string }>; calistir: Calistir }) {
+export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Array<FigurKomutu & { id: string }>; calistir: Calistir; oda?: "oda1" | "oda2" }) {
   const { seciliYon, bildir } = useArayuz();
   const [klipler, setKlipler] = useState<KlipOzeti[]>([]);
   const [klip, setKlip] = useState("");
@@ -53,7 +53,8 @@ export function FigurPaneli({ aktifler, calistir }: { aktifler: Array<FigurKomut
   const yaraliCagir = () => {
     const ad = yaralilar[0];
     if (!ad) return;
-    void calistir(() => cagir(ad, 0, -12)).then(() => bildir({ tur: "basari", baslik: "Yaralı yerde", metin: `${yonMetni(seciliYon)} tarafı, yakın mesafe · yardım çağırıyor` }));
+    // Oda 1: 8 m yakında; Oda 2: sütrenin içinde (3,5 m), kum torbası hattının arkasında kalmasın
+    void calistir(() => cagir(ad, 0, oda === "oda2" ? -26 : -12)).then(() => bildir({ tur: "basari", baslik: "Yaralı yerde", metin: `${yonMetni(seciliYon)} tarafı, ${oda === "oda2" ? "sütrenin içinde" : "yakın mesafe"} · yardım çağırıyor` }));
   };
   const pozDegistir = (f: FigurKomutu & { id: string }, poz: FigurPozu) =>
     void calistir(() => api.figur({ islem: "poz", id: f.id, poz })).then(
