@@ -150,7 +150,9 @@ Köprüyü yeniden başlatma: port 4000'i dinleyen süreci durdur, `Start-Proces
 duvar önizlemesi (oynatıcı → köprü → panel, `onizleme` mesajı), "Asker vuruldu" hızlı düğmesi (6), serbest
 yerleşim (`serbestYerlesim`: yaralı/sıhhiyeci plan dışı; Oda 2'de 3,5 m), figür yükleme sırasında mevzi
 rezervasyonu, panorama yüklenirken efekt kuyruğu, dağlık patlama noktaları ≤13 m, SWAT figürler haki tonlu,
-fare imleci 3 sn'de gizlenir, `docs/gosterim-rehberi.md`.
+fare imleci 3 sn'de gizlenir, `docs/gosterim-rehberi.md`. Köprü son durumu diske yazıp açılışta geri yükler;
+"Sahneyi sıfırla" (`/sahne/sifirla` + `sahne` WS mesajı); oynatıcı uyarıları köprü günlüğüne (`gunluk` istemci
+mesajı), önizleme fps/kalite bilgisi taşır; HUD varsayılan kapalı; panelde `figurYardimcilari.ts`.
 
 ## Sıradaki işler (öncelik sırasıyla)
 
