@@ -17,6 +17,7 @@ import { UnrealKomutlariPaneli } from "./bilesenler/UnrealKomutlariPaneli";
 import { UstCubuk } from "./bilesenler/UstCubuk";
 import { SEKME_KISAYOLLARI, YanMenu } from "./bilesenler/YanMenu";
 import { EFEKT_ETIKETLERI, type EfektTuru } from "./tipler";
+import { vurulabilirAskerler, yoneEnYakin } from "./figurYardimcilari";
 import { useKopru } from "./useKopru";
 
 export function Uygulama() {
@@ -67,13 +68,8 @@ function Govde() {
       }
       if (e.key === "6" && durum.oda === "oda1") {
         // Canlı sahne kartındaki "Asker vuruldu" ile aynı: pusulaya en yakın ayakta asker
-        const adaylar = figurler.filter((f) => /^asker_(bekleyen|taktik|diz_cokmus|kamuflaj)/.test(f.klip ?? "") && f.poz !== "yarali");
-        if (adaylar.length) {
-          const hedefAz = ((seciliYon + 180) % 360) - 180;
-          const fark = (a: number) => Math.abs((((a - hedefAz) % 360) + 540) % 360 - 180);
-          const f = [...adaylar].sort((a, b) => fark(a.azimut ?? 0) - fark(b.azimut ?? 0))[0];
-          void calistir(() => api.figur({ islem: "poz", id: f.id, poz: "yarali" })).then((r) => r && bildir({ tur: "hata", baslik: "Asker vuruldu" }));
-        }
+        const f = yoneEnYakin(vurulabilirAskerler(figurler), seciliYon);
+        if (f) void calistir(() => api.figur({ islem: "poz", id: f.id, poz: "yarali" })).then((r) => r && bildir({ tur: "hata", baslik: "Asker vuruldu" }));
         return;
       }
       if (e.key === "ArrowLeft") setSeciliYon(seciliYon - (e.shiftKey ? 15 : 5));

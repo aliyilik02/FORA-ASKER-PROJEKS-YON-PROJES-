@@ -97,4 +97,18 @@ describe("figür yöneticisi", () => {
     expect(bos.azimut).toBe(10);
     expect(() => f.komut({ islem: "poz", id: y.id, poz: "yatmis" })).not.toThrow();
   });
+
+  it("yukle: kaydedilmiş figürleri yayın yapmadan geri alır, bozuk kayıtları atlar", () => {
+    const f = new FigurYoneticisi(new Gunluk(), []);
+    let yayin = 0;
+    f.dinle(() => yayin++);
+    f.yukle([
+      { islem: "oynat", id: "a", klip: "asker_bekleyen", azimut: 5, poz: "yarali" },
+      { islem: "oynat", id: "", klip: "x" } as never,
+      { islem: "oynat", id: "b" } as never,
+    ]);
+    expect(f.aktifListe().map((x) => x.id)).toEqual(["a"]);
+    expect(f.aktifListe()[0].poz).toBe("yarali");
+    expect(yayin).toBe(0);
+  });
 });

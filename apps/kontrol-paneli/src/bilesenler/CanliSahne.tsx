@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useArayuz } from "../arayuz";
 import { BOLGE_ETIKETLERI, EFEKT_ETIKETLERI, HELIKOPTER_ETIKETLERI, MEVSIM_ETIKETLERI, YAGIS_ETIKETLERI, type EfektTuru, type FigurKomutu, type SenaryoDurumu, type SimulasyonDurumu } from "../tipler";
+import { vurulabilirAskerler, yoneEnYakin } from "../figurYardimcilari";
 import { Ikon, OnayliDugme, Rozet, saatBicimi, sureBicimi, yonMetni } from "./ortak";
 import { Pusula } from "./Pusula";
 
@@ -50,12 +51,10 @@ export function CanliSahne({
 
   const hizli = durum.oda === "oda1" ? HIZLI_ODA1 : HIZLI_ODA2;
   // Oda 1'in en önemli tek dokunuşu: pusulaya en yakın ayakta/diz çökmüş asker vurulur (6 tuşu)
-  const vurulabilir = figurler.filter((f) => /^asker_(bekleyen|taktik|diz_cokmus|kamuflaj)/.test(f.klip ?? "") && f.poz !== "yarali");
+  const vurulabilir = vurulabilirAskerler(figurler);
   const askerVuruldu = () => {
-    if (!vurulabilir.length) return;
-    const hedefAz = ((seciliYon + 180) % 360) - 180;
-    const fark = (a: number) => Math.abs((((a - hedefAz) % 360) + 540) % 360 - 180);
-    const f = [...vurulabilir].sort((a, b) => fark(a.azimut ?? 0) - fark(b.azimut ?? 0))[0];
+    const f = yoneEnYakin(vurulabilir, seciliYon);
+    if (!f) return;
     setSonTetik("vuruldu");
     window.setTimeout(() => setSonTetik(null), 450);
     void calistir(() => api.figur({ islem: "poz", id: f.id, poz: "yarali" })).then((r) => r && bildir({ tur: "hata", baslik: "Asker vuruldu", metin: `${yonMetni(((f.azimut ?? 0) + 360) % 360)} tarafı · Figürler'den sıhhiyeci gönder` }));

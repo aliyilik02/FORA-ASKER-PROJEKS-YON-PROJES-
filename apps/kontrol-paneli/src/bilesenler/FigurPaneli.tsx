@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useArayuz, yonAzimut } from "../arayuz";
+import { vurulabilirAskerler, yoneEnYakin } from "../figurYardimcilari";
 import { FIGUR_POZ_ETIKETLERI, type FigurKomutu, type FigurPozu, type KlipOzeti } from "../tipler";
 import { Anahtar, Bolum, Ikon, Kaydirici, OnayliDugme, yonMetni } from "./ortak";
 
@@ -45,7 +46,7 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
   const yaraliAktifler = aktifler.filter((f) => f.poz === "yarali");
   const baslik = (ad: string) => klipler.find((k) => k.ad === ad)?.baslik ?? ad;
   /** Vurulabilecek (ayakta/diz çökmüş, 3B asker) figürler. */
-  const vurulabilir = aktifler.filter((f) => /^asker_(bekleyen|taktik|diz_cokmus|kamuflaj)/.test(f.klip ?? "") && f.poz !== "yarali");
+  const vurulabilir = vurulabilirAskerler(aktifler);
 
   const cagir = async (ad: string, sapma = 0, yuk = -7) => {
     await api.figur({ islem: "oynat", klip: ad, azimut: yonAzimut(seciliYon + sapma), yukseklik: yuk, olcek: 1, yansit: false, dongu: true });
@@ -77,11 +78,8 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
   };
   /** Tek dokunuş: sahnedeki ayakta askerlerden biri (pusulaya en yakın) vurulur, yere düşer. */
   const askerVuruldu = () => {
-    if (!vurulabilir.length) return;
-    const hedefAz = yonAzimut(seciliYon);
-    const fark = (a: number) => Math.abs((((a - hedefAz) % 360) + 540) % 360 - 180);
-    const f = [...vurulabilir].sort((a, b) => fark(a.azimut ?? 0) - fark(b.azimut ?? 0))[0];
-    pozDegistir(f, "yarali");
+    const f = yoneEnYakin(vurulabilir, seciliYon);
+    if (f) pozDegistir(f, "yarali");
   };
   const askerCagir = () => {
     if (!askerler.length) return;

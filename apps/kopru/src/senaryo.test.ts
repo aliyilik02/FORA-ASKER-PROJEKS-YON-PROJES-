@@ -151,4 +151,12 @@ describe("durum deposu", () => {
     await ilerle(1500);
     expect(komutlar).toEqual(["oynat:senaryo_a1:asker_bekleyen", "poz:senaryo_a1:yarali"]);
   });
+
+  it("oda adımı depoda odayı değiştirir", async () => {
+    const { depo, motor, ilerle } = kur();
+    motor.yukle({ id: "o1", ad: "Oda", oda: "oda1", adimlar: [{ id: "x1", gecikmeMs: 0, aciklama: "oda2", islem: { tip: "oda", oda: "oda2" } }] });
+    await motor.oynat();
+    await ilerle(100);
+    expect(depo.al().oda).toBe("oda2");
+  });
 });

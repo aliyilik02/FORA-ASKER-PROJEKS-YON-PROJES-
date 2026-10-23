@@ -36,7 +36,7 @@ export class FigurYoneticisi {
   /** Açılışta kaydedilmiş figürleri geri yükler (yayın yok; bağlanan istemciler listeyi zaten alır). */
   yukle(liste: AktifFigur[]) {
     this.aktifler.clear();
-    for (const f of liste) if (f && typeof f.id === "string" && f.klip) this.aktifler.set(f.id, { ...f, islem: "oynat" });
+    for (const f of liste) if (f && typeof f.id === "string" && f.id && typeof f.klip === "string" && f.klip) this.aktifler.set(f.id, { ...f, islem: "oynat" });
   }
 
   /** Komutu doğrular, uygular ve yayınlar. Hatalı komutta Error fırlatır. */
