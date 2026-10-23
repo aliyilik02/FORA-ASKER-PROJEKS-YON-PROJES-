@@ -4,6 +4,7 @@
  * Zamanlayıcı dışarıdan verilebilir (testlerde sahte saat kullanılır).
  */
 import type { DurumDeposu } from "./durum.js";
+import type { FigurYoneticisi } from "./figur.js";
 import type { Gunluk } from "./gunluk.js";
 import type { Senaryo, SenaryoAdimi, SenaryoDurumu } from "./tipler.js";
 
@@ -29,6 +30,12 @@ export class SenaryoMotoru {
   private duraklatmaKonumu = 0;
   private durdur: (() => void) | null = null;
   private dinleyiciler = new Set<Dinleyici>();
+  /** Figür adımları için; `figurBagla` ile verilir (isteğe bağlı, testlerde yok). */
+  private figur: Pick<FigurYoneticisi, "komut"> | null = null;
+
+  figurBagla(f: Pick<FigurYoneticisi, "komut">) {
+    this.figur = f;
+  }
 
   constructor(
     private readonly depo: DurumDeposu,
@@ -129,6 +136,17 @@ export class SenaryoMotoru {
         break;
       case "catisma":
         await this.depo.catismaGuncelle(islem.catisma);
+        break;
+      case "figur":
+        if (!this.figur) {
+          this.gunluk.uyari("Senaryo figür adımı: figür yöneticisi bağlı değil");
+          break;
+        }
+        try {
+          this.figur.komut(islem.figur);
+        } catch (hata) {
+          this.gunluk.uyari(`Senaryo figür adımı uygulanamadı: ${hata instanceof Error ? hata.message : String(hata)}`);
+        }
         break;
     }
   }

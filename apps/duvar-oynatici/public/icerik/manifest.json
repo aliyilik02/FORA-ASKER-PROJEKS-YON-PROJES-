@@ -3182,7 +3182,9 @@
       "ad": "Asker – mevzide, tüfekli (3B)",
       "animasyon": "Idle_Gun",
       "animasyonlar": {
-        "ates": "Idle_Gun_Shoot"
+        "ates": "Idle_Gun_Shoot",
+        "vurulma": "HitRecieve",
+        "dusme": "Death"
       },
       "silahModeli": {
         "dosya": "modeller/tufek.glb",
@@ -3217,7 +3219,9 @@
       "ad": "Asker – taktik yelek, tüfekli (3B)",
       "animasyon": "Idle_Gun",
       "animasyonlar": {
-        "ates": "Idle_Gun_Shoot"
+        "ates": "Idle_Gun_Shoot",
+        "vurulma": "HitRecieve",
+        "dusme": "Death"
       },
       "silahModeli": {
         "dosya": "modeller/tufek.glb",
@@ -3244,6 +3248,82 @@
       ],
       "genislikDerece": 4,
       "_kaynak": "Quaternius Soldier (Poly Pizza, CC-BY 3.0) - LISANS_asker_quaternius.txt"
+    },
+    "asker_yarali_3b": {
+      "dosya": "modeller/asker_swat.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Yaralı asker – yerde, yardım istiyor (3B)",
+      "animasyon": "Idle_Gun",
+      "animasyonlar": {
+        "ates": "Idle_Gun_Shoot",
+        "vurulma": "HitRecieve",
+        "dusme": "Death"
+      },
+      "silahModeli": {
+        "dosya": "modeller/tufek.glb",
+        "kemik": "Wrist.R",
+        "konum": [
+          0,
+          0.05,
+          0.12
+        ],
+        "donus": [
+          0,
+          -90,
+          0
+        ],
+        "boy": 0.85
+      },
+      "poz": "yarali",
+      "boy": 1.8,
+      "mesafe": 9,
+      "dongu": true,
+      "yerlesim": [
+        "figur"
+      ],
+      "genislikDerece": 5,
+      "_not": "Oda 1 (ateş altında yaralıya müdahale): yakın mesafede yerde; nefes alır, ara ara kol kaldırıp yardım çağırır. Panelden ayakta askere \"Vuruldu\" denince aynı duruma geçer.",
+      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt"
+    },
+    "asker_diz_cokmus": {
+      "dosya": "modeller/asker_swat.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Asker – diz çökmüş, tüfekli (3B)",
+      "animasyon": "Idle_Gun",
+      "animasyonlar": {
+        "ates": "Idle_Gun_Shoot",
+        "vurulma": "HitRecieve",
+        "dusme": "Death"
+      },
+      "silahModeli": {
+        "dosya": "modeller/tufek.glb",
+        "kemik": "Wrist.R",
+        "konum": [
+          0,
+          0.05,
+          0.12
+        ],
+        "donus": [
+          0,
+          -90,
+          0
+        ],
+        "boy": 0.85
+      },
+      "poz": "comelmis",
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ],
+      "genislikDerece": 4,
+      "_not": "Prosedürel diz çökme (kemik ofsetleri); çatışmada nişan alır.",
+      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt"
     },
     "asker_kosan": {
       "dosya": "modeller/asker_swat.glb",

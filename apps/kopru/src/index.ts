@@ -58,6 +58,7 @@ const icerikAdaylari = [
   fileURLToPath(new URL("../../duvar-oynatici/dist/icerik/", import.meta.url)),
 ].filter((k) => existsSync(k));
 const figur = new FigurYoneticisi(gunluk, icerikAdaylari);
+senaryo.figurBagla(figur);
 
 const uygulama = express();
 uygulama.use("/api", apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, figur }));

@@ -25,7 +25,7 @@ import { oda2OnPlanCiz } from "./sahne/oda2";
 import { PanoramaKatmani } from "./panorama";
 import { Sahne3B } from "./sahne3b/sahne3b";
 import { SesMotoru } from "./ses";
-import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type EfektIstegi, type SimulasyonDurumu, varsayilanDurum } from "./tipler";
+import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type EfektIstegi, type FigurKomutu, type SimulasyonDurumu, varsayilanDurum } from "./tipler";
 import { panoramaSec, VideoKatmani } from "./video";
 
 const tuval = document.getElementById("tuval") as HTMLCanvasElement;
@@ -65,6 +65,11 @@ sahne3b.catismaSesleriAyarla({
   atis: (pan, uzak) => ses.tekAtis(pan, uzak),
   uzakPatlama: (az) => void ses.patlama(azimutPan(az), 0.7, true, 600),
   topAtisi: (pan) => void ses.patlama(pan, 0.55),
+});
+// Yaralı figür: vurulunca bağırma, yerde ara ara yardım çağrısı (figürün yönünden)
+sahne3b.figurSesleriAyarla((tur, azimut) => {
+  if (tur === "vuruldu") void ses.bagirma(azimutPan(azimut));
+  else void ses.cagirma(azimutPan(azimut));
 });
 // Hata ayıklama: tarayıcı konsolundan sahneye erişim (window.duvar.sahne3b, window.duvar.THREE)
 (window as unknown as { duvar: unknown }).duvar = { sahne3b, THREE };
@@ -229,25 +234,46 @@ function durumUygula(d: SimulasyonDurumu) {
   panoramayiGuncelle();
 }
 
-function figurKomutu(k: { islem: string; id: string; klip?: string; azimut?: number; yukseklik?: number; olcek?: number; dongu?: boolean; yansit?: boolean }) {
+function figurKomutu(k: FigurKomutu & { id: string }) {
   if (k.islem === "temizle") {
+    bekleyenFigurler.clear();
     klipler.temizle();
     sahne3b.figurTemizle();
     return;
   }
   if (k.islem === "durdur") {
+    bekleyenFigurler.delete(k.id);
     klipler.durdur(k.id);
     sahne3b.figurDurdur(k.id);
+    return;
+  }
+  if (k.islem === "poz") {
+    const bekleyen = bekleyenFigurler.get(k.id);
+    if (bekleyen) bekleyen.poz = k.poz;
+    else if (k.poz) sahne3b.figurPoz(k.id, k.poz);
     return;
   }
   if (!k.klip) return;
   const tanim = klipler.tanim(k.klip);
   if (tanim?.tip === "model" && sahne3b.hazir) {
-    sahne3b.figurOynat(tanim, { id: k.id, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, yansit: k.yansit, dongu: k.dongu }, video.kok);
+    sahne3b.figurOynat(tanim, { id: k.id, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, yansit: k.yansit, dongu: k.dongu, poz: k.poz }, video.kok);
     return;
   }
-  if (tanim?.tip === "model") return; // 3B katman yok: model gösterilemez
+  if (tanim?.tip === "model") {
+    // 3B sahne henüz hazır değil (panorama yükleniyor / oynatıcı yeni açıldı): köprünün gönderdiği
+    // aktif figürler kaybolmasın, sahne hazır olunca uygulanır
+    if (ucAktifOlabilir) bekleyenFigurler.set(k.id, k);
+    return;
+  }
   klipler.oynat({ id: k.id, klip: k.klip, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, dongu: k.dongu, yansit: k.yansit });
+}
+/** 3B sahne hazır olmadan gelen model figürleri (oynatıcı açılışında köprü aktif listeyi yollar). */
+const bekleyenFigurler = new Map<string, FigurKomutu & { id: string }>();
+function bekleyenFigurleriUygula() {
+  if (!sahne3b.hazir || bekleyenFigurler.size === 0) return;
+  const liste = [...bekleyenFigurler.values()];
+  bekleyenFigurler.clear();
+  for (const k of liste) figurKomutu(k);
 }
 
 const kopru = new KopruBaglantisi(
@@ -414,6 +440,7 @@ function kare(simdi: number) {
   }
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  bekleyenFigurleriUygula();
   if (kalibrasyon) kalibrasyonCiz(ctx, W, H, duvarlar.map((d) => d.ad));
   if (baglanti === "kopuk") uyariCiz(ctx, W, H, "Köprü sunucusu bekleniyor…", "Oynatıcı, köprüye (port 4000) bağlanınca panelden yönetilir");
   if (hud) {

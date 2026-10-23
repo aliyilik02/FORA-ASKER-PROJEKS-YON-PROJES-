@@ -1,16 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api";
 import {
   BOLGE_ETIKETLERI,
   EFEKT_ETIKETLERI,
+  FIGUR_POZ_ETIKETLERI,
   GUVENLI_ALAN_ETIKETLERI,
   HELIKOPTER_ETIKETLERI,
   MEVSIM_ETIKETLERI,
   YAGIS_ETIKETLERI,
   type Bolge,
   type EfektTuru,
+  type FigurPozu,
   type GuvenliAlanTipi,
   type HelikopterDurumu,
+  type KlipOzeti,
   type Mevsim,
   type Oda,
   type Senaryo,
@@ -18,7 +21,7 @@ import {
   type SimulasyonDurumu,
   type Yagis,
 } from "../tipler";
-import { saatBicimi, sureBicimi } from "./ortak";
+import { saatBicimi, sureBicimi, yonMetni } from "./ortak";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 type AdimTipi = SenaryoAdimi["islem"]["tip"];
@@ -31,7 +34,11 @@ const TIP_ETIKETLERI: Record<AdimTipi, string> = {
   oda2: "Oda 2 (güvenli alan / helikopter)",
   isik: "Ortam ışığı",
   catisma: "Çatışma (düşman ateşi)",
+  figur: "Figür (asker / tank / vuruldu)",
 };
+const FIGUR_ISLEM_ETIKETLERI = { oynat: "Sahneye koy", poz: "Duruş değiştir (vuruldu / diz çök / kalk)", temizle: "Hepsini kaldır" } as const;
+type FigurIslem = keyof typeof FIGUR_ISLEM_ETIKETLERI;
+const FIGUR_MESAFELER: Record<string, number> = { "Yakın · 8 m": -12, "Orta · 14 m": -7, "Uzak · 24 m": -4 };
 
 interface YeniAdim {
   saniye: number;
@@ -55,6 +62,15 @@ interface YeniAdim {
   catismaAktif: boolean;
   catismaSiddet: number;
   catismaYon: number;
+  figurIslem: FigurIslem;
+  figurKlip: string;
+  figurBaslik: string;
+  figurYon: number;
+  figurYukseklik: number;
+  figurPoz: FigurPozu;
+  /** Duruş adımının hedefi: bu senaryoda daha önce sahneye konan figür adımının kimliği ve etiketi. */
+  figurHedefId: string;
+  figurHedefAd: string;
 }
 
 function varsayilanYeni(d: SimulasyonDurumu): YeniAdim {
@@ -80,6 +96,14 @@ function varsayilanYeni(d: SimulasyonDurumu): YeniAdim {
     catismaAktif: true,
     catismaSiddet: d.catisma?.siddet ?? 0.5,
     catismaYon: d.catisma?.yon ?? 0,
+    figurIslem: "oynat",
+    figurKlip: "",
+    figurBaslik: "",
+    figurYon: 0,
+    figurYukseklik: -7,
+    figurPoz: "yarali",
+    figurHedefId: "",
+    figurHedefAd: "",
   };
 }
 
@@ -136,6 +160,22 @@ function adimUret(y: YeniAdim, id: string): SenaryoAdimi {
             islem: { tip: "catisma", catisma: { aktif: true, siddet: y.catismaSiddet, yon: y.catismaYon } },
           }
         : { id, gecikmeMs, aciklama: "Çatışma durur", islem: { tip: "catisma", catisma: { aktif: false } } };
+    case "figur":
+      if (y.figurIslem === "temizle") return { id, gecikmeMs, aciklama: "Birlik geri çekilir (tüm figürler)", islem: { tip: "figur", figur: { islem: "temizle" } } };
+      if (y.figurIslem === "poz")
+        return {
+          id,
+          gecikmeMs,
+          aciklama: `${y.figurHedefAd || "Figür"} → ${FIGUR_POZ_ETIKETLERI[y.figurPoz].toLowerCase()}`,
+          islem: { tip: "figur", figur: { islem: "poz", id: y.figurHedefId, poz: y.figurPoz } },
+        };
+      // Sahneye koy: kimlik adım kimliğinden türetilir; sonraki "duruş" adımları buna bağlanır
+      return {
+        id,
+        gecikmeMs,
+        aciklama: `${y.figurBaslik || y.figurKlip} sahneye (${yonMetni(y.figurYon)})`,
+        islem: { tip: "figur", figur: { islem: "oynat", id: `senaryo_${id}`, klip: y.figurKlip, azimut: y.figurYon, yukseklik: y.figurYukseklik, olcek: 1, dongu: true } },
+      };
   }
 }
 
@@ -178,8 +218,21 @@ export function SenaryoEditoru({
   const [adimlar, setAdimlar] = useState<SenaryoAdimi[]>([]);
   const [yeni, setYeni] = useState<YeniAdim>(() => varsayilanYeni(durum));
   const [sayac, setSayac] = useState(1);
+  const [klipler, setKlipler] = useState<KlipOzeti[]>([]);
 
   const g = (k: Partial<YeniAdim>) => setYeni((e) => ({ ...e, ...k }));
+
+  // Figür adımı için manifestteki figürler (asker, tank, yaralı); efekt plakaları hariç
+  useEffect(() => {
+    void api.klipler().then((k) => {
+      const figurler = k.filter((x) => x.kategori === "figur");
+      setKlipler(figurler);
+      const ilk = figurler[0];
+      if (ilk) setYeni((e) => (e.figurKlip ? e : { ...e, figurKlip: ilk.ad, figurBaslik: ilk.baslik }));
+    });
+  }, []);
+  /** Bu senaryoda sahneye konmuş figür adımları: duruş adımı bunlardan birini hedefler. */
+  const figurAdimlari = adimlar.flatMap((a) => (a.islem.tip === "figur" && a.islem.figur.islem === "oynat" && a.islem.figur.id ? [{ id: a.islem.figur.id, ad: `${sureBicimi(a.gecikmeMs)} ${a.aciklama}` }] : []));
 
   const adimEkle = (adim: SenaryoAdimi) => {
     setAdimlar((e) => [...e, adim].sort((a, b) => a.gecikmeMs - b.gecikmeMs));
@@ -315,8 +368,69 @@ export function SenaryoEditoru({
           </div>
         )}
 
+        {yeni.tip === "figur" && (
+          <div className="alanlar">
+            <label className="alan">
+              <span>İşlem</span>
+              <Secim deger={yeni.figurIslem} secenekler={FIGUR_ISLEM_ETIKETLERI} onChange={(figurIslem) => g({ figurIslem })} />
+            </label>
+            {yeni.figurIslem === "oynat" && (
+              <>
+                <label className="alan">
+                  <span>Figür</span>
+                  <select
+                    value={yeni.figurKlip}
+                    onChange={(e) => g({ figurKlip: e.target.value, figurBaslik: klipler.find((k) => k.ad === e.target.value)?.baslik ?? e.target.value })}
+                  >
+                    {klipler.map((k) => (
+                      <option key={k.ad} value={k.ad}>
+                        {k.baslik}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <Sayi etiket="Yön (°)" deger={yeni.figurYon} min={-180} max={180} onChange={(figurYon) => g({ figurYon })} />
+                <label className="alan">
+                  <span>Mesafe</span>
+                  <select value={yeni.figurYukseklik} onChange={(e) => g({ figurYukseklik: Number(e.target.value) })}>
+                    {Object.entries(FIGUR_MESAFELER).map(([ad, y]) => (
+                      <option key={ad} value={y}>
+                        {ad}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            )}
+            {yeni.figurIslem === "poz" && (
+              <>
+                <label className="alan">
+                  <span>Hangi figür</span>
+                  <select value={yeni.figurHedefId} onChange={(e) => g({ figurHedefId: e.target.value, figurHedefAd: figurAdimlari.find((f) => f.id === e.target.value)?.ad ?? "" })}>
+                    <option value="">— önce "Sahneye koy" adımı ekle —</option>
+                    {figurAdimlari.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.ad}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="alan">
+                  <span>Duruş</span>
+                  <Secim deger={yeni.figurPoz} secenekler={FIGUR_POZ_ETIKETLERI} onChange={(figurPoz) => g({ figurPoz })} />
+                </label>
+              </>
+            )}
+          </div>
+        )}
+
         <div className="satir">
-          <button type="button" className="birincil" onClick={() => adimEkle(adimUret(yeni, `adim_${sayac}`))}>
+          <button
+            type="button"
+            className="birincil"
+            disabled={yeni.tip === "figur" && ((yeni.figurIslem === "oynat" && !yeni.figurKlip) || (yeni.figurIslem === "poz" && !yeni.figurHedefId))}
+            onClick={() => adimEkle(adimUret(yeni, `adim_${sayac}`))}
+          >
             + Adımı ekle
           </button>
           <button type="button" onClick={mevcutOrtamiEkle} title="Paneldeki şu anki mevsim/saat/hava ayarlarını bu saniyeye adım olarak ekler">

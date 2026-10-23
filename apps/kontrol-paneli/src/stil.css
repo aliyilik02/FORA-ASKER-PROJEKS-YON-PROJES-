@@ -1115,6 +1115,21 @@ button.birlik.tank {
   border-color: rgba(201, 181, 138, 0.4);
   background: rgba(201, 181, 138, 0.1);
 }
+button.birlik.yarali {
+  border-color: rgba(214, 112, 96, 0.45);
+  background: rgba(214, 112, 96, 0.1);
+}
+button.birlik.vuruldu {
+  border-color: rgba(214, 112, 96, 0.7);
+  background: rgba(214, 112, 96, 0.18);
+}
+button.birlik.vuruldu .birlik-ad {
+  color: #f2a08e;
+}
+.dugme-grubu {
+  display: inline-flex;
+  gap: 4px;
+}
 .gelismis summary {
   cursor: pointer;
   font-size: 13px;

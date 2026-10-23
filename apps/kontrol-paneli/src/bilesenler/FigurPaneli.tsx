@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useArayuz, yonAzimut } from "../arayuz";
-import type { FigurKomutu, KlipOzeti } from "../tipler";
+import { FIGUR_POZ_ETIKETLERI, type FigurKomutu, type FigurPozu, type KlipOzeti } from "../tipler";
 import { Anahtar, Bolum, Ikon, Kaydirici, OnayliDugme, yonMetni } from "./ortak";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
@@ -39,10 +39,36 @@ export function FigurPaneli({ aktifler, calistir }: { aktifler: Array<FigurKomut
   const askerler = klipler.filter((k) => k.kategori === "figur" && /^asker_(bekleyen|kamuflaj)/.test(k.ad)).map((k) => k.ad);
   const tanklar = klipler.filter((k) => k.kategori === "figur" && /^tank/.test(k.ad)).map((k) => k.ad);
   const kosanlar = klipler.filter((k) => /^asker_(kosan|yuruyen)/.test(k.ad)).map((k) => k.ad);
+  const yaralilar = klipler.filter((k) => k.kategori === "figur" && /^asker_yarali_3b/.test(k.ad)).map((k) => k.ad);
   const baslik = (ad: string) => klipler.find((k) => k.ad === ad)?.baslik ?? ad;
+  /** Vurulabilecek (ayakta/diz çökmüş, 3B asker) figürler. */
+  const vurulabilir = aktifler.filter((f) => /^asker_(bekleyen|taktik|diz_cokmus|kamuflaj)/.test(f.klip ?? "") && f.poz !== "yarali");
 
   const cagir = async (ad: string, sapma = 0, yuk = -7) => {
     await api.figur({ islem: "oynat", klip: ad, azimut: yonAzimut(seciliYon + sapma), yukseklik: yuk, olcek: 1, yansit: false, dongu: true });
+  };
+  const yaraliCagir = () => {
+    const ad = yaralilar[0];
+    if (!ad) return;
+    void calistir(() => cagir(ad, 0, -12)).then(() => bildir({ tur: "basari", baslik: "Yaralı yerde", metin: `${yonMetni(seciliYon)} tarafı, yakın mesafe · yardım çağırıyor` }));
+  };
+  const pozDegistir = (f: FigurKomutu & { id: string }, poz: FigurPozu) =>
+    void calistir(() => api.figur({ islem: "poz", id: f.id, poz })).then(
+      (r) =>
+        r &&
+        bildir({
+          tur: poz === "yarali" ? "hata" : "basari",
+          baslik: poz === "yarali" ? "Asker vuruldu" : poz === "comelmis" ? "Asker diz çöktü" : "Asker ayağa kalktı",
+          metin: `${baslik(f.klip ?? "")} · ${yonMetni(((f.azimut ?? 0) + 360) % 360)} tarafı`,
+        }),
+    );
+  /** Tek dokunuş: sahnedeki ayakta askerlerden biri (pusulaya en yakın) vurulur, yere düşer. */
+  const askerVuruldu = () => {
+    if (!vurulabilir.length) return;
+    const hedefAz = yonAzimut(seciliYon);
+    const fark = (a: number) => Math.abs((((a - hedefAz) % 360) + 540) % 360 - 180);
+    const f = [...vurulabilir].sort((a, b) => fark(a.azimut ?? 0) - fark(b.azimut ?? 0))[0];
+    pozDegistir(f, "yarali");
   };
   const askerCagir = () => {
     if (!askerler.length) return;
@@ -117,6 +143,14 @@ export function FigurPaneli({ aktifler, calistir }: { aktifler: Array<FigurKomut
             <button type="button" className="birlik" disabled={!kosanlar.length} onClick={() => kosanGonder(true)}>
               <span className="birlik-ad">← Koşan asker</span>
               <small>Sağdan sola geçer</small>
+            </button>
+            <button type="button" className="birlik yarali" disabled={!yaralilar.length} onClick={yaraliCagir}>
+              <span className="birlik-ad">Yaralı asker</span>
+              <small>Yakında yerde, yardım ister</small>
+            </button>
+            <button type="button" className="birlik vuruldu" disabled={!vurulabilir.length} onClick={askerVuruldu} title="Pusulaya en yakın ayakta asker vurulur ve yere düşer">
+              <span className="birlik-ad">Asker vuruldu!</span>
+              <small>{vurulabilir.length ? `${vurulabilir.length} asker sahnede` : "Önce asker çağır"}</small>
             </button>
           </div>
         )}
@@ -197,8 +231,27 @@ export function FigurPaneli({ aktifler, calistir }: { aktifler: Array<FigurKomut
                   <small>
                     {yonMetni(((f.azimut ?? 0) + 360) % 360)} tarafı
                     {f.yansit ? " · aynalı" : ""}
+                    {f.poz && f.poz !== "ayakta" ? ` · ${FIGUR_POZ_ETIKETLERI[f.poz].toLowerCase()}` : ""}
                   </small>
                 </div>
+                {/^asker_/.test(f.klip ?? "") && !/^asker_(kosan|yuruyen)/.test(f.klip ?? "") && (
+                  <span className="dugme-grubu">
+                    {f.poz !== "yarali" && (
+                      <button type="button" className="kucuk tehlike" onClick={() => pozDegistir(f, "yarali")} title="Vurulur, yere düşer, yardım çağırır">
+                        Vuruldu
+                      </button>
+                    )}
+                    {f.poz === "comelmis" || f.poz === "yarali" ? (
+                      <button type="button" className="kucuk ikincil" onClick={() => pozDegistir(f, "ayakta")}>
+                        Kalk
+                      </button>
+                    ) : (
+                      <button type="button" className="kucuk ikincil" onClick={() => pozDegistir(f, "comelmis")}>
+                        Diz çök
+                      </button>
+                    )}
+                  </span>
+                )}
                 <button type="button" className="kucuk ikincil" onClick={() => void calistir(() => api.figur({ islem: "durdur", id: f.id }))}>
                   Kaldır
                 </button>

@@ -52,4 +52,31 @@ describe("figür yöneticisi", () => {
     ]);
     expect(new FigurYoneticisi(new Gunluk(), [yok]).klipleriOku()).toEqual([]);
   });
+
+  it("poz komutu aktif figürün duruşunu günceller ve doğrular", () => {
+    const f = new FigurYoneticisi(new Gunluk(), []);
+    const olaylar: string[] = [];
+    f.dinle((k) => olaylar.push(`${k.islem}:${k.poz ?? "-"}`));
+    const a = f.komut({ islem: "oynat", klip: "asker_bekleyen", azimut: 20 });
+    expect(a.poz).toBeUndefined(); // ayakta varsayılan, yayında taşınmaz
+    const y = f.komut({ islem: "oynat", klip: "asker_yarali_3b", poz: "yarali" });
+    expect(y.poz).toBe("yarali");
+
+    const p = f.komut({ islem: "poz", id: a.id, poz: "yarali" });
+    expect(p).toEqual({ islem: "poz", id: a.id, poz: "yarali" });
+    expect(f.aktifListe().find((x) => x.id === a.id)?.poz).toBe("yarali");
+    f.komut({ islem: "poz", id: a.id, poz: "ayakta" });
+    expect(f.aktifListe().find((x) => x.id === a.id)?.poz).toBeUndefined();
+
+    // Duruşlu figür tek seferlik sayılıp silinmez
+    f.komut({ islem: "poz", id: a.id, poz: "comelmis" });
+    f.tekSeferlikleriKaldir({ asker_bekleyen: { dongu: false }, asker_yarali_3b: { dongu: false } });
+    expect(f.aktifListe().map((x) => x.id).sort()).toEqual([a.id, y.id].sort());
+
+    expect(() => f.komut({ islem: "poz", poz: "yarali" })).toThrow(/id/);
+    expect(() => f.komut({ islem: "poz", id: a.id })).toThrow(/poz/);
+    expect(() => f.komut({ islem: "poz", id: "yok", poz: "yarali" })).toThrow(/sahnede/);
+    expect(() => f.komut({ islem: "poz", id: a.id, poz: "ucan" as "yarali" })).toThrow(/poz/);
+    expect(olaylar).toEqual(["oynat:-", "oynat:yarali", "poz:yarali", "poz:ayakta", "poz:comelmis"]);
+  });
 });

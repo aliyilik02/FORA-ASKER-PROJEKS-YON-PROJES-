@@ -121,4 +121,34 @@ describe("durum deposu", () => {
     expect(son.Parameters.Mesafe).toBe(1200);
     expect(son.Parameters.Yon).toBe(135);
   });
+
+  it("figür adımını bağlı figür yöneticisine iletir; bağlı değilse uyarıp geçer", async () => {
+    const { motor, ilerle } = kur();
+    const komutlar: string[] = [];
+    const s: Senaryo = {
+      id: "f1",
+      ad: "Figür",
+      oda: "oda1",
+      adimlar: [
+        { id: "a1", gecikmeMs: 0, aciklama: "asker", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_a1", klip: "asker_bekleyen", azimut: 15 } } },
+        { id: "a2", gecikmeMs: 1000, aciklama: "vuruldu", islem: { tip: "figur", figur: { islem: "poz", id: "senaryo_a1", poz: "yarali" } } },
+      ],
+    };
+    // Bağlı değil: hata vermez
+    motor.yukle(s);
+    await motor.oynat();
+    await ilerle(1500);
+    expect(motor.al().tamamlanan).toEqual(["a1", "a2"]);
+
+    motor.figurBagla({
+      komut: (k) => {
+        komutlar.push(`${k.islem}:${k.id ?? ""}:${k.poz ?? k.klip ?? ""}`);
+        return { ...k, id: k.id ?? "x" };
+      },
+    });
+    motor.yukle(s);
+    await motor.oynat();
+    await ilerle(1500);
+    expect(komutlar).toEqual(["oynat:senaryo_a1:asker_bekleyen", "poz:senaryo_a1:yarali"]);
+  });
 });

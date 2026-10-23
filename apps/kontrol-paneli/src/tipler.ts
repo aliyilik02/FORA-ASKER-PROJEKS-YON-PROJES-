@@ -123,7 +123,9 @@ export interface SenaryoAdimi {
     | { tip: "izli_mermi"; izliMermi: Partial<IzliMermiAyarlari> }
     | { tip: "isik"; isik: Partial<OrtamIsigi> }
     | { tip: "oda2"; oda2: Partial<Oda2Ayarlari> }
-    | { tip: "catisma"; catisma: Partial<CatismaAyarlari> };
+    | { tip: "catisma"; catisma: Partial<CatismaAyarlari> }
+    /** Figür komutu: asker/tank çağır, duruş değiştir (vuruldu), kaldır. */
+    | { tip: "figur"; figur: FigurKomutu };
 }
 
 export interface Senaryo {
@@ -188,10 +190,16 @@ export interface OrnekDurumu {
  * Figür / klip komutu: oynatıcıdaki alfa kanallı klip katmanına (asker, araç, efekt plakası)
  * bir klibi belirli bir azimuta yerleştirir veya kaldırır. Klip adları içerik manifestinden gelir.
  */
+export type FigurPozu = "ayakta" | "comelmis" | "yarali";
+export const FIGUR_POZ_ETIKETLERI: Record<FigurPozu, string> = { ayakta: "Ayakta", comelmis: "Diz çökmüş", yarali: "Yaralı (yerde)" };
+
 export interface FigurKomutu {
-  islem: "oynat" | "durdur" | "temizle";
+  /** `poz`: sahnedeki figürün duruşunu değiştirir (vurulma → yere düşme, diz çökme, ayağa kalkma). */
+  islem: "oynat" | "durdur" | "temizle" | "poz";
   /** Örnek (instance) kimliği; verilmezse köprü üretir. */
   id?: string;
+  /** Duruş; `oynat` ile başlangıç duruşu, `poz` ile değişiklik. Varsayılan ayakta. */
+  poz?: FigurPozu;
   /** Manifestteki klip adı (ör. asker_yarali_yerde). */
   klip?: string;
   /** -180..180; 0 = orta duvarın ortası. */

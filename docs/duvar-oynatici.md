@@ -56,6 +56,21 @@ katmanda:
   Panelin Figür komutu aynen gelir: azimut, yükseklik → mesafe (`uzay.ts`), ölçek, yansıt (ayna / sola
   yürü). `animasyon` (Idle/Walk/Run), `boy` (m; iskeletli modellerde `precise` sınır kutusu şart),
   `hiz` (yana yürüme m/s), `mesafe`, `yatik`. Mixamo iskeletli modellere Mixamo klipleri retarget'sız uyar.
+- **Figür duruşları** (`poz`: ayakta / comelmis / yarali; panel komutu `{islem:"poz", id, poz}` ya da
+  `oynat` ile başlangıç duruşu, manifestte `poz`): **yaralı** = `animasyonlar.vurulma` (tek sefer, isabet
+  tepkisi) → `animasyonlar.dusme` (tek sefer, son karede kalır; Quaternius "HitRecieve"/"Death") → yerde:
+  göğüs nefesle inip kalkar, 6–12 sn'de bir sağ kol yardım ister gibi kalkar (ses: vurulunca bağırma,
+  kol kalkınca çağırma, figürün yönünden). Tüfek elden çıkıp yanına düşer; kalkınca ele döner. Yaralı
+  çatışmada düşmana dönmez ve `silahliKonumlar` listesine girmez. **Diz çökme** prosedüreldir: karıştırıcıdan
+  sonra kemiklere dünya eksenli ofset (sol uyluk öne 85°, baldır dik; sağ diz yerde; gövde 0,42 m iner).
+  Quaternius riginde ayaklar (Foot.L/R) uyluk zincirinin dışında ayrı kemiktir (IK hedefi) → ayaklar da
+  taşınır. Kemik adları `kemikler` ile değiştirilebilir (varsayılan Quaternius: Torso, Chest,
+  UpperLeg/LowerLeg.L/R, UpperArm.R, Foot.L/R). Dikkat: dünya eksenli döndürmede kuaterniyonlar
+  normalize edilmeli (ebeveyn ölçeği 100 ve kayma var; yoksa model şişer) ve klibin yazmadığı kemikler
+  (Torso) her kare temel poza geri alınmalı (`kemikTemel`), yoksa ofset birikir.
+- **Bekleyen figürler** (`main.ts`): 3B sahne hazır olmadan (panorama yükleniyor) gelen model figür
+  komutları kuyruğa alınır, sahne hazır olunca uygulanır — oynatıcı yeniden açılınca köprünün yolladığı
+  aktif figürler kaybolmaz.
 - **Helikopter** (`helikopter3b.ts`): `klipler.helikopter` modeli; yaklaşma → iniş → yerde → kalkış
   (iniş noktası azimut 12°, 38 m), modelin kendi animasyonu + `rotor` düğümleri döner, yere yakınken
   rotor tozu. Model yoksa 2B siluet.
@@ -139,10 +154,13 @@ içerik bitmeli (kesik kenar duvarda dikdörtgen olarak görünür). Üretim ve 
 `docs/fotogercekci-icerik-hatti.md` §2.5 ve §6. Depodaki `klipler/*_test_*.webm` dosyaları sentetik
 test içeriğidir (`araclar/test-klipleri-uret.sh`).
 
-Panelden gelen figür komutları (`POST /api/figur`, `{islem: oynat|durdur|temizle, klip, azimut,
-yukseklik, olcek, dongu, yansit}`) köprüde tutulur ve `figur` WebSocket mesajıyla tüm oynatıcılara
-gider; yeniden bağlanan oynatıcıya köprü aktif figürleri bağlantı anında yeniden gönderir (sahne
-kaldığı yerden devam eder). Senaryo adımı olarak figür komutu bir sonraki adımda eklenecek.
+Panelden gelen figür komutları (`POST /api/figur`, `{islem: oynat|durdur|temizle|poz, id, klip, azimut,
+yukseklik, olcek, dongu, yansit, poz}`) köprüde tutulur ve `figur` WebSocket mesajıyla tüm oynatıcılara
+gider; yeniden bağlanan oynatıcıya köprü aktif figürleri (duruşlarıyla) bağlantı anında yeniden gönderir
+(sahne kaldığı yerden devam eder). Senaryo adımı `{tip:"figur", figur: FigurKomutu}` aynı komutu zaman
+çizelgesinden tetikler; editörde "Sahneye koy" adımı `senaryo_<adım>` kimliği üretir, sonraki "Duruş
+değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "Yaralı asker" (yakına yerde),
+"Asker vuruldu!" (pusulaya en yakın ayakta asker düşer) ve figür satırında Vuruldu / Diz çök / Kalk var.
 
 ## Köprü ile sözleşme
 
@@ -163,6 +181,7 @@ kaldığı yerden devam eder). Senaryo adımı olarak figür komutu bir sonraki 
 - Helikopter modeli düşük poligonlu (OGA CC-BY); 3B görsel testi henüz yapılmadı.
 - Performans: dizüstünde (Iris Xe) 1920×360'ta 20–30 fps ölçüldü; 5760×1080'de hedef makine
   (RTX 4060+) gerekir. Gölge haritası 2048, parçacık üst sınırı ~2000.
-- Figür klipleri sahneye panelden elle konur; senaryo adımı tipi olarak henüz yok.
+- Yaralı/diz çökme Quaternius rigine göre ayarlandı; Poly Pizza/Mixamo modellerde düşme klibi yok, klipsiz
+  model yaralı olunca gövde yere yatırılır (kaba). Yere yatıp ateş (prone) duruşu yok.
 - Ses çıkışı stereo; 4 kanal yerleşimi saha donanımına göre eklenecek.
 - Tarayıcı: Chrome/Edge (kiosk bayrakları). 5760×1080'de 60 fps için RTX 4060 sınıfı yeterli.

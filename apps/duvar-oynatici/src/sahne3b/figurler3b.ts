@@ -34,10 +34,62 @@ export interface ModelTanimi {
   /** Kule ve namlu düğüm adları (glTF). Namlu kuleye bağlanır, kule düşmana döner. */
   kule?: string;
   namlu?: string;
-  /** Duruma göre klipler: çatışmada `ates` (nişan/atış döngüsü), aksi hâlde `animasyon`. Kısa ad yeter ("Idle_Gun_Shoot"). */
-  animasyonlar?: { ates?: string };
+  /**
+   * Duruma göre klipler: çatışmada `ates` (nişan/atış döngüsü), aksi hâlde `animasyon`; `vurulma` (tek sefer,
+   * isabet tepkisi) ve `dusme` (tek sefer, yere düşüp kalır) yaralı duruşu için. Kısa ad yeter ("Idle_Gun_Shoot").
+   */
+  animasyonlar?: { ates?: string; vurulma?: string; dusme?: string };
   /** Elde silah: ayrı glTF, iskeletteki kemiğe bağlanır. konum metre, donus derece, boy = silah uzunluğu (m). */
   silahModeli?: { dosya: string; kemik: string; konum?: [number, number, number]; donus?: [number, number, number]; boy?: number };
+  /** Başlangıç duruşu (manifest); panel komutu `poz` ile değişir. */
+  poz?: FigurPozu;
+  /**
+   * Prosedürel duruş (diz çökme, yerde nefes/yardım işareti) için kemik adları. Verilmezse Quaternius
+   * rigi varsayılır (Hips, Chest, UpperLeg.L/R, LowerLeg.L/R, UpperArm.R; GLTFLoader noktaları siler).
+   */
+  kemikler?: Partial<Record<KemikRolu, string>>;
+}
+
+export type FigurPozu = "ayakta" | "comelmis" | "yarali";
+type KemikRolu = "govde" | "gogus" | "solUstBacak" | "solAltBacak" | "sagUstBacak" | "sagAltBacak" | "sagUstKol" | "solAyak" | "sagAyak";
+/**
+ * Quaternius rigi: uyluk→baldır zinciri Body altında, ayaklar (Foot.L/R) Root altında AYRI kemiklerdir
+ * (IK hedefi; bekleme klibi onları yazmaz). Bacak döndürülünce ayak da taşınmalı.
+ */
+const VARSAYILAN_KEMIKLER: Record<KemikRolu, string> = {
+  govde: "Torso",
+  gogus: "Chest",
+  solUstBacak: "UpperLeg.L",
+  solAltBacak: "LowerLeg.L",
+  sagUstBacak: "UpperLeg.R",
+  sagAltBacak: "LowerLeg.R",
+  sagUstKol: "UpperArm.R",
+  solAyak: "Foot.L",
+  sagAyak: "Foot.R",
+};
+
+/** Kemiği dünya uzayında `d` kadar taşır (ebeveynin ölçeği/dönüşü hesaba katılır). */
+function dunyadaKaydir(kemik: THREE.Object3D, d: THREE.Vector3) {
+  if (!kemik.parent || d.lengthSq() < 1e-10) return;
+  kemik.parent.updateWorldMatrix(true, false);
+  const ters = kemik.parent.matrixWorld.clone().invert();
+  const yerel = d.clone().applyMatrix4(ters).sub(new THREE.Vector3().applyMatrix4(ters));
+  kemik.position.add(yerel);
+  kemik.updateWorldMatrix(false, true);
+}
+
+/**
+ * Kemiği dünya eksenine göre döndürür (ebeveyn zinciri korunur): W' = R(eksen, açı) · W.
+ * Animasyonlu riglerde ebeveyn ölçekleri düzgün olmayabilir (kayma); dünya kuaterniyonu ve sonuç
+ * normalize edilir, yoksa birim olmayan kuaterniyon matrisi ölçekler ve model şişer.
+ */
+function dunyaEkseniEtrafindaDondur(kemik: THREE.Object3D, eksen: THREE.Vector3, aci: number) {
+  if (Math.abs(aci) < 1e-5) return;
+  kemik.updateWorldMatrix(true, false);
+  const q = kemik.getWorldQuaternion(new THREE.Quaternion()).normalize();
+  const r = new THREE.Quaternion().setFromAxisAngle(eksen, aci);
+  kemik.quaternion.multiply(q.clone().invert().multiply(r).multiply(q)).normalize();
+  kemik.updateWorldMatrix(false, true);
 }
 
 export interface AgirSilah {
@@ -57,7 +109,11 @@ export interface FigurSecenekleri {
   olcek?: number;
   yansit?: boolean;
   dongu?: boolean;
+  /** Başlangıç duruşu; manifestteki `poz`u ezer. */
+  poz?: FigurPozu;
 }
+
+type PozAsamasi = "normal" | "vuruluyor" | "dusuyor" | "yerde";
 
 interface Aktif {
   id: string;
@@ -77,6 +133,31 @@ interface Aktif {
   eylemBekle: THREE.AnimationAction | null;
   eylemAtes: THREE.AnimationAction | null;
   atesPozu: boolean;
+  /** Duruş sistemi */
+  poz: FigurPozu;
+  asama: PozAsamasi;
+  eylemVurulma: THREE.AnimationAction | null;
+  eylemDusme: THREE.AnimationAction | null;
+  kemikler: Partial<Record<KemikRolu, THREE.Object3D>>;
+  /** Ofset uygulanmadan önceki kemik kuaterniyonları: klip o kemiği yazmıyorsa birikmeyi önlemek için kare başında geri yüklenir. */
+  kemikTemel: Map<THREE.Object3D, THREE.Quaternion>;
+  kemikTemelKonum: Map<THREE.Object3D, THREE.Vector3>;
+  /** Elde silah: yaralı yere düşünce yanına bırakılır, kalkınca ele döner. */
+  silahNesne: THREE.Object3D | null;
+  silahKemik: THREE.Object3D | null;
+  silahTemel: { konum: THREE.Vector3; donus: THREE.Quaternion; olcek: THREE.Vector3 } | null;
+  silahYerde: boolean;
+  /** İç model düğümü (sarmalın çocuğu) ve ayakta dururkenki y'si; diz çökünce aşağı iner. */
+  icNesne: THREE.Object3D;
+  tabanY: number;
+  /** Hedef boy (m): çökme derinliği ve nefes genliği buna göre. */
+  boy: number;
+  /** Çökme miktarı 0..1 (yumuşak geçiş). */
+  comelme: number;
+  /** Prosedürel hareketler için zaman (s) ve bir sonraki yardım işareti zamanı. */
+  zaman: number;
+  sonrakiYardim: number;
+  azimut: number;
 }
 
 /** Klip adı tam ("CharacterArmature|Idle_Gun") ya da kısa ("Idle_Gun") eşleşir. */
@@ -97,9 +178,17 @@ export class FigurKatmani {
     return this.aktifler.length;
   }
 
-  /** Hafif silahlı (tüfekli) figürlerin dünya konumları (ayak hizası); ağır silahlar ayrı. */
+  /** Ses olayları (yaralanma çığlığı, yardım çağrısı); main.ts ses motoruna bağlar. */
+  sesOlayi: ((tur: "vuruldu" | "yardim", azimut: number) => void) | null = null;
+
+  /** Hafif silahlı (tüfekli), ateş edebilir durumdaki figürlerin dünya konumları (ayak hizası); yaralılar ve ağır silahlar hariç. */
   silahliKonumlar(): THREE.Vector3[] {
-    return this.aktifler.filter((a) => a.silah && !a.agirSilah && a.hiz === 0).map((a) => a.nesne.position.clone());
+    return this.aktifler.filter((a) => a.silah && !a.agirSilah && a.hiz === 0 && a.poz !== "yarali").map((a) => a.nesne.position.clone());
+  }
+
+  /** Sahnedeki figürlerin duruşları (panel/HUD için). */
+  pozlar(): Array<{ id: string; poz: FigurPozu }> {
+    return this.aktifler.map((a) => ({ id: a.id, poz: a.poz }));
   }
 
   /** Verilen zemin noktasının `yaricap` m içinde figür var mı (yerleşimde üst üste binmeyi önler). */
@@ -234,6 +323,8 @@ export class FigurKatmani {
     let karistirici: THREE.AnimationMixer | null = null;
     let eylemBekle: THREE.AnimationAction | null = null;
     let eylemAtes: THREE.AnimationAction | null = null;
+    let eylemVurulma: THREE.AnimationAction | null = null;
+    let eylemDusme: THREE.AnimationAction | null = null;
     const animasyonlar = gltf.animations ?? [];
     if (animasyonlar.length && tanim.animasyon !== "yok") {
       const klip = klipBul(animasyonlar, tanim.animasyon) ?? animasyonlar[0];
@@ -249,8 +340,28 @@ export class FigurKatmani {
         eylemAtes.setLoop(THREE.LoopRepeat, Infinity);
         eylemAtes.timeScale = 0.9 + Math.random() * 0.2;
       }
+      const tekSefer = (ad: string | undefined) => {
+        const k = klipBul(animasyonlar, ad);
+        if (!k || !karistirici) return null;
+        const e = karistirici.clipAction(k);
+        e.setLoop(THREE.LoopOnce, 1);
+        e.clampWhenFinished = true;
+        return e;
+      };
+      eylemVurulma = tekSefer(tanim.animasyonlar?.vurulma);
+      eylemDusme = tekSefer(tanim.animasyonlar?.dusme);
+    }
+    // Prosedürel duruş kemikleri (ad: manifest → varsayılan; GLTFLoader nokta/boşluğu sildiği için iki biçim)
+    const kemikler: Partial<Record<KemikRolu, THREE.Object3D>> = {};
+    for (const rol of Object.keys(VARSAYILAN_KEMIKLER) as KemikRolu[]) {
+      const ad = tanim.kemikler?.[rol] ?? VARSAYILAN_KEMIKLER[rol];
+      const k = nesne.getObjectByName(ad) ?? nesne.getObjectByName(ad.replace(/[^\w]/g, ""));
+      if (k) kemikler[rol] = k;
     }
     // Elde silah: kemiğe bağla, metre cinsinden konum/boy → kemik yerel birimine çevir
+    let silahNesne: THREE.Object3D | null = null;
+    let silahKemik: THREE.Object3D | null = null;
+    let silahTemel: Aktif["silahTemel"] = null;
     if (tanim.silahModeli) {
       const sm = tanim.silahModeli;
       const silahUrl = /^(https?:|data:|blob:|\/)/.test(sm.dosya) ? sm.dosya : kok + sm.dosya;
@@ -275,6 +386,9 @@ export class FigurKatmani {
           if (m.isMesh) m.castShadow = true;
         });
         kemik.add(silah);
+        silahNesne = silah;
+        silahKemik = kemik;
+        silahTemel = { konum: silah.position.clone(), donus: silah.quaternion.clone(), olcek: silah.scale.clone() };
       }
     }
     // Kule / namlu: namlu kuleye bağlanır (dünya dönüşümü korunarak), kule düşmana döner
@@ -289,7 +403,7 @@ export class FigurKatmani {
       }
     }
     this.grup.add(sarmal);
-    this.aktifler.push({
+    const aktif: Aktif = {
       id: s.id,
       nesne: sarmal,
       karistirici,
@@ -306,13 +420,197 @@ export class FigurKatmani {
       eylemBekle,
       eylemAtes,
       atesPozu: false,
+      poz: "ayakta",
+      asama: "normal",
+      eylemVurulma,
+      eylemDusme,
+      kemikler,
+      kemikTemel: new Map(),
+      kemikTemelKonum: new Map(),
+      silahNesne,
+      silahKemik,
+      silahTemel,
+      silahYerde: false,
+      icNesne: nesne,
+      tabanY: nesne.position.y,
+      boy: hedefBoy,
+      comelme: 0,
+      zaman: Math.random() * 10,
+      sonrakiYardim: 2 + Math.random() * 4,
+      azimut: s.azimut,
+    };
+    // Tek seferlik klipler bitince sonraki aşama: vurulma → düşme → yerde
+    karistirici?.addEventListener("finished", (olay) => {
+      const e = (olay as unknown as { action: THREE.AnimationAction }).action;
+      if (aktif.asama === "vuruluyor" && e === aktif.eylemVurulma) this.dusmeyeBasla(aktif);
+      else if (aktif.asama === "dusuyor" && e === aktif.eylemDusme) this.yereDustu(aktif);
     });
+    this.aktifler.push(aktif);
+    const baslangicPozu = s.poz ?? tanim.poz ?? "ayakta";
+    if (baslangicPozu !== "ayakta") this.pozUygula(aktif, baslangicPozu, true);
     return true;
+  }
+
+  /** Panel komutu: figürün duruşunu değiştir (vuruldu → yere düşer; diz çök; ayağa kalk). */
+  pozAyarla(id: string, poz: FigurPozu) {
+    const a = this.aktifler.find((x) => x.id === id);
+    if (a) this.pozUygula(a, poz, false);
+  }
+
+  private pozUygula(a: Aktif, poz: FigurPozu, aninda: boolean) {
+    if (a.poz === poz) return;
+    const onceki = a.poz;
+    a.poz = poz;
+    if (poz === "yarali") {
+      if (a.eylemDusme) {
+        if (aninda) {
+          // Hazır yaralı: düşme klibinin son karesinde, yerde
+          this.oturanlariSondur(a, 0);
+          a.eylemDusme.reset().setEffectiveWeight(1).play();
+          a.eylemDusme.time = Math.max(0, a.eylemDusme.getClip().duration - 0.01);
+          a.eylemDusme.paused = true;
+          a.karistirici?.update(0); // son kareyi hemen uygula ki silah elin yanına düşsün
+          this.yereDustu(a);
+        } else if (a.eylemVurulma) {
+          this.oturanlariSondur(a, 0.15);
+          a.eylemVurulma.reset().setEffectiveWeight(1).play();
+          a.asama = "vuruluyor";
+          this.sesOlayi?.("vuruldu", a.azimut);
+        } else {
+          this.dusmeyeBasla(a);
+          this.sesOlayi?.("vuruldu", a.azimut);
+        }
+      } else {
+        // Klipsiz model: gövdeyi yere yatır
+        a.icNesne.rotation.x = -Math.PI / 2;
+        a.icNesne.position.y = 0.05;
+        this.yereDustu(a);
+        if (!aninda) this.sesOlayi?.("vuruldu", a.azimut);
+      }
+      a.sonrakiYardim = a.zaman + 3 + Math.random() * 3;
+      return;
+    }
+    // ayakta / çömelmiş: yerdeyse kalk (bekleme klibine dön), silahı al
+    if (onceki === "yarali") {
+      a.asama = "normal";
+      this.silahiAl(a);
+      a.icNesne.rotation.x = 0;
+      a.icNesne.position.y = a.tabanY;
+      a.eylemVurulma?.stop();
+      a.eylemDusme?.stop();
+      if (a.eylemBekle) a.eylemBekle.reset().setEffectiveWeight(1).play();
+      a.atesPozu = false;
+    }
+    if (aninda) a.comelme = poz === "comelmis" ? 1 : 0;
+  }
+
+  /** Yere düştü: aşama "yerde", tüfek elden çıkıp yanına düşer (dik durmasın). */
+  private yereDustu(a: Aktif) {
+    a.asama = "yerde";
+    const s = a.silahNesne;
+    if (!s || !a.silahKemik || a.silahYerde) return;
+    a.silahYerde = true;
+    a.nesne.updateMatrixWorld(true);
+    const el = a.nesne.worldToLocal(s.getWorldPosition(new THREE.Vector3()));
+    a.nesne.attach(s); // dünya dönüşümü korunur; artık sarmal (metre) uzayında
+    s.position.set(el.x + (Math.random() - 0.5) * 0.4, 0.03, el.z + 0.2);
+    s.rotation.set(0, Math.random() * Math.PI, 0); // tüfeğin uzun ekseni yatay; rastgele yön
+  }
+
+  /** Kalkınca tüfek ele geri döner (bağlandığı kemik ve yerel dönüşüm). */
+  private silahiAl(a: Aktif) {
+    const s = a.silahNesne;
+    if (!s || !a.silahKemik || !a.silahTemel || !a.silahYerde) return;
+    a.silahYerde = false;
+    a.silahKemik.add(s);
+    s.position.copy(a.silahTemel.konum);
+    s.quaternion.copy(a.silahTemel.donus);
+    s.scale.copy(a.silahTemel.olcek);
+  }
+
+  private dusmeyeBasla(a: Aktif) {
+    if (!a.eylemDusme) {
+      this.yereDustu(a);
+      return;
+    }
+    const onceki = a.asama === "vuruluyor" ? a.eylemVurulma : null;
+    a.eylemDusme.reset().setEffectiveWeight(1).play();
+    if (onceki) onceki.crossFadeTo(a.eylemDusme, 0.12, false);
+    else this.oturanlariSondur(a, 0.15);
+    a.asama = "dusuyor";
+  }
+
+  /** Bekleme/ateş döngülerini söndürür (tek seferlik klibe geçerken). */
+  private oturanlariSondur(a: Aktif, sure: number) {
+    for (const e of [a.eylemBekle, a.eylemAtes]) {
+      if (!e) continue;
+      if (sure > 0) e.fadeOut(sure);
+      else e.stop();
+    }
+  }
+
+  /**
+   * Prosedürel duruş: karıştırıcıdan sonra kemiklere dünya eksenli ofsetler.
+   * - Diz çökme: sol bacak öne 90° (diz bükük, ayak yerde), sağ diz yerde (alt bacak geriye), gövde hafif öne, kalça iner.
+   * - Yerde yaralı: göğüs nefesle inip kalkar, ara ara sağ kol yardım ister gibi kalkar.
+   */
+  private durusuUygula(a: Aktif, dt: number) {
+    a.zaman += dt;
+    const hedefComelme = a.poz === "comelmis" ? 1 : 0;
+    if (a.comelme !== hedefComelme) a.comelme += Math.sign(hedefComelme - a.comelme) * Math.min(Math.abs(hedefComelme - a.comelme), dt / 0.6);
+    const sag = new THREE.Vector3(1, 0, 0).applyQuaternion(a.nesne.getWorldQuaternion(new THREE.Quaternion())).normalize();
+    const k = a.kemikler;
+    const dondur = (kemik: THREE.Object3D | undefined, aci: number) => {
+      if (!kemik) return;
+      if (!a.kemikTemel.has(kemik)) a.kemikTemel.set(kemik, kemik.quaternion.clone());
+      dunyaEkseniEtrafindaDondur(kemik, sag, aci);
+    };
+    const kaydir = (kemik: THREE.Object3D | undefined, d: THREE.Vector3) => {
+      if (!kemik) return;
+      if (!a.kemikTemelKonum.has(kemik)) a.kemikTemelKonum.set(kemik, kemik.position.clone());
+      dunyadaKaydir(kemik, d);
+    };
+    if (a.comelme > 0 && a.asama === "normal") {
+      const c = 0.5 - 0.5 * Math.cos(Math.PI * a.comelme); // yumuşak 0..1
+      const olcek = (a.boy / 1.8) * c;
+      // Figürün ileri yönü (model +z; sarmal izleyiciye/düşmana dönük) ve yukarı
+      const ileri = new THREE.Vector3(0, 0, 1).applyQuaternion(a.nesne.getWorldQuaternion(new THREE.Quaternion())).normalize();
+      const yukari = new THREE.Vector3(0, 1, 0);
+      // Kalça iner: ~0.42 m (1.8 m boy için); iç düğüm sarmal altında metre cinsinden
+      a.icNesne.position.y = a.tabanY - 0.42 * olcek;
+      a.icNesne.updateMatrixWorld(true);
+      // Sol bacak öne: uyluk yatay, baldır dik; ayak öne gider ve (gövde indiği için) yerde kalır
+      dondur(k.solUstBacak, -radyan(85) * c);
+      dondur(k.solAltBacak, radyan(88) * c);
+      kaydir(k.solAyak, yukari.clone().multiplyScalar(0.42 * olcek).addScaledVector(ileri, 0.5 * olcek));
+      // Sağ diz yerde: uyluk dik, baldır geriye yatık; ayak geriye gider, parmaklar yere bakar
+      dondur(k.sagUstBacak, radyan(8) * c);
+      dondur(k.sagAltBacak, radyan(95) * c);
+      kaydir(k.sagAyak, yukari.clone().multiplyScalar(0.4 * olcek).addScaledVector(ileri, -0.45 * olcek));
+      dondur(k.sagAyak, radyan(80) * c);
+      dondur(k.govde, -radyan(6) * c);
+    } else if (a.comelme <= 0 && a.asama === "normal" && a.poz !== "yarali" && a.icNesne.position.y !== a.tabanY) {
+      a.icNesne.position.y = a.tabanY;
+    }
+    if (a.poz === "yarali" && a.asama === "yerde") {
+      a.icNesne.updateMatrixWorld(true);
+      // Nefes: göğüs ±2.5°, ~0.45 Hz (ağır, kesik)
+      const nefes = Math.sin(a.zaman * Math.PI * 2 * 0.45);
+      dondur(k.gogus, radyan(2.5) * nefes);
+      // Yardım işareti: her 6–12 sn'de kol 2,6 sn boyunca kalkar-sallanır-iner
+      const t = a.zaman - a.sonrakiYardim;
+      if (t >= 0 && t < 2.6) {
+        const zarf = Math.sin((t / 2.6) * Math.PI); // 0→1→0
+        const sallama = Math.sin(t * Math.PI * 2 * 1.6) * 12;
+        dondur(k.sagUstKol, -radyan(70 * zarf + sallama * zarf));
+        if (t < dt) this.sesOlayi?.("yardim", a.azimut);
+      } else if (t >= 2.6) a.sonrakiYardim = a.zaman + 6 + Math.random() * 6;
+    }
   }
 
   /** Çatışma durumuna göre bekleme ↔ ateş klipleri arasında yumuşak geçiş. */
   private pozuGuncelle(a: Aktif) {
-    if (!a.eylemAtes || !a.eylemBekle) return;
+    if (!a.eylemAtes || !a.eylemBekle || a.poz === "yarali") return;
     const istenen = a.silah && a.hiz === 0 && this.dusmanAzimutu !== null;
     if (istenen === a.atesPozu) return;
     a.atesPozu = istenen;
@@ -335,11 +633,16 @@ export class FigurKatmani {
   guncelle(dt: number) {
     for (const a of this.aktifler) {
       this.pozuGuncelle(a);
+      for (const [kemik, temel] of a.kemikTemel) kemik.quaternion.copy(temel);
+      a.kemikTemel.clear();
+      for (const [kemik, temel] of a.kemikTemelKonum) kemik.position.copy(temel);
+      a.kemikTemelKonum.clear();
       a.karistirici?.update(dt);
+      this.durusuUygula(a, dt);
       // Kuleli ağır silah: gövde yerinde, kule düşmana döner
       if (a.agirSilah && a.kule) this.kuleyiDondur(a, dt);
-      // Çatışmada silahlı, sabit figürler (kulesiz) düşmana döner (yumuşak)
-      if (a.silah && a.hiz === 0 && !(a.agirSilah && a.kule)) {
+      // Çatışmada silahlı, sabit figürler (kulesiz) düşmana döner (yumuşak); yaralı dönmez
+      if (a.silah && a.hiz === 0 && !(a.agirSilah && a.kule) && a.poz !== "yarali") {
         // Modelin ön yüzü (+z) düşman yönüne (sin a, 0, -cos a) baksın: θ = π − a
         const hedef = this.dusmanAzimutu === null ? a.temelDonus : Math.PI - radyan(this.dusmanAzimutu);
         let fark = hedef - a.nesne.rotation.y;

@@ -82,10 +82,10 @@ flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test. Sorgu: 
 `?yaw=`, `?hud=1`, `?doldur=1`. Ayrıntı: `docs/duvar-oynatici.md`.
 
 Panel API'si (`apps/kopru/src/api.ts`): `/api/durum`, `/oda`, `/bolge`, `/ortam`, `/isik`,
-`/izli-mermi`, `/oda2`, `/efekt`, `/figur` (oynat/durdur/temizle), `/klipler`, `/figurler`,
+`/izli-mermi`, `/oda2`, `/efekt`, `/figur` (oynat/durdur/temizle/poz), `/klipler`, `/figurler`,
 `/senaryolar`, `/senaryo/*`, `/on-ayarlar`, `/unreal/son-istekler`, `/ornek/*`, `/baglanti`, `/gunluk`.
 
-## Mevcut durum (22 Ekim 2026)
+## Mevcut durum (23 Ekim 2026)
 
 Çalışan: panel, köprü, oynatıcı, senaryo editörü, ön ayarlar, Art-Net çıkışı (donanımsız
 doğrulandı), figür paneli, demo.bat. **Oynatıcıda 3B sahne katmanı** (`apps/duvar-oynatici/src/sahne3b/`,
@@ -119,16 +119,26 @@ Idle_Gun ↔ Idle_Gun_Shoot geçişi, elde tüfek (`silahModeli`, kemik adı GLT
 Oda 2 sütreleri: manifest `sutreler` (kum torbası, kaya, toprak yığını, bariyer; `modeller/sutre/`).
 Bone/klip adları: GLTFLoader noktayı siler; kısa klip adı `klipBul` ile eşleşir.
 
+**Figür duruşları (23 Ekim):** `FigurKomutu.poz` (ayakta / comelmis / yarali) ve `islem: "poz"`;
+yaralı = SWAT "HitRecieve" → "Death" (son karede kalır) + prosedürel nefes ve kol kaldırma (yardım
+çağrısı, sesli), tüfek yere düşer; diz çökme prosedürel kemik ofseti (`figurler3b.ts`, Quaternius riginde
+ayak kemikleri ayrı → ayaklar da taşınır; kuaterniyon normalize + klibin yazmadığı kemikler her kare
+geri alınır). Manifest: `asker_yarali_3b`, `asker_diz_cokmus`, `animasyonlar.vurulma/dusme`. Panel:
+"Yaralı asker", "Asker vuruldu!", satırda Vuruldu / Diz çök / Kalk. Senaryo adımı `figur` (editörde
+"Sahneye koy" → `senaryo_<adım>` kimliği, "Duruş değiştir" onu hedefler). Oynatıcı 3B hazır değilken
+gelen figürler kuyruğa alınır (yeniden açılışta kaybolmaz). Tarayıcıda doğrulandı. Test için
+`?fov=12`'den küçük değer 90'a düşer (`fov > 10` şartı); 3B kameralar `?fov=`'u izler.
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 1. Poly Haven panoramaları (23) için yerleşim planı + `yawKaydirma`; güneş tahmini ve gece karartması
-   gözle kontrol. Oda 2 için 3B sütre/kum torbası modelleri (2B ön plan 3B'de kapalı).
-2. Çömelme/yere yatma/yaralı figür (ücretsiz CC0 rigde yok: Quaternius UAL "Crouch" klipleri UE5
-   iskeletli UBC modeline uygulanıp üniforma boyanabilir, scratchpad'de indirildi) ya da yeşil perde
-   çekimi (docs §2.5). HESCO modeli yok (prosedürel kutu + doku yapılabilir).
+   gözle kontrol (kırsal AI panoramada güneş 5° → çok uzun gölge çizgileri; tahmini sınırla). Oda 2 için
+   3B sütre/kum torbası modelleri (2B ön plan 3B'de kapalı).
+2. Yere yatıp ateş (prone) duruşu; HESCO modeli yok (prosedürel kutu + doku yapılabilir). Yaralıya
+   müdahale eden ikinci asker (sağlıkçı) animasyonu yok (yeşil perde çekimi docs §2.5).
 3. VFX plakaları (gerçek çekim, alfa) ve helikopter inişi için 3B toz + ses ayarı; izli mermiyi 3B'ye taşıma.
-4. Senaryo adımı tipi olarak figür komutu; 4 kanal ses; Türkçe bağırma kaydı; U duvar ölçüleri → `?fov=`.
-5. İdareye gösterim: kırsal 4 varyant + patlama/krater + 3 asker + helikopter.
+4. 4 kanal ses; Türkçe bağırma/yaralı inleme kaydı; U duvar ölçüleri → `?fov=`.
+5. İdareye gösterim: kırsal 4 varyant + patlama/krater + 3 asker + yaralı + helikopter.
 
 ## Belgeler
 

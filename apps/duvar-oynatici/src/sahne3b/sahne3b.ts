@@ -14,7 +14,7 @@ import { gunesKonumu, type Yerlesim } from "../projeksiyon";
 import type { CatismaAyarlari, HelikopterDurumu, IzliMermiAyarlari, OrtamAyarlari } from "../tipler";
 import { CatismaSistemi, type CatismaSesleri } from "./catisma";
 import { atesDokusu, dumanDokusu, kivilcimDokusu, kraterDokusu } from "./dokular";
-import { FigurKatmani, type FigurSecenekleri, type ModelTanimi } from "./figurler3b";
+import { FigurKatmani, type FigurPozu, type FigurSecenekleri, type ModelTanimi } from "./figurler3b";
 import { gunesTahmin, panoramadanSahneAzimutu, type GunesTahmini } from "./gunes";
 import { HasarKatmani } from "./hasar";
 import { Helikopter3B } from "./helikopter3b";
@@ -411,6 +411,14 @@ export class Sahne3B {
   }
   figurDurdur(id: string) {
     this.figurler.durdur(id);
+  }
+  /** Duruş değişikliği: vuruldu (yere düşer), diz çök, ayağa kalk. */
+  figurPoz(id: string, poz: FigurPozu) {
+    this.figurler.pozAyarla(id, poz);
+  }
+  /** Figür ses olayları (yaralanma çığlığı, yardım çağrısı) → ses motoru. */
+  figurSesleriAyarla(f: (tur: "vuruldu" | "yardim", azimut: number) => void) {
+    this.figurler.sesOlayi = f;
   }
   figurTemizle() {
     this.figurler.temizle();
