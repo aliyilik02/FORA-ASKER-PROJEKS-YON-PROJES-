@@ -427,6 +427,11 @@ export class Sahne3B {
     // (tank → tank noktası, asker → mevzi). Nokta yoksa yön + mesafe serbest kalır.
     const varsayilan = s.yukseklik !== undefined ? yukseklikMesafe(s.yukseklik) : (tanim.mesafe ?? 20);
     const k = this.kaynak?.yawKaydirma ?? 0;
+    if (s.yaninda) {
+      // Başka figürün yanına: yerleşim planı atlanır, konum oynatıcıda o figüre göre hesaplanır
+      void this.figurler.oynat(tanim, { ...s, mesafe: undefined }, kok);
+      return;
+    }
     const turler = tanim.yerlesim ?? ["asker", "figur"];
     const secim = birlikNoktasiSec(this.kaynak?.plan, s.azimut + k, turler, varsayilan, (az, m) => this.figurler.doluMu(yerKonumu(panoramadanSahneAzimutu(az, k), m)));
     const azimut = panoramadanSahneAzimutu(secim.azimut, k);

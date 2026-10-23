@@ -260,7 +260,7 @@ function figurKomutu(k: FigurKomutu & { id: string }) {
   if (!k.klip) return;
   const tanim = klipler.tanim(k.klip);
   if (tanim?.tip === "model" && sahne3b.hazir) {
-    sahne3b.figurOynat(tanim, { id: k.id, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, yansit: k.yansit, dongu: k.dongu, poz: k.poz }, video.kok);
+    sahne3b.figurOynat(tanim, { id: k.id, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, yansit: k.yansit, dongu: k.dongu, poz: k.poz, yaninda: k.yaninda }, video.kok);
     return;
   }
   if (tanim?.tip === "model") {

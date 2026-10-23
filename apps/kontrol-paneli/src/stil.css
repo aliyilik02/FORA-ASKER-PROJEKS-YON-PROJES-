@@ -845,6 +845,10 @@ button.efekt.tetiklendi {
 .pusula-figur.comelmis circle {
   stroke-dasharray: 2 1.5;
 }
+.pusula-figur.yatmis circle {
+  stroke-dasharray: 1 1.5;
+  opacity: 0.8;
+}
 .pusula-figur circle {
   fill: var(--nvg);
   stroke: #0b0d0a;
@@ -1135,6 +1139,10 @@ button.birlik.yarali {
 button.birlik.vuruldu {
   border-color: rgba(214, 112, 96, 0.7);
   background: rgba(214, 112, 96, 0.18);
+}
+button.birlik.sihhiyeci {
+  border-color: rgba(116, 212, 140, 0.45);
+  background: rgba(116, 212, 140, 0.08);
 }
 button.birlik.vuruldu .birlik-ad {
   color: #f2a08e;

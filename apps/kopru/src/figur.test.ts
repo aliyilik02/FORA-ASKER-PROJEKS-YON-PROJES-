@@ -51,6 +51,12 @@ describe("figür yöneticisi", () => {
       { ad: "asker_yarali_yerde", baslik: "Yaralı asker (yerde)", kategori: "figur", dongu: true },
     ]);
     expect(new FigurYoneticisi(new Gunluk(), [yok]).klipleriOku()).toEqual([]);
+    // Manifestte poz tanımlı klip: oynat komutu duruşu listeye taşır
+    writeFileSync(join(var1, "manifest.json"), JSON.stringify({ klipler: { yarali: { ad: "Y", kategori: "figur", poz: "yarali" }, duz: { ad: "D", kategori: "figur" } } }));
+    const f2 = new FigurYoneticisi(new Gunluk(), [var1]);
+    expect(f2.komut({ islem: "oynat", klip: "yarali" }).poz).toBe("yarali");
+    expect(f2.komut({ islem: "oynat", klip: "duz" }).poz).toBeUndefined();
+    expect(f2.komut({ islem: "oynat", klip: "yarali", poz: "ayakta" }).poz).toBeUndefined();
   });
 
   it("poz komutu aktif figürün duruşunu günceller ve doğrular", () => {
@@ -78,5 +84,17 @@ describe("figür yöneticisi", () => {
     expect(() => f.komut({ islem: "poz", id: "yok", poz: "yarali" })).toThrow(/sahnede/);
     expect(() => f.komut({ islem: "poz", id: a.id, poz: "ucan" as "yarali" })).toThrow(/poz/);
     expect(olaylar).toEqual(["oynat:-", "oynat:yarali", "poz:yarali", "poz:ayakta", "poz:comelmis"]);
+  });
+
+  it("yaninda: yalnızca sahnedeki bir figüre bağlanır ve onun yönünü alır", () => {
+    const f = new FigurYoneticisi(new Gunluk(), []);
+    const y = f.komut({ islem: "oynat", klip: "asker_yarali_3b", poz: "yarali", azimut: 40 });
+    const s = f.komut({ islem: "oynat", klip: "asker_sihhiyeci", yaninda: y.id, azimut: 0 });
+    expect(s.yaninda).toBe(y.id);
+    expect(s.azimut).toBe(40);
+    const bos = f.komut({ islem: "oynat", klip: "asker_sihhiyeci", yaninda: "yok", azimut: 10 });
+    expect(bos.yaninda).toBeUndefined();
+    expect(bos.azimut).toBe(10);
+    expect(() => f.komut({ islem: "poz", id: y.id, poz: "yatmis" })).not.toThrow();
   });
 });

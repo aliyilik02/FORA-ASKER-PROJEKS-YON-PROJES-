@@ -40,6 +40,9 @@ export function FigurPaneli({ aktifler, calistir }: { aktifler: Array<FigurKomut
   const tanklar = klipler.filter((k) => k.kategori === "figur" && /^tank/.test(k.ad)).map((k) => k.ad);
   const kosanlar = klipler.filter((k) => /^asker_(kosan|yuruyen)/.test(k.ad)).map((k) => k.ad);
   const yaralilar = klipler.filter((k) => k.kategori === "figur" && /^asker_yarali_3b/.test(k.ad)).map((k) => k.ad);
+  const sihhiyeciler = klipler.filter((k) => /^asker_sihhiyeci/.test(k.ad)).map((k) => k.ad);
+  /** Sahnedeki yaralılar; sıhhiyeci en son vurulanın yanına gider. */
+  const yaraliAktifler = aktifler.filter((f) => f.poz === "yarali");
   const baslik = (ad: string) => klipler.find((k) => k.ad === ad)?.baslik ?? ad;
   /** Vurulabilecek (ayakta/diz çökmüş, 3B asker) figürler. */
   const vurulabilir = aktifler.filter((f) => /^asker_(bekleyen|taktik|diz_cokmus|kamuflaj)/.test(f.klip ?? "") && f.poz !== "yarali");
@@ -58,10 +61,19 @@ export function FigurPaneli({ aktifler, calistir }: { aktifler: Array<FigurKomut
         r &&
         bildir({
           tur: poz === "yarali" ? "hata" : "basari",
-          baslik: poz === "yarali" ? "Asker vuruldu" : poz === "comelmis" ? "Asker diz çöktü" : "Asker ayağa kalktı",
+          baslik: poz === "yarali" ? "Asker vuruldu" : poz === "comelmis" ? "Asker diz çöktü" : poz === "yatmis" ? "Asker yere yattı" : "Asker ayağa kalktı",
           metin: `${baslik(f.klip ?? "")} · ${yonMetni(((f.azimut ?? 0) + 360) % 360)} tarafı`,
         }),
     );
+  /** Sıhhiyeci: en son yaralının yanına diz çöker, ona dönük müdahale eder. */
+  const sihhiyeciGonder = () => {
+    const ad = sihhiyeciler[0];
+    const yarali = yaraliAktifler[yaraliAktifler.length - 1];
+    if (!ad || !yarali) return;
+    void calistir(() => api.figur({ islem: "oynat", klip: ad, yaninda: yarali.id, azimut: yarali.azimut, olcek: 1, dongu: true })).then(
+      (r) => r && bildir({ tur: "basari", baslik: "Sıhhiyeci yaralının başında", metin: `${yonMetni(((yarali.azimut ?? 0) + 360) % 360)} tarafı` }),
+    );
+  };
   /** Tek dokunuş: sahnedeki ayakta askerlerden biri (pusulaya en yakın) vurulur, yere düşer. */
   const askerVuruldu = () => {
     if (!vurulabilir.length) return;
@@ -152,6 +164,10 @@ export function FigurPaneli({ aktifler, calistir }: { aktifler: Array<FigurKomut
               <span className="birlik-ad">Asker vuruldu!</span>
               <small>{vurulabilir.length ? `${vurulabilir.length} asker sahnede` : "Önce asker çağır"}</small>
             </button>
+            <button type="button" className="birlik sihhiyeci" disabled={!sihhiyeciler.length || !yaraliAktifler.length} onClick={sihhiyeciGonder} title="Son yaralının yanına diz çöker, müdahale eder">
+              <span className="birlik-ad">Sıhhiyeci gönder</span>
+              <small>{yaraliAktifler.length ? "Yaralının başına diz çöker" : "Önce yaralı olmalı"}</small>
+            </button>
           </div>
         )}
         <details className="gelismis">
@@ -241,13 +257,19 @@ export function FigurPaneli({ aktifler, calistir }: { aktifler: Array<FigurKomut
                         Vuruldu
                       </button>
                     )}
-                    {f.poz === "comelmis" || f.poz === "yarali" ? (
+                    {(f.poz ?? "ayakta") !== "ayakta" && (
                       <button type="button" className="kucuk ikincil" onClick={() => pozDegistir(f, "ayakta")}>
                         Kalk
                       </button>
-                    ) : (
+                    )}
+                    {f.poz !== "comelmis" && f.poz !== "yarali" && (
                       <button type="button" className="kucuk ikincil" onClick={() => pozDegistir(f, "comelmis")}>
                         Diz çök
+                      </button>
+                    )}
+                    {f.poz !== "yatmis" && f.poz !== "yarali" && !/sihhiyeci/.test(f.klip ?? "") && (
+                      <button type="button" className="kucuk ikincil" onClick={() => pozDegistir(f, "yatmis")} title="Yere yatıp ateş pozisyonu">
+                        Yat
                       </button>
                     )}
                   </span>

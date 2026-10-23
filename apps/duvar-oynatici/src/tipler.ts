@@ -190,8 +190,8 @@ export interface OrnekDurumu {
  * Figür / klip komutu: oynatıcıdaki alfa kanallı klip katmanına (asker, araç, efekt plakası)
  * bir klibi belirli bir azimuta yerleştirir veya kaldırır. Klip adları içerik manifestinden gelir.
  */
-export type FigurPozu = "ayakta" | "comelmis" | "yarali";
-export const FIGUR_POZ_ETIKETLERI: Record<FigurPozu, string> = { ayakta: "Ayakta", comelmis: "Diz çökmüş", yarali: "Yaralı (yerde)" };
+export type FigurPozu = "ayakta" | "comelmis" | "yatmis" | "yarali";
+export const FIGUR_POZ_ETIKETLERI: Record<FigurPozu, string> = { ayakta: "Ayakta", comelmis: "Diz çökmüş", yatmis: "Yere yatmış", yarali: "Yaralı (yerde)" };
 
 export interface FigurKomutu {
   /** `poz`: sahnedeki figürün duruşunu değiştirir (vurulma → yere düşme, diz çökme, ayağa kalkma). */
@@ -200,6 +200,8 @@ export interface FigurKomutu {
   id?: string;
   /** Duruş; `oynat` ile başlangıç duruşu, `poz` ile değişiklik. Varsayılan ayakta. */
   poz?: FigurPozu;
+  /** `oynat`: bu kimlikli figürün hemen yanına, ona dönük yerleşir (sıhhiyeci → yaralı); azimut/yükseklik yok sayılır. */
+  yaninda?: string;
   /** Manifestteki klip adı (ör. asker_yarali_yerde). */
   klip?: string;
   /** -180..180; 0 = orta duvarın ortası. */

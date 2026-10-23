@@ -9,7 +9,7 @@ import type { Gunluk } from "./gunluk.js";
 import type { FigurKomutu, FigurPozu, KlipOzeti } from "./tipler.js";
 
 export type AktifFigur = FigurKomutu & { id: string };
-const POZLAR: FigurPozu[] = ["ayakta", "comelmis", "yarali"];
+const POZLAR: FigurPozu[] = ["ayakta", "comelmis", "yatmis", "yarali"];
 type Dinleyici = (komut: AktifFigur, aktifler: AktifFigur[]) => void;
 
 const sinirla = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
@@ -40,6 +40,8 @@ export class FigurYoneticisi {
     let k: AktifFigur;
     if (ham.islem === "oynat") {
       if (!ham.klip || typeof ham.klip !== "string") throw new Error("klip adı zorunlu");
+      // Manifestte başlangıç duruşu tanımlı klip (asker_yarali_3b → yarali): panel listesi de bilsin
+      const poz = ham.poz ?? this.klipPozu(ham.klip);
       k = {
         islem: "oynat",
         id: ham.id ?? kimlikUret("fg"),
@@ -49,8 +51,11 @@ export class FigurYoneticisi {
         olcek: sinirla(Number(ham.olcek ?? 1), 0.1, 10),
         dongu: ham.dongu,
         yansit: Boolean(ham.yansit),
-        ...(ham.poz && ham.poz !== "ayakta" ? { poz: ham.poz } : {}),
+        ...(poz && poz !== "ayakta" ? { poz } : {}),
+        ...(typeof ham.yaninda === "string" && this.aktifler.has(ham.yaninda) ? { yaninda: ham.yaninda } : {}),
       };
+      // Yanına yerleşen figür paneldeki listede aynı yönde görünsün
+      if (k.yaninda) k.azimut = this.aktifler.get(k.yaninda)?.azimut ?? k.azimut;
       this.aktifler.set(k.id, k);
       this.gunluk.bilgi(`Figür oynat: ${k.klip} @ ${k.azimut}°${k.poz ? ` (${k.poz})` : ""} (${k.id})`);
     } else if (ham.islem === "poz") {
@@ -85,6 +90,26 @@ export class FigurYoneticisi {
       const dongu = f.dongu ?? tanim?.dongu ?? false;
       if (!dongu && !f.poz) this.aktifler.delete(id);
     }
+  }
+
+  /** Manifestte klibe tanımlı başlangıç duruşu (`poz`), yoksa undefined. */
+  klipPozu(ad: string): FigurPozu | undefined {
+    const t = this.manifestKlipleri()[ad];
+    const p = t?.poz;
+    return typeof p === "string" && POZLAR.includes(p as FigurPozu) ? (p as FigurPozu) : undefined;
+  }
+
+  private manifestKlipleri(): Record<string, Record<string, unknown>> {
+    for (const klasor of this.icerikKlasorleri) {
+      const yol = join(klasor, "manifest.json");
+      if (!existsSync(yol)) continue;
+      try {
+        return (JSON.parse(readFileSync(yol, "utf8")) as { klipler?: Record<string, Record<string, unknown>> }).klipler ?? {};
+      } catch {
+        return {};
+      }
+    }
+    return {};
   }
 
   /** Manifestteki klipleri özetler (panel listesi için). */

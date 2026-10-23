@@ -50,8 +50,8 @@ export interface ModelTanimi {
   kemikler?: Partial<Record<KemikRolu, string>>;
 }
 
-export type FigurPozu = "ayakta" | "comelmis" | "yarali";
-type KemikRolu = "govde" | "gogus" | "solUstBacak" | "solAltBacak" | "sagUstBacak" | "sagAltBacak" | "sagUstKol" | "solAyak" | "sagAyak";
+export type FigurPozu = "ayakta" | "comelmis" | "yatmis" | "yarali";
+type KemikRolu = "govde" | "gogus" | "bas" | "solUstBacak" | "solAltBacak" | "sagUstBacak" | "sagAltBacak" | "sagUstKol" | "solAyak" | "sagAyak";
 /**
  * Quaternius rigi: uyluk→baldır zinciri Body altında, ayaklar (Foot.L/R) Root altında AYRI kemiklerdir
  * (IK hedefi; bekleme klibi onları yazmaz). Bacak döndürülünce ayak da taşınmalı.
@@ -59,6 +59,7 @@ type KemikRolu = "govde" | "gogus" | "solUstBacak" | "solAltBacak" | "sagUstBaca
 const VARSAYILAN_KEMIKLER: Record<KemikRolu, string> = {
   govde: "Torso",
   gogus: "Chest",
+  bas: "Head",
   solUstBacak: "UpperLeg.L",
   solAltBacak: "LowerLeg.L",
   sagUstBacak: "UpperLeg.R",
@@ -134,6 +135,8 @@ export interface FigurSecenekleri {
   dongu?: boolean;
   /** Başlangıç duruşu; manifestteki `poz`u ezer. */
   poz?: FigurPozu;
+  /** Bu kimlikli figürün yanına, ona dönük yerleş (sıhhiyeci → yaralı). */
+  yaninda?: string;
 }
 
 type PozAsamasi = "normal" | "vuruluyor" | "dusuyor" | "yerde";
@@ -153,6 +156,8 @@ interface Aktif {
   namlu: THREE.Object3D | null;
   /** Kule yaw ofseti: a=0 iken kulenin dünya yaw'ı ve işaret (deneysel ölçülür). */
   kuleAci: number;
+  /** Başka figürün yanına yerleşti: çatışmada düşmana dönmez, ona dönük kalır. */
+  yaninda: boolean;
   eylemBekle: THREE.AnimationAction | null;
   eylemAtes: THREE.AnimationAction | null;
   atesPozu: boolean;
@@ -177,6 +182,8 @@ interface Aktif {
   boy: number;
   /** Çökme miktarı 0..1 (yumuşak geçiş). */
   comelme: number;
+  /** Yere yatma miktarı 0..1 (yumuşak geçiş). */
+  yatma: number;
   /** Prosedürel hareketler için zaman (s) ve bir sonraki yardım işareti zamanı. */
   zaman: number;
   sonrakiYardim: number;
@@ -343,6 +350,17 @@ export class FigurKatmani {
     const hiz = tanim.hiz ?? 0;
     const sola = Boolean(s.yansit);
     sarmal.rotation.y = hiz > 0 ? yanaDonus(s.azimut, sola) : izleyiciyeDonus(s.azimut);
+    // Başka figürün yanına: ona 1,1 m mesafede, izleyici tarafında durur ve ona dönük (+z yüzü ona bakar)
+    const yanindaki = s.yaninda ? this.aktifler.find((x) => x.id === s.yaninda) : undefined;
+    if (yanindaki) {
+      const hedef = yanindaki.nesne.position;
+      const izleyiciYonu = new THREE.Vector3(-hedef.x, 0, -hedef.z).normalize();
+      const yan = new THREE.Vector3(-izleyiciYonu.z, 0, izleyiciYonu.x).multiplyScalar(0.6);
+      sarmal.position.copy(hedef).addScaledVector(izleyiciYonu, 0.9).add(yan);
+      sarmal.position.y = ZEMIN_Y;
+      const d = hedef.clone().sub(sarmal.position);
+      sarmal.rotation.y = Math.atan2(d.x, d.z);
+    }
 
     let karistirici: THREE.AnimationMixer | null = null;
     let eylemBekle: THREE.AnimationAction | null = null;
@@ -436,6 +454,7 @@ export class FigurKatmani {
       bitti: false,
       silah: Boolean(tanim.silah),
       temelDonus: sarmal.rotation.y,
+      yaninda: Boolean(yanindaki),
       agirSilah: Boolean(tanim.agirSilah),
       kule,
       kuleTemel: kule ? kule.quaternion.clone() : null,
@@ -459,6 +478,7 @@ export class FigurKatmani {
       tabanY: nesne.position.y,
       boy: hedefBoy,
       comelme: 0,
+      yatma: 0,
       zaman: Math.random() * 10,
       sonrakiYardim: 2 + Math.random() * 4,
       azimut: s.azimut,
@@ -525,7 +545,10 @@ export class FigurKatmani {
       if (a.eylemBekle) a.eylemBekle.reset().setEffectiveWeight(1).play();
       a.atesPozu = false;
     }
-    if (aninda) a.comelme = poz === "comelmis" ? 1 : 0;
+    if (aninda) {
+      a.comelme = poz === "comelmis" ? 1 : 0;
+      a.yatma = poz === "yatmis" ? 1 : 0;
+    }
   }
 
   /** Yere düştü: aşama "yerde", tüfek elden çıkıp yanına düşer (dik durmasın). */
@@ -582,6 +605,8 @@ export class FigurKatmani {
     a.zaman += dt;
     const hedefComelme = a.poz === "comelmis" ? 1 : 0;
     if (a.comelme !== hedefComelme) a.comelme += Math.sign(hedefComelme - a.comelme) * Math.min(Math.abs(hedefComelme - a.comelme), dt / 0.6);
+    const hedefYatma = a.poz === "yatmis" ? 1 : 0;
+    if (a.yatma !== hedefYatma) a.yatma += Math.sign(hedefYatma - a.yatma) * Math.min(Math.abs(hedefYatma - a.yatma), dt / 0.8);
     const sag = new THREE.Vector3(1, 0, 0).applyQuaternion(a.nesne.getWorldQuaternion(new THREE.Quaternion())).normalize();
     const k = a.kemikler;
     const dondur = (kemik: THREE.Object3D | undefined, aci: number) => {
@@ -594,6 +619,18 @@ export class FigurKatmani {
       if (!a.kemikTemelKonum.has(kemik)) a.kemikTemelKonum.set(kemik, kemik.position.clone());
       dunyadaKaydir(kemik, d);
     };
+    if (a.yatma > 0 && a.asama === "normal") {
+      // Yere yatıp ateş (prone): gövde ayak ekseninden öne yatırılır (yüzü yere, başı ileri), baş ileri bakar;
+      // bekleme/ateş klibi sürer, tüfek yerde ileri bakar. Gövde kalınlığı için 0,12 m yukarı.
+      const y = 0.5 - 0.5 * Math.cos(Math.PI * a.yatma);
+      a.icNesne.rotation.x = (Math.PI / 2) * y;
+      a.icNesne.position.y = a.tabanY + 0.12 * (a.boy / 1.8) * y;
+      a.icNesne.updateMatrixWorld(true);
+      dondur(k.bas, -radyan(65) * y);
+      dondur(k.gogus, -radyan(15) * y);
+    } else if (a.yatma <= 0 && a.asama === "normal" && a.poz !== "yarali" && a.icNesne.rotation.x !== 0) {
+      a.icNesne.rotation.x = 0;
+    }
     if (a.comelme > 0 && a.asama === "normal") {
       const c = 0.5 - 0.5 * Math.cos(Math.PI * a.comelme); // yumuşak 0..1
       const olcek = (a.boy / 1.8) * c;
@@ -613,7 +650,7 @@ export class FigurKatmani {
       kaydir(k.sagAyak, yukari.clone().multiplyScalar(0.4 * olcek).addScaledVector(ileri, -0.45 * olcek));
       dondur(k.sagAyak, radyan(80) * c);
       dondur(k.govde, -radyan(6) * c);
-    } else if (a.comelme <= 0 && a.asama === "normal" && a.poz !== "yarali" && a.icNesne.position.y !== a.tabanY) {
+    } else if (a.comelme <= 0 && a.yatma <= 0 && a.asama === "normal" && a.poz !== "yarali" && a.icNesne.position.y !== a.tabanY) {
       a.icNesne.position.y = a.tabanY;
     }
     if (a.poz === "yarali" && a.asama === "yerde") {
@@ -666,7 +703,7 @@ export class FigurKatmani {
       // Kuleli ağır silah: gövde yerinde, kule düşmana döner
       if (a.agirSilah && a.kule) this.kuleyiDondur(a, dt);
       // Çatışmada silahlı, sabit figürler (kulesiz) düşmana döner (yumuşak); yaralı dönmez
-      if (a.silah && a.hiz === 0 && !(a.agirSilah && a.kule) && a.poz !== "yarali") {
+      if (a.silah && a.hiz === 0 && !(a.agirSilah && a.kule) && a.poz !== "yarali" && !a.yaninda) {
         // Modelin ön yüzü (+z) düşman yönüne (sin a, 0, -cos a) baksın: θ = π − a
         const hedef = this.dusmanAzimutu === null ? a.temelDonus : Math.PI - radyan(this.dusmanAzimutu);
         let fark = hedef - a.nesne.rotation.y;
