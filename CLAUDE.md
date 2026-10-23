@@ -124,7 +124,8 @@ yaralı = SWAT "HitRecieve" → "Death" (son karede kalır) + prosedürel nefes 
 çağrısı, sesli), tüfek yere düşer; diz çökme prosedürel kemik ofseti (`figurler3b.ts`, Quaternius riginde
 ayak kemikleri ayrı → ayaklar da taşınır; kuaterniyon normalize + klibin yazmadığı kemikler her kare
 geri alınır). Manifest: `asker_yarali_3b`, `asker_diz_cokmus`, `animasyonlar.vurulma/dusme`. Panel:
-"Yaralı asker", "Asker vuruldu!", satırda Vuruldu / Diz çök / Kalk. Senaryo adımı `figur` (editörde
+"Yaralı asker", "Asker vuruldu!", "Sıhhiyeci gönder" (`yaninda=<id>`: yaralının yanına, ona dönük), satırda
+Vuruldu / Diz çök / Yat / Kalk; duruşlar ayakta / comelmis / yatmis (prone, prosedürel) / yarali. Senaryo adımı `figur` (editörde
 "Sahneye koy" → `senaryo_<adım>` kimliği, "Duruş değiştir" onu hedefler). Oynatıcı 3B hazır değilken
 gelen figürler kuyruğa alınır (yeniden açılışta kaybolmaz). Tarayıcıda doğrulandı. Test için
 `?fov=12`'den küçük değer 90'a düşer (`fov > 10` şartı); 3B kameralar `?fov=`'u izler.
@@ -142,8 +143,8 @@ oynatıcı sekmesi aynı GPU'yu paylaşıyor demektir; fazlasını kapat.
 1. Poly Haven panoramaları (23) için yerleşim planı + `yawKaydirma`; güneş tahmini ve gece karartması
    gözle kontrol (kırsal AI panoramada güneş 5° → çok uzun gölge çizgileri; tahmini sınırla). Oda 2 için
    3B sütre/kum torbası modelleri (2B ön plan 3B'de kapalı).
-2. Yere yatıp ateş (prone) duruşu; HESCO modeli yok (prosedürel kutu + doku yapılabilir). Yaralıya
-   müdahale eden ikinci asker (sağlıkçı) animasyonu yok (yeşil perde çekimi docs §2.5).
+2. HESCO modeli yok (prosedürel kutu + doku yapılabilir). Sıhhiyeci "Interact" klibiyle idare ediyor; gerçek
+   müdahale animasyonu (turnike) için yeşil perde çekimi (docs §2.5). Yaralı taşıma (iki kişi) yok.
 3. VFX plakaları (gerçek çekim, alfa) ve helikopter inişi için 3B toz + ses ayarı; izli mermiyi 3B'ye taşıma.
 4. 4 kanal ses; Türkçe bağırma/yaralı inleme kaydı; U duvar ölçüleri → `?fov=`.
 5. İdareye gösterim: kırsal 4 varyant + patlama/krater + 3 asker + yaralı + helikopter.
