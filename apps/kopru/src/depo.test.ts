@@ -37,4 +37,16 @@ describe("veri deposu", () => {
       }
     }
   });
+
+  it("son durumu yazar/okur; 12 saatten eskisini yok sayar", () => {
+    const k = mkdtempSync(join(tmpdir(), "depo-"));
+    const d = new VeriDeposu(k);
+    expect(d.sonDurumOku()).toBeNull();
+    const durum = { oda: "oda2" } as unknown as Parameters<typeof d.sonDurumYaz>[0]["durum"];
+    d.sonDurumYaz({ zaman: Date.now(), durum, figurler: [{ islem: "oynat", id: "f1", klip: "asker_bekleyen" }] });
+    expect(d.sonDurumOku()?.figurler[0].id).toBe("f1");
+    d.sonDurumYaz({ zaman: Date.now() - 13 * 3600 * 1000, durum, figurler: [] });
+    expect(d.sonDurumOku()).toBeNull();
+    expect(d.sonDurumOku(14 * 3600 * 1000)).not.toBeNull();
+  });
 });

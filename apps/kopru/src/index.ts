@@ -60,6 +60,27 @@ const icerikAdaylari = [
 const figur = new FigurYoneticisi(gunluk, icerikAdaylari);
 senaryo.figurBagla(figur);
 
+// Son durum: köprü kapanıp açılınca sahne (bölge, ortam, oda, figürler) kaldığı yerden devam eder (12 saatten
+// eskiyse yok sayılır). Durum/figür değişiminde 1 sn gecikmeyle diske yazılır.
+const sonDurum = veri.sonDurumOku();
+if (sonDurum) {
+  figur.yukle(sonDurum.figurler);
+  void depo.durumuYukle(sonDurum.durum).then(() => gunluk.bilgi(`Son durum geri yüklendi (${new Date(sonDurum.zaman).toLocaleTimeString("tr-TR")}, ${sonDurum.figurler.length} figür)`));
+}
+let sonDurumZamanlayici: NodeJS.Timeout | null = null;
+function sonDurumuKaydet() {
+  if (sonDurumZamanlayici) return;
+  sonDurumZamanlayici = setTimeout(() => {
+    sonDurumZamanlayici = null;
+    const { sonEfektler: _e, ...durum } = depo.al();
+    try {
+      veri.sonDurumYaz({ zaman: Date.now(), durum, figurler: figur.aktifListe() });
+    } catch (hata) {
+      gunluk.uyari(`Son durum yazılamadı: ${hata instanceof Error ? hata.message : String(hata)}`);
+    }
+  }, 1000);
+}
+
 const uygulama = express();
 uygulama.use("/api", apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, figur }));
 for (const klasor of icerikAdaylari) {
@@ -94,13 +115,19 @@ function herkeseGonder(mesaj: SunucuMesaji) {
 
 const baglantiYayinla = () => herkeseGonder({ tip: "baglanti", baglanti: baglantiDurumu(unreal, artnet, oynaticiSayisi()) });
 
-depo.dinle((durum) => herkeseGonder({ tip: "durum", durum }));
+depo.dinle((durum) => {
+  herkeseGonder({ tip: "durum", durum });
+  sonDurumuKaydet();
+});
 depo.efektDinle((efekt) => herkeseGonder({ tip: "efekt", efekt }));
 senaryo.dinle((s) => herkeseGonder({ tip: "senaryo", senaryo: s }));
 gunluk.dinle((k) => herkeseGonder({ tip: "gunluk", seviye: k.seviye, mesaj: k.mesaj, zaman: k.zaman }));
 unreal.dinle((istek) => herkeseGonder({ tip: "unreal", istek }));
 ornek.dinle((o) => herkeseGonder({ tip: "ornek", ornek: o }));
-figur.dinle((komut, aktifler) => herkeseGonder({ tip: "figur", komut, aktifler }));
+figur.dinle((komut, aktifler) => {
+  herkeseGonder({ tip: "figur", komut, aktifler });
+  sonDurumuKaydet();
+});
 
 wss.on("connection", (ws: WebSocket) => {
   istemciRolleri.set(ws, "panel");

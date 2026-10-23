@@ -3,7 +3,14 @@
  */
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import type { OnAyar, Senaryo } from "./tipler.js";
+import type { FigurKomutu, OnAyar, Senaryo, SimulasyonDurumu } from "./tipler.js";
+
+/** Köprü kapanıp açılınca sahnenin kaldığı yerden devam etmesi için son durum (bölge, ortam, oda, figürler). */
+export interface SonDurum {
+  zaman: number;
+  durum: Omit<SimulasyonDurumu, "sonEfektler">;
+  figurler: Array<FigurKomutu & { id: string }>;
+}
 
 function dosyaOku<T>(yol: string, varsayilan: T): T {
   if (!existsSync(yol)) return varsayilan;
@@ -25,11 +32,13 @@ export function kimlikUret(onek: string): string {
 export class VeriDeposu {
   private readonly onAyarDosyasi: string;
   private readonly senaryoDosyasi: string;
+  private readonly sonDurumDosyasi: string;
 
   constructor(klasor: string, varsayilanSenaryolar: Senaryo[] = []) {
     mkdirSync(klasor, { recursive: true });
     this.onAyarDosyasi = join(klasor, "on-ayarlar.json");
     this.senaryoDosyasi = join(klasor, "senaryolar.json");
+    this.sonDurumDosyasi = join(klasor, "son-durum.json");
     if (!existsSync(this.senaryoDosyasi) && varsayilanSenaryolar.length) {
       dosyaYaz(this.senaryoDosyasi, varsayilanSenaryolar);
     } else if (varsayilanSenaryolar.length) {
@@ -39,6 +48,19 @@ export class VeriDeposu {
       const eksik = varsayilanSenaryolar.filter((v) => !mevcut.some((m) => m.id === v.id));
       if (eksik.length) dosyaYaz(this.senaryoDosyasi, [...mevcut, ...eksik]);
     }
+  }
+
+  /** Son durumu yazar (durum/figür değişiminde, gecikmeli çağrılır). */
+  sonDurumYaz(d: SonDurum) {
+    dosyaYaz(this.sonDurumDosyasi, d);
+  }
+
+  /** Son durumu okur; `enCokYasMs`'den eskiyse (varsayılan 12 saat) yok sayar: dünkü gece sahnesi sabah açılışta gelmesin. */
+  sonDurumOku(enCokYasMs = 12 * 3600 * 1000): SonDurum | null {
+    const d = dosyaOku<SonDurum | null>(this.sonDurumDosyasi, null);
+    if (!d || typeof d.zaman !== "number" || !d.durum) return null;
+    if (Date.now() - d.zaman > enCokYasMs) return null;
+    return { zaman: d.zaman, durum: d.durum, figurler: Array.isArray(d.figurler) ? d.figurler : [] };
   }
 
   onAyarlar(): OnAyar[] {
