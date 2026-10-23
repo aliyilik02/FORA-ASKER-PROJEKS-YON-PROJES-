@@ -151,7 +151,7 @@
         {
           "ad": "cakil yol",
           "azimut": 15,
-          "mesafe": 24,
+          "mesafe": 13,
           "tur": [
             "patlama",
             "toz"
@@ -160,7 +160,7 @@
         {
           "ad": "kiyi camuru",
           "azimut": 80,
-          "mesafe": 28,
+          "mesafe": 13,
           "tur": [
             "patlama"
           ]
@@ -168,7 +168,7 @@
         {
           "ad": "kiyi uzak",
           "azimut": 130,
-          "mesafe": 30,
+          "mesafe": 13,
           "tur": [
             "patlama"
           ]
@@ -264,7 +264,7 @@
         {
           "ad": "sirt sol",
           "azimut": -30,
-          "mesafe": 20,
+          "mesafe": 13,
           "tur": [
             "patlama",
             "toz"
@@ -273,7 +273,7 @@
         {
           "ad": "sirt sag",
           "azimut": 30,
-          "mesafe": 18,
+          "mesafe": 13,
           "tur": [
             "patlama"
           ]
@@ -281,7 +281,7 @@
         {
           "ad": "patika",
           "azimut": 90,
-          "mesafe": 24,
+          "mesafe": 13,
           "tur": [
             "patlama"
           ]
@@ -289,7 +289,7 @@
         {
           "ad": "arka",
           "azimut": -120,
-          "mesafe": 22,
+          "mesafe": 13,
           "tur": [
             "patlama"
           ]
@@ -379,7 +379,7 @@
         {
           "ad": "cayir sol",
           "azimut": -20,
-          "mesafe": 22,
+          "mesafe": 13,
           "tur": [
             "patlama",
             "toz"
@@ -388,7 +388,7 @@
         {
           "ad": "cayir sag",
           "azimut": 40,
-          "mesafe": 20,
+          "mesafe": 13,
           "tur": [
             "patlama"
           ]
@@ -396,7 +396,7 @@
         {
           "ad": "iz sol",
           "azimut": -135,
-          "mesafe": 20,
+          "mesafe": 13,
           "tur": [
             "patlama"
           ]
@@ -404,7 +404,7 @@
         {
           "ad": "iz sag",
           "azimut": 150,
-          "mesafe": 22,
+          "mesafe": 13,
           "tur": [
             "patlama"
           ]
@@ -500,7 +500,7 @@
         {
           "ad": "yamac on",
           "azimut": -20,
-          "mesafe": 18,
+          "mesafe": 13,
           "tur": [
             "patlama",
             "toz"
@@ -509,7 +509,7 @@
         {
           "ad": "sirt sag",
           "azimut": 60,
-          "mesafe": 20,
+          "mesafe": 13,
           "tur": [
             "patlama"
           ]
@@ -517,7 +517,7 @@
         {
           "ad": "sirt sag uzak",
           "azimut": 110,
-          "mesafe": 24,
+          "mesafe": 13,
           "tur": [
             "patlama"
           ]
@@ -525,7 +525,7 @@
         {
           "ad": "sol yamac",
           "azimut": -90,
-          "mesafe": 20,
+          "mesafe": 13,
           "tur": [
             "patlama"
           ]
