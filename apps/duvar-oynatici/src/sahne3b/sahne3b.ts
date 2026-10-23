@@ -380,6 +380,16 @@ export class Sahne3B {
     const yagisGunes = 0.3 + 0.7 * this.yagisKararma;
     this.gunes.intensity = (0.35 + guc * 2.4) * faktor * yagisGunes;
     this.gunes.shadow.radius = 2 + (1 - guc * yagisGunes) * 8;
+    // Gece panoraması: parlak nokta sokak lambası/ay olabilir; figürler gündüz gibi aydınlanmasın.
+    // Ay ışığı: zayıf, mavimsi, yumuşak gölge. Alacakaranlıkta orta. Gündüz panoraması gece saatinde zaten faktörle kısılır.
+    if (z === "gece") {
+      this.gunes.intensity = Math.min(this.gunes.intensity, 0.45);
+      this.gunes.color.lerp(new THREE.Color(0.72, 0.8, 1), 0.7);
+      this.gunes.shadow.radius = Math.max(this.gunes.shadow.radius, 6);
+      this.dolgu.intensity = Math.max(this.dolgu.intensity, 0.08);
+    } else if (z === "alacakaranlik") {
+      this.gunes.intensity = Math.min(this.gunes.intensity, 1.2);
+    }
   }
 
   /** Yer patlaması: ateş, toprak sütunu, moloz, anlık aydınlatma, kalıcı krater + tüten duman. */
