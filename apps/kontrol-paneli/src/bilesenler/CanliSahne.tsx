@@ -46,6 +46,17 @@ export function CanliSahne({
   }, []);
 
   const hizli = durum.oda === "oda1" ? HIZLI_ODA1 : HIZLI_ODA2;
+  // Oda 1'in en önemli tek dokunuşu: pusulaya en yakın ayakta/diz çökmüş asker vurulur (6 tuşu)
+  const vurulabilir = figurler.filter((f) => /^asker_(bekleyen|taktik|diz_cokmus|kamuflaj)/.test(f.klip ?? "") && f.poz !== "yarali");
+  const askerVuruldu = () => {
+    if (!vurulabilir.length) return;
+    const hedefAz = ((seciliYon + 180) % 360) - 180;
+    const fark = (a: number) => Math.abs((((a - hedefAz) % 360) + 540) % 360 - 180);
+    const f = [...vurulabilir].sort((a, b) => fark(a.azimut ?? 0) - fark(b.azimut ?? 0))[0];
+    setSonTetik("vuruldu");
+    window.setTimeout(() => setSonTetik(null), 450);
+    void calistir(() => api.figur({ islem: "poz", id: f.id, poz: "yarali" })).then((r) => r && bildir({ tur: "hata", baslik: "Asker vuruldu", metin: `${yonMetni(((f.azimut ?? 0) + 360) % 360)} tarafı · Figürler'den sıhhiyeci gönder` }));
+  };
   const tetikle = (tur: EfektTuru, siddet: number) => {
     setSonTetik(tur);
     window.setTimeout(() => setSonTetik(null), 450);
@@ -121,8 +132,20 @@ export function CanliSahne({
             <kbd>{h.kisayol}</kbd>
           </button>
         ))}
+        {durum.oda === "oda1" && (
+          <button
+            type="button"
+            className={`efekt vuruldu ${sonTetik === "vuruldu" ? "tetiklendi" : ""}`}
+            disabled={!vurulabilir.length}
+            onClick={askerVuruldu}
+            title={vurulabilir.length ? "Pusulaya en yakın asker vurulur, yere düşer, yardım çağırır" : "Önce Figürler'den asker çağır"}
+          >
+            <span className="efekt-ad">Asker vuruldu</span>
+            <kbd>6</kbd>
+          </button>
+        )}
       </div>
-      <p className="ipucu">Yönü pusuladan seç, efekti tek dokunuşla tetikle. Klavye: 1–5 efekt, ←/→ yön, Boşluk senaryo oynat/duraklat.</p>
+      <p className="ipucu">Yönü pusuladan seç, efekti tek dokunuşla tetikle. Klavye: 1–5 efekt, 6 asker vuruldu, ←/→ yön, Boşluk senaryo oynat/duraklat.</p>
     </section>
   );
 }

@@ -1143,6 +1143,13 @@ button.birlik.vuruldu {
   border-color: rgba(214, 112, 96, 0.7);
   background: rgba(214, 112, 96, 0.18);
 }
+.hizli-efektler button.efekt.vuruldu {
+  border-color: rgba(214, 112, 96, 0.6);
+  background: rgba(214, 112, 96, 0.12);
+}
+.hizli-efektler button.efekt.vuruldu .efekt-ad {
+  color: #f2a08e;
+}
 button.birlik.sihhiyeci {
   border-color: rgba(116, 212, 140, 0.45);
   background: rgba(116, 212, 140, 0.08);
