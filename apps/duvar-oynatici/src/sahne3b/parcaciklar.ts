@@ -204,10 +204,10 @@ export class ParcacikSistemi {
   readonly kivilcim: ParcacikGrubu;
   readonly grup = new THREE.Group();
 
-  constructor(dumanDoku: THREE.Texture, atesDoku: THREE.Texture, kivilcimDoku: THREE.Texture) {
-    this.duman = new ParcacikGrubu(dumanDoku, 1200, "normal", true);
-    this.ates = new ParcacikGrubu(atesDoku, 300, "katki", false);
-    this.kivilcim = new ParcacikGrubu(kivilcimDoku, 600, "katki", false);
+  constructor(dumanDoku: THREE.Texture, atesDoku: THREE.Texture, kivilcimDoku: THREE.Texture, kapasiteCarpani = 1) {
+    this.duman = new ParcacikGrubu(dumanDoku, Math.round(1200 * kapasiteCarpani), "normal", true);
+    this.ates = new ParcacikGrubu(atesDoku, Math.round(300 * kapasiteCarpani), "katki", false);
+    this.kivilcim = new ParcacikGrubu(kivilcimDoku, Math.round(600 * kapasiteCarpani), "katki", false);
     this.grup.add(this.duman.mesh, this.ates.mesh, this.kivilcim.mesh);
   }
 

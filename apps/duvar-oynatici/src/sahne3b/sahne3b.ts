@@ -23,6 +23,14 @@ import { SutreKatmani, type SutreEsyasi } from "./sutre";
 import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu, yukseklikMesafe } from "./uzay";
 import { birlikNoktasiSec, noktaSec, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 
+export type Kalite = "dusuk" | "orta" | "yuksek";
+/** Kalite kademeleri: dizüstü/entegre GPU'da "dusuk", sahadaki RTX sınıfı makinede "yuksek". */
+export const KALITE_AYARLARI: Record<Kalite, { golgeHaritasi: number; kenarYumusatma: boolean; parcacikCarpani: number }> = {
+  dusuk: { golgeHaritasi: 1024, kenarYumusatma: false, parcacikCarpani: 0.5 },
+  orta: { golgeHaritasi: 1536, kenarYumusatma: true, parcacikCarpani: 0.75 },
+  yuksek: { golgeHaritasi: 2048, kenarYumusatma: true, parcacikCarpani: 1 },
+};
+
 export interface PanoramaKaynagi {
   url: string;
   yawKaydirma?: number;
@@ -74,16 +82,21 @@ export class Sahne3B {
   hazir = false;
   hata = "";
 
-  constructor(tuval: HTMLCanvasElement, hataAyiklama = false) {
+  /** Kalite kademesi (`?kalite=`): gölge haritası, kenar yumuşatma ve parçacık kapasitesi. */
+  readonly kalite: Kalite;
+
+  constructor(tuval: HTMLCanvasElement, hataAyiklama = false, kalite: Kalite = "yuksek") {
+    this.kalite = kalite;
+    const k = KALITE_AYARLARI[kalite];
     let r: THREE.WebGLRenderer | null = null;
     try {
-      r = new THREE.WebGLRenderer({ canvas: tuval, antialias: true, alpha: false, powerPreference: "high-performance", preserveDrawingBuffer: false });
+      r = new THREE.WebGLRenderer({ canvas: tuval, antialias: k.kenarYumusatma, alpha: false, powerPreference: "high-performance", preserveDrawingBuffer: false });
     } catch (h) {
       this.hata = h instanceof Error ? h.message : String(h);
     }
     this.destekli = r !== null;
-    this.parcaciklar = new ParcacikSistemi(dumanDokusu(128, 1), atesDokusu(128, 7), kivilcimDokusu(32));
-    this.hasar = new HasarKatmani([kraterDokusu(256, 3), kraterDokusu(256, 9), kraterDokusu(256, 21)], this.parcaciklar);
+    this.parcaciklar = new ParcacikSistemi(dumanDokusu(128, 1), atesDokusu(128, 7), kivilcimDokusu(32), k.parcacikCarpani);
+    this.hasar = new HasarKatmani([kraterDokusu(256, 3), kraterDokusu(256, 9), kraterDokusu(256, 21)], this.parcaciklar, Math.round(320 * k.parcacikCarpani));
     this.heli = new Helikopter3B(this.parcaciklar);
     this.catisma = new CatismaSistemi(this.parcaciklar, {
       carpma: (p) => this.catismaSesleri.carpma(p),
@@ -109,7 +122,7 @@ export class Sahne3B {
 
     // Güneş + gölge
     this.gunes.castShadow = true;
-    this.gunes.shadow.mapSize.set(2048, 2048);
+    this.gunes.shadow.mapSize.set(k.golgeHaritasi, k.golgeHaritasi);
     const sc = this.gunes.shadow.camera;
     sc.left = -45;
     sc.right = 45;

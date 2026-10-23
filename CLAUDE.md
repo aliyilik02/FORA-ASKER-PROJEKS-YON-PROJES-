@@ -79,7 +79,7 @@ parametrik yer tutucu. Üstüne: Oda 2 ön planları, **figür klipleri** (`klip
 `figur`), sis, helikopter, hava, **efekt plakaları** (`klipler`, kategori `efekt`; adı
 `patlama_*`, `toz_*`, `uzak_patlama_*` olanlar panel efektlerine otomatik bağlanır), izli mermi,
 flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test. Sorgu: `?fov=`, `?panorama=`,
-`?yaw=`, `?hud=1`, `?doldur=1`. Ayrıntı: `docs/duvar-oynatici.md`.
+`?yaw=`, `?hud=1`, `?doldur=1`, `?kalite=dusuk|orta|yuksek` (dizüstü: dusuk; yerel kayıtta kalır). Ayrıntı: `docs/duvar-oynatici.md`.
 
 Panel API'si (`apps/kopru/src/api.ts`): `/api/durum`, `/oda`, `/bolge`, `/ortam`, `/isik`,
 `/izli-mermi`, `/oda2`, `/efekt`, `/figur` (oynat/durdur/temizle/poz), `/klipler`, `/figurler`,

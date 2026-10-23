@@ -23,7 +23,7 @@ import { gokyuzuCiz, gokyuzuGuncelle, gokyuzuRenkleri } from "./sahne/gokyuzu";
 import { HavaSistemi, kararmaCiz, sisCiz } from "./sahne/hava";
 import { oda2OnPlanCiz } from "./sahne/oda2";
 import { PanoramaKatmani } from "./panorama";
-import { Sahne3B } from "./sahne3b/sahne3b";
+import { type Kalite, Sahne3B } from "./sahne3b/sahne3b";
 import { SesMotoru } from "./ses";
 import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type EfektIstegi, type FigurKomutu, type SimulasyonDurumu, varsayilanDurum } from "./tipler";
 import { panoramaSec, VideoKatmani } from "./video";
@@ -58,7 +58,11 @@ const video = new VideoKatmani("icerik/"); // belge tabanına göreli: /oynatici
 const panorama = new PanoramaKatmani();
 const klipler = new KlipKatmani();
 /** 3B sahne katmanı: panorama resmi arka plan + IBL, 3B figür/efekt/helikopter. Video panoramada 2B yol kalır. */
-const sahne3b = new Sahne3B(tuval3b, params.get("gunes") === "1");
+/** Kalite kademesi: ?kalite=dusuk|orta|yuksek (adres çubuğu > yerel kayıt > yüksek). Dizüstünde "dusuk" önerilir. */
+const kaliteParam = params.get("kalite");
+const kalite: Kalite = (["dusuk", "orta", "yuksek"] as const).find((k) => k === (kaliteParam ?? localStorage.getItem("kalite"))) ?? "yuksek";
+if (kaliteParam) localStorage.setItem("kalite", kalite);
+const sahne3b = new Sahne3B(tuval3b, params.get("gunes") === "1", kalite);
 const ucAktifOlabilir = ucBoyut && sahne3b.destekli;
 sahne3b.catismaSesleriAyarla({
   carpma: (pan) => ses.carpma(pan),
@@ -452,7 +456,7 @@ function kare(simdi: number) {
         `bulut ${durum.ortam.bulut.toFixed(2)} · sis ${durum.ortam.sis.toFixed(2)} · yağış ${durum.ortam.yagis} · rüzgâr ${durum.ortam.ruzgarSiddeti.toFixed(2)} @ ${durum.ortam.ruzgarYonu}°`,
         `izli mermi ${durum.izliMermi.aktif ? `açık (duvar ${durum.izliMermi.cikisNoktasi}, ${durum.izliMermi.yon}°, ${durum.izliMermi.siklik}/sn)` : "kapalı"} · oda2 ${GUVENLI_ALAN_ETIKETLERI[durum.oda2.guvenliAlan]} · helikopter ${HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}`,
         `içerik: ${ucCizildi ? "3B sahne + panorama" : panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""}${sahne3b.hata ? ` · 3B hatası: ${sahne3b.hata}` : ""} · aktif klip ${klipler.aktifSayisi} · fov ${duvarlar[0].fov}° · H hud · K kalibrasyon · F tam ekran · M sessiz · 1/2/3 test`,
-        `3B: ${ucAktifOlabilir ? (sahne3b.hazir ? "açık" : "bekliyor") : ucBoyut ? "desteklenmiyor" : "kapalı (?uc=0)"} · ${sahne3b.gunesBilgisi} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi} · parçacık ${sahne3b.parcacikSayisi} · çizim/duvar ${sahne3b.cizimCagrisi} · iz ${sahne3b.izSayisi} · çatışma ${durum.catisma?.aktif ? `%${Math.round(durum.catisma.siddet * 100)} @ ${durum.catisma.yon}°` : "kapalı"} · helikopter ${sahne3b.helikopterHazir ? `model, iniş ${sahne3b.helikopterAzimutu.toFixed(0)}°` : "siluet"}`,
+        `3B: ${ucAktifOlabilir ? (sahne3b.hazir ? "açık" : "bekliyor") : ucBoyut ? "desteklenmiyor" : "kapalı (?uc=0)"} · kalite ${sahne3b.kalite} · ${sahne3b.gunesBilgisi} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi} · parçacık ${sahne3b.parcacikSayisi} · çizim/duvar ${sahne3b.cizimCagrisi} · iz ${sahne3b.izSayisi} · çatışma ${durum.catisma?.aktif ? `%${Math.round(durum.catisma.siddet * 100)} @ ${durum.catisma.yon}°` : "kapalı"} · helikopter ${sahne3b.helikopterHazir ? `model, iniş ${sahne3b.helikopterAzimutu.toFixed(0)}°` : "siluet"}`,
       ],
       H,
     );

@@ -68,6 +68,10 @@ katmanda:
   UpperLeg/LowerLeg.L/R, UpperArm.R, Foot.L/R). Dikkat: dünya eksenli döndürmede kuaterniyonlar
   normalize edilmeli (ebeveyn ölçeği 100 ve kayma var; yoksa model şişer) ve klibin yazmadığı kemikler
   (Torso) her kare temel poza geri alınmalı (`kemikTemel`), yoksa ofset birikir.
+- **Kalite kademesi** (`?kalite=dusuk|orta|yuksek`, `KALITE_AYARLARI`): gölge haritası 1024/1536/2048, kenar
+  yumuşatma (düşükte kapalı), parçacık kapasitesi ×0,5/0,75/1 ve krater dumanı üst sınırı. Adres çubuğundan
+  verilince `localStorage`'a yazılır, sonraki açılışlarda kalır; HUD'da görünür. Gölge haritası güneşe bağlı
+  olduğundan karede bir kez çizilir (`shadowMap.autoUpdate=false`); iskeletli mesh'ler tek Skeleton paylaşır.
 - **Bekleyen figürler** (`main.ts`): 3B sahne hazır olmadan (panorama yükleniyor) gelen model figür
   komutları kuyruğa alınır, sahne hazır olunca uygulanır — oynatıcı yeniden açılınca köprünün yolladığı
   aktif figürler kaybolmaz.
@@ -179,8 +183,9 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
 - 3B asker modelleri stilize (three.js Soldier, Poly Pizza); kabul için Mixamo "Swat" karakteri +
   Rifle animasyonları (ücretsiz Adobe hesabı, Blender → GLB) ya da yeşil perde çekimi önerilir.
 - Helikopter modeli düşük poligonlu (OGA CC-BY); 3B görsel testi henüz yapılmadı.
-- Performans: dizüstünde (Iris Xe) 1920×360'ta 20–30 fps ölçüldü; 5760×1080'de hedef makine
-  (RTX 4060+) gerekir. Gölge haritası 2048, parçacık üst sınırı ~2000.
+- Performans (23 Ekim, Iris Xe, 1277×239): boş sahne 60 fps; 4 figür + çatışma + 16 krater ≈ 38 fps (kalite yüksek).
+  Darboğazlar figür iskeletleri ve krater dumanıydı (düzeltildi). 5760×1080 için hedef makine (RTX 4060+)
+  gerekir; dizüstünde `?kalite=dusuk`. Parçacık üst sınırı 2100×kalite çarpanı.
 - Yaralı/diz çökme Quaternius rigine göre ayarlandı; Poly Pizza/Mixamo modellerde düşme klibi yok, klipsiz
   model yaralı olunca gövde yere yatırılır (kaba). Yere yatıp ateş (prone) duruşu yok.
 - Ses çıkışı stereo; 4 kanal yerleşimi saha donanımına göre eklenecek.
