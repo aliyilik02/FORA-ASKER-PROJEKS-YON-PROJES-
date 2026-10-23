@@ -3210,7 +3210,8 @@
         "figur"
       ],
       "genislikDerece": 4,
-      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt"
+      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt",
+      "renk": "#8a8460"
     },
     "asker_taktik": {
       "dosya": "modeller/asker_taktik.glb",
@@ -3285,7 +3286,8 @@
       "genislikDerece": 5,
       "_not": "Oda 1 (ateş altında yaralıya müdahale): yakın mesafede yerde; nefes alır, ara ara kol kaldırıp yardım çağırır. Panelden ayakta askere \"Vuruldu\" denince aynı duruma geçer. Yerleşim planı atlanır (serbestYerlesim): panelin mesafesi aynen; Oda 2'de sütrenin içine (3,5 m) konur.",
       "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt",
-      "serbestYerlesim": true
+      "serbestYerlesim": true,
+      "renk": "#8a8460"
     },
     "asker_diz_cokmus": {
       "dosya": "modeller/asker_swat.glb",
@@ -3324,7 +3326,8 @@
       ],
       "genislikDerece": 4,
       "_not": "Prosedürel diz çökme (kemik ofsetleri); çatışmada nişan alır.",
-      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt"
+      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt",
+      "renk": "#8a8460"
     },
     "asker_sihhiyeci": {
       "dosya": "modeller/asker_swat.glb",
@@ -3343,7 +3346,8 @@
       "genislikDerece": 4,
       "_not": "Panelde \"Sıhhiyeci gönder\": yaralının yanına, ona dönük yerleşir (figür komutu yaninda=<yaralı id>). Silahsız; çatışmada düşmana dönmez.",
       "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt",
-      "serbestYerlesim": true
+      "serbestYerlesim": true,
+      "renk": "#8a8460"
     },
     "asker_kosan": {
       "dosya": "modeller/asker_swat.glb",
@@ -3374,7 +3378,8 @@
         "figur"
       ],
       "genislikDerece": 4,
-      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt"
+      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt",
+      "renk": "#8a8460"
     },
     "asker_yuruyen": {
       "dosya": "modeller/asker_swat.glb",
@@ -3405,7 +3410,8 @@
         "figur"
       ],
       "genislikDerece": 4,
-      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt"
+      "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt",
+      "renk": "#8a8460"
     },
     "asker_zirhli": {
       "dosya": "modeller/asker_mixamo.glb",
