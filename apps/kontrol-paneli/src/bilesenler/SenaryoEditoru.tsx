@@ -71,6 +71,9 @@ interface YeniAdim {
   /** Duruş adımının hedefi: bu senaryoda daha önce sahneye konan figür adımının kimliği ve etiketi. */
   figurHedefId: string;
   figurHedefAd: string;
+  /** "Sahneye koy" için: bu adımın figürünün yanına yerleş (sıhhiyeci → yaralı); boş = yön/mesafe ile. */
+  figurYanindaId: string;
+  figurYanindaAd: string;
 }
 
 function varsayilanYeni(d: SimulasyonDurumu): YeniAdim {
@@ -104,6 +107,8 @@ function varsayilanYeni(d: SimulasyonDurumu): YeniAdim {
     figurPoz: "yarali",
     figurHedefId: "",
     figurHedefAd: "",
+    figurYanindaId: "",
+    figurYanindaAd: "",
   };
 }
 
@@ -170,6 +175,13 @@ function adimUret(y: YeniAdim, id: string): SenaryoAdimi {
           islem: { tip: "figur", figur: { islem: "poz", id: y.figurHedefId, poz: y.figurPoz } },
         };
       // Sahneye koy: kimlik adım kimliğinden türetilir; sonraki "duruş" adımları buna bağlanır
+      if (y.figurYanindaId)
+        return {
+          id,
+          gecikmeMs,
+          aciklama: `${y.figurBaslik || y.figurKlip} → ${y.figurYanindaAd || "figür"} yanına`,
+          islem: { tip: "figur", figur: { islem: "oynat", id: `senaryo_${id}`, klip: y.figurKlip, yaninda: y.figurYanindaId, azimut: y.figurYon, olcek: 1, dongu: true } },
+        };
       return {
         id,
         gecikmeMs,
@@ -385,6 +397,17 @@ export function SenaryoEditoru({
                     {klipler.map((k) => (
                       <option key={k.ad} value={k.ad}>
                         {k.baslik}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="alan">
+                  <span>Yanına yerleş</span>
+                  <select value={yeni.figurYanindaId} onChange={(e) => g({ figurYanindaId: e.target.value, figurYanindaAd: figurAdimlari.find((f) => f.id === e.target.value)?.ad ?? "" })}>
+                    <option value="">— hayır, yön/mesafe ile —</option>
+                    {figurAdimlari.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.ad}
                       </option>
                     ))}
                   </select>
