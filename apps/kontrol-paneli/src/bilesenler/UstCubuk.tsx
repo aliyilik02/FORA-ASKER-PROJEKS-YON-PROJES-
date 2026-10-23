@@ -75,7 +75,7 @@ export function UstCubuk({
         <button type="button" className="ikincil kucuk ikonlu" onClick={() => void calistir(() => api.yenidenSenkron())} title="Durumu oynatıcı ve Unreal'a yeniden gönder">
           <Ikon.yenile /> Senkron
         </button>
-        <a className="dugme ikincil kucuk ikonlu" href={`/oynatici/?hud=1&kalite=${oynaticiKalite}`} target="_blank" rel="noreferrer" title={`Oynatıcıyı yeni pencerede aç (kalite: ${oynaticiKalite})`}>
+        <a className="dugme ikincil kucuk ikonlu" href={`/oynatici/?kalite=${oynaticiKalite}`} target="_blank" rel="noreferrer" title={`Oynatıcıyı yeni pencerede aç (kalite: ${oynaticiKalite})`}>
           <Ikon.pencere /> Oynatıcı
         </a>
       </div>

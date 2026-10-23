@@ -83,7 +83,9 @@ flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test. Sorgu: 
 
 Panel API'si (`apps/kopru/src/api.ts`): `/api/durum`, `/oda`, `/bolge`, `/ortam`, `/isik`,
 `/izli-mermi`, `/oda2`, `/efekt`, `/figur` (oynat/durdur/temizle/poz), `/klipler`, `/figurler`,
-`/senaryolar`, `/senaryo/*`, `/on-ayarlar`, `/unreal/son-istekler`, `/ornek/*`, `/baglanti`, `/gunluk`.
+`/senaryolar`, `/senaryo/*`, `/on-ayarlar`, `/unreal/son-istekler`, `/ornek/*`, `/baglanti`, `/gunluk`,
+`/sahne/sifirla` (yeni grup: figür/çatışma/izli/helikopter kapanır, oynatıcıda krater-duman silinir). Köprü son
+durumu `apps/kopru/veri/son-durum.json`'a yazar ve açılışta geri yükler (12 saat).
 
 ## Mevcut durum (23 Ekim 2026)
 

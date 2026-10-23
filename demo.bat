@@ -81,10 +81,10 @@ timeout /t 4 /nobreak >nul
 
 :tarayici
 echo Kontrol paneli:  http://localhost:4000
-echo Duvar oynatici:  http://localhost:4000/oynatici/?hud=1
+echo Duvar oynatici:  http://localhost:4000/oynatici/
 start "" "http://localhost:4000"
 timeout /t 2 /nobreak >nul
-start "" "http://localhost:4000/oynatici/?hud=1"
+start "" "http://localhost:4000/oynatici/"
 echo.
 echo Oynatici penceresinde: H bilgi katmani, K kalibrasyon, F tam ekran, M sessiz.
 echo Ayni agdaki tablet icin panel: http://^<bu-bilgisayarin-ip^>:4000

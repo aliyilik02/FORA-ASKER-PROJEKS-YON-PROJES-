@@ -13,7 +13,7 @@ Bu rehber eğitmen/sunucu içindir; teknik ayrıntı `docs/duvar-oynatici.md`'de
 4. Dizüstü/entegre ekran kartında: panel **Sistem → Oynatıcı ayarları → Düşük** seç, oynatıcıyı
    kapatıp "Oynatıcı" düğmesiyle yeniden aç. Saha makinesinde (RTX) "Yüksek".
 5. Ses: oynatıcı penceresine bir kez tıkla (tarayıcı sesi kullanıcı etkileşimi ister); **M** sessiz/açık.
-6. Oynatıcıda **H** ile HUD'u kapat (fps yazısı görünmesin). Kalibrasyon ızgarası **K** kapalı olsun.
+6. Oynatıcı HUD kapalı açılır (**H** açar/kapar; fps ve tanı bilgisi). Kalibrasyon ızgarası **K** kapalı olsun.
 
 ## Seçenek A – Tek tuş: "Gösterim – Tam Tur (5 dk)"
 

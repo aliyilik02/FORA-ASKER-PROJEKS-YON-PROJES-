@@ -182,6 +182,10 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
 - Oynatıcı komut göndermez (durumsuz; yeniden bağlanınca son durumu alır). Tek istisna **önizleme**: ~2 sn'de
   bir iki tuvali 384 px JPEG'e indirip `{tip:"onizleme", veri}` yollar; köprü `onizleme` mesajını yalnızca
   panellere iletir, panelin canlı sahne kartı pusulanın üstünde gösterir (15 sn'den eskiyse gizler).
+- `sahne` mesajı (`islem: "sifirla"`, `POST /api/sahne/sifirla`): krater, duman, parçacık ve 2B klipler temizlenir;
+  köprü aynı anda figürleri, çatışmayı, izli mermiyi ve helikopteri kapatır (yeni eğitim grubu).
+- Köprü son durumu `veri/son-durum.json`'a yazar (1 sn gecikmeli) ve açılışta geri yükler (12 saatten eskiyse
+  yok sayar); oynatıcı yeniden bağlanınca bu durumu ve figürleri alır.
 
 ## Sınırlamalar (prototip)
 
