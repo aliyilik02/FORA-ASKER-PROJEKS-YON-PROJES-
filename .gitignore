@@ -17,3 +17,7 @@ apps/duvar-oynatici/public/icerik/**/*.webp
 # Küçük sentetik test klipleri (klip katmanını içerik gelmeden denemek için) depoda kalır
 !apps/duvar-oynatici/public/icerik/klipler/patlama_test_1.webm
 !apps/duvar-oynatici/public/icerik/klipler/asker_test_ayakta.webm
+
+# 3B arazi içeriği (Poly Haven, ~150 MB): araclar/arazi-indir.mjs ile indirilir
+apps/duvar-oynatici/public/icerik/arazi/**
+!apps/duvar-oynatici/public/icerik/arazi/LISANS.txt

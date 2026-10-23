@@ -6,7 +6,7 @@
 import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as iskeletKopyala } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { ZEMIN_Y, izleyiciyeDonus, konumAzimutu, radyan, yanaDonus, yerKonumu, yukseklikMesafe } from "./uzay";
+import { izleyiciyeDonus, konumAzimutu, radyan, yanaDonus, yerKonumu, yukseklikMesafe, zeminY } from "./uzay";
 
 export interface ModelTanimi {
   dosya: string;
@@ -376,7 +376,7 @@ export class FigurKatmani {
       const izleyiciYonu = new THREE.Vector3(-hedef.x, 0, -hedef.z).normalize();
       const yan = new THREE.Vector3(-izleyiciYonu.z, 0, izleyiciYonu.x).multiplyScalar(0.6);
       sarmal.position.copy(hedef).addScaledVector(izleyiciYonu, 0.9).add(yan);
-      sarmal.position.y = ZEMIN_Y;
+      sarmal.position.y = zeminY(sarmal.position.x, sarmal.position.z);
       const d = hedef.clone().sub(sarmal.position);
       sarmal.rotation.y = Math.atan2(d.x, d.z);
     }
@@ -735,7 +735,7 @@ export class FigurKatmani {
         const tegets = new THREE.Vector3(Math.cos(radyan(az)), 0, Math.sin(radyan(az)));
         if (a.sola) tegets.negate();
         a.nesne.position.addScaledVector(tegets, a.hiz * dt);
-        a.nesne.position.y = ZEMIN_Y;
+        a.nesne.position.y = zeminY(a.nesne.position.x, a.nesne.position.z);
         a.nesne.rotation.y = yanaDonus(konumAzimutu(a.nesne.position), a.sola);
         if (Math.abs(konumAzimutu(a.nesne.position)) > 165) a.bitti = true;
       }

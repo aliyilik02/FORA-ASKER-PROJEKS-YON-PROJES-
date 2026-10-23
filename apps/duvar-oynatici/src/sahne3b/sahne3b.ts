@@ -20,7 +20,9 @@ import { HasarKatmani } from "./hasar";
 import { Helikopter3B } from "./helikopter3b";
 import { ParcacikSistemi } from "./parcaciklar";
 import { SutreKatmani, type SutreEsyasi } from "./sutre";
-import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu, yukseklikMesafe } from "./uzay";
+import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, type AraziModu } from "./arazi";
+import { Gokyuzu } from "./gokyuzu";
+import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu } from "./uzay";
 import { birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
@@ -78,6 +80,12 @@ export class Sahne3B {
   private readonly sutre = new SutreKatmani();
   private catismaSesleri: CatismaSesleri = { carpma: () => undefined, atis: () => undefined };
   private yagisKararma = 1;
+  /** 3B arazi (hibrit / tam) ve tam kipte prosedürel gökyüzü. */
+  readonly arazi = new AraziKatmani();
+  private readonly gokyuzu = new Gokyuzu();
+  private golgeZemini: THREE.Mesh | null = null;
+  private araziBolge = "";
+  private sonBulut = 0.2;
   private gunesIsareti: THREE.Mesh | null = null;
   hazir = false;
   hata = "";
@@ -144,8 +152,10 @@ export class Sahne3B {
     zemin.receiveShadow = true;
     zemin.renderOrder = 1;
     this.sahne.add(zemin);
+    this.golgeZemini = zemin;
+    this.gokyuzu.baglan(r);
 
-    this.sahne.add(this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
+    this.sahne.add(this.arazi.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
 
     if (hataAyiklama) {
       this.gunesIsareti = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffee55 }));
@@ -287,6 +297,39 @@ export class Sahne3B {
     );
   }
 
+  private ufukRenkOnbellek: { url: string; renk: THREE.Color } | null = null;
+  /** Panoramanın ufuk bandının ortalama rengi (sis için); kaynak başına bir kez hesaplanır. */
+  private ufukRengi(): THREE.Color {
+    if (this.ufukRenkOnbellek && this.ufukRenkOnbellek.url === this.yuklenen) return this.ufukRenkOnbellek.renk.clone();
+    const renk = new THREE.Color(0.78, 0.8, 0.82);
+    const img = this.arkaPlan?.image as HTMLImageElement | undefined;
+    if (img) {
+      try {
+        const c = document.createElement("canvas");
+        c.width = 128;
+        c.height = 64;
+        const ctx = c.getContext("2d", { willReadFrequently: true })!;
+        ctx.drawImage(img, 0, 0, 128, 64);
+        const d = ctx.getImageData(0, 30, 128, 6).data; // ufkun hemen altı (v ≈ 0,47–0,56)
+        let r = 0;
+        let g = 0;
+        let b = 0;
+        let n = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          r += d[i];
+          g += d[i + 1];
+          b += d[i + 2];
+          n++;
+        }
+        renk.setRGB(r / n / 255, g / n / 255, b / n / 255).convertSRGBToLinear();
+      } catch {
+        /* tainted canvas: varsayılan */
+      }
+    }
+    this.ufukRenkOnbellek = { url: this.yuklenen, renk: renk.clone() };
+    return renk;
+  }
+
   private gunesiTahminEt(img: HTMLImageElement): GunesTahmini | null {
     try {
       const c = document.createElement("canvas");
@@ -325,11 +368,14 @@ export class Sahne3B {
     this.hasar.temizle();
     this.parcaciklar.temizle();
     this.catisma.temizle();
+    // Arazi kraterleri: ızgara yeniden kurulur (bölge değişimi de buradan geçer)
+    if (this.arazi.aktif) this.araziBolge = "";
   }
 
   ortamAyarla(ortam: OrtamAyarlari, isik: number) {
     this.saat = ortam.saat;
     this.isik = isik;
+    this.sonBulut = ortam.bulut;
     // Güneşli panoramada yağmur/kar: sahneyi kıs, güneşi yumuşat (yağışlı panorama yoksa inandırıcılık için)
     this.yagisKararma = ortam.yagis === "siddetli_yagmur" ? 0.62 : ortam.yagis === "hafif_yagmur" ? 0.8 : ortam.yagis === "kar" ? 0.85 : 1;
     this.yagisKararma *= 1 - ortam.bulut * 0.18;
@@ -339,6 +385,40 @@ export class Sahne3B {
   /** Oda 2 sütre dizilimi (güvenli alan tipi); null → kaldır. */
   sutreAyarla(tip: string | null, esyalar: SutreEsyasi[] | undefined, kok: string) {
     this.sutre.ayarla(tip, esyalar, kok);
+  }
+
+  /**
+   * 3B arazi kipi. "kapali": yalnızca panorama + gölge düzlemi (eski yol). "hibrit": yakın arazi 3B, uzak
+   * panorama. "tam": uzak halka + prosedürel gökyüzü, panorama yalnız yerleşim planı için yüklenir.
+   * Bölge değişince arazi yeniden kurulur (profil bölgeye göre).
+   */
+  araziAyarla(mod: AraziModu, bolge: string, mevsim: string, kok: string) {
+    if (!this.renderer) return;
+    const kar = mevsim === "kis" ? 1 : mevsim === "sonbahar" ? 0.12 : 0;
+    const anahtar = `${mod}|${bolge}`;
+    if (this.araziBolge !== anahtar) {
+      this.araziBolge = anahtar;
+      const profil = ARAZI_PROFILLERI[bolge] ?? ARAZI_PROFILLERI.kirsal_acik_arazi;
+      const k = this.kaynak?.yawKaydirma ?? 0;
+      this.arazi.temizNoktalar = (this.kaynak?.plan?.noktalar ?? []).map((n) => yerKonumu(panoramadanSahneAzimutu(n.azimut, k), n.mesafe));
+      this.arazi.kur(mod, profil, ARAZI_KALITE[this.kalite], kok, kar);
+      zeminFonksiyonu(this.arazi.aktif ? (x, z) => this.arazi.yukseklik(x, z) : null);
+      if (this.golgeZemini) this.golgeZemini.visible = !this.arazi.aktif;
+      this.hasar.cikartmaCiz = !this.arazi.aktif;
+      if (mod !== "tam") {
+        this.gokyuzu.sok(this.sahne);
+        this.sahne.fog = null;
+        if (this.arkaPlan) this.sahne.background = this.arkaPlan;
+      }
+      this.isikGuncelle();
+    }
+    this.arazi.karAyarla(kar);
+  }
+  get araziModu(): AraziModu {
+    return this.arazi.mod;
+  }
+  get araziDurumu(): string {
+    return this.arazi.durum;
   }
 
   private isikGuncelle() {
@@ -354,6 +434,36 @@ export class Sahne3B {
     let azimut: number;
     let yukseklik: number;
     let guc: number;
+    if (this.arazi.mod === "tam") {
+      // Tam 3B: gökyüzü saatten, panorama yalnız plan için; sis ufuk rengine
+      this.gokyuzu.guncelle(this.saat, this.sonBulut, this.sahne);
+      this.sahne.background = null;
+      const ufuk = this.gokyuzu.ufukRengi(this.sonBulut);
+      this.sahne.fog = new THREE.Fog(ufuk, 180, 1400 - this.sonBulut * 700);
+      const g = gunesKonumu(this.saat);
+      azimut = g.azimut;
+      yukseklik = Math.max(-10, g.yukseklik);
+      guc = (1 - this.sonBulut * 0.7) * (yukseklik > 0 ? 1 : 0.1);
+      const yon = azimutYon(azimut);
+      const e = radyan(Math.max(6, yukseklik));
+      const d = new THREE.Vector3(yon.x * Math.cos(e), Math.sin(e), yon.z * Math.cos(e));
+      this.gunes.position.copy(d.clone().multiplyScalar(120)).add(this.gunes.target.position);
+      const gun = Math.max(0, Math.min(1, (yukseklik + 4) / 16));
+      this.gunes.intensity = (0.2 + guc * 2.6) * gun * (0.3 + 0.7 * this.yagisKararma);
+      const sicak = Math.max(0, Math.min(1, 1 - yukseklik / 18));
+      this.gunes.color.setRGB(1, 0.96 - sicak * 0.25, 0.9 - sicak * 0.45);
+      this.gunes.shadow.radius = 2 + (1 - guc) * 8;
+      this.dolgu.intensity = 0.1 + 0.25 * gun;
+      this.sahne.environmentIntensity = (0.15 + 0.85 * gun) * this.yagisKararma;
+      this.parcaciklar.isik = 0.1 + 0.9 * gun;
+      this.catisma.isik = gun;
+      return;
+    }
+    if (this.arazi.mod === "hibrit" && this.arkaPlan) {
+      // Hibrit: arazi kenarı panoramanın ufuk rengine karışsın
+      const ufuk = this.ufukRengi();
+      this.sahne.fog = new THREE.Fog(ufuk.multiplyScalar(faktor), 90, 230);
+    }
     if (this.gunesTahmini && this.gunesTahmini.guc > 0.05) {
       azimut = panoramadanSahneAzimutu(this.gunesTahmini.azimut, this.kaynak?.yawKaydirma ?? 0);
       guc = this.gunesTahmini.guc;
@@ -413,6 +523,7 @@ export class Sahne3B {
     if (!plakaVar) this.parcaciklar.patlama(p, r);
     else this.parcaciklar.tozBulutu(p, r, s * 0.6);
     this.hasar.krater(p, 1.6 + s * 2.6, s);
+    if (this.arazi.aktif) this.arazi.krater(p, 1.6 + s * 2.6, s);
     this.flas.position.set(p.x, p.y + r, p.z);
     this.flasGuc = Math.max(this.flasGuc, s);
   }
@@ -512,6 +623,7 @@ export class Sahne3B {
     this.hasar.guncelle(dt);
     this.figurler.guncelle(dt);
     this.heli.guncelle(dt);
+    this.arazi.guncelle(dt);
     if (this.flasGuc > 0) {
       this.flas.intensity = this.flasGuc * 6000;
       this.flasGuc = Math.max(0, this.flasGuc - dt * 3.5);

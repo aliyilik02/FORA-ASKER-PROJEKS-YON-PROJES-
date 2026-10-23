@@ -27,6 +27,8 @@ export class HasarKatmani {
   private static readonly EN_COK = 40;
   /** Krater dumanı toplam üst sınırı (parçacık); aşılınca yeni topak çıkmaz. Kalite kademesine göre. */
   private readonly enCokDuman: number;
+  /** Zemine krater çıkartması çizilsin mi (3B arazi açıkken arazi kendisi çukurlaşır; yalnız moloz + duman). */
+  cikartmaCiz = true;
 
   constructor(dokular: THREE.Texture[], private readonly parcaciklar: ParcacikSistemi, enCokDuman = 320) {
     this.dokular = dokular;
@@ -62,6 +64,7 @@ export class HasarKatmani {
     mesh.position.y += 0.01 + this.kraterler.length * 0.001; // üst üste binenlerde z-fighting önleme
     mesh.receiveShadow = true;
     mesh.renderOrder = 5 + this.kraterler.length;
+    mesh.visible = this.cikartmaCiz;
     this.grup.add(mesh);
     // Savrulmuş toprak kesekleri: düz çıkartma eğik bakışta kaybolur, 3B moloz krateri "okunur" kılar
     const adet = 14 + Math.round(siddet * 16);

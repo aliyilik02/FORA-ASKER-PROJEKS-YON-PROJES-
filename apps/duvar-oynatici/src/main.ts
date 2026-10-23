@@ -24,6 +24,7 @@ import { HavaSistemi, kararmaCiz, sisCiz } from "./sahne/hava";
 import { oda2OnPlanCiz } from "./sahne/oda2";
 import { PanoramaKatmani } from "./panorama";
 import { type Kalite, Sahne3B } from "./sahne3b/sahne3b";
+import type { AraziModu } from "./sahne3b/arazi";
 import { SesMotoru } from "./ses";
 import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type EfektIstegi, type FigurKomutu, type SimulasyonDurumu, varsayilanDurum } from "./tipler";
 import { panoramaSec, VideoKatmani } from "./video";
@@ -63,6 +64,17 @@ const kaliteParam = params.get("kalite");
 const kalite: Kalite = (["dusuk", "orta", "yuksek"] as const).find((k) => k === (kaliteParam ?? localStorage.getItem("kalite"))) ?? "yuksek";
 if (kaliteParam) localStorage.setItem("kalite", kalite);
 const sahne3b = new Sahne3B(tuval3b, params.get("gunes") === "1", kalite);
+/**
+ * 3B arazi kipi: ?arazi=kapali|hibrit|tam (adres çubuğu > yerel kayıt > bölgeye göre varsayılan).
+ * Varsayılan: kırsal açık arazide "hibrit" (yakın alan 3B, uzak panorama); diğer bölgelerde kapalı (panorama).
+ */
+const araziParam = params.get("arazi");
+const araziSecimi: AraziModu | null = (["kapali", "hibrit", "tam"] as const).find((k) => k === (araziParam ?? localStorage.getItem("arazi"))) ?? null;
+if (araziParam && araziSecimi) localStorage.setItem("arazi", araziSecimi);
+function araziModuSec(bolge: string): AraziModu {
+  if (araziSecimi) return araziSecimi;
+  return bolge === "kirsal_acik_arazi" ? "hibrit" : "kapali";
+}
 const ucAktifOlabilir = ucBoyut && sahne3b.destekli;
 sahne3b.catismaSesleriAyarla({
   carpma: (pan) => ses.carpma(pan),
@@ -249,6 +261,7 @@ function durumUygula(d: SimulasyonDurumu) {
   sahne3b.sutreAyarla(sutreTipi, sutreTipi ? video.manifest.sutreler?.[sutreTipi] : undefined, video.kok);
   video.secim(d.bolge, d.ortam.mevsim, zamanDilimi(d.ortam.saat));
   panoramayiGuncelle();
+  if (sahne3b.destekli) sahne3b.araziAyarla(araziModuSec(d.bolge), d.bolge, d.ortam.mevsim, video.kok);
 }
 
 function figurKomutu(k: FigurKomutu & { id: string }) {
@@ -533,7 +546,7 @@ function kare(simdi: number) {
         `bulut ${durum.ortam.bulut.toFixed(2)} · sis ${durum.ortam.sis.toFixed(2)} · yağış ${durum.ortam.yagis} · rüzgâr ${durum.ortam.ruzgarSiddeti.toFixed(2)} @ ${durum.ortam.ruzgarYonu}°`,
         `izli mermi ${durum.izliMermi.aktif ? `açık (duvar ${durum.izliMermi.cikisNoktasi}, ${durum.izliMermi.yon}°, ${durum.izliMermi.siklik}/sn)` : "kapalı"} · oda2 ${GUVENLI_ALAN_ETIKETLERI[durum.oda2.guvenliAlan]} · helikopter ${HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}`,
         `içerik: ${ucCizildi ? "3B sahne + panorama" : panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""}${sahne3b.hata ? ` · 3B hatası: ${sahne3b.hata}` : ""} · aktif klip ${klipler.aktifSayisi} · fov ${duvarlar[0].fov}° · H hud · K kalibrasyon · F tam ekran · M sessiz · 1/2/3 test`,
-        `3B: ${ucAktifOlabilir ? (sahne3b.hazir ? "açık" : "bekliyor") : ucBoyut ? "desteklenmiyor" : "kapalı (?uc=0)"} · kalite ${sahne3b.kalite} · ${sahne3b.gunesBilgisi} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi} · parçacık ${sahne3b.parcacikSayisi} · çizim/duvar ${sahne3b.cizimCagrisi} · iz ${sahne3b.izSayisi} · çatışma ${durum.catisma?.aktif ? `%${Math.round(durum.catisma.siddet * 100)} @ ${durum.catisma.yon}°` : "kapalı"} · helikopter ${sahne3b.helikopterHazir ? `model, iniş ${sahne3b.helikopterAzimutu.toFixed(0)}°` : "siluet"}`,
+        `3B: ${ucAktifOlabilir ? (sahne3b.hazir ? "açık" : "bekliyor") : ucBoyut ? "desteklenmiyor" : "kapalı (?uc=0)"} · kalite ${sahne3b.kalite} · arazi ${sahne3b.araziDurumu} · ${sahne3b.gunesBilgisi} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi} · parçacık ${sahne3b.parcacikSayisi} · çizim/duvar ${sahne3b.cizimCagrisi} · iz ${sahne3b.izSayisi} · çatışma ${durum.catisma?.aktif ? `%${Math.round(durum.catisma.siddet * 100)} @ ${durum.catisma.yon}°` : "kapalı"} · helikopter ${sahne3b.helikopterHazir ? `model, iniş ${sahne3b.helikopterAzimutu.toFixed(0)}°` : "siluet"}`,
       ],
       H,
     );

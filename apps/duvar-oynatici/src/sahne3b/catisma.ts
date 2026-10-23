@@ -9,7 +9,7 @@
  */
 import * as THREE from "three";
 import type { ParcacikSistemi } from "./parcaciklar";
-import { ZEMIN_Y, azimutYon, konumAzimutu, radyan } from "./uzay";
+import { ZEMIN_Y, azimutYon, konumAzimutu, radyan, zeminY } from "./uzay";
 
 interface Iz {
   p: THREE.Vector3;
@@ -125,18 +125,21 @@ export class CatismaSistemi {
     const r = Math.random();
     if (dostlar.length && r < 0.5) {
       const d = dostlar[Math.floor(Math.random() * dostlar.length)];
-      hedef = new THREE.Vector3(d.x + rnd(-3, 3), ZEMIN_Y + (Math.random() < 0.6 ? 0 : rnd(0.3, 1.6)), d.z + rnd(-3, 3));
+      hedef = new THREE.Vector3(d.x + rnd(-3, 3), 0, d.z + rnd(-3, 3));
+      hedef.y = zeminY(hedef.x, hedef.z) + (Math.random() < 0.6 ? 0 : rnd(0.3, 1.6));
     } else if (r < 0.85) {
       const az = kaynakAzimut + rnd(-hedefAzimutYayilim, hedefAzimutYayilim);
       const yon = azimutYon(az);
       const mesafe = rnd(3, 24);
-      hedef = new THREE.Vector3(yon.x * mesafe, ZEMIN_Y, yon.z * mesafe);
+      hedef = new THREE.Vector3(yon.x * mesafe, 0, yon.z * mesafe);
+      hedef.y = zeminY(hedef.x, hedef.z);
     } else {
       // İzleyicinin yanından/üstünden geçen: arkadaki bir nokta
       const az = kaynakAzimut + 180 + rnd(-35, 35);
       const yon = azimutYon(az);
       const mesafe = rnd(8, 30);
-      hedef = new THREE.Vector3(yon.x * mesafe, ZEMIN_Y + rnd(1.5, 6), yon.z * mesafe);
+      hedef = new THREE.Vector3(yon.x * mesafe, 0, yon.z * mesafe);
+      hedef.y = zeminY(hedef.x, hedef.z) + rnd(1.5, 6);
     }
     const v = hedef.clone().sub(kaynak).normalize().multiplyScalar(rnd(140, 190));
     this.izEkle(kaynak, v, false);
@@ -199,7 +202,7 @@ export class CatismaSistemi {
       for (let i = 0; i < 5; i++) {
         this.parcaciklar.duman.ekle({
           x: p.x + rnd(-0.2, 0.2),
-          y: ZEMIN_Y + 0.05,
+          y: zeminY(p.x, p.z) + 0.05,
           z: p.z + rnd(-0.2, 0.2),
           vx: rnd(-0.6, 0.6),
           vy: rnd(0.8, 2.2),
@@ -218,7 +221,7 @@ export class CatismaSistemi {
       }
       for (let i = 0; i < 4; i++) {
         const a = rnd(0, 6.28);
-        this.parcaciklar.kivilcim.ekle({ x: p.x, y: ZEMIN_Y + 0.05, z: p.z, vx: Math.cos(a) * rnd(1, 4), vy: rnd(2, 6), vz: Math.sin(a) * rnd(1, 4), boyut: rnd(0.04, 0.09), buyume: 0, alfa: 1, aci: 0, donus: 0, t: 0, sure: rnd(0.25, 0.6), renk: [1, 0.8, 0.5], yercekimi: 9.8, surtunme: 0.3 });
+        this.parcaciklar.kivilcim.ekle({ x: p.x, y: zeminY(p.x, p.z) + 0.05, z: p.z, vx: Math.cos(a) * rnd(1, 4), vy: rnd(2, 6), vz: Math.sin(a) * rnd(1, 4), boyut: rnd(0.04, 0.09), buyume: 0, alfa: 1, aci: 0, donus: 0, t: 0, sure: rnd(0.25, 0.6), renk: [1, 0.8, 0.5], yercekimi: 9.8, surtunme: 0.3 });
       }
       this.sesler.carpma(pan);
       if (!iz.sekti && Math.random() < 0.3) {
@@ -227,7 +230,7 @@ export class CatismaSistemi {
         v.x += rnd(-40, 40);
         v.z += rnd(-40, 40);
         v.setLength(iz.v.length() * rnd(0.4, 0.7));
-        this.izEkle(new THREE.Vector3(p.x, ZEMIN_Y + 0.05, p.z), v, false, true);
+        this.izEkle(new THREE.Vector3(p.x, zeminY(p.x, p.z) + 0.05, p.z), v, false, true);
       }
     }
   }
@@ -312,8 +315,9 @@ export class CatismaSistemi {
       const yeniY = iz.p.y + iz.v.y * dt;
       iz.p.x += iz.v.x * dt;
       iz.p.z += iz.v.z * dt;
-      if (yeniY <= ZEMIN_Y + 0.03 && iz.v.y < 0) {
-        iz.p.y = ZEMIN_Y + 0.03;
+      const zemin = zeminY(iz.p.x, iz.p.z);
+      if (yeniY <= zemin + 0.03 && iz.v.y < 0) {
+        iz.p.y = zemin + 0.03;
         this.carpma(iz);
         continue;
       }

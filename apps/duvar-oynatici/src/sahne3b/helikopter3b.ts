@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { HelikopterDurumu } from "../tipler";
 import type { ParcacikSistemi } from "./parcaciklar";
-import { ZEMIN_Y, azimutYon, radyan } from "./uzay";
+import { azimutYon, radyan, zeminY } from "./uzay";
 
 export class Helikopter3B {
   /** İniş noktası (panorama yerleşim planından; varsayılan azimut 12°, 38 m). */
@@ -144,7 +144,9 @@ export class Helikopter3B {
     }
     const yon = azimutYon(this.inisAzimut);
     const sallanti = this.irtifa > 0.3 ? Math.sin(this.faz * 1.1) * 0.6 : 0;
-    this.grup.position.set(yon.x * this.mesafe, ZEMIN_Y + this.irtifa + sallanti, yon.z * this.mesafe);
+    const gx = yon.x * this.mesafe;
+    const gz = yon.z * this.mesafe;
+    this.grup.position.set(gx, zeminY(gx, gz) + this.irtifa + sallanti, gz);
     // Burun izleyiciye doğru hafif çapraz; uçuşta öne eğik
     this.grup.rotation.y = radyan(-this.inisAzimut + 150);
     this.grup.rotation.x = this.durum === "yaklasiyor" || this.durum === "kalkiyor" ? -0.08 : -0.02;
@@ -158,7 +160,7 @@ export class Helikopter3B {
     const yakin = Math.max(0, 1 - this.irtifa / 18);
     this.tozSiddeti = this.durum === "yerde" ? 0.45 * Math.max(0.3, Math.min(1, rotorHiz / 40)) : yakin;
     if (this.tozSiddeti > 0.05) {
-      const yer = new THREE.Vector3(this.grup.position.x, ZEMIN_Y, this.grup.position.z);
+      const yer = new THREE.Vector3(this.grup.position.x, zeminY(this.grup.position.x, this.grup.position.z), this.grup.position.z);
       this.parcaciklar.rotorTozu(yer, 9, this.tozSiddeti, dt);
     }
   }

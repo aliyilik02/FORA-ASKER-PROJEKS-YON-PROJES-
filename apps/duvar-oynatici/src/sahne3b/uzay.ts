@@ -9,6 +9,16 @@ import * as THREE from "three";
 export const GOZ_YUKSEKLIGI = 1.7;
 export const ZEMIN_Y = -GOZ_YUKSEKLIGI;
 
+/** Arazi katmanı açıkken zemin yüksekliği (m, düzleme göre); kapalıyken 0. arazi.ts bağlar. */
+let yukseklikFn: (x: number, z: number) => number = () => 0;
+export function zeminFonksiyonu(f: ((x: number, z: number) => number) | null) {
+  yukseklikFn = f ?? (() => 0);
+}
+/** Dünya (x, z) noktasında zemin y'si (arazi dâhil). Yere oturan her şey bunu kullanmalı. */
+export function zeminY(x: number, z: number): number {
+  return ZEMIN_Y + yukseklikFn(x, z);
+}
+
 export function derece(rad: number): number {
   return (rad * 180) / Math.PI;
 }
@@ -25,7 +35,7 @@ export function azimutYon(azimut: number): THREE.Vector3 {
 /** Zemin üzerinde azimut + mesafe → dünya konumu. */
 export function yerKonumu(azimut: number, mesafe: number, yukseklik = 0): THREE.Vector3 {
   const v = azimutYon(azimut).multiplyScalar(mesafe);
-  v.y = ZEMIN_Y + yukseklik;
+  v.y = zeminY(v.x, v.z) + yukseklik;
   return v;
 }
 
