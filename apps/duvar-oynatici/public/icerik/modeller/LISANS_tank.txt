@@ -1,0 +1,27 @@
+tank.glb
+========
+Kaynak (model sayfasi) : https://poly.pizza/m/7GG1xDtc8l
+Dogrudan dosya (GLB)   : https://static.poly.pizza/a79322fd-93b8-42bf-a261-b4e639f6270d.glb
+Baslik                 : "Tank" (dosya ici mesh adi: Super_Tank) - modern ana muharebe tanki silueti (Leopard 2 benzeri)
+Yazar                  : Zsky (https://poly.pizza/u/Zsky), Poly Pizza uzerinden
+Lisans                 : CC-BY 3.0 - Creative Commons Attribution 3.0
+                         https://creativecommons.org/licenses/by/3.0/
+Atif metni (onerilen)  : "Tank" by Zsky, via Poly Pizza (https://poly.pizza/m/7GG1xDtc8l), CC-BY 3.0
+Bicim                  : glTF 2.0 Binary (.glb), FBX2glTF v0.9.7 ile uretilmis; doku yok, duz PBR renk malzemeleri (7 malzeme)
+Boyut                  : 189.148 bayt; 5.094 kose, 2.796 ucgen
+Sinir kutusu           : 1.87 (X) x 1.61 (Y) x 4.56 (Z) birim; min (-0.94, -0.54, -2.28) max (0.92, 1.07, 2.28)
+Yapi                   : RootNode > Super_Tank (tek mesh, 7 primitif; Three.js'te Super_Tank_1..7 alt mesh olarak acilir).
+                         Kule/namlu AYRI DUGUM DEGIL (primitifler renge gore bolunmus).
+Indirme tarihi         : 2026-10-22
+
+alternatif_quaternius_tank_cc0.glb (yedek, ayri kule + namlu + palet animasyonu)
+=================================================================================
+Kaynak                 : https://poly.pizza/m/FA5daiyZQq
+Dogrudan dosya (GLB)   : https://static.poly.pizza/4a40c214-87f9-4cdb-bc72-003c96f49f76.glb
+Yazar                  : Quaternius (https://poly.pizza/u/Quaternius, https://quaternius.com) - "Ultimate Animated Tanks" paketinden
+Lisans                 : CC0 1.0 (kamu mali) - https://creativecommons.org/publicdomain/zero/1.0/
+Bicim                  : .glb, doku yok, COLOR_0 kose renkleri + duz malzemeler; 7.222 ucgen; 912.836 bayt
+Sinir kutusu           : 17.68 x 4.62 x 10.09 birim (yaklasik 1/10 olcek gerekir)
+Yapi                   : RootNode > Tank_Turret [mesh], Tank_Gun [mesh], Tank_body [skinned], TrackMesh.L/R [skinned], TankArmature
+Animasyonlar           : TankArmature|Tank_Forward, Tank_Backwards, Tank_TurningLeft, Tank_TurningRight (palet dongusu)
+Not                    : Stilize, II. Dunya Savasi gorunumlu; modern MBT siluetine daha az benziyor.

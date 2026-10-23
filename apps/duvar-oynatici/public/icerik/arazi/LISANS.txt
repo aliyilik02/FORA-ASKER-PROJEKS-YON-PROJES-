@@ -1,0 +1,10 @@
+3B arazi içeriği – Poly Haven (https://polyhaven.com), hepsi CC0 1.0 (kamu malı; atıf gerekmez, verilmesi iyidir).
+
+Dokular (dokular/, 2K JPG: *_renk = Diffuse, *_normal = nor_gl, *_arm = AO/Roughness/Metal, *_yukseklik = Displacement):
+  kuru_toprak = dry_ground_01, bozkir = dry_ground_rocks, makro_kahve = dirt_aerial_02, cimen_kaya = aerial_grass_rock, uzak_arazi = rocky_terrain_02, cakil = gravelly_sand,
+  kaya = rock_boulder_dry, yanik = burned_ground_01, kar = snow_02, yol = pebble_ground_01, tasli_zemin = rocks_ground_02
+Modeller (modeller/<ad>/, 1K glTF + bin + textures):
+  kaya_buyuk = boulder_01, kaya_orta = namaqualand_boulder_02, kaya_kucuk = namaqualand_boulder_03, kaya_yuvarlak = rock_09,
+  tas_kume = sand_rocks_small_01, taslar = namaqualand_stones_01, cimen_1 = grass_medium_01, cimen_2 = grass_medium_02,
+  cali = searsia_burchellii, kuru_dal = dry_branches_medium_01, kutuk = dead_tree_trunk_02
+Yeniden indirme: node araclar/arazi-indir.mjs (liste: araclar/arazi-indir-listesi.txt). Bu klasör depoya girmez (.gitignore).

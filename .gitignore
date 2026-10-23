@@ -1,0 +1,23 @@
+node_modules/
+dist/
+apps/kopru/veri/
+*.log
+.DS_Store
+apps/kopru/.env
+apps/duvar-oynatici/public/icerik/**/*.mp4
+apps/duvar-oynatici/public/icerik/**/*.webm
+apps/duvar-oynatici/public/icerik/**/*.ogg
+apps/duvar-oynatici/public/icerik/**/*.mp3
+apps/duvar-oynatici/public/icerik/**/*.wav
+apps/duvar-oynatici/public/icerik/**/*.mov
+apps/duvar-oynatici/public/icerik/**/*.jpg
+apps/duvar-oynatici/public/icerik/**/*.jpeg
+apps/duvar-oynatici/public/icerik/**/*.png
+apps/duvar-oynatici/public/icerik/**/*.webp
+# Küçük sentetik test klipleri (klip katmanını içerik gelmeden denemek için) depoda kalır
+!apps/duvar-oynatici/public/icerik/klipler/patlama_test_1.webm
+!apps/duvar-oynatici/public/icerik/klipler/asker_test_ayakta.webm
+
+# 3B arazi içeriği (Poly Haven, ~150 MB): araclar/arazi-indir.mjs ile indirilir
+apps/duvar-oynatici/public/icerik/arazi/**
+!apps/duvar-oynatici/public/icerik/arazi/LISANS.txt

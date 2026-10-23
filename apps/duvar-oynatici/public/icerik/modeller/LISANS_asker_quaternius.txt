@@ -1,0 +1,59 @@
+ASKER FIGUR MODELLERI - KAYNAK VE LISANS BILGISI (22 Ekim 2026)
+================================================================
+
+1) quaternius_swat_cc0.glb  (ONERILEN - ana aday)
+   Kaynak : https://poly.pizza/m/Btfn3G5Xv4  (GLB: https://static.poly.pizza/713f6535-f4f3-4367-a4c6-ced126ae0936.glb)
+   Yapimci: Quaternius (Ultimate Animated Character Pack)
+   Lisans : CC0 1.0 (Public Domain) - atif gerekmez
+   Rig    : 62 kemik "CharacterArmature" (Root, Body, Hips, Abdomen, Torso, Chest, Neck, Head, Shoulder/UpperArm/LowerArm/Wrist .L/.R, parmaklar, UpperLeg/LowerLeg/Foot .L/.R, PT.L/PT.R)
+   Klipler (24): CharacterArmature|Death, Gun_Shoot, HitRecieve, HitRecieve_2, Idle, Idle_Gun, Idle_Gun_Pointing,
+            Idle_Gun_Shoot, Idle_Neutral, Idle_Sword, Interact, Kick_Left, Kick_Right, Punch_Left, Punch_Right,
+            Roll, Run, Run_Back, Run_Left, Run_Right, Run_Shoot, Sword_Slash, Walk, Wave
+   7752 ucgen, doku yok (duz PBR renk materyalleri), FBX2glTF ile uretilmis. Elinde silah yok (Wrist.R kemigine bagla).
+
+2) quaternius_soldier_ccby.glb
+   Kaynak : https://poly.pizza/m/oAArCNHjFB  (GLB: https://static.poly.pizza/66a55d04-4286-44a3-b289-0d774c27db5b.glb)
+   Yapimci: Quaternius (Ultimate Animated Character Pack - kadin asker, taktik yelek)
+   Lisans : poly.pizza'da CC-BY 3.0 olarak listelenmis (Quaternius'un kendi sitesindeki paket CC0). Guvenli tarafta kal: "Quaternius" atfi ekle.
+   Rig/klipler: 1) ile BIREBIR AYNI 62 kemik ve ayni 24 klip. 7900 ucgen, doku yok.
+
+3) quaternius_character_soldier_chibi_cc0.glb  ve  quaternius_character_enemy_chibi_cc0.glb
+   Kaynak : https://poly.pizza/m/PpLF4rt4ah  ve  https://poly.pizza/m/mdGe4IN31v
+   Yapimci: Quaternius   Lisans: CC0 1.0
+   Rig    : 43 kemik (Root, Foot.L, Body, Hips, Abdomen, Torso, Neck, Head, Shoulder/UpperArm/LowerArm .L/.R, parmaklar, UpperLeg/LowerLeg .L/.R, PoleTarget.L/R, Foot.R) - ikisi birebir ayni.
+   Klipler Soldier (14): Death, Duck (comelme), HitReact, Idle, Idle_Shoot, Jump, Jump_Idle, Jump_Land, No, Punch, Run, Run_Gun, Wave, Yes
+   Klipler Enemy (17, ayni rig; ek olarak): Run_Shoot, Walk, Walk_Shoot  -> ayni kemik adlari oldugu icin Soldier'a dogrudan uygulanabilir.
+   NOT: Cok karikaturize (chibi, buyuk kafa, minigun). Yer tutucu olarak uygun, kabul icin degil.
+
+4) quaternius_UAL1_mannequin_anims_cc0.glb  ve  quaternius_UAL2_mannequin_anims_cc0.glb
+   Kaynak : https://quaternius.itch.io/universal-animation-library  ve  .../universal-animation-library-2  (Standard/ucretsiz surum, giris gerektirmedi)
+   Yapimci: Quaternius   Lisans: CC0 1.0 (paket icindeki License.txt)
+   Rig    : UE5 Mannequin kemik adlari (root, pelvis, spine_01..03, neck_01, Head, clavicle/upperarm/lowerarm/hand _l/_r, parmaklar, thigh/calf/foot/ball _l/_r), 65 eklem. Mannequin mesh dahil (13.7k ucgen, dokusuz).
+   UAL1 klipler (43): A_TPose, Crouch_Fwd_Loop, Crouch_Idle_Loop, Dance_Loop, Death01, Driving_Loop, Fixing_Kneeling, Hit_Chest, Hit_Head,
+     Idle_Loop, Idle_Talking_Loop, Idle_Torch_Loop, Interact, Jog_Fwd_Loop, Jump_Land, Jump_Loop, Jump_Start, PickUp_Table,
+     Pistol_Aim_Down, Pistol_Aim_Neutral, Pistol_Aim_Up, Pistol_Idle_Loop, Pistol_Reload, Pistol_Shoot, Punch_Cross, Punch_Jab,
+     Push_Loop, Roll, Sitting_Enter, Sitting_Exit, Sitting_Idle_Loop, Sitting_Talking_Loop, Spell_Simple_*, Sprint_Loop,
+     Swim_Fwd_Loop, Swim_Idle_Loop, Sword_Attack, Sword_Idle, Walk_Formal_Loop, Walk_Loop
+   UAL2 klipler (43): LayToIdle (yerden kalkma), Hit_Knockback, ClimbUp_1m, Slide_*, Melee_Hook, OverhandThrow, Sword_*, Shield_*, Zombie_*, Farm_*, Idle_* vb.
+   Ucretsiz surumde TUFEK animasyonu YOK, PRONE/surunme YOK (sadece tabanca, comelme, olum, isabet).
+
+5) ubc_superhero_male/  (Superhero_Male_FullBody.gltf + .bin + dokular)
+   Kaynak : https://quaternius.itch.io/universal-base-characters (Standard/ucretsiz surum)
+   Yapimci: Quaternius   Lisans: CC0 1.0
+   Rig    : 4) ile BIREBIR AYNI UE5 Mannequin kemik adlari (65 eklem) -> UAL1/UAL2 klipleri dogrudan uygulanir.
+   14.3k ucgen, 7 doku (BaseColor/Normal/Roughness, goz, sac). Kiyafet "superhero" tulumu - asker degil; uniforma dokusu boyanmali.
+
+6) quaternius_assault_rifle_cc0.glb
+   Kaynak : https://poly.pizza/m/Bgvuu4CUMV   Yapimci: Quaternius   Lisans: CC0 1.0   1930 ucgen, statik. Ele baglamak icin.
+
+7) kenney_blocky/  (character-a.glb, character-b.glb, Textures/texture-a.png)  - YEDEK
+   Kaynak : https://kenney.nl/assets/blocky-characters (kenney_blocky-characters_20.zip)
+   Yapimci: Kenney   Lisans: CC0 1.0
+   Rig    : iskelet yok, dugum (node) animasyonu; AnimationMixer ile calisir. 72 ucgen, blok/karikatur.
+   Klipler (27): static, idle, walk, sprint, sit, drive, die, pick-up, emote-yes, emote-no, holding-right/left/both,
+     holding-right-shoot, holding-left-shoot, holding-both-shoot, attack-melee-*, attack-kick-*, interact-*, wheelchair-*
+   Comelme yok.
+
+BULUNAMAYANLAR: Giris gerektirmeden indirilebilen, serbest lisansli ve TUFEK + PRONE/SURUNME animasyonu iceren
+hicbir insansi model bulunamadi. GitHub'da (three.js Soldier.glb: yalnizca Idle/Walk/Run/TPose, MIT) ve GitHub arama API'sinde
+tufek animasyonlu MIT Mixamo GLB cikmadi. Mixamo tufek klipleri (Rifle Aiming Idle, Firing Rifle, Prone vb.) Adobe hesabi ister.
