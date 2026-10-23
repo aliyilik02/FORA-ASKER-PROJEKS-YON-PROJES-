@@ -166,3 +166,4 @@ Köprüyü yeniden başlatma: port 4000'i dinleyen süreci durdur, `Start-Proces
 - `docs/mimari.md`, `docs/unreal-kurulum.md`, `docs/3-projeksiyon-tek-ekran.md`
 - `docs/ornek-calisma-inceleme.md` – firmadan gelen TCCC örnek paketi incelemesi
 - `docs/donanim-onerileri.md`, `docs/kaynak-proje-talebi.md`, `docs/sartname-uyumluluk.md`
+- `docs/gosterim-rehberi.md` – idareye sunum: hazırlık, tek tuş "Gösterim – Tam Tur" akışı, elle 3 dk, sorulara cevaplar, aksaklıklar
