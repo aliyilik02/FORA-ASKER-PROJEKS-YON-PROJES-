@@ -40,7 +40,8 @@ export interface Manifest {
   /** Alfa kanallı klipler: efekt plakaları, figürler (asker/araç), sprite sayfaları. */
   klipler?: Record<string, KlipTanimi>;
   /** Oda 2 sütre dizilimleri: güvenli alan tipi → 3B eşyalar (sahne3b/sutre.ts). */
-  sutreler?: Record<string, Array<{ dosya: string; azimut: number; mesafe: number; yonDerece?: number; boy?: number; renk?: string }>>;
+  /** Oda 2 sütre dizilimleri; `tip: "hesco"` prosedürel (dosya gerekmez), bkz. sahne3b/sutre.ts SutreEsyasi. */
+  sutreler?: Record<string, Array<{ dosya?: string; tip?: "model" | "hesco"; adet?: number; hucre?: [number, number]; azimut: number; mesafe: number; yonDerece?: number; boy?: number; renk?: string }>>;
   sesler?: SesManifesti;
 }
 

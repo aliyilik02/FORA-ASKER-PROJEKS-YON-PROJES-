@@ -129,7 +129,8 @@ export class SutreKatmani {
   ayarla(tip: string | null, esyalar: SutreEsyasi[] | undefined, kok: string) {
     if (tip === this.aktifTip) return;
     this.temizle();
-    this.aktifTip = tip;
+    // Manifest henüz yüklenmemişse (esyalar undefined) tip işaretlenmez; sonraki çağrı dizilimi kurar
+    this.aktifTip = tip && !esyalar ? null : tip;
     if (!tip || !esyalar?.length) return;
     const nesil = ++this.nesil;
     for (const e of esyalar) {

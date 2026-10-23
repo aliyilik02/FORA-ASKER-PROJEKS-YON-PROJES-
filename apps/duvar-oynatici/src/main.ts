@@ -271,6 +271,17 @@ function figurKomutu(k: FigurKomutu & { id: string }) {
   }
   klipler.oynat({ id: k.id, klip: k.klip, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, dongu: k.dongu, yansit: k.yansit });
 }
+/**
+ * Açılışta durum, 3B sahne / helikopter modeli / manifest hazır olmadan gelir; bu parçalar hazır olunca
+ * (geçiş anında) durum yeniden uygulanır: sütre dizilimi, 3B helikopter, panorama seçimi kaybolmaz.
+ */
+let oncekiHazirImzasi = "";
+function hazirOluncaYenidenUygula() {
+  const imza = `${sahne3b.hazir ? 1 : 0}${sahne3b.helikopterHazir ? 1 : 0}${video.manifest.sutreler ? 1 : 0}${video.manifest.klipler ? 1 : 0}`;
+  if (imza === oncekiHazirImzasi) return;
+  oncekiHazirImzasi = imza;
+  if (durumGeldi) durumUygula(durum);
+}
 /** 3B sahne hazır olmadan gelen model figürleri (oynatıcı açılışında köprü aktif listeyi yollar). */
 const bekleyenFigurler = new Map<string, FigurKomutu & { id: string }>();
 function bekleyenFigurleriUygula() {
@@ -444,6 +455,7 @@ function kare(simdi: number) {
   }
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  hazirOluncaYenidenUygula();
   bekleyenFigurleriUygula();
   if (kalibrasyon) kalibrasyonCiz(ctx, W, H, duvarlar.map((d) => d.ad));
   if (baglanti === "kopuk") uyariCiz(ctx, W, H, "Köprü sunucusu bekleniyor…", "Oynatıcı, köprüye (port 4000) bağlanınca panelden yönetilir");
