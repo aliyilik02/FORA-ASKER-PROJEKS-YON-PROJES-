@@ -31,11 +31,14 @@ export function CanliSahne({
   figurler,
   senaryo,
   calistir,
+  onizleme = null,
 }: {
   durum: SimulasyonDurumu;
   figurler: Array<FigurKomutu & { id: string }>;
   senaryo: SenaryoDurumu | null;
   calistir: Calistir;
+  /** Oynatıcıdan gelen küçük duvar görüntüsü (yoksa kart pusulayla yetinir). */
+  onizleme?: { veri: string; zaman: number } | null;
 }) {
   const { seciliYon, setSeciliYon, bildir } = useArayuz();
   const [simdi, setSimdi] = useState(Date.now());
@@ -99,6 +102,12 @@ export function CanliSahne({
         </div>
       </header>
 
+      {onizleme && simdi - onizleme.zaman < 15000 && (
+        <figure className="onizleme" title="Duvardaki görüntü (oynatıcıdan ~2 sn'de bir)">
+          <img src={onizleme.veri} alt="Duvar önizlemesi" />
+          <figcaption>duvar · {Math.max(0, Math.round((simdi - onizleme.zaman) / 1000))} sn önce</figcaption>
+        </figure>
+      )}
       <Pusula
         yon={seciliYon}
         onYon={setSeciliYon}

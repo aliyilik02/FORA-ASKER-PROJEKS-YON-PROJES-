@@ -1761,3 +1761,28 @@ details summary {
     grid-template-columns: 1fr;
   }
 }
+
+/* Canlı sahne kartı: oynatıcıdan gelen duvar önizlemesi */
+.onizleme {
+  margin: 0 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000;
+  position: relative;
+}
+.onizleme img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.onizleme figcaption {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  font-size: 11px;
+  color: var(--murekkep-3);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 1px 6px;
+  border-radius: 4px;
+}

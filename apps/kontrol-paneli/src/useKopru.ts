@@ -17,6 +17,7 @@ export function useKopru() {
   const [unrealIstekler, setUnrealIstekler] = useState<UnrealIstekKaydi[]>([]);
   const [ornek, setOrnek] = useState<OrnekDurumu | null>(null);
   const [figurler, setFigurler] = useState<Array<FigurKomutu & { id: string }>>([]);
+  const [onizleme, setOnizleme] = useState<{ veri: string; zaman: number } | null>(null);
   const [soketAcik, setSoketAcik] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const yenidenDeneme = useRef<number | null>(null);
@@ -67,6 +68,9 @@ export function useKopru() {
           case "figur":
             setFigurler(mesaj.aktifler);
             break;
+          case "onizleme":
+            setOnizleme({ veri: mesaj.veri, zaman: mesaj.zaman });
+            break;
         }
       };
       ws.onclose = () => {
@@ -95,5 +99,5 @@ export function useKopru() {
     }
   }, []);
 
-  return { durum, senaryo, baglanti, gunluk, unrealIstekler, ornek, figurler, soketAcik, hata, calistir };
+  return { durum, senaryo, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, soketAcik, hata, calistir };
 }

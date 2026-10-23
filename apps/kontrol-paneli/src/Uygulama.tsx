@@ -29,7 +29,7 @@ export function Uygulama() {
 
 function Govde() {
   const kopru = useKopru();
-  const { durum, senaryo, baglanti, gunluk, unrealIstekler, ornek, figurler, soketAcik, hata } = kopru;
+  const { durum, senaryo, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, soketAcik, hata } = kopru;
   const { sekme, setSekme, seciliYon, setSeciliYon, bildir } = useArayuz();
 
   // API çağrılarını sarar: hata olursa bildirim
@@ -106,7 +106,7 @@ function Govde() {
         <YanMenu rozetler={{ figurler: figurler.length, senaryo: senaryo?.durum === "oynuyor" ? "▶" : undefined, sistem: gunluk.filter((g) => g.seviye === "hata").length || undefined }} />
         <main className="icerik">
           <aside className="sol-kolon">
-            <CanliSahne durum={durum} figurler={figurler} senaryo={senaryo} calistir={calistir} />
+            <CanliSahne durum={durum} figurler={figurler} senaryo={senaryo} calistir={calistir} onizleme={onizleme} />
           </aside>
           <div className="sag-kolon" key={sekme}>
             {sekme === "sahne" && (

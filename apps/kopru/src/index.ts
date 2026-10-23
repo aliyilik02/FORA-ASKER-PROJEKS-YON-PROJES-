@@ -45,7 +45,7 @@ const veri = new VeriDeposu(ayarlar.veriKlasoru, ORNEK_SENARYOLAR);
 const ornek = new OrnekBaslatici(ornekKomutuOlustur(ayarlar.ornek), gunluk);
 
 /** Bağlı istemciler ve rolleri (panel / oynatıcı). */
-const istemciRolleri = new Map<WebSocket, IstemciMesaji["rol"]>();
+const istemciRolleri = new Map<WebSocket, "panel" | "oynatici">();
 const oynaticiSayisi = () => [...istemciRolleri.values()].filter((r) => r === "oynatici").length;
 
 // Derlenmiş oynatıcı ve panel varsa aynı porttan sun.
@@ -76,6 +76,14 @@ if (existsSync(panelKlasoru)) {
 
 const sunucu = createServer(uygulama);
 const wss = new WebSocketServer({ server: sunucu, path: "/ws" });
+
+/** Yalnızca panellere (oynatıcılara değil) gönderir; önizleme görüntüsü için. */
+function panellereGonder(mesaj: SunucuMesaji) {
+  const veri = JSON.stringify(mesaj);
+  for (const istemci of wss.clients) {
+    if (istemci.readyState === istemci.OPEN && istemciRolleri.get(istemci) !== "oynatici") istemci.send(veri);
+  }
+}
 
 function herkeseGonder(mesaj: SunucuMesaji) {
   const veri = JSON.stringify(mesaj);
@@ -117,6 +125,8 @@ wss.on("connection", (ws: WebSocket) => {
       istemciRolleri.set(ws, mesaj.rol);
       if (mesaj.rol === "oynatici") gunluk.bilgi(`Duvar Oynatıcı bağlandı${mesaj.ad ? ` (${mesaj.ad})` : ""}; toplam ${oynaticiSayisi()}`);
       baglantiYayinla();
+    } else if (mesaj?.tip === "onizleme" && istemciRolleri.get(ws) === "oynatici" && typeof mesaj.veri === "string" && mesaj.veri.startsWith("data:image/") && mesaj.veri.length < 300000) {
+      panellereGonder({ tip: "onizleme", veri: mesaj.veri, zaman: Date.now() });
     }
   });
 

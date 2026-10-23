@@ -41,6 +41,11 @@ export class KopruBaglantisi {
     this.ws.onerror = () => this.ws?.close();
   }
 
+  /** Köprüye istemci mesajı (önizleme görüntüsü); bağlı değilse sessizce atlanır. */
+  gonder(m: IstemciMesaji) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(m));
+  }
+
   kapat() {
     if (this.zamanlayici) clearTimeout(this.zamanlayici);
     this.ws?.close();

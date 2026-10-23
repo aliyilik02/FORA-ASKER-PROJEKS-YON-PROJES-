@@ -165,7 +165,10 @@ export interface BaglantiDurumu {
 }
 
 /** İstemci → sunucu WebSocket mesajları. */
-export type IstemciMesaji = { tip: "merhaba"; rol: "panel" | "oynatici"; ad?: string };
+export type IstemciMesaji =
+  | { tip: "merhaba"; rol: "panel" | "oynatici"; ad?: string }
+  /** Oynatıcıdan küçük JPEG önizleme (data URL, ~2 sn'de bir); köprü yalnızca panellere iletir. */
+  | { tip: "onizleme"; veri: string };
 
 /** Köprünün Unreal Engine'e gönderdiği bir Remote Control çağrısının kaydı (panelde canlı izlenir). */
 export interface UnrealIstekKaydi {
@@ -236,7 +239,9 @@ export type SunucuMesaji =
   /** Tetiklenen efekt olayı (oynatıcı ve paneller için). */
   | { tip: "efekt"; efekt: EfektIstegi & { zaman: number } }
   /** Figür / klip komutu (oynatıcı uygular, paneller aktif listeyi günceller). */
-  | { tip: "figur"; komut: FigurKomutu & { id: string }; aktifler: Array<FigurKomutu & { id: string }> };
+  | { tip: "figur"; komut: FigurKomutu & { id: string }; aktifler: Array<FigurKomutu & { id: string }> }
+  /** Duvar görüntüsünün küçük önizlemesi (panelin canlı sahne kartı). */
+  | { tip: "onizleme"; veri: string; zaman: number };
 
 export const BOLGE_ETIKETLERI: Record<Bolge, string> = {
   meskun_mahal: "Meskûn Mahal",

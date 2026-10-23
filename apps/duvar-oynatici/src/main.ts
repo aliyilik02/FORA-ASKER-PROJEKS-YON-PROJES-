@@ -399,6 +399,35 @@ void video.yukle().then((m) => {
 
 kopru.baslat();
 
+/**
+ * Panel için küçük önizleme: iki tuval (3B + 2B) 384×(oran) JPEG'e indirgenir, ~2 sn'de bir köprüye
+ * gönderilir (köprü yalnızca panellere iletir). Kontrol odasında duvarı görmeyen eğitmen "duvarda şu an ne var"
+ * sorusunu canlı sahne kartından yanıtlar.
+ */
+const onizlemeTuval = document.createElement("canvas");
+let sonOnizleme = 0;
+function onizlemeGonder(simdi: number) {
+  if (kopru.durum !== "bagli" || simdi - sonOnizleme < 2000 || W === 0 || H === 0) return;
+  sonOnizleme = simdi;
+  try {
+    const g = 384;
+    const y = Math.max(24, Math.round((g * H) / W));
+    if (onizlemeTuval.width !== g || onizlemeTuval.height !== y) {
+      onizlemeTuval.width = g;
+      onizlemeTuval.height = y;
+    }
+    const c = onizlemeTuval.getContext("2d");
+    if (!c) return;
+    c.fillStyle = "#000";
+    c.fillRect(0, 0, g, y);
+    if (tuval3b.style.visibility !== "hidden") c.drawImage(tuval3b, 0, 0, g, y);
+    c.drawImage(tuval, 0, 0, g, y);
+    kopru.gonder({ tip: "onizleme", veri: onizlemeTuval.toDataURL("image/jpeg", 0.55) });
+  } catch {
+    /* tuval okunamazsa (tainted) önizleme yok */
+  }
+}
+
 let sonZaman = performance.now();
 let fpsSayac = 0;
 let fpsZaman = 0;
@@ -483,6 +512,7 @@ function kare(simdi: number) {
   hazirOluncaYenidenUygula();
   bekleyenFigurleriUygula();
   bekleyenEfektleriUygula();
+  onizlemeGonder(simdi);
   if (kalibrasyon) kalibrasyonCiz(ctx, W, H, duvarlar.map((d) => d.ad));
   if (baglanti === "kopuk") uyariCiz(ctx, W, H, "Köprü sunucusu bekleniyor…", "Oynatıcı, köprüye (port 4000) bağlanınca panelden yönetilir");
   if (hud) {
