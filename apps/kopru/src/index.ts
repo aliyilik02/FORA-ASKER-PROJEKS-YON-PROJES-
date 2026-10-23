@@ -82,7 +82,7 @@ function sonDurumuKaydet() {
 }
 
 const uygulama = express();
-uygulama.use("/api", apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, figur }));
+uygulama.use("/api", apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, figur, sahneSifirla: () => herkeseGonder({ tip: "sahne", islem: "sifirla" }) }));
 for (const klasor of icerikAdaylari) {
   uygulama.use("/oynatici/icerik", express.static(klasor));
 }

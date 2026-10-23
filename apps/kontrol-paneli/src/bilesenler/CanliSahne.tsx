@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useArayuz } from "../arayuz";
 import { BOLGE_ETIKETLERI, EFEKT_ETIKETLERI, HELIKOPTER_ETIKETLERI, MEVSIM_ETIKETLERI, YAGIS_ETIKETLERI, type EfektTuru, type FigurKomutu, type SenaryoDurumu, type SimulasyonDurumu } from "../tipler";
-import { Ikon, Rozet, saatBicimi, sureBicimi, yonMetni } from "./ortak";
+import { Ikon, OnayliDugme, Rozet, saatBicimi, sureBicimi, yonMetni } from "./ortak";
 import { Pusula } from "./Pusula";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
@@ -99,6 +99,9 @@ export function CanliSahne({
               senaryo {sureBicimi(senaryo.konumMs)} / {sureBicimi(senaryo.toplamMs)}
             </Rozet>
           )}
+          <OnayliDugme sinif="kucuk ikincil" onay="Sahne temizlensin mi?" onClick={() => void calistir(() => api.sahneSifirla()).then((r) => r && bildir({ tur: "basari", baslik: "Sahne sıfırlandı", metin: "Figürler, çatışma, izli mermi, helikopter, krater ve duman temizlendi" }))}>
+            Sahneyi sıfırla
+          </OnayliDugme>
         </div>
       </header>
 

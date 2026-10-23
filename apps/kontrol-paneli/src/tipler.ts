@@ -241,7 +241,9 @@ export type SunucuMesaji =
   /** Figür / klip komutu (oynatıcı uygular, paneller aktif listeyi günceller). */
   | { tip: "figur"; komut: FigurKomutu & { id: string }; aktifler: Array<FigurKomutu & { id: string }> }
   /** Duvar görüntüsünün küçük önizlemesi (panelin canlı sahne kartı). */
-  | { tip: "onizleme"; veri: string; zaman: number };
+  | { tip: "onizleme"; veri: string; zaman: number }
+  /** Sahne sıfırlama: oynatıcı kraterleri, dumanı, 2B klipleri temizler (yeni eğitim grubu). */
+  | { tip: "sahne"; islem: "sifirla" };
 
 export const BOLGE_ETIKETLERI: Record<Bolge, string> = {
   meskun_mahal: "Meskûn Mahal",

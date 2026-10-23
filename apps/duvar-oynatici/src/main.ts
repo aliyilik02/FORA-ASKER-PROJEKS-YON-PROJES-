@@ -321,6 +321,11 @@ const kopru = new KopruBaglantisi(
     if (m.tip === "durum") durumUygula(m.durum);
     else if (m.tip === "efekt") efektUygula(m.efekt);
     else if (m.tip === "figur") figurKomutu(m.komut);
+    else if (m.tip === "sahne" && m.islem === "sifirla") {
+      sahne3b.sahneyiSifirla();
+      klipler.temizle();
+      bekleyenEfektler.length = 0;
+    }
   },
   (d) => {
     baglanti = d;

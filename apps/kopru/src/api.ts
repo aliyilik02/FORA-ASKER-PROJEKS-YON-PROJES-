@@ -24,6 +24,8 @@ export interface ApiBagimliliklari {
   /** Bağlı Duvar Oynatıcı sayısını döndürür. */
   oynaticiSayisi?: () => number;
   figur?: FigurYoneticisi;
+  /** Sahne sıfırlama yayını (oynatıcılara "sahne/sifirla"). */
+  sahneSifirla?: () => void;
 }
 
 export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici, oynaticiSayisi = 0): BaglantiDurumu {
@@ -156,6 +158,20 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
       } catch (hata) {
         res.status(400).json({ hata: hata instanceof Error ? hata.message : String(hata) });
       }
+    }),
+  );
+
+  // --- Sahneyi sıfırla: yeni eğitim grubu için temiz başlangıç (figürler, çatışma, izli mermi, helikopter, krater/duman) ---
+  r.post(
+    "/sahne/sifirla",
+    sarmala(async (_req, res) => {
+      b.figur?.komut({ islem: "temizle" });
+      await b.depo.catismaGuncelle({ aktif: false });
+      await b.depo.izliMermiGuncelle({ aktif: false });
+      await b.depo.oda2Guncelle({ helikopter: "yok" });
+      b.sahneSifirla?.();
+      b.gunluk.bilgi("Sahne sıfırlandı (figürler, çatışma, izli mermi, helikopter, krater/duman)");
+      res.json({ tamam: true, durum: b.depo.al() });
     }),
   );
 
