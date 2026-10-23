@@ -17,6 +17,29 @@ sütunu Unreal projesinde üretilecek kısmı, "Bu depo" sütunu yazılım taraf
 | §9 | Uzaktan patlama ve mermi sesi | `uzak_patlama`, `uzak_mermi_sesi` efektleri; mesafe ve yön ayarı, otomatik zayıflatma parametresi | Attenuation ayarlı sesler | Yazılım hazır | Silah sesi paketleri var; attenuation ayarlanacak |
 | §10 | Çevrimdışı çalışma, Türkçe arayüz | Hiçbir dış bağlantı yok; tüm arayüz ve dokümantasyon Türkçe; `.env` ile saha ayarı | – | Hazır | – |
 
+## Tarayıcı oynatıcı ile mevcut durum (23 Ekim 2026)
+
+Hibrit yol gereği görüntüyü Unreal değil, tarayıcı tabanlı Duvar Oynatıcı (`apps/duvar-oynatici`,
+Three.js 3B katman) üretir; yukarıdaki "UE içerik" sütunu isteğe bağlı yola aittir. Aynı maddelerin
+oynatıcıdaki karşılığı:
+
+| No | Oynatıcıda karşılığı | Durum |
+|---|---|---|
+| §1 | 3 duvar tek tarayıcı penceresinde (`?fov=` duvar açısı, kalibrasyon ızgarası K tuşu), köprü 4000 portundan panel + oynatıcı | Hazır; saha ölçüleri → `?fov=` |
+| §2 | 5 bölge × mevsim × zaman: 23 Poly Haven CC0 8K çekim panoraması + AI kırsal panorama; panorama başına yerleşim planı (patlama/figür ağaç ve bina içine düşmez) | Hazır (içerik kullanıcının makinesinde) |
+| §3 | Mevsim/saat/bulut/sis/yağış/rüzgâr: panorama seçimi + IBL karartma, güneş yönü panoramadan (yükseklik ≥18° gündüz, gece ay ışığı), yağmurda zayıf güneş ve yumuşak gölge | Hazır |
+| §4 | Patlama: 3B ateş topu, toprak sütunu, moloz, kalıcı krater + tüten duman, flaş + sarsıntı; bağırma/çağırma sesleri (Mixkit/OGA); **figürler**: asker (mevzide, diz çökmüş, yere yatmış, koşan), tank (kule düşmana döner, top atar), **yaralı** (vurulma → düşme → yerde nefes ve yardım işareti, tüfek yere düşer), **sıhhiyeci** yaralının başında; panelde tek dokunuş ("Asker vuruldu!", "Sıhhiyeci gönder") | Hazır; Türkçe bağırma kaydı ve müdahale animasyonu (yeşil perde) bekliyor |
+| §5 | 3B izli mermi + çatışma sistemi (düşman cephesi yönü/şiddet, çarpma/sekme, dost ateşi, tank topu); klasik 2B izli mermi 3B kapalıyken | Hazır |
+| §6 | Art-Net değişmedi (köprü) | Hazır; armatür haritası bekleniyor |
+| §7 | Oda 2 güvenli alan: 3B sütre dizilimleri (kum torbası, kaya, toprak yığını, jersey bariyer, sandık, **prosedürel HESCO**) manifest `sutreler` | Hazır |
+| §8 | 3B helikopter (OGA CC-BY): yaklaşma → iniş → yerde → kalkış, iniş yönü panelden, rotor tozu (parçacık) + rotor sesi; iniş noktası yerleşim planından | Hazır |
+| §9 | Uzak patlama 3B (uzak parıltı + gürültü, mesafe zayıflatma), uzak mermi sesi | Hazır |
+| §10 | Dış bağlantı yok; içerik yerel klasörde; demo.bat | Hazır |
+
+Senaryo motoru artık **figür adımlarını** da çalıştırır (sahneye koy, yanına yerleş, duruş değiştir,
+hepsini kaldır); örnek senaryolar "Ateş Altında Yaralıya Müdahale (TCCC)" ve "Gösterim – Kırsal Tam Tur"
+kurulumla gelir. Performans: dizüstü (Iris Xe) için `?kalite=dusuk`; saha makinesi RTX sınıfı.
+
 ## Rapor §3 teknik mimari maddeleri
 
 | Madde | Bu depo |
@@ -30,7 +53,10 @@ sütunu Unreal projesinde üretilecek kısmı, "Bu depo" sütunu yazılım taraf
 
 - Art-Net ArtDmx paket yapısı (başlık, opcode, evren, uzunluk)
 - Işık → DMX kanal dönüşümü ve gün ışığı eğrisi
-- Senaryo motoru: sıralı tetikleme, duraklat/devam, durdur
+- Senaryo motoru: sıralı tetikleme, duraklat/devam, durdur, figür adımları (bağlı figür yöneticisine iletim)
+- Figür yöneticisi: oynat/durdur/temizle/poz doğrulama, manifestten başlangıç duruşu, `yaninda` bağlama
+- Veri deposu: ilk kurulum örnekleri, mevcut kuruluma eksik örneklerin eklenmesi, örnek senaryo tutarlılığı
+- Oynatıcı: yerleşim planı (nokta seçimi, yasak aralık), güneş tahmini, projeksiyon hesapları
 - Durum deposu: değer sınırlama, Oda 2 uzak ses parametrelerinin otomatik doldurulması
 - Örnek paket başlatıcı: komut satırı üretimi (pencere/tam ekran, FOV parametresi, tırnaklı ek parametreler), süreç başlat/durdur
 - `.env` okuyucu: yorum satırları, tırnaklar, var olan değişkenin korunması
