@@ -125,7 +125,9 @@ export interface SenaryoAdimi {
     | { tip: "oda2"; oda2: Partial<Oda2Ayarlari> }
     | { tip: "catisma"; catisma: Partial<CatismaAyarlari> }
     /** Figür komutu: asker/tank çağır, duruş değiştir (vuruldu), kaldır. */
-    | { tip: "figur"; figur: FigurKomutu };
+    | { tip: "figur"; figur: FigurKomutu }
+    /** Oda değiştir (Oda 1 ↔ Oda 2): gösterim senaryosu helikopter inişine geçebilsin. */
+    | { tip: "oda"; oda: Oda };
 }
 
 export interface Senaryo {

@@ -79,6 +79,7 @@ export function CanliSahne({
             </Rozet>
           )}
           {figurler.length > 0 && <Rozet tur="iyi">{figurler.length} figür</Rozet>}
+          {figurler.some((f) => f.poz === "yarali") && <Rozet tur="kotu">{figurler.filter((f) => f.poz === "yarali").length} yaralı</Rozet>}
           {senaryo?.senaryoId && senaryo.durum !== "duruyor" && (
             <Rozet tur={senaryo.durum === "oynuyor" ? "iyi" : "uyari"}>
               senaryo {sureBicimi(senaryo.konumMs)} / {sureBicimi(senaryo.toplamMs)}

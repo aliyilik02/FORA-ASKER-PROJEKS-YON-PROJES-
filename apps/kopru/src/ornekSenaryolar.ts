@@ -112,10 +112,10 @@ export const ORNEK_SENARYOLAR: Senaryo[] = [
   },
   {
     id: "sn_gosterim_kirsal",
-    ad: "Gösterim – Kırsal Tam Tur (4 dk)",
+    ad: "Gösterim – Tam Tur (5 dk)",
     aciklama:
-      "İdareye sunum için tek tuşla tam tur: gündüz devriye, cephe ve tank, çatışma, patlama ve krater, yaralı, " +
-      "akşam ve yağmur geçişi, gece; sonda Oda 2 helikopter inişi (Oda 2'ye geçince). Eğitmen hiçbir şeye dokunmaz.",
+      "İdareye sunum için tek tuşla tam tur: gündüz devriye, cephe ve tank, çatışma, patlama ve krater, yaralı ve sıhhiyeci, " +
+      "akşam ve yağmur geçişi, gece, kış; ardından Oda 2 güvenli alan (HESCO) ve helikopterle tahliye. Eğitmen hiçbir şeye dokunmaz.",
     oda: "oda1",
     adimlar: [
       { id: "g1", gecikmeMs: 0, aciklama: "Kırsal açık arazi, yaz öğlen", islem: { tip: "bolge", bolge: "kirsal_acik_arazi" } },
@@ -140,7 +140,18 @@ export const ORNEK_SENARYOLAR: Senaryo[] = [
       { id: "g19", gecikmeMs: 175000, aciklama: "Kış, sabah 08:00", islem: { tip: "ortam", ortam: { mevsim: "kis", saat: 8, bulut: 0.5, sis: 0.1 } } },
       { id: "g20", gecikmeMs: 200000, aciklama: "Birlik geri çekilir", islem: { tip: "figur", figur: { islem: "temizle" } } },
       { id: "g21", gecikmeMs: 205000, aciklama: "Yaz öğlene dönüş", islem: { tip: "ortam", ortam: { mevsim: "yaz", saat: 12, bulut: 0.15, sis: 0, yagis: "yok" } } },
-      { id: "g22", gecikmeMs: 240000, aciklama: "Gösterim bitti", islem: { tip: "efekt", efekt: { tur: "gurultu", siddet: 0.2, yon: 0 } } },
+      { id: "g22", gecikmeMs: 210000, aciklama: "Oda 2: üs bölgesi güvenli alanı (HESCO, kum torbası)", islem: { tip: "oda", oda: "oda2" } },
+      { id: "g23", gecikmeMs: 210500, aciklama: "Güvenli alan: operasyonel bölge; uzak sesler 800 m", islem: { tip: "oda2", oda2: { guvenliAlan: "operasyonel_bolge", helikopter: "yok", uzakSesMesafesi: 800, uzakSesYonu: 45, helikopterYonu: 12 } } },
+      { id: "g24", gecikmeMs: 215000, aciklama: "Yaralı güvenli alanda, sıhhiyeci başında", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_g24", klip: "asker_yarali_3b", azimut: -10, yukseklik: -12, olcek: 1, dongu: true } } },
+      { id: "g25", gecikmeMs: 217000, aciklama: "Sıhhiyeci", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_g25", klip: "asker_sihhiyeci", yaninda: "senaryo_g24", azimut: -10, olcek: 1, dongu: true } } },
+      { id: "g26", gecikmeMs: 220000, aciklama: "Uzaktan mermi sesi", islem: { tip: "efekt", efekt: { tur: "uzak_mermi_sesi", siddet: 0.7 } } },
+      { id: "g27", gecikmeMs: 228000, aciklama: "Helikopter yaklaşıyor", islem: { tip: "oda2", oda2: { helikopter: "yaklasiyor" } } },
+      { id: "g28", gecikmeMs: 245000, aciklama: "Helikopter iniyor (rotor tozu)", islem: { tip: "oda2", oda2: { helikopter: "iniyor" } } },
+      { id: "g29", gecikmeMs: 262000, aciklama: "Helikopter yerde: tahliye", islem: { tip: "oda2", oda2: { helikopter: "yerde" } } },
+      { id: "g30", gecikmeMs: 285000, aciklama: "Helikopter kalkıyor", islem: { tip: "oda2", oda2: { helikopter: "kalkiyor" } } },
+      { id: "g31", gecikmeMs: 300000, aciklama: "Helikopter gitti, birlik çekildi", islem: { tip: "oda2", oda2: { helikopter: "yok" } } },
+      { id: "g32", gecikmeMs: 301000, aciklama: "Figürler kaldırılır", islem: { tip: "figur", figur: { islem: "temizle" } } },
+      { id: "g33", gecikmeMs: 305000, aciklama: "Oda 1'e dönüş – gösterim bitti", islem: { tip: "oda", oda: "oda1" } },
     ],
   },
 ];

@@ -35,6 +35,7 @@ const TIP_ETIKETLERI: Record<AdimTipi, string> = {
   isik: "Ortam ışığı",
   catisma: "Çatışma (düşman ateşi)",
   figur: "Figür (asker / tank / vuruldu)",
+  oda: "Oda değiştir (1 ↔ 2)",
 };
 const FIGUR_ISLEM_ETIKETLERI = { oynat: "Sahneye koy", poz: "Duruş değiştir (vuruldu / diz çök / kalk)", temizle: "Hepsini kaldır" } as const;
 type FigurIslem = keyof typeof FIGUR_ISLEM_ETIKETLERI;
@@ -74,6 +75,7 @@ interface YeniAdim {
   /** "Sahneye koy" için: bu adımın figürünün yanına yerleş (sıhhiyeci → yaralı); boş = yön/mesafe ile. */
   figurYanindaId: string;
   figurYanindaAd: string;
+  adimOda: Oda;
 }
 
 function varsayilanYeni(d: SimulasyonDurumu): YeniAdim {
@@ -109,6 +111,7 @@ function varsayilanYeni(d: SimulasyonDurumu): YeniAdim {
     figurHedefAd: "",
     figurYanindaId: "",
     figurYanindaAd: "",
+    adimOda: d.oda === "oda1" ? "oda2" : "oda1",
   };
 }
 
@@ -165,6 +168,8 @@ function adimUret(y: YeniAdim, id: string): SenaryoAdimi {
             islem: { tip: "catisma", catisma: { aktif: true, siddet: y.catismaSiddet, yon: y.catismaYon } },
           }
         : { id, gecikmeMs, aciklama: "Çatışma durur", islem: { tip: "catisma", catisma: { aktif: false } } };
+    case "oda":
+      return { id, gecikmeMs, aciklama: y.adimOda === "oda2" ? "Oda 2'ye geç (güvenli alan / helikopter)" : "Oda 1'e geç", islem: { tip: "oda", oda: y.adimOda } };
     case "figur":
       if (y.figurIslem === "temizle") return { id, gecikmeMs, aciklama: "Birlik geri çekilir (tüm figürler)", islem: { tip: "figur", figur: { islem: "temizle" } } };
       if (y.figurIslem === "poz")
@@ -380,6 +385,17 @@ export function SenaryoEditoru({
           </div>
         )}
 
+        {yeni.tip === "oda" && (
+          <div className="alanlar">
+            <label className="alan">
+              <span>Oda</span>
+              <select value={yeni.adimOda} onChange={(e) => g({ adimOda: e.target.value as Oda })}>
+                <option value="oda1">Oda 1 – Ateş Altında Yaralıya Müdahale</option>
+                <option value="oda2">Oda 2 – Taktik Güvenli Alan / Tahliye</option>
+              </select>
+            </label>
+          </div>
+        )}
         {yeni.tip === "figur" && (
           <div className="alanlar">
             <label className="alan">

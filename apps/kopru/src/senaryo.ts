@@ -137,6 +137,9 @@ export class SenaryoMotoru {
       case "catisma":
         await this.depo.catismaGuncelle(islem.catisma);
         break;
+      case "oda":
+        await this.depo.odaSec(islem.oda);
+        break;
       case "figur":
         if (!this.figur) {
           this.gunluk.uyari("Senaryo figür adımı: figür yöneticisi bağlı değil");
