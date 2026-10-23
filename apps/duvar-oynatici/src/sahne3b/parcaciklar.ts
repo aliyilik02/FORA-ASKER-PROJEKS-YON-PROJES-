@@ -316,7 +316,7 @@ export class ParcacikSistemi {
       aci: rnd(0, 6.28),
       donus: rnd(-0.4, 0.4),
       t: 0,
-      sure: rnd(4, 9),
+      sure: rnd(3, 6),
       renk: [0.5, 0.47, 0.43],
       yercekimi: -0.15,
       surtunme: 0.3,

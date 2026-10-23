@@ -102,6 +102,8 @@ export class Sahne3B {
     r.toneMapping = THREE.NoToneMapping;
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFShadowMap;
+    // Gölge haritası yöne bağlı (güneş), kameraya değil: üç duvar için üç kez değil karede bir kez çizilir
+    r.shadowMap.autoUpdate = false;
     r.setPixelRatio(1);
     this.pmrem = new THREE.PMREMGenerator(r);
 
@@ -144,6 +146,10 @@ export class Sahne3B {
   }
   get parcacikSayisi() {
     return this.parcaciklar.duman.sayi + this.parcaciklar.ates.sayi + this.parcaciklar.kivilcim.sayi;
+  }
+  /** Son duvar çiziminin çağrı sayısı (HUD; performans tanısı). */
+  get cizimCagrisi(): number {
+    return this.renderer?.info.render.calls ?? 0;
   }
   get gunesBilgisi(): string {
     if (!this.gunesTahmini) return "güneş: saatten";
@@ -477,6 +483,7 @@ export class Sahne3B {
     const r = this.renderer;
     if (!r || !this.hazir || this.kameralar.length === 0) return false;
     r.setScissorTest(true);
+    r.shadowMap.needsUpdate = true; // ilk duvar çiziminde gölge geçişi, diğer ikisi aynı haritayı kullanır
     this.yerlesimler.forEach((y, i) => {
       r.setViewport(y.x, 0, y.genislik, this.H);
       r.setScissor(y.x, 0, y.genislik, this.H);

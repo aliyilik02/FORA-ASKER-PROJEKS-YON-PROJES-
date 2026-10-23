@@ -68,6 +68,29 @@ const VARSAYILAN_KEMIKLER: Record<KemikRolu, string> = {
   sagAyak: "Foot.R",
 };
 
+/**
+ * Aynı kemik listesine sahip iskeletli mesh'ler tek Skeleton nesnesini paylaşır. SkeletonUtils.clone her
+ * mesh'e ayrı Skeleton verir; renderer kemik matrislerini iskelet başına (karede bir) hesaplayıp dokuya
+ * yüklediği için 9 parçalı Quaternius modelinde bu 9 kat iş demektir (3 duvar × gölge geçişi ile çarpılır).
+ */
+function iskeletleriPaylastir(kok: THREE.Object3D) {
+  const meshler: THREE.SkinnedMesh[] = [];
+  kok.traverse((o) => {
+    if ((o as THREE.SkinnedMesh).isSkinnedMesh) meshler.push(o as THREE.SkinnedMesh);
+  });
+  const temsilciler: THREE.Skeleton[] = [];
+  for (const m of meshler) {
+    const esi = temsilciler.find(
+      (t) =>
+        t.bones.length === m.skeleton.bones.length &&
+        t.bones.every((b, i) => b === m.skeleton.bones[i]) &&
+        t.boneInverses.every((inv, i) => inv.equals(m.skeleton.boneInverses[i])),
+    );
+    if (esi) m.skeleton = esi;
+    else temsilciler.push(m.skeleton);
+  }
+}
+
 /** Kemiği dünya uzayında `d` kadar taşır (ebeveynin ölçeği/dönüşü hesaba katılır). */
 function dunyadaKaydir(kemik: THREE.Object3D, d: THREE.Vector3) {
   if (!kemik.parent || d.lengthSq() < 1e-10) return;
@@ -271,6 +294,7 @@ export class FigurKatmani {
     // Aynı id için bu arada yeni komut geldiyse eskisini uygulama
     if (this.aktifler.some((a) => a.id === s.id)) return false;
     const nesne = iskeletKopyala(gltf.scene) as THREE.Object3D;
+    iskeletleriPaylastir(nesne);
     const boya = tanim.renk ? new THREE.Color(tanim.renk) : null;
     nesne.traverse((o) => {
       const m = o as THREE.Mesh;

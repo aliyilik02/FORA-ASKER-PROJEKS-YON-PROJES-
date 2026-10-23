@@ -25,6 +25,8 @@ export class HasarKatmani {
   private kraterler: Krater[] = [];
   private dokular: THREE.Texture[];
   private static readonly EN_COK = 40;
+  /** Krater dumanı toplam üst sınırı (parçacık); aşılınca yeni topak çıkmaz. */
+  private static readonly EN_COK_DUMAN = 320;
 
   constructor(dokular: THREE.Texture[], private readonly parcaciklar: ParcacikSistemi) {
     this.dokular = dokular;
@@ -100,12 +102,14 @@ export class HasarKatmani {
       if (k.dumanKalan <= 0) continue;
       k.dumanKalan -= dt;
       k.sayac += dt;
-      // Zamanla seyrelen duman: başta saniyede ~6 topak, sonda ~1
+      // Zamanla seyrelen duman: başta saniyede ~3 topak, sonda ~0,7. Büyük yumuşak topaklar üç duvarda
+      // ayrı ayrı çizildiği için doldurma maliyeti yüksek; toplam krater dumanı sınırlıdır (çok kraterde
+      // her biri daha az tüter).
       const oran = k.dumanKalan / (30 + k.siddet * 60);
-      const aralik = 1 / (1 + 5 * oran);
+      const aralik = (1 / (0.7 + 2.3 * oran)) * Math.max(1, this.kraterler.length / 3);
       while (k.sayac >= aralik) {
         k.sayac -= aralik;
-        this.parcaciklar.tutenDuman(k.konum, k.yaricap, k.siddet * (0.4 + 0.6 * oran));
+        if (this.parcaciklar.duman.sayi < HasarKatmani.EN_COK_DUMAN) this.parcaciklar.tutenDuman(k.konum, k.yaricap, k.siddet * (0.4 + 0.6 * oran));
       }
     }
   }
