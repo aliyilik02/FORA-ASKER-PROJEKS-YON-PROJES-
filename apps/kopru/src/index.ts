@@ -46,6 +46,7 @@ const ornek = new OrnekBaslatici(ornekKomutuOlustur(ayarlar.ornek), gunluk);
 
 /** Bağlı istemciler ve rolleri (panel / oynatıcı). */
 const istemciRolleri = new Map<WebSocket, "panel" | "oynatici">();
+const oynaticiGunlukZamani = new Map<WebSocket, number>();
 const oynaticiSayisi = () => [...istemciRolleri.values()].filter((r) => r === "oynatici").length;
 
 // Derlenmiş oynatıcı ve panel varsa aynı porttan sun.
@@ -153,7 +154,17 @@ wss.on("connection", (ws: WebSocket) => {
       if (mesaj.rol === "oynatici") gunluk.bilgi(`Duvar Oynatıcı bağlandı${mesaj.ad ? ` (${mesaj.ad})` : ""}; toplam ${oynaticiSayisi()}`);
       baglantiYayinla();
     } else if (mesaj?.tip === "onizleme" && istemciRolleri.get(ws) === "oynatici" && typeof mesaj.veri === "string" && mesaj.veri.startsWith("data:image/") && mesaj.veri.length < 300000) {
-      panellereGonder({ tip: "onizleme", veri: mesaj.veri, zaman: Date.now() });
+      panellereGonder({ tip: "onizleme", veri: mesaj.veri, zaman: Date.now(), bilgi: typeof mesaj.bilgi === "string" ? mesaj.bilgi.slice(0, 200) : undefined });
+    } else if (mesaj?.tip === "gunluk" && istemciRolleri.get(ws) === "oynatici" && typeof mesaj.mesaj === "string") {
+      // Oynatıcı günlüğü: saniyede en çok 2 satır (hata döngüsü köprüyü boğmasın)
+      const simdi = Date.now();
+      const son = oynaticiGunlukZamani.get(ws) ?? 0;
+      if (simdi - son >= 500) {
+        oynaticiGunlukZamani.set(ws, simdi);
+        const metin = `Oynatıcı: ${mesaj.mesaj.slice(0, 300)}`;
+        if (mesaj.seviye === "hata") gunluk.hata(metin);
+        else gunluk.uyari(metin);
+      }
     }
   });
 

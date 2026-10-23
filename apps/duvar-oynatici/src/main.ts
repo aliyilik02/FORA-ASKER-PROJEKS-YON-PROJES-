@@ -403,6 +403,9 @@ void video.yukle().then((m) => {
 });
 
 kopru.baslat();
+// Oynatıcı uyarıları köprü günlüğüne (panelde görünür): model yüklenemedi, 3B katman hatası
+sahne3b.uyari = (mesaj) => kopru.gonder({ tip: "gunluk", seviye: "uyari", mesaj });
+if (sahne3b.hata) kopru.gonder({ tip: "gunluk", seviye: "hata", mesaj: `3B katman açılamadı: ${sahne3b.hata}` });
 
 /**
  * Panel için küçük önizleme: iki tuval (3B + 2B) 384×(oran) JPEG'e indirgenir, ~2 sn'de bir köprüye
@@ -427,7 +430,8 @@ function onizlemeGonder(simdi: number) {
     c.fillRect(0, 0, g, y);
     if (tuval3b.style.visibility !== "hidden") c.drawImage(tuval3b, 0, 0, g, y);
     c.drawImage(tuval, 0, 0, g, y);
-    kopru.gonder({ tip: "onizleme", veri: onizlemeTuval.toDataURL("image/jpeg", 0.55) });
+    const bilgi = `${fps.toFixed(0)} fps · ${W}×${H} · kalite ${sahne3b.kalite} · 3B ${sahne3b.hazir ? "açık" : "kapalı"} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi}`;
+    kopru.gonder({ tip: "onizleme", veri: onizlemeTuval.toDataURL("image/jpeg", 0.55), bilgi });
   } catch {
     /* tuval okunamazsa (tainted) önizleme yok */
   }

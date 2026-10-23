@@ -84,6 +84,8 @@ export class Sahne3B {
 
   /** Kalite kademesi (`?kalite=`): gölge haritası, kenar yumuşatma ve parçacık kapasitesi. */
   readonly kalite: Kalite;
+  /** Uyarı kanalı (model yüklenemedi vb.); main.ts köprü günlüğüne iletir. */
+  uyari: ((mesaj: string) => void) | null = null;
 
   constructor(tuval: HTMLCanvasElement, hataAyiklama = false, kalite: Kalite = "yuksek") {
     this.kalite = kalite;
@@ -439,19 +441,19 @@ export class Sahne3B {
     const k = this.kaynak?.yawKaydirma ?? 0;
     if (s.yaninda) {
       // Başka figürün yanına: yerleşim planı atlanır, konum oynatıcıda o figüre göre hesaplanır
-      void this.figurler.oynat(tanim, { ...s, mesafe: undefined }, kok);
+      void this.figurler.oynat(tanim, { ...s, mesafe: undefined }, kok).then((ok) => ok || this.uyari?.(`Figür yüklenemedi: ${tanim.dosya}`));
       return;
     }
     if (tanim.serbestYerlesim) {
       // Yaralı vb.: panelin yönü ve mesafesi aynen (Oda 2'de sütrenin içine, Oda 1'de yakına); yalnız ağaç/bina içine değil
       const az = panoramadanSahneAzimutu(yasaktanKacin(s.azimut + k, this.kaynak?.plan?.yasak), k);
-      void this.figurler.oynat(tanim, { ...s, azimut: az, mesafe: varsayilan }, kok);
+      void this.figurler.oynat(tanim, { ...s, azimut: az, mesafe: varsayilan }, kok).then((ok) => ok || this.uyari?.(`Figür yüklenemedi: ${tanim.dosya}`));
       return;
     }
     const turler = tanim.yerlesim ?? ["asker", "figur"];
     const secim = birlikNoktasiSec(this.kaynak?.plan, s.azimut + k, turler, varsayilan, (az, m) => this.figurler.doluMu(yerKonumu(panoramadanSahneAzimutu(az, k), m)));
     const azimut = panoramadanSahneAzimutu(secim.azimut, k);
-    void this.figurler.oynat(tanim, { ...s, azimut, mesafe: secim.nokta ? secim.mesafe : undefined }, kok);
+    void this.figurler.oynat(tanim, { ...s, azimut, mesafe: secim.nokta ? secim.mesafe : undefined }, kok).then((ok) => ok || this.uyari?.(`Figür yüklenemedi: ${tanim.dosya}`));
   }
   figurDurdur(id: string) {
     this.figurler.durdur(id);

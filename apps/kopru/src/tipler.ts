@@ -168,7 +168,9 @@ export interface BaglantiDurumu {
 export type IstemciMesaji =
   | { tip: "merhaba"; rol: "panel" | "oynatici"; ad?: string }
   /** Oynatıcıdan küçük JPEG önizleme (data URL, ~2 sn'de bir); köprü yalnızca panellere iletir. */
-  | { tip: "onizleme"; veri: string };
+  | { tip: "onizleme"; veri: string; bilgi?: string }
+  /** Oynatıcıdan uyarı/hata (model yüklenemedi, WebGL yok...); köprü günlüğüne "Oynatıcı:" önekiyle düşer. */
+  | { tip: "gunluk"; seviye: "uyari" | "hata"; mesaj: string };
 
 /** Köprünün Unreal Engine'e gönderdiği bir Remote Control çağrısının kaydı (panelde canlı izlenir). */
 export interface UnrealIstekKaydi {
@@ -241,7 +243,7 @@ export type SunucuMesaji =
   /** Figür / klip komutu (oynatıcı uygular, paneller aktif listeyi günceller). */
   | { tip: "figur"; komut: FigurKomutu & { id: string }; aktifler: Array<FigurKomutu & { id: string }> }
   /** Duvar görüntüsünün küçük önizlemesi (panelin canlı sahne kartı). */
-  | { tip: "onizleme"; veri: string; zaman: number }
+  | { tip: "onizleme"; veri: string; zaman: number; bilgi?: string }
   /** Sahne sıfırlama: oynatıcı kraterleri, dumanı, 2B klipleri temizler (yeni eğitim grubu). */
   | { tip: "sahne"; islem: "sifirla" };
 

@@ -17,7 +17,7 @@ export function useKopru() {
   const [unrealIstekler, setUnrealIstekler] = useState<UnrealIstekKaydi[]>([]);
   const [ornek, setOrnek] = useState<OrnekDurumu | null>(null);
   const [figurler, setFigurler] = useState<Array<FigurKomutu & { id: string }>>([]);
-  const [onizleme, setOnizleme] = useState<{ veri: string; zaman: number } | null>(null);
+  const [onizleme, setOnizleme] = useState<{ veri: string; zaman: number; bilgi?: string } | null>(null);
   const [soketAcik, setSoketAcik] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const yenidenDeneme = useRef<number | null>(null);
@@ -69,7 +69,7 @@ export function useKopru() {
             setFigurler(mesaj.aktifler);
             break;
           case "onizleme":
-            setOnizleme({ veri: mesaj.veri, zaman: mesaj.zaman });
+            setOnizleme({ veri: mesaj.veri, zaman: mesaj.zaman, bilgi: mesaj.bilgi });
             break;
         }
       };

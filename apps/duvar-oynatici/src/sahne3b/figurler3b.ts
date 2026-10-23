@@ -312,7 +312,7 @@ export class FigurKatmani {
       setTimeout(() => this.rezerveler.delete(s.id), 0);
     }
     // Aynı id için bu arada yeni komut geldiyse eskisini uygulama
-    if (this.aktifler.some((a) => a.id === s.id)) return false;
+    if (this.aktifler.some((a) => a.id === s.id)) return true; // aynı id için yeni komut geldi: hata değil, eskisi uygulanmaz
     const nesne = iskeletKopyala(gltf.scene) as THREE.Object3D;
     iskeletleriPaylastir(nesne);
     const boya = tanim.renk ? new THREE.Color(tanim.renk) : null;
@@ -370,7 +370,7 @@ export class FigurKatmani {
       await new Promise((r) => setTimeout(r, 100));
       yanindaki = this.aktifler.find((x) => x.id === s.yaninda);
     }
-    if (this.aktifler.some((a) => a.id === s.id)) return false; // beklerken aynı id için yeni komut geldiyse
+    if (this.aktifler.some((a) => a.id === s.id)) return true; // aynı id için yeni komut geldi: hata değil, eskisi uygulanmaz // beklerken aynı id için yeni komut geldiyse
     if (yanindaki) {
       const hedef = yanindaki.nesne.position;
       const izleyiciYonu = new THREE.Vector3(-hedef.x, 0, -hedef.z).normalize();
