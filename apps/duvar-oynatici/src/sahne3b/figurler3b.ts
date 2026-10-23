@@ -353,7 +353,13 @@ export class FigurKatmani {
     const sola = Boolean(s.yansit);
     sarmal.rotation.y = hiz > 0 ? yanaDonus(s.azimut, sola) : izleyiciyeDonus(s.azimut);
     // Başka figürün yanına: ona 1,1 m mesafede, izleyici tarafında durur ve ona dönük (+z yüzü ona bakar)
-    const yanindaki = s.yaninda ? this.aktifler.find((x) => x.id === s.yaninda) : undefined;
+    // Hedef figür henüz yükleniyor olabilir (açılışta köprü aktif listeyi art arda yollar): en çok 4 sn bekle
+    let yanindaki = s.yaninda ? this.aktifler.find((x) => x.id === s.yaninda) : undefined;
+    for (let deneme = 0; s.yaninda && !yanindaki && deneme < 40; deneme++) {
+      await new Promise((r) => setTimeout(r, 100));
+      yanindaki = this.aktifler.find((x) => x.id === s.yaninda);
+    }
+    if (this.aktifler.some((a) => a.id === s.id)) return false; // beklerken aynı id için yeni komut geldiyse
     if (yanindaki) {
       const hedef = yanindaki.nesne.position;
       const izleyiciYonu = new THREE.Vector3(-hedef.x, 0, -hedef.z).normalize();
