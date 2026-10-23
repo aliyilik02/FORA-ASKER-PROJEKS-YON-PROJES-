@@ -32,6 +32,12 @@ export class VeriDeposu {
     this.senaryoDosyasi = join(klasor, "senaryolar.json");
     if (!existsSync(this.senaryoDosyasi) && varsayilanSenaryolar.length) {
       dosyaYaz(this.senaryoDosyasi, varsayilanSenaryolar);
+    } else if (varsayilanSenaryolar.length) {
+      // Sürüm güncellemesiyle gelen yeni örnekler mevcut kuruluma da eklenir; eğitmenin kendi senaryoları ve
+      // düzenlediği (aynı kimlikli) örnekler olduğu gibi kalır.
+      const mevcut = dosyaOku<Senaryo[]>(this.senaryoDosyasi, []);
+      const eksik = varsayilanSenaryolar.filter((v) => !mevcut.some((m) => m.id === v.id));
+      if (eksik.length) dosyaYaz(this.senaryoDosyasi, [...mevcut, ...eksik]);
     }
   }
 

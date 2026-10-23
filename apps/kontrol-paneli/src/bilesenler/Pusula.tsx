@@ -173,9 +173,10 @@ export function Pusula({
           const mesafe = Math.min(1, 1.7 / Math.tan((Math.max(0.5, -yuk) * Math.PI) / 180) / 40);
           const p = nokta(f.azimut ?? 0, 16 + mesafe * (R_DUVAR - 24));
           return (
-            <g key={f.id} className="pusula-figur">
-              <circle cx={p.x} cy={p.y} r="5.5" />
-              <title>{f.klip}</title>
+            <g key={f.id} className={`pusula-figur ${f.poz ?? ""}`}>
+              <circle cx={p.x} cy={p.y} r={f.poz === "comelmis" ? 4.5 : 5.5} />
+              {f.poz === "yarali" && <path d={`M${p.x - 3} ${p.y}h6M${p.x} ${p.y - 3}v6`} className="haci" />}
+              <title>{`${f.klip ?? ""}${f.poz ? ` · ${f.poz}` : ""}`}</title>
             </g>
           );
         })}

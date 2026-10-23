@@ -345,6 +345,10 @@ export class Sahne3B {
       // Disk yok, yalnızca ışıma sütunu: yön panoramadan, yükseklik saatten (gece panoramasında ay için 25°)
       yukseklik = this.gunesTahmini.yukseklikGuvenilir ? this.gunesTahmini.yukseklik : Math.max(20, this.kaynak?.zaman === "gece" ? 25 : gunesKonumu(this.saat).yukseklik);
       if (!this.gunesTahmini.yukseklikGuvenilir) guc *= 0.7;
+      // Makullük sınırı: parlak ufuk pusu / yapay zekâ panoramasında güneş diski 5° gibi çıkabiliyor; o zaman
+      // gölgeler boyun 10 katı çizgiler oluyor. Gündüz panoramasında en az 18°, alacakaranlıkta 6°, gecede 15°.
+      const enAz = z === "gece" ? 15 : z === "alacakaranlik" ? 6 : 18;
+      if (yukseklik < enAz) yukseklik = enAz;
     } else {
       const g = gunesKonumu(this.saat);
       azimut = g.azimut;

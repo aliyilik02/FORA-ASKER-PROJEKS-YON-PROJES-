@@ -832,6 +832,19 @@ button.efekt.tetiklendi {
 .pusula-dusman circle {
   fill: var(--izli);
 }
+.pusula-figur.yarali circle {
+  fill: rgba(214, 112, 96, 0.9);
+  stroke: #f2a08e;
+  animation: nefes 1.4s ease-in-out infinite;
+}
+.pusula-figur.yarali .haci {
+  stroke: #1a1410;
+  stroke-width: 1.4;
+  fill: none;
+}
+.pusula-figur.comelmis circle {
+  stroke-dasharray: 2 1.5;
+}
 .pusula-figur circle {
   fill: var(--nvg);
   stroke: #0b0d0a;
