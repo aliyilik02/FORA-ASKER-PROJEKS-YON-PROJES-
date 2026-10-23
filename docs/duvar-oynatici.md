@@ -179,7 +179,9 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
 - Bağlanınca `{tip:"merhaba", rol:"oynatici"}` gönderir; köprü `baglanti.oynatici` sayacını artırır.
 - `durum` mesajı → tüm sahne parametreleri; `efekt` mesajı → anlık efekt (`EfektIstegi` + zaman);
   `figur` mesajı → figür komutu + aktif figür listesi.
-- Oynatıcı hiçbir komut göndermez; tek yönlü ve durumsuzdur, yeniden bağlanınca son durumu alır.
+- Oynatıcı komut göndermez (durumsuz; yeniden bağlanınca son durumu alır). Tek istisna **önizleme**: ~2 sn'de
+  bir iki tuvali 384 px JPEG'e indirip `{tip:"onizleme", veri}` yollar; köprü `onizleme` mesajını yalnızca
+  panellere iletir, panelin canlı sahne kartı pusulanın üstünde gösterir (15 sn'den eskiyse gizler).
 
 ## Sınırlamalar (prototip)
 

@@ -144,7 +144,11 @@ ay ışığı sınırı (zayıf/mavimsi), pusulada yaralı/diz çökmüş/yatmı
 örnekler otomatik eklenir; değişen örnekler için `apps/kopru/veri/senaryolar.json` elle yenilenir), kalite
 kademesi (oynatıcı `?kalite=`, panel Sistem > Oynatıcı ayarları), prosedürel HESCO, sıhhiyeci + `yaninda`,
 prone duruşu, editörde "Yanına yerleş", açılışta durumun yeniden uygulanması (sütre/helikopter kaybolmuyordu).
-Köprüyü yeniden başlatma: port 4000'i dinleyen süreci durdur, `Start-Process cmd /k npm start`.
+Köprüyü yeniden başlatma: port 4000'i dinleyen süreci durdur, `Start-Process cmd /k npm start`. Sonra: canlı
+duvar önizlemesi (oynatıcı → köprü → panel, `onizleme` mesajı), "Asker vuruldu" hızlı düğmesi (6), serbest
+yerleşim (`serbestYerlesim`: yaralı/sıhhiyeci plan dışı; Oda 2'de 3,5 m), figür yükleme sırasında mevzi
+rezervasyonu, panorama yüklenirken efekt kuyruğu, dağlık patlama noktaları ≤13 m, SWAT figürler haki tonlu,
+fare imleci 3 sn'de gizlenir, `docs/gosterim-rehberi.md`.
 
 ## Sıradaki işler (öncelik sırasıyla)
 
