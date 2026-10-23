@@ -44,7 +44,7 @@ const BOZKIR = { toprak: "bozkir", toprakOlcek: 4, cimen: "cimen_kaya", cimenOlc
 const CAYIR = { toprak: "kuru_toprak", toprakOlcek: 4, cimen: "cimen_kaya", cimenOlcek: 15, makro: "uzak_arazi", makroOlcek: 90 };
 
 export const ARAZI_PROFILLERI: Record<string, AraziProfili> = {
-  kirsal_acik_arazi: { tohum: 11, genlik: 6, dalga: 140, sirt: 14, dere: 2.2, uzakTepe: 45, yol: true, cimen: 0.7, kaya: 0.6, cali: 0.7, kuruluk: 0.8, dokular: BOZKIR },
+  kirsal_acik_arazi: { tohum: 11, genlik: 9, dalga: 120, sirt: 18, dere: 3, uzakTepe: 45, yol: true, cimen: 0.7, kaya: 0.8, cali: 0.8, kuruluk: 0.8, dokular: BOZKIR },
   daglik: { tohum: 23, genlik: 22, dalga: 110, sirt: 40, dere: 0, uzakTepe: 160, yol: false, cimen: 0.4, kaya: 1, cali: 0.3, kuruluk: 0.6, dokular: BOZKIR },
   ormanlik: { tohum: 37, genlik: 7, dalga: 120, sirt: 10, dere: 1.5, uzakTepe: 60, yol: true, cimen: 0.9, kaya: 0.4, cali: 1, kuruluk: 0.25, dokular: CAYIR },
   us_bolgesi: { tohum: 41, genlik: 1.5, dalga: 160, sirt: 0, dere: 0, uzakTepe: 30, yol: true, cimen: 0.5, kaya: 0.2, cali: 0.3, kuruluk: 0.7, dokular: BOZKIR },
@@ -141,8 +141,8 @@ export class AraziKatmani {
     h += fbm(x / 7, z / 7, p.tohum + 2, 2) * 0.25;
     if (p.sirt > 0) {
       // Sırt: arka-sol çaprazında, izleyiciden 110–180 m
-      const d = (x * 0.6 + z * 0.8 + 150) / 1.0;
-      h += p.sirt * Math.exp(-(d * d) / (2 * 42 * 42)) * (0.7 + 0.3 * fbm(x / 60, z / 60, p.tohum + 3, 2));
+      const d = x * 0.55 + z * 0.83 + 112;
+      h += p.sirt * Math.exp(-(d * d) / (2 * 38 * 38)) * (0.7 + 0.3 * fbm(x / 60, z / 60, p.tohum + 3, 2));
     }
     if (p.dere > 0) {
       // Dere yatağı: sağ taraftan arkaya doğru kıvrılan vadi
@@ -579,6 +579,13 @@ AraziKarisim araziAgirliklari(vec3 geoNormal) {
     };
     mal.customProgramCacheKey = () => "arazi-cimen-v1";
     const mesh = new THREE.InstancedMesh(geo, mal, sayi);
+    const renk = new THREE.Color();
+    for (let i = 0; i < sayi; i++) {
+      const t = 0.88 + Math.random() * 0.24;
+      renk.setRGB(t * (0.97 + Math.random() * 0.06), t, t * (0.9 + Math.random() * 0.12));
+      mesh.setColorAt(i, renk);
+    }
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.castShadow = false;
     mesh.receiveShadow = true;
     mesh.frustumCulled = false;
@@ -669,7 +676,7 @@ AraziKarisim araziAgirliklari(vec3 geoNormal) {
       let deneme = 0;
       while (yerler.length < adet && deneme < adet * 40) {
         deneme++;
-        const r = 10 + Math.pow(Math.random(), 0.8) * 140;
+        const r = 8 + Math.pow(Math.random(), 1.35) * 140;
         const a = Math.random() * Math.PI * 2;
         const x = Math.cos(a) * r;
         const z = Math.sin(a) * r;

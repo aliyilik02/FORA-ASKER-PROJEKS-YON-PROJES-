@@ -154,6 +154,8 @@ fare imleci 3 sn'de gizlenir, `docs/gosterim-rehberi.md`. Köprü son durumu dis
 "Sahneyi sıfırla" (`/sahne/sifirla` + `sahne` WS mesajı); oynatıcı uyarıları köprü günlüğüne (`gunluk` istemci
 mesajı), önizleme fps/kalite bilgisi taşır; HUD varsayılan kapalı; panelde `figurYardimcilari.ts`.
 
+**3B arazi (23 Ekim akşam, devam ediyor):** `sahne3b/arazi.ts` (yükseklik haritası, splat doku karışımı, krater deformasyonu, çimen demetleri, Poly Haven CC0 kaya/çalı LOD), `gokyuzu.ts` (tam kip), `uzay.ts` zeminY. Kip: `?arazi=kapali|hibrit|tam`, kırsal varsayılan hibrit. İçerik `icerik/arazi/` (depo dışı; `araclar/arazi-indir.mjs`, `araclar/arazi-sadelestir.mjs`). Kalan: tam kip görsel testi, diğer bölgelerin profilleri, çimen/kaya gölgesi, Oda 2 düzlük kontrolü, performans (dizüstünde dusuk), belgeler.
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 1. Poly Haven panoramaları (23) için yerleşim planı + `yawKaydirma`; güneş tahmini ve gece karartması
