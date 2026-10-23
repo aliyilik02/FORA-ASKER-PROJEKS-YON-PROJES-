@@ -142,7 +142,20 @@ function ufuk(): number {
   return sahne3b.hazir ? sahne3b.ufukY : bolgeUfukY(durum.bolge, H);
 }
 
+/** 3B sahne hazır değilken (panorama yükleniyor) gelen patlama/toz efektleri: hazır olunca uygulanır (10 sn içinde). */
+const bekleyenEfektler: Array<{ e: EfektIstegi; zaman: number }> = [];
+function bekleyenEfektleriUygula() {
+  if (!sahne3b.hazir || bekleyenEfektler.length === 0) return;
+  const simdi = performance.now();
+  const liste = bekleyenEfektler.splice(0);
+  for (const b of liste) if (simdi - b.zaman < 10000) efektUygula(b.e);
+}
+
 function efektUygula(e: EfektIstegi) {
+  if (ucAktifOlabilir && !sahne3b.hazir && (e.tur === "patlama" || e.tur === "toz_duman" || e.tur === "uzak_patlama")) {
+    bekleyenEfektler.push({ e, zaman: performance.now() });
+    return;
+  }
   const azimut = yonAzimut(e.yon ?? 0);
   const pan = azimutPan(azimut);
   const siddet = e.siddet ?? 1;
@@ -290,6 +303,18 @@ function bekleyenFigurleriUygula() {
   bekleyenFigurler.clear();
   for (const k of liste) figurKomutu(k);
 }
+
+// Projeksiyonda fare imleci görünmesin: 3 sn hareketsizlikte gizlenir, hareket edince döner
+let imlecZamanlayici: number | null = null;
+function imleciGoster() {
+  document.body.style.cursor = "";
+  if (imlecZamanlayici) clearTimeout(imlecZamanlayici);
+  imlecZamanlayici = window.setTimeout(() => {
+    document.body.style.cursor = "none";
+  }, 3000);
+}
+window.addEventListener("mousemove", imleciGoster);
+imleciGoster();
 
 const kopru = new KopruBaglantisi(
   (m) => {
@@ -457,6 +482,7 @@ function kare(simdi: number) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   hazirOluncaYenidenUygula();
   bekleyenFigurleriUygula();
+  bekleyenEfektleriUygula();
   if (kalibrasyon) kalibrasyonCiz(ctx, W, H, duvarlar.map((d) => d.ad));
   if (baglanti === "kopuk") uyariCiz(ctx, W, H, "Köprü sunucusu bekleniyor…", "Oynatıcı, köprüye (port 4000) bağlanınca panelden yönetilir");
   if (hud) {

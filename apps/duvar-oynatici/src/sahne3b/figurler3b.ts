@@ -223,9 +223,14 @@ export class FigurKatmani {
     return this.aktifler.map((a) => ({ id: a.id, poz: a.poz }));
   }
 
-  /** Verilen zemin noktasının `yaricap` m içinde figür var mı (yerleşimde üst üste binmeyi önler). */
+  /** Yüklenmekte olan figürlerin rezerve konumları (aynı anda çağrılan iki asker aynı mevziye düşmesin). */
+  private readonly rezerveler = new Map<string, THREE.Vector3>();
+
+  /** Verilen zemin noktasının `yaricap` m içinde figür (ya da yüklenmekte olan rezervasyon) var mı. */
   doluMu(konum: THREE.Vector3, yaricap = 2.2): boolean {
-    return this.aktifler.some((a) => a.nesne.position.distanceTo(konum) < yaricap);
+    if (this.aktifler.some((a) => a.nesne.position.distanceTo(konum) < yaricap)) return true;
+    for (const r of this.rezerveler.values()) if (r.distanceTo(konum) < yaricap) return true;
+    return false;
   }
 
   /** Ağır silahlar (tank): namlu ucu ve yönü ile. Kule yoksa yön = düşman azimutu. */
@@ -294,11 +299,17 @@ export class FigurKatmani {
   async oynat(tanim: ModelTanimi, s: FigurSecenekleri, kok: string): Promise<boolean> {
     const url = /^(https?:|data:|blob:|\/)/.test(tanim.dosya) ? tanim.dosya : kok + tanim.dosya;
     this.durdur(s.id);
+    const onMesafe = s.mesafe ?? (s.yukseklik !== undefined ? yukseklikMesafe(s.yukseklik) : (tanim.mesafe ?? 20));
+    if (!s.yaninda) this.rezerveler.set(s.id, yerKonumu(s.azimut, onMesafe));
     let gltf: GLTF;
     try {
       gltf = await this.yukle(url);
     } catch {
+      this.rezerveler.delete(s.id);
       return false;
+    } finally {
+      // Konum artık ya aktif listede ya da hiç gelmeyecek; rezervasyon yükleme bitince kalkar
+      setTimeout(() => this.rezerveler.delete(s.id), 0);
     }
     // Aynı id için bu arada yeni komut geldiyse eskisini uygulama
     if (this.aktifler.some((a) => a.id === s.id)) return false;
