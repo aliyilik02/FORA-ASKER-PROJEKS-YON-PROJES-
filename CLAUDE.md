@@ -143,7 +143,8 @@ oynatıcı sekmesi aynı GPU'yu paylaşıyor demektir; fazlasını kapat.
 1. Poly Haven panoramaları (23) için yerleşim planı + `yawKaydirma`; güneş tahmini ve gece karartması
    gözle kontrol (kırsal AI panoramada güneş 5° → çok uzun gölge çizgileri; tahmini sınırla). Oda 2 için
    3B sütre/kum torbası modelleri (2B ön plan 3B'de kapalı).
-2. HESCO modeli yok (prosedürel kutu + doku yapılabilir). Sıhhiyeci "Interact" klibiyle idare ediyor; gerçek
+2. HESCO artık prosedürel (`sutre.ts` `tip: "hesco"`, canvas doku: tel kafes + jeotekstil + kum; üs bölgesi
+   diziliminde iki hat). Sıhhiyeci "Interact" klibiyle idare ediyor; gerçek
    müdahale animasyonu (turnike) için yeşil perde çekimi (docs §2.5). Yaralı taşıma (iki kişi) yok.
 3. VFX plakaları (gerçek çekim, alfa) ve helikopter inişi için 3B toz + ses ayarı; izli mermiyi 3B'ye taşıma.
 4. 4 kanal ses; Türkçe bağırma/yaralı inleme kaydı; U duvar ölçüleri → `?fov=`.

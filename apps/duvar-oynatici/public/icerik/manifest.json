@@ -3520,35 +3520,40 @@
         "azimut": -28,
         "mesafe": 5.6,
         "boy": 1.1,
-        "yonDerece": 0
+        "yonDerece": 0,
+        "renk": "#9c8c64"
       },
       {
         "dosya": "modeller/sutre/kum_torbasi_siper_quaternius.glb",
         "azimut": 0,
         "mesafe": 5.2,
         "boy": 1.1,
-        "yonDerece": 0
+        "yonDerece": 0,
+        "renk": "#9c8c64"
       },
       {
         "dosya": "modeller/sutre/kum_torbasi_siper_quaternius.glb",
         "azimut": 28,
         "mesafe": 5.6,
         "boy": 1.1,
-        "yonDerece": 0
+        "yonDerece": 0,
+        "renk": "#9c8c64"
       },
       {
         "dosya": "modeller/sutre/kum_torbasi_siper_kucuk_quaternius.glb",
         "azimut": -50,
         "mesafe": 6.4,
         "boy": 0.9,
-        "yonDerece": 20
+        "yonDerece": 20,
+        "renk": "#9c8c64"
       },
       {
         "dosya": "modeller/sutre/kum_torbasi_siper_kucuk_quaternius.glb",
         "azimut": 50,
         "mesafe": 6.4,
         "boy": 0.9,
-        "yonDerece": -20
+        "yonDerece": -20,
+        "renk": "#9c8c64"
       },
       {
         "dosya": "modeller/sutre/jersey_bariyer_jtoastie.glb",
@@ -3593,6 +3598,21 @@
         "mesafe": 4.4,
         "boy": 0.45,
         "yonDerece": -25
+      },
+      {
+        "tip": "hesco",
+        "adet": 5,
+        "azimut": -62,
+        "mesafe": 7.5,
+        "yonDerece": 0,
+        "_not": "Prosedürel HESCO bastion hattı (sutre.ts hescoHatti); 5 hücre 1,1×1,37 m"
+      },
+      {
+        "tip": "hesco",
+        "adet": 5,
+        "azimut": 62,
+        "mesafe": 7.5,
+        "yonDerece": 0
       }
     ],
     "kaya_sutre_arkasi": [
@@ -3706,7 +3726,8 @@
         "azimut": 6,
         "mesafe": 3.8,
         "boy": 0.7,
-        "yonDerece": 20
+        "yonDerece": 20,
+        "renk": "#9c8c64"
       }
     ],
     "meskun_mahal_ici": [
@@ -3739,7 +3760,8 @@
         "azimut": -40,
         "mesafe": 4.8,
         "boy": 0.7,
-        "yonDerece": 0
+        "yonDerece": 0,
+        "renk": "#9c8c64"
       },
       {
         "dosya": "modeller/sutre/sandik_ahsap_quaternius.glb",
