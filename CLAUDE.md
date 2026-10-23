@@ -129,6 +129,14 @@ geri alınır). Manifest: `asker_yarali_3b`, `asker_diz_cokmus`, `animasyonlar.v
 gelen figürler kuyruğa alınır (yeniden açılışta kaybolmaz). Tarayıcıda doğrulandı. Test için
 `?fov=12`'den küçük değer 90'a düşer (`fov > 10` şartı); 3B kameralar `?fov=`'u izler.
 
+**Performans (23 Ekim):** gölge haritası karede bir kez (`shadowMap.autoUpdate=false`, `ciz()` başında
+`needsUpdate`), iskeletli mesh'ler tek Skeleton paylaşır (`iskeletleriPaylastir`), krater dumanı 3/sn + toplam
+320 topak sınırı. Iris Xe, 1277×239: boş sahne 60 fps; 4 figür + çatışma + 16 krater ≈ 38 fps (önce 30).
+HUD'da `çizim/duvar` sayısı var. **Ölçüm tuzağı:** Claude-in-Chrome sekmesi/penceresi arka planda kalınca
+Chrome kareyi kısar (10–16 fps görünür); gerçek fps için normal Chrome penceresinde HUD'a bak (PowerShell
+`CopyFromScreen` ile ekran yakalama işe yarar). Üst çubuktaki "Oynatıcı ×N" sayısı 1'den büyükse birden çok
+oynatıcı sekmesi aynı GPU'yu paylaşıyor demektir; fazlasını kapat.
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 1. Poly Haven panoramaları (23) için yerleşim planı + `yawKaydirma`; güneş tahmini ve gece karartması
