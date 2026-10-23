@@ -138,6 +138,14 @@ Chrome kareyi kısar (10–16 fps görünür); gerçek fps için normal Chrome p
 `CopyFromScreen` ile ekran yakalama işe yarar). Üst çubuktaki "Oynatıcı ×N" sayısı 1'den büyükse birden çok
 oynatıcı sekmesi aynı GPU'yu paylaşıyor demektir; fazlasını kapat.
 
+**23 Ekim öğleden sonra (otonom tur):** güneş yüksekliği makullük sınırı (gündüz ≥18°), gece panoramasında
+ay ışığı sınırı (zayıf/mavimsi), pusulada yaralı/diz çökmüş/yatmış işaretleri, örnek senaryolar
+"Ateş Altında Yaralıya Müdahale (TCCC)" ve "Gösterim – Kırsal Tam Tur (4 dk)" (depo: mevcut kuruluma eksik
+örnekler otomatik eklenir; değişen örnekler için `apps/kopru/veri/senaryolar.json` elle yenilenir), kalite
+kademesi (oynatıcı `?kalite=`, panel Sistem > Oynatıcı ayarları), prosedürel HESCO, sıhhiyeci + `yaninda`,
+prone duruşu, editörde "Yanına yerleş", açılışta durumun yeniden uygulanması (sütre/helikopter kaybolmuyordu).
+Köprüyü yeniden başlatma: port 4000'i dinleyen süreci durdur, `Start-Process cmd /k npm start`.
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 1. Poly Haven panoramaları (23) için yerleşim planı + `yawKaydirma`; güneş tahmini ve gece karartması
