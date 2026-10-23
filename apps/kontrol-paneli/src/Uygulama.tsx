@@ -10,6 +10,7 @@ import { IsikPaneli } from "./bilesenler/IsikPaneli";
 import { Oda2Paneli } from "./bilesenler/Oda2Paneli";
 import { OnAyarPaneli } from "./bilesenler/OnAyarPaneli";
 import { OrnekPaneli } from "./bilesenler/OrnekPaneli";
+import { OynaticiAyarlari } from "./bilesenler/OynaticiAyarlari";
 import { BolgePaneli, OrtamPaneli } from "./bilesenler/OrtamPaneli";
 import { SenaryoPaneli } from "./bilesenler/SenaryoPaneli";
 import { UnrealKomutlariPaneli } from "./bilesenler/UnrealKomutlariPaneli";
@@ -114,6 +115,7 @@ function Govde() {
             )}
             {sekme === "sistem" && (
               <>
+                <OynaticiAyarlari baglanti={baglanti} />
                 <OrnekPaneli ornek={ornek} calistir={calistir} />
                 <UnrealKomutlariPaneli istekler={unrealIstekler} baglanti={baglanti} />
                 <GunlukPaneli gunluk={gunluk} durum={durum} />

@@ -1,5 +1,6 @@
 /** Üst çubuk: marka, oda seçimi, görev saati (simülasyon saati), bağlantı lambaları, oynatıcı penceresi. */
 import { api } from "../api";
+import { useArayuz } from "../arayuz";
 import type { BaglantiDurumu, Oda, SimulasyonDurumu } from "../tipler";
 import { Ikon, Led, saatBicimi } from "./ortak";
 
@@ -18,6 +19,7 @@ export function UstCubuk({
   onOda: (oda: Oda) => void;
   calistir: Calistir;
 }) {
+  const { oynaticiKalite } = useArayuz();
   const ue = baglanti?.unreal;
   const oynatici = baglanti?.oynatici;
   const saat = durum.ortam.saat;
@@ -56,9 +58,13 @@ export function UstCubuk({
       <div className="lambalar">
         <Led durum={soketAcik ? "iyi" : "bekliyor"} etiket="Köprü" title="Köprü sunucusu (WebSocket)" />
         <Led
-          durum={oynatici?.bagli ? "iyi" : "kotu"}
+          durum={!oynatici?.bagli ? "kotu" : oynatici.sayi > 1 ? "bekliyor" : "iyi"}
           etiket={oynatici?.bagli ? `Oynatıcı ×${oynatici.sayi}` : "Oynatıcı"}
-          title="Duvar Oynatıcı: görüntüyü üreten tarayıcı (3 duvar)"
+          title={
+            oynatici && oynatici.sayi > 1
+              ? `${oynatici.sayi} oynatıcı sekmesi bağlı: hepsi aynı ekran kartında sahneyi çizer ve birbirini yavaşlatır. Fazla sekmeleri kapat.`
+              : "Duvar Oynatıcı: görüntüyü üreten tarayıcı (3 duvar)"
+          }
         />
         <Led
           durum={ue?.mod === "simulasyon" ? "pasif" : ue?.bagli ? "iyi" : "kotu"}
@@ -69,7 +75,7 @@ export function UstCubuk({
         <button type="button" className="ikincil kucuk ikonlu" onClick={() => void calistir(() => api.yenidenSenkron())} title="Durumu oynatıcı ve Unreal'a yeniden gönder">
           <Ikon.yenile /> Senkron
         </button>
-        <a className="dugme ikincil kucuk ikonlu" href="/oynatici/?hud=1" target="_blank" rel="noreferrer" title="Oynatıcıyı yeni pencerede aç">
+        <a className="dugme ikincil kucuk ikonlu" href={`/oynatici/?hud=1&kalite=${oynaticiKalite}`} target="_blank" rel="noreferrer" title={`Oynatıcıyı yeni pencerede aç (kalite: ${oynaticiKalite})`}>
           <Ikon.pencere /> Oynatıcı
         </a>
       </div>

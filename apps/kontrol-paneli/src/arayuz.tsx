@@ -8,6 +8,9 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 
 export type Sekme = "sahne" | "efektler" | "figurler" | "senaryo" | "sistem";
+/** Oynatıcı kalite kademesi; "Oynatıcı" düğmesi bu değerle (`?kalite=`) açar. */
+export type OynaticiKalite = "dusuk" | "orta" | "yuksek";
+export const KALITE_ETIKETLERI: Record<OynaticiKalite, string> = { dusuk: "Düşük (dizüstü / entegre ekran kartı)", orta: "Orta", yuksek: "Yüksek (saha makinesi, RTX)" };
 
 export interface Bildirim {
   id: number;
@@ -24,11 +27,14 @@ interface ArayuzDegerleri {
   bildirimler: Bildirim[];
   bildir: (b: Omit<Bildirim, "id">) => void;
   bildirimKapat: (id: number) => void;
+  oynaticiKalite: OynaticiKalite;
+  setOynaticiKalite: (k: OynaticiKalite) => void;
 }
 
 const Baglam = createContext<ArayuzDegerleri | null>(null);
 
 const SEKME_ANAHTARI = "duvar.panel.sekme";
+const KALITE_ANAHTARI = "duvar.panel.kalite";
 
 export function ArayuzSaglayici({ children }: { children: ReactNode }) {
   const [seciliYon, setSeciliYonHam] = useState(0);
@@ -41,6 +47,22 @@ export function ArayuzSaglayici({ children }: { children: ReactNode }) {
     }
   });
   const [bildirimler, setBildirimler] = useState<Bildirim[]>([]);
+  const [oynaticiKalite, setKaliteHam] = useState<OynaticiKalite>(() => {
+    try {
+      const k = localStorage.getItem(KALITE_ANAHTARI) as OynaticiKalite | null;
+      return k && ["dusuk", "orta", "yuksek"].includes(k) ? k : "yuksek";
+    } catch {
+      return "yuksek";
+    }
+  });
+  const setOynaticiKalite = useCallback((k: OynaticiKalite) => {
+    setKaliteHam(k);
+    try {
+      localStorage.setItem(KALITE_ANAHTARI, k);
+    } catch {
+      /* özel pencere */
+    }
+  }, []);
   const sayac = useRef(0);
 
   const setSeciliYon = useCallback((yon: number) => setSeciliYonHam(((Math.round(yon) % 360) + 360) % 360), []);
@@ -63,8 +85,8 @@ export function ArayuzSaglayici({ children }: { children: ReactNode }) {
   );
 
   const deger = useMemo(
-    () => ({ seciliYon, setSeciliYon, sekme, setSekme, bildirimler, bildir, bildirimKapat }),
-    [seciliYon, setSeciliYon, sekme, setSekme, bildirimler, bildir, bildirimKapat],
+    () => ({ seciliYon, setSeciliYon, sekme, setSekme, bildirimler, bildir, bildirimKapat, oynaticiKalite, setOynaticiKalite }),
+    [seciliYon, setSeciliYon, sekme, setSekme, bildirimler, bildir, bildirimKapat, oynaticiKalite, setOynaticiKalite],
   );
   return <Baglam.Provider value={deger}>{children}</Baglam.Provider>;
 }

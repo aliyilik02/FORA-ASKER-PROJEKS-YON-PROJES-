@@ -403,6 +403,9 @@ input[type="color"] {
   background: var(--izli-sis);
   color: #ffb39a;
 }
+.uyari-metin {
+  color: var(--uyari);
+}
 .rozet.uyari {
   background: rgba(232, 197, 74, 0.14);
   color: var(--uyari);
