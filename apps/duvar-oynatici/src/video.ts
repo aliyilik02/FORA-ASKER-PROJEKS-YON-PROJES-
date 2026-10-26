@@ -26,8 +26,14 @@ export interface PanoramaKaydiManifest {
   yawKaydirma?: number;
   yukseklikKaydirma?: number;
   /** Panoramaya özel yerleşim noktaları ve yasak açı aralıkları (sahne3b/yerlesim.ts). */
-  noktalar?: Array<{ ad?: string; azimut: number; mesafe: number; tur?: Array<"patlama" | "figur" | "helikopter" | "toz"> }>;
+  noktalar?: Array<{ ad?: string; azimut: number; mesafe: number; tur?: Array<"patlama" | "figur" | "asker" | "tank" | "helikopter" | "toz"> }>;
   yasak?: Array<{ ad?: string; baslangic: number; bitis: number }>;
+  /**
+   * Işık kaynağı (güneş / ay), panorama koordinatında: azimut ve ufka göre yükseklik (derece), güç 0–1
+   * (1 keskin güneş, 0,2 kapalı gök). Verilirse panoramadan otomatik tahmin yerine bu kullanılır;
+   * `araclar/plan-onizleme.py` yeşil halka olarak gösterir.
+   */
+  gunes?: { azimut: number; yukseklik: number; guc?: number; aciklama?: string };
   _ornek?: boolean;
 }
 

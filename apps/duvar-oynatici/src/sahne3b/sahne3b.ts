@@ -41,6 +41,13 @@ export interface PanoramaKaynagi {
   zaman?: "gunduz" | "alacakaranlik" | "gece";
   /** Panoramaya özel yerleşim noktaları ve yasak aralıklar. */
   plan?: YerlesimPlani;
+  /** Manifestte elle belirlenmiş ışık kaynağı (panorama koordinatı); varsa otomatik tahmin yapılmaz. */
+  gunes?: { azimut: number; yukseklik: number; guc?: number };
+}
+
+/** Manifestteki elle girilmiş güneş/ay → tahmin biçimi (yükseklik doğrulanmış sayılır). */
+function elleGunes(g: { azimut: number; yukseklik: number; guc?: number }): GunesTahmini {
+  return { azimut: g.azimut, yukseklik: Math.max(0, Math.min(89, g.yukseklik)), guc: Math.max(0, Math.min(1, g.guc ?? 0.9)), yukseklikGuvenilir: true };
 }
 
 /**
@@ -70,6 +77,8 @@ export class Sahne3B {
   private yuklenen = "";
   private kaynak: PanoramaKaynagi | null = null;
   private gunesTahmini: GunesTahmini | null = null;
+  /** true: güneş manifestten (elle), false: panoramadan otomatik tahmin. */
+  private gunesElle = false;
   private saat = 12;
   private isik = 1;
   private readonly parcaciklar: ParcacikSistemi;
@@ -179,7 +188,7 @@ export class Sahne3B {
   get gunesBilgisi(): string {
     if (!this.gunesTahmini) return "güneş: saatten";
     const g = this.gunesTahmini;
-    return `güneş: panoramadan az ${g.azimut.toFixed(0)}° yük ${g.yukseklikGuvenilir ? `${g.yukseklik.toFixed(0)}°` : "saatten"} güç ${g.guc.toFixed(2)}`;
+    return `güneş: ${this.gunesElle ? "manifest" : "panoramadan"} az ${g.azimut.toFixed(0)}° yük ${g.yukseklikGuvenilir ? `${g.yukseklik.toFixed(0)}°` : "saatten"} güç ${g.guc.toFixed(2)}`;
   }
 
   /**
@@ -259,11 +268,18 @@ export class Sahne3B {
       return;
     }
     const yawDegisti = this.kaynak && (this.kaynak.yawKaydirma !== kaynak.yawKaydirma || this.kaynak.yukseklikKaydirma !== kaynak.yukseklikKaydirma);
+    const gunesDegisti = JSON.stringify(this.kaynak?.gunes ?? null) !== JSON.stringify(kaynak.gunes ?? null);
     this.kaynak = kaynak;
-    const inis = noktaSec(kaynak.plan, 12, "helikopter", 38, 180);
+    // Varsayılan iniş: panelin varsayılan yönüne (sahne +12°) en yakın iniş noktası (sahne koordinatına çevrilir)
+    const inis = this.noktaSec(12, "helikopter", 38, 180);
     this.heli.inisNoktasi(inis.azimut, inis.mesafe);
     if (kaynak.url === this.yuklenen) {
       if (yawDegisti) this.yonelimUygula();
+      if (gunesDegisti && this.arkaPlan) {
+        this.gunesElle = Boolean(kaynak.gunes);
+        this.gunesTahmini = kaynak.gunes ? elleGunes(kaynak.gunes) : this.gunesiTahminEt(this.arkaPlan.image as HTMLImageElement);
+        this.isikGuncelle();
+      }
       return;
     }
     this.kapat();
@@ -284,7 +300,9 @@ export class Sahne3B {
         this.sahne.background = doku;
         this.ortamDokusu = this.pmrem.fromEquirectangular(doku).texture;
         this.sahne.environment = this.ortamDokusu;
-        this.gunesTahmini = this.gunesiTahminEt(doku.image as HTMLImageElement);
+        // Elle doğrulanmış güneş (manifest) varsa o; yoksa panoramanın en parlak diskinden tahmin
+        this.gunesElle = Boolean(kaynak.gunes);
+        this.gunesTahmini = kaynak.gunes ? elleGunes(kaynak.gunes) : this.gunesiTahminEt(doku.image as HTMLImageElement);
         this.yonelimUygula();
         this.isikGuncelle();
         this.hazir = true;
@@ -360,6 +378,7 @@ export class Sahne3B {
     this.yuklenen = "";
     this.kaynak = null;
     this.gunesTahmini = null;
+    this.gunesElle = false;
     this.hazir = false;
   }
 
@@ -477,7 +496,8 @@ export class Sahne3B {
       if (!this.gunesTahmini.yukseklikGuvenilir) guc *= 0.7;
       // Makullük sınırı: parlak ufuk pusu / yapay zekâ panoramasında güneş diski 5° gibi çıkabiliyor; o zaman
       // gölgeler boyun 10 katı çizgiler oluyor. Gündüz panoramasında en az 18°, alacakaranlıkta 6°, gecede 15°.
-      const enAz = z === "gece" ? 15 : z === "alacakaranlik" ? 6 : 18;
+      // Manifestte elle doğrulanmış güneş (kış öğleden sonrası 12° gibi) aynen kullanılır; yalnız 4° taban.
+      const enAz = this.gunesElle ? 4 : z === "gece" ? 15 : z === "alacakaranlik" ? 6 : 18;
       if (yukseklik < enAz) yukseklik = enAz;
     } else {
       const g = gunesKonumu(this.saat);
@@ -596,10 +616,13 @@ export class Sahne3B {
   helikopterYukle(url: string, boy?: number, rotor?: string[], renk?: string) {
     this.heli.yukle(url, boy, rotor, renk);
   }
-  /** `yon`: panelden iniş yönü (sahne azimutu, derece); planın iniş noktasına 70° içinde yapışır. */
+  /**
+   * `yon`: panelden iniş yönü (sahne azimutu, derece). Planda iniş noktası varsa yöne en yakın olana iner
+   * (helikopter açık alana inmeli; ağaçlık/binalı yöne serbest iniş yapılmaz); plan yoksa yön + 38 m.
+   */
   helikopterAyarla(d: HelikopterDurumu, yon?: number) {
     if (yon !== undefined) {
-      const secim = this.noktaSec(yon, "helikopter", 38, 70);
+      const secim = this.noktaSec(yon, "helikopter", 38, 180);
       this.heli.inisNoktasi(secim.azimut, secim.mesafe);
     }
     this.heli.durumAyarla(d);

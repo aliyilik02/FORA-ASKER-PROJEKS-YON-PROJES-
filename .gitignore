@@ -21,3 +21,7 @@ apps/duvar-oynatici/public/icerik/**/*.webp
 # 3B arazi içeriği (Poly Haven, ~150 MB): araclar/arazi-indir.mjs ile indirilir
 apps/duvar-oynatici/public/icerik/arazi/**
 !apps/duvar-oynatici/public/icerik/arazi/LISANS.txt
+
+# Araç çıktıları
+__pycache__/
+.plan-onizleme/

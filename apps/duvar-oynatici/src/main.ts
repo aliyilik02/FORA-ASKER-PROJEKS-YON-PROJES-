@@ -101,7 +101,7 @@ function videoMu(dosya: string, tip?: string) {
 
 function panoramayiGuncelle() {
   const kayit = testPanorama
-    ? { dosya: testPanorama, tip: undefined, yawKaydirma: testYaw, yukseklikKaydirma: 0, zaman: undefined, noktalar: undefined, yasak: undefined }
+    ? { dosya: testPanorama, tip: undefined, yawKaydirma: testYaw, yukseklikKaydirma: 0, zaman: undefined, noktalar: undefined, yasak: undefined, gunes: undefined }
     : panoramaSec(video.manifest, durum.bolge, durum.ortam.mevsim, zamanDilimi(durum.ortam.saat));
   if (!kayit) {
     panorama.sec(null, video.kok);
@@ -118,6 +118,7 @@ function panoramayiGuncelle() {
       yukseklikKaydirma: kayit.yukseklikKaydirma ?? 0,
       zaman: kayit.zaman,
       plan: { noktalar: kayit.noktalar, yasak: kayit.yasak },
+      gunes: kayit.gunes,
     });
     return;
   }
