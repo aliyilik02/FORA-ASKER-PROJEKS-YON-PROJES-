@@ -256,6 +256,15 @@ export class AraziKatmani {
   durum = "kapalı";
   /** Kaya/çalı yerleşiminde boş bırakılacak noktalar (mevzi, patlama, iniş). */
   temizNoktalar: THREE.Vector3[] = [];
+  /**
+   * Görüş koridorları: yerleşim planı noktalarına (asker, tank, iniş...) izleyiciden bakış hattı. Arazi bu hatta göz →
+   * ayak çizgisinin altına indirilir, noktanın çevresi düzlenir: plan noktasındaki asker tümsek arkasında kaybolmaz ve
+   * panoramanın düz zemin varsayımıyla aynı yüksekliğe basar. `yaricap`: düz alan yarıçapı (iniş alanı geniş).
+   */
+  private koridorlar: Array<{ x: number; z: number; d: number; yaricap: number }> = [];
+  private koridorImzasi = "";
+  /** Uygulanmış kraterler: yükseklikler yeniden hesaplanınca (koridor değişimi) çukurlar korunur. */
+  private kraterler: Array<{ x: number; z: number; r: number; s: number }> = [];
   /** Uyarı kanalı (doku/model bulunamadı); sahne3b köprü günlüğüne iletir. */
   uyari: ((mesaj: string) => void) | null = null;
 
@@ -303,7 +312,95 @@ export class AraziKatmani {
     h *= smooth(9, 26, r);
     // Hibrit: kenara doğru çanak — panoramadaki yakın ağaç/bina temelleri arazinin altında kalmasın
     if (this.mod === "hibrit" && p.kenarCukuru > 0) h -= p.kenarCukuru * smooth(p.yaricap * 0.45, p.yaricap * 0.98, r);
+    return this.koridorUygula(h, x, z);
+  }
+
+  /** Plan noktalarına görüş koridoru ve nokta çevresinde düz alan (bkz. `koridorlar`). Yalnız alçaltır/düzler. */
+  private koridorUygula(h: number, x: number, z: number): number {
+    for (const k of this.koridorlar) {
+      // Nokta çevresi: düz zemin (panorama düz zemin varsayımı; asker, krater, tank, iniş aynı seviyede)
+      const dn = Math.hypot(x - k.x, z - k.z);
+      if (dn < k.yaricap) h *= smooth(k.yaricap * 0.55, k.yaricap, dn);
+      // Hat boyunca: göz (zeminden 1,7 m) → ayak çizgisinin 0,25 m altı; tümsekler kesilir, çukurlar kalır
+      const t = (x * k.x + z * k.z) / k.d;
+      if (t <= 0 || t >= k.d) continue;
+      const yan = Math.abs(x * k.z - z * k.x) / k.d;
+      const genislik = 1.4 + 0.07 * t;
+      if (yan >= genislik * 1.7) continue;
+      const tavan = 1.7 * (1 - t / k.d) - 0.25;
+      if (h > tavan) h -= (h - tavan) * (1 - smooth(genislik, genislik * 1.7, yan));
+    }
     return h;
+  }
+
+  /** (x, z) görüş koridorunun çekirdeğinde mi (kaya/çalı/fidan konmaz, askerin önünü kapatmasın). */
+  private koridorda(x: number, z: number, pay = 0): boolean {
+    for (const k of this.koridorlar) {
+      if (Math.hypot(x - k.x, z - k.z) < k.yaricap * 0.8 + pay) return true;
+      const t = (x * k.x + z * k.z) / k.d;
+      if (t <= 2 || t >= k.d) continue;
+      if (Math.abs(x * k.z - z * k.x) / k.d < 1.4 + 0.07 * t + pay) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Yerleşim planı noktalarından görüş koridorlarını ayarlar (panorama değişince). Arazi kuruluysa yükseklikler yerinde
+   * yeniden hesaplanır (kraterler yeniden uygulanır, dokular yeniden yüklenmez); çimen ve bitkiler yeni zemine oturur,
+   * koridora düşen kaya/çalı gizlenir. Değişiklik varsa true döner (çağıran figür/sütreyi zemine oturtur).
+   */
+  koridorlariAyarla(noktalar: Array<{ x: number; z: number; yaricap: number }>, yerinde = true): boolean {
+    const imza = noktalar.map((n) => `${n.x.toFixed(1)},${n.z.toFixed(1)},${n.yaricap}`).join(";");
+    if (imza === this.koridorImzasi) return false;
+    this.koridorImzasi = imza;
+    this.koridorlar = noktalar.map((n) => ({ ...n, d: Math.max(1, Math.hypot(n.x, n.z)) })).filter((n) => n.d > 3);
+    this.temizNoktalar = noktalar.map((n) => new THREE.Vector3(n.x, 0, n.z));
+    if (!yerinde || !this.yakin || !this.yukseklikler) return false;
+    const n = this.n;
+    const yarim = YAKIN_BOYUT / 2;
+    const eski = this.yukseklikler.slice();
+    const h = this.yukseklikler;
+    for (let iz = 0; iz < n; iz++) for (let ix = 0; ix < n; ix++) h[iz * n + ix] = this.analitik(ix * YAKIN_ADIM - yarim, iz * YAKIN_ADIM - yarim);
+    for (const k of this.kraterler) this.kraterYuksekligi(k.x, k.z, k.r, k.s);
+    const pos = this.yakin.geometry.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) pos.setY(i, h[i]);
+    pos.needsUpdate = true;
+    this.yakin.geometry.computeVertexNormals();
+    // Çimen ve bitkiler: yükseklik farkı kadar kayar; koridor çekirdeğindeki kaya/çalı gizlenir (çimen kalır)
+    const fark = (x: number, z: number) => this.izgaraYuksekligi(h, x, z) - this.izgaraYuksekligi(eski, x, z);
+    const m = new THREE.Matrix4();
+    const p = new THREE.Vector3();
+    const q = new THREE.Quaternion();
+    const s = new THREE.Vector3();
+    for (const c of this.bitkiGrubu.children) {
+      const inst = c as THREE.InstancedMesh;
+      if (!inst.isInstancedMesh) continue;
+      const cimenMi = inst === this.cimen;
+      for (let i = 0; i < inst.count; i++) {
+        inst.getMatrixAt(i, m);
+        m.decompose(p, q, s);
+        if (s.x === 0) continue;
+        p.y += fark(p.x, p.z);
+        if (!cimenMi && this.koridorda(p.x, p.z, 0.6)) s.set(0, 0, 0);
+        m.compose(p, q, s);
+        inst.setMatrixAt(i, m);
+      }
+      inst.instanceMatrix.needsUpdate = true;
+    }
+    return true;
+  }
+
+  /** Izgaradan çift doğrusal yükseklik (verilen dizi; yeni/eski karşılaştırma için). */
+  private izgaraYuksekligi(h: Float32Array, x: number, z: number): number {
+    const yarim = YAKIN_BOYUT / 2;
+    const fx = Math.min(this.n - 1.001, Math.max(0, (x + yarim) / YAKIN_ADIM));
+    const fz = Math.min(this.n - 1.001, Math.max(0, (z + yarim) / YAKIN_ADIM));
+    const ix = Math.floor(fx);
+    const iz = Math.floor(fz);
+    const tx = fx - ix;
+    const tz = fz - iz;
+    const n = this.n;
+    return (h[iz * n + ix] * (1 - tx) + h[iz * n + ix + 1] * tx) * (1 - tz) + (h[(iz + 1) * n + ix] * (1 - tx) + h[(iz + 1) * n + ix + 1] * tx) * tz;
   }
 
   /** Arazi yüksekliği (m, zemin düzlemine göre); krater deformasyonu dâhil. */
@@ -443,6 +540,7 @@ export class AraziKatmani {
     this.splatTuval = null;
     this.splatDoku = null;
     this.yukseklikler = null;
+    this.kraterler = [];
     this.uniformlar = {};
     this.mod = "kapali";
     this.durum = "kapalı";
@@ -705,41 +803,52 @@ void araziAgirliklari(vec3 geoNormal) {
   }
 
   // ------------------------------------------------------------------ krater
+  /** Krater çukurunu (kenarı hafif kabarık) yükseklik dizisine ekler; değişen ızgara penceresini döner. */
+  private kraterYuksekligi(kx: number, kz: number, r: number, siddet: number): [number, number, number, number] | null {
+    if (!this.yukseklikler) return null;
+    const n = this.n;
+    const h = this.yukseklikler;
+    const yarim = YAKIN_BOYUT / 2;
+    const derinlik = 0.32 * r * (0.5 + siddet * 0.5);
+    const ix0 = Math.max(0, Math.floor((kx - r * 1.5 + yarim) / YAKIN_ADIM));
+    const ix1 = Math.min(n - 1, Math.ceil((kx + r * 1.5 + yarim) / YAKIN_ADIM));
+    const iz0 = Math.max(0, Math.floor((kz - r * 1.5 + yarim) / YAKIN_ADIM));
+    const iz1 = Math.min(n - 1, Math.ceil((kz + r * 1.5 + yarim) / YAKIN_ADIM));
+    if (ix1 < ix0 || iz1 < iz0) return null;
+    for (let iz = iz0; iz <= iz1; iz++) {
+      for (let ix = ix0; ix <= ix1; ix++) {
+        const x = ix * YAKIN_ADIM - yarim;
+        const z = iz * YAKIN_ADIM - yarim;
+        const d = Math.hypot(x - kx, z - kz) / r;
+        let dh = 0;
+        if (d < 1) dh = -derinlik * Math.pow(1 - d * d, 2);
+        dh += Math.exp(-Math.pow((d - 1.06) / 0.16, 2)) * derinlik * 0.28;
+        if (Math.abs(dh) >= 1e-3) h[iz * n + ix] += dh;
+      }
+    }
+    return [ix0, ix1, iz0, iz1];
+  }
+
   /** Araziyi çukurlaştırır (kenar hafif yükselir), yanık doku boyar, çimeni temizler. `konum` dünya koordinatı. */
   krater(konum: THREE.Vector3, yaricap: number, siddet: number) {
     if (!this.aktif || !this.yakin || !this.yukseklikler) return;
     const n = this.n;
     const h = this.yukseklikler;
-    const yarim = YAKIN_BOYUT / 2;
     const r = Math.max(1.2, yaricap);
-    const derinlik = 0.32 * r * (0.5 + siddet * 0.5);
-    const ix0 = Math.max(0, Math.floor((konum.x - r * 1.5 + yarim) / YAKIN_ADIM));
-    const ix1 = Math.min(n - 1, Math.ceil((konum.x + r * 1.5 + yarim) / YAKIN_ADIM));
-    const iz0 = Math.max(0, Math.floor((konum.z - r * 1.5 + yarim) / YAKIN_ADIM));
-    const iz1 = Math.min(n - 1, Math.ceil((konum.z + r * 1.5 + yarim) / YAKIN_ADIM));
-    if (ix1 < ix0 || iz1 < iz0) return;
+    this.kraterler.push({ x: konum.x, z: konum.z, r, s: siddet });
+    const pencere = this.kraterYuksekligi(konum.x, konum.z, r, siddet);
+    if (!pencere) return;
+    const [ix0, ix1, iz0, iz1] = pencere;
     const pos = this.yakin.geometry.attributes.position as THREE.BufferAttribute;
-    for (let iz = iz0; iz <= iz1; iz++) {
-      for (let ix = ix0; ix <= ix1; ix++) {
-        const x = ix * YAKIN_ADIM - yarim;
-        const z = iz * YAKIN_ADIM - yarim;
-        const d = Math.hypot(x - konum.x, z - konum.z) / r;
-        let dh = 0;
-        if (d < 1) dh = -derinlik * Math.pow(1 - d * d, 2);
-        const kenar = Math.exp(-Math.pow((d - 1.06) / 0.16, 2)) * derinlik * 0.28;
-        dh += kenar;
-        if (Math.abs(dh) < 1e-3) continue;
-        const i = iz * n + ix;
-        h[i] += dh;
-        pos.setY(i, h[i]); // ızgara (ix, iz) ↔ köşe indeksi iz·n + ix (PlaneGeometry satır = z)
-      }
-    }
+    // ızgara (ix, iz) ↔ köşe indeksi iz·n + ix (PlaneGeometry satır = z)
+    for (let iz = iz0; iz <= iz1; iz++) for (let ix = ix0; ix <= ix1; ix++) pos.setY(iz * n + ix, h[iz * n + ix]);
     pos.needsUpdate = true;
     this.yakin.geometry.computeVertexNormals();
     // Yanık boyası (G)
     if (this.splatTuval && this.splatDoku) {
       const ctx = this.splatTuval.getContext("2d")!;
       const olcek = SPLAT_BOYUT / YAKIN_BOYUT;
+      const yarim = YAKIN_BOYUT / 2;
       const px = (konum.x + yarim) * olcek;
       const py = (konum.z + yarim) * olcek;
       const g = ctx.createRadialGradient(px, py, 0, px, py, r * 1.5 * olcek);
@@ -917,6 +1026,7 @@ void araziAgirliklari(vec3 geoNormal) {
         const egim = this.egim(x, z);
         if (Math.random() > 0.25 + egim * b.egimTercihi * 3) continue;
         if (this.temizNoktalar.some((t) => Math.hypot(t.x - x, t.z - z) < 4 + boyut.x * 0.5)) continue;
+        if (this.koridorda(x, z, boyut.x * 0.5 * b.olcek[1])) continue; // görüş koridoru: askerin önünü kapatmasın
         if (b.dereYok && this.yukseklik(x, z) < -1.2) continue; // dere yatağına büyük kaya değil
         const olcek = b.olcek[0] + Math.random() * (b.olcek[1] - b.olcek[0]);
         const y = ZEMIN_Y + this.yukseklik(x, z) - taban * olcek - boyut.y * olcek * b.gomme;

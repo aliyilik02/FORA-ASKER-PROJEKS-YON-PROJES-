@@ -418,8 +418,8 @@ export class Sahne3B {
     if (this.araziBolge !== anahtar) {
       this.araziBolge = anahtar;
       const profil = ARAZI_PROFILLERI[bolge] ?? ARAZI_PROFILLERI.kirsal_acik_arazi;
-      const k = this.kaynak?.yawKaydirma ?? 0;
-      this.arazi.temizNoktalar = (this.kaynak?.plan?.noktalar ?? []).map((n) => yerKonumu(panoramadanSahneAzimutu(n.azimut, k), n.mesafe));
+      // Görüş koridorları kurulumda hesaplanır (yerinde güncelleme gereksiz: arazi zaten yeniden kuruluyor)
+      this.arazi.koridorlariAyarla(this.planKoridorlari(), false);
       this.arazi.uyari = (m) => this.uyari?.(m);
       this.arazi.kur(mod, profil, ARAZI_KALITE[this.kalite], kok, kar);
       zeminFonksiyonu(this.arazi.aktif ? (x, z) => this.arazi.yukseklik(x, z) : null);
@@ -434,8 +434,21 @@ export class Sahne3B {
         if (this.arkaPlan) this.sahne.background = this.arkaPlan;
       }
       this.isikGuncelle();
+    } else if (this.arazi.koridorlariAyarla(this.planKoridorlari())) {
+      // Aynı bölgede panorama değişti (saat/mevsim → başka plan): koridorlar yerinde güncellendi, nesneler zemine
+      this.figurler.zemineOturt();
+      this.sutre.zemineOturt();
     }
     this.arazi.karAyarla(kar);
+  }
+
+  /** Yerleşim planı noktaları (sahne koordinatı) + düz alan yarıçapı: iniş alanı 9 m, tank 5 m, diğerleri 3,5 m. */
+  private planKoridorlari(): Array<{ x: number; z: number; yaricap: number }> {
+    const k = this.kaynak?.yawKaydirma ?? 0;
+    return (this.kaynak?.plan?.noktalar ?? []).map((n) => {
+      const p = azimutYon(panoramadanSahneAzimutu(n.azimut, k)).multiplyScalar(n.mesafe);
+      return { x: p.x, z: p.z, yaricap: n.tur?.includes("helikopter") ? 9 : n.tur?.includes("tank") ? 5 : 3.5 };
+    });
   }
   get araziModu(): AraziModu {
     return this.arazi.mod;
