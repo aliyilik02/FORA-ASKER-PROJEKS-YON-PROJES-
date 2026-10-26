@@ -130,6 +130,17 @@ export class SutreKatmani {
     for (const c of this.grup.children) c.position.y = zeminY(c.position.x, c.position.z);
   }
 
+  private readonly kutu = new THREE.Box3();
+  /** (x, z) bir sütre eşyasının taban izine `pay` metreden yakın mı (asker kayanın/HESCO'nun içine konmasın). */
+  doluMu(konum: THREE.Vector3, pay = 0.6): boolean {
+    for (const c of this.grup.children) {
+      this.kutu.setFromObject(c);
+      if (this.kutu.isEmpty()) continue;
+      if (konum.x > this.kutu.min.x - pay && konum.x < this.kutu.max.x + pay && konum.z > this.kutu.min.z - pay && konum.z < this.kutu.max.z + pay) return true;
+    }
+    return false;
+  }
+
   /** Dizilimi değiştirir; aynı tip zaten açıksa dokunmaz. */
   ayarla(tip: string | null, esyalar: SutreEsyasi[] | undefined, kok: string) {
     if (tip === this.aktifTip) return;

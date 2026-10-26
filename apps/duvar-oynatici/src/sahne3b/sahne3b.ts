@@ -23,7 +23,7 @@ import { SutreKatmani, type SutreEsyasi } from "./sutre";
 import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, type AraziModu } from "./arazi";
 import { Gokyuzu } from "./gokyuzu";
 import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu, zeminY } from "./uzay";
-import { birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
+import { aciNormalize, birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
 /** Kalite kademeleri: dizüstü/entegre GPU'da "dusuk", sahadaki RTX sınıfı makinede "yuksek". */
@@ -32,6 +32,14 @@ export const KALITE_AYARLARI: Record<Kalite, { golgeHaritasi: number; kenarYumus
   orta: { golgeHaritasi: 1536, kenarYumusatma: true, parcacikCarpani: 0.75 },
   yuksek: { golgeHaritasi: 2048, kenarYumusatma: true, parcacikCarpani: 1 },
 };
+
+/**
+ * Askerlerin izleyiciye uzaklığı (m). Eğitimde asker duvarda net ve iri okunmalı (kullanıcı isteği: "çok yakın"):
+ * 7 m'de 1,8 m'lik asker 1080p duvarda ~265 px (duvar yüksekliğinin dörtte biri), 4 m'de ~440 px; 20 m'de yalnız ~95 px.
+ * Plan noktası daha uzaksa yönü korunur, mesafe kısalır. Tank ve helikopter plandaki mesafede kalır.
+ */
+export const ASKER_EN_UZAK = 7;
+export const ASKER_EN_YAKIN = 4;
 
 export interface PanoramaKaynagi {
   url: string;
@@ -127,6 +135,7 @@ export class Sahne3B {
       topAtisi: (pan) => this.catismaSesleri.topAtisi?.(pan),
     });
     this.catisma.dostlar = () => this.figurler.silahliKonumlar();
+    this.figurler.engel = (p) => this.sutre.doluMu(p, 0.3);
     this.catisma.agirSilahlar = () => this.figurler.agirSilahlar();
     if (!r) return;
     this.renderer = r;
@@ -542,6 +551,28 @@ export class Sahne3B {
     }
   }
 
+  /**
+   * Patlama yeri: yöne en yakın plan noktası; çevresinde (4,5 m) asker/tank varsa yöne 40° içindeki boş bir patlama
+   * noktası, o da yoksa aynı yönde dışarı (6 m adımlarla), en son plandaki herhangi bir boş nokta. Askerin üstüne düşmez.
+   */
+  private patlamaYeri(azimut: number, varsayilanMesafe: number): { azimut: number; mesafe: number } {
+    const k = this.kaynak?.yawKaydirma ?? 0;
+    const titret = (m: number, nokta: boolean) => m * (nokta ? 0.92 + Math.random() * 0.16 : 0.85 + Math.random() * 0.3);
+    const bos = (az: number, m: number) => !this.figurler.doluMu(yerKonumu(az, m), 4.5);
+    const ilk = this.noktaSec(azimut, "patlama", varsayilanMesafe, 180);
+    const m0 = titret(ilk.mesafe, Boolean(ilk.nokta));
+    if (bos(ilk.azimut, m0)) return { azimut: ilk.azimut, mesafe: m0 };
+    const istenen = azimut + k;
+    const adaylar = (this.kaynak?.plan?.noktalar ?? [])
+      .filter((n) => !n.tur || n.tur.includes("patlama"))
+      .map((n) => ({ az: panoramadanSahneAzimutu(n.azimut, k), m: titret(n.mesafe, true), fark: Math.abs(aciNormalize(n.azimut - istenen)) }))
+      .sort((a, b) => a.fark - b.fark);
+    for (const a of adaylar) if (a.fark <= 40 && bos(a.az, a.m)) return { azimut: a.az, mesafe: a.m };
+    for (let ek = 6; ek <= 18; ek += 6) if (bos(ilk.azimut, m0 + ek)) return { azimut: ilk.azimut, mesafe: m0 + ek };
+    for (const a of adaylar) if (bos(a.az, a.m)) return { azimut: a.az, mesafe: a.m };
+    return { azimut: ilk.azimut, mesafe: m0 + 24 };
+  }
+
   /** Yer patlaması: ateş, toprak sütunu, moloz, anlık aydınlatma, kalıcı krater + tüten duman. */
   patlama(azimut: number, siddet: number, uzak = false, plakaVar = false) {
     const s = Math.max(0.1, Math.min(1.5, siddet));
@@ -553,9 +584,8 @@ export class Sahne3B {
       return;
     }
     // Yerleşim planı: patlama her zaman hazır bir noktaya düşer (yön yalnız tercih); plan yoksa serbest
-    const secim = this.noktaSec(azimut, "patlama", 30 - 16 * s, 180);
-    const mesafe = secim.mesafe * (secim.nokta ? 0.92 + Math.random() * 0.16 : 0.85 + Math.random() * 0.3);
-    const p = yerKonumu(secim.azimut, mesafe);
+    const secim = this.patlamaYeri(azimut, 30 - 16 * s);
+    const p = yerKonumu(secim.azimut, secim.mesafe);
     const r = 1.2 + s * 2.4;
     // Gerçek çekilmiş plaka 2B katmanda oynuyorsa 3B ateş topu çizilmez; krater, moloz ve ışık yine eklenir.
     if (!plakaVar) this.parcaciklar.patlama(p, r);
@@ -600,13 +630,21 @@ export class Sahne3B {
     if (tanim.serbestYerlesim) {
       // Yaralı vb.: panelin yönü ve mesafesi aynen (Oda 2'de sütrenin içine, Oda 1'de yakına); yalnız ağaç/bina içine değil
       const az = panoramadanSahneAzimutu(yasaktanKacin(s.azimut + k, this.kaynak?.plan?.yasak), k);
-      void this.figurler.oynat(tanim, { ...s, azimut: az, mesafe: varsayilan }, kok).then((ok) => ok || this.uyari?.(`Figür yüklenemedi: ${tanim.dosya}`));
+      void this.figurler.oynat(tanim, { ...s, azimut: az, mesafe: Math.min(ASKER_EN_UZAK, varsayilan) }, kok).then((ok) => ok || this.uyari?.(`Figür yüklenemedi: ${tanim.dosya}`));
       return;
     }
     const turler = tanim.yerlesim ?? ["asker", "figur"];
-    const secim = birlikNoktasiSec(this.kaynak?.plan, s.azimut + k, turler, varsayilan, (az, m) => this.figurler.doluMu(yerKonumu(panoramadanSahneAzimutu(az, k), m)));
+    // Asker/figür: plan noktasının yönü korunur, mesafe ASKER_EN_YAKIN–ASKER_EN_UZAK aralığına çekilir (duvarda net
+    // okunsun); tank ve araçlar plandaki mesafede kalır. Doluluk da kısaltılmış mesafede denetlenir.
+    const askerMi = !turler.includes("tank");
+    const kisalt = (m: number) => (askerMi ? Math.min(ASKER_EN_UZAK, Math.max(ASKER_EN_YAKIN, m)) : m);
+    const dolu = (p: THREE.Vector3) => this.figurler.doluMu(p) || this.sutre.doluMu(p);
+    const secim = birlikNoktasiSec(this.kaynak?.plan, s.azimut + k, turler, varsayilan, (az, m) => dolu(yerKonumu(panoramadanSahneAzimutu(az, k), kisalt(m))));
     const azimut = panoramadanSahneAzimutu(secim.azimut, k);
-    void this.figurler.oynat(tanim, { ...s, azimut, mesafe: secim.nokta ? secim.mesafe : undefined }, kok).then((ok) => ok || this.uyari?.(`Figür yüklenemedi: ${tanim.dosya}`));
+    // Seçilen yer hâlâ bir sütre eşyasının içindeyse (Oda 2 kaya/HESCO hattı) aynı yönde biraz dışarı
+    let mesafe = kisalt(secim.mesafe);
+    for (let ek = 0; ek < 6 && this.sutre.doluMu(yerKonumu(azimut, mesafe)); ek += 1.5) mesafe += 1.5;
+    void this.figurler.oynat(tanim, { ...s, azimut, mesafe }, kok).then((ok) => ok || this.uyari?.(`Figür yüklenemedi: ${tanim.dosya}`));
   }
   figurDurdur(id: string) {
     this.figurler.durdur(id);

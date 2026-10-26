@@ -232,6 +232,9 @@ export class FigurKatmani {
     for (const a of this.aktifler) a.nesne.position.y = zeminY(a.nesne.position.x, a.nesne.position.z);
   }
 
+  /** Sabit engel (Oda 2 sütre eşyası) denetimi; sahne3b bağlar. "Yanında" yerleşimi engelin içine düşmesin. */
+  engel: (konum: THREE.Vector3) => boolean = () => false;
+
   doluMu(konum: THREE.Vector3, yaricap = 2.2): boolean {
     if (this.aktifler.some((a) => a.nesne.position.distanceTo(konum) < yaricap)) return true;
     for (const r of this.rezerveler.values()) if (r.distanceTo(konum) < yaricap) return true;
@@ -380,7 +383,12 @@ export class FigurKatmani {
       const hedef = yanindaki.nesne.position;
       const izleyiciYonu = new THREE.Vector3(-hedef.x, 0, -hedef.z).normalize();
       const yan = new THREE.Vector3(-izleyiciYonu.z, 0, izleyiciYonu.x).multiplyScalar(0.6);
-      sarmal.position.copy(hedef).addScaledVector(izleyiciYonu, 0.9).add(yan);
+      // Tercih: izleyici tarafında yanında; orası sütre eşyasının içindeyse öbür yan, arka, tam yanlar
+      const adaylar: Array<[number, number]> = [[0.9, 1], [0.9, -1], [-0.9, 1], [-0.9, -1], [0, 1.8], [0, -1.8]];
+      for (const [ileri, yana] of adaylar) {
+        sarmal.position.copy(hedef).addScaledVector(izleyiciYonu, ileri).addScaledVector(yan, yana);
+        if (!this.engel(sarmal.position)) break;
+      }
       sarmal.position.y = zeminY(sarmal.position.x, sarmal.position.z);
       const d = hedef.clone().sub(sarmal.position);
       sarmal.rotation.y = Math.atan2(d.x, d.z);
