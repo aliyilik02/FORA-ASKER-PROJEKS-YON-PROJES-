@@ -8,7 +8,10 @@
  *   ?hud=1       hata ayıklama katmanı açık başlasın
  *   ?uc=0        3B sahne katmanını kapat (yalnızca 2B yol)
  *   ?gunes=1     3B sahnede güneş tahminini küreyle göster (panoramadaki güneşle çakışmalı)
- * Tuşlar: H hud · K kalibrasyon ızgarası · F tam ekran · M sessiz · 1 patlama · 2 toz · 3 izli mermi aç/kapa
+ *   ?ses=5.1     ses düzeni stereo|dortlu|5.1|7.1|otomatik (varsayılan otomatik: cihazın kanal sayısı; yerel kayıtta kalır)
+ *   ?hoparlor=-45,45,-135,135   kanal sırasıyla hoparlör azimutları, LFE için "lfe" (sahadaki gerçek açılar)
+ * Tuşlar: H hud · K kalibrasyon ızgarası · F tam ekran · M sessiz · 1 patlama · 2 toz · 3 izli mermi aç/kapa ·
+ *   T hoparlör testi (her kanalda sırayla gürültü, kanal adı ekranda)
  */
 import * as THREE from "three";
 import { KopruBaglantisi, type BaglantiDurumu } from "./baglanti";
@@ -17,7 +20,7 @@ import { Helikopter } from "./efektler/helikopter";
 import { IzliMermiSistemi } from "./efektler/izliMermi";
 import { hudCiz, kalibrasyonCiz, uyariCiz } from "./hud";
 import { KlipKatmani } from "./klipler";
-import { azimutPan, duvarYerlesimleri, duvarlariOlustur, type Yerlesim, yonAzimut, zamanDilimi } from "./projeksiyon";
+import { duvarYerlesimleri, duvarlariOlustur, type Yerlesim, xAzimut, yonAzimut, zamanDilimi } from "./projeksiyon";
 import { araziCiz, araziGuncelle, ufukY as bolgeUfukY } from "./sahne/arazi";
 import { gokyuzuCiz, gokyuzuGuncelle, gokyuzuRenkleri } from "./sahne/gokyuzu";
 import { HavaSistemi, kararmaCiz, sisCiz } from "./sahne/hava";
@@ -26,6 +29,7 @@ import { PanoramaKatmani } from "./panorama";
 import { type Kalite, Sahne3B } from "./sahne3b/sahne3b";
 import type { AraziModu } from "./sahne3b/arazi";
 import { SesMotoru } from "./ses";
+import { sesAyariniCoz } from "./sesYerlesimi";
 import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type EfektIstegi, type FigurKomutu, type SimulasyonDurumu, varsayilanDurum } from "./tipler";
 import { panoramaSec, VideoKatmani } from "./video";
 
@@ -50,8 +54,17 @@ let durumGeldi = false;
 let baglanti: BaglantiDurumu = "kopuk";
 let fps = 0;
 
-const ses = new SesMotoru();
-const izli = new IzliMermiSistemi((x, genislik) => ses.vizilti((x / genislik) * 2 - 1));
+/**
+ * Ses düzeni: ?ses= ve ?hoparlor= (adres çubuğu > yerel kayıt > otomatik: cihazın kanal sayısı). Stereoda eski
+ * StereoPanner yolu; 4+ kanalda konumsal ses ve LFE (bkz. sesYerlesimi.ts, docs/duvar-oynatici.md).
+ */
+const ses = new SesMotoru(sesAyariniCoz({ ses: params.get("ses"), hoparlor: params.get("hoparlor") }, localStorage));
+const izli = new IzliMermiSistemi((x) => ses.vizilti(tuvalAzimutu(x)));
+/** 2B tuval x'i → sahne azimutu (2B izli mermi vızıltısı): x'in düştüğü duvarın yaw/fov'u; kenar dışı en yakın duvardan. */
+function tuvalAzimutu(x: number): number {
+  const y = yerlesimler.find((d) => x < d.x + d.genislik) ?? yerlesimler[yerlesimler.length - 1];
+  return y ? xAzimut(x, y) : 0;
+}
 const efektler = new EfektSistemi();
 const heli = new Helikopter();
 const hava = new HavaSistemi();
@@ -78,16 +91,17 @@ function araziModuSec(bolge: string): AraziModu {
   return ARAZI_VARSAYILAN[bolge] ?? "kapali";
 }
 const ucAktifOlabilir = ucBoyut && sahne3b.destekli;
+// Çatışma sesleri sahne azimutuyla (derece) gelir; ses motoru stereo / çok kanala kendisi yerleştirir
 sahne3b.catismaSesleriAyarla({
-  carpma: (pan) => ses.carpma(pan),
-  atis: (pan, uzak) => ses.tekAtis(pan, uzak),
-  uzakPatlama: (az) => void ses.patlama(azimutPan(az), 0.7, true, 600),
-  topAtisi: (pan) => void ses.patlama(pan, 0.55),
+  carpma: (az) => ses.carpma(az),
+  atis: (az, uzak) => ses.tekAtis(az, uzak),
+  uzakPatlama: (az) => void ses.patlama(az, 0.7, true, 600),
+  topAtisi: (az) => void ses.patlama(az, 0.55),
 });
 // Yaralı figür: vurulunca bağırma, yerde ara ara yardım çağrısı (figürün yönünden)
 sahne3b.figurSesleriAyarla((tur, azimut) => {
-  if (tur === "vuruldu") void ses.bagirma(azimutPan(azimut));
-  else void ses.cagirma(azimutPan(azimut));
+  if (tur === "vuruldu") void ses.bagirma(azimut);
+  else void ses.cagirma(azimut);
 });
 // Hata ayıklama: tarayıcı konsolundan sahneye erişim (window.duvar.sahne3b, window.duvar.THREE)
 (window as unknown as { duvar: unknown }).duvar = { sahne3b, THREE };
@@ -172,7 +186,6 @@ function efektUygula(e: EfektIstegi) {
     return;
   }
   const azimut = yonAzimut(e.yon ?? 0);
-  const pan = azimutPan(azimut);
   const siddet = e.siddet ?? 1;
   // Gerçek plaka varsa (manifest "klipler": patlama_*, toz_*) onu kullan, yoksa prosedürel efekt.
   // 3B sahne açıkken "yedek" işaretli (sentetik test) plakalar atlanır; 3B efekt daha iyidir.
@@ -195,7 +208,7 @@ function efektUygula(e: EfektIstegi) {
         efektler.flasVeSarsinti(siddet);
       } else if (plakaVar) efektler.flasVeSarsinti(siddet);
       else efektler.patlama(azimut, siddet, yerlesimler, ufuk(), H);
-      void ses.patlama(pan, siddet);
+      void ses.patlama(azimut, siddet);
       break;
     }
     case "toz_duman":
@@ -203,13 +216,13 @@ function efektUygula(e: EfektIstegi) {
       if (!plaka("toz", -3, 0.7 + siddet * 0.6) && !uc) efektler.tozDuman(azimut, siddet, yerlesimler, ufuk(), H);
       break;
     case "gurultu":
-      void ses.gurultu(pan, siddet);
+      void ses.gurultu(azimut, siddet);
       break;
     case "bagirma":
-      void ses.bagirma(pan);
+      void ses.bagirma(azimut);
       break;
     case "cagirma":
-      void ses.cagirma(pan);
+      void ses.cagirma(azimut);
       break;
     case "uzak_patlama": {
       const plakaVar = plaka("uzak_patlama", 0.5, 0.25 + siddet * 0.15);
@@ -218,11 +231,11 @@ function efektUygula(e: EfektIstegi) {
         efektler.flasVeSarsinti(siddet * 0.2);
       } else if (plakaVar) efektler.flasVeSarsinti(siddet * 0.2);
       else efektler.uzakPatlama(azimut, siddet, yerlesimler, ufuk(), H);
-      void ses.patlama(pan, siddet, true, e.mesafe ?? 800);
+      void ses.patlama(azimut, siddet, true, e.mesafe ?? 800);
       break;
     }
     case "uzak_mermi_sesi":
-      void ses.mermi(pan, true);
+      void ses.mermi(azimut, true);
       break;
   }
 }
@@ -345,6 +358,8 @@ const kopru = new KopruBaglantisi(
   },
   (d) => {
     baglanti = d;
+    // "merhaba" gidip rol "oynatici" olduktan sonra (köprü günlüğü yalnız oynatıcıdan kabul eder)
+    if (d === "bagli") window.setTimeout(sesUyarilariniGonder, 700);
   },
 );
 
@@ -385,6 +400,10 @@ addEventListener("keydown", (e) => {
     case "3":
       izli.ayarla({ ...durum.izliMermi, aktif: !izli.aktif });
       break;
+    case "t":
+      // Hoparlör testi: her kanalda sırayla gürültü, çalan kanalın adı ekranda; test sürerken T durdurur
+      if (!e.repeat) void sesiAc().then(() => ses.hoparlorTesti());
+      break;
   }
   void sesiAc();
 });
@@ -422,6 +441,19 @@ kopru.baslat();
 // Oynatıcı uyarıları köprü günlüğüne (panelde görünür): model yüklenemedi, 3B katman hatası
 sahne3b.uyari = (mesaj) => kopru.gonder({ tip: "gunluk", seviye: "uyari", mesaj });
 if (sahne3b.hata) kopru.gonder({ tip: "gunluk", seviye: "hata", mesaj: `3B katman açılamadı: ${sahne3b.hata}` });
+/**
+ * Ses düzeni uyarıları (istenen kanal sayısı cihazda yok, geçersiz ?ses= / ?hoparlor=): açılışta, köprü bağlanmadan
+ * gelir; bekletilir, bağlanınca tek satırda köprü günlüğüne gider (köprü oynatıcı günlüğünü 500 ms'de bire sınırlar).
+ */
+const bekleyenSesUyarilari: string[] = [];
+function sesUyarilariniGonder() {
+  if (kopru.durum !== "bagli" || bekleyenSesUyarilari.length === 0) return;
+  kopru.gonder({ tip: "gunluk", seviye: "uyari", mesaj: `Ses: ${bekleyenSesUyarilari.splice(0).join(" · ")}` });
+}
+ses.uyariDinle((mesaj) => {
+  bekleyenSesUyarilari.push(mesaj);
+  sesUyarilariniGonder();
+});
 
 /**
  * Panel için küçük önizleme: iki tuval (3B + 2B) 384×(oran) JPEG'e indirgenir, ~2 sn'de bir köprüye
@@ -479,7 +511,8 @@ function kare(simdi: number) {
   video.guncelle(dt);
   klipler.guncelle(dt);
   sahne3b.guncelle(dt);
-  if (sahne3b.helikopterHazir && sahne3b.hazir) ses.helikopter(durum.oda === "oda2" ? durum.oda2.helikopter : "yok", sahne3b.helikopterTozu);
+  // 3B helikopterde rotor sesi modelin konumundan gelir (yön, mesafe, Doppler); 2B siluette yönsüz (eski davranış)
+  if (sahne3b.helikopterHazir && sahne3b.hazir) ses.helikopter(durum.oda === "oda2" ? durum.oda2.helikopter : "yok", sahne3b.helikopterTozu, sahne3b.helikopterSesKonumu);
   else ses.helikopter(heli.mevcutDurum, heli.tozSiddeti);
 
   // Çiz
@@ -539,12 +572,14 @@ function kare(simdi: number) {
   bekleyenEfektleriUygula();
   onizlemeGonder(simdi);
   if (kalibrasyon) kalibrasyonCiz(ctx, W, H, duvarlar.map((d) => d.ad));
-  if (baglanti === "kopuk") uyariCiz(ctx, W, H, "Köprü sunucusu bekleniyor…", "Oynatıcı, köprüye (port 4000) bağlanınca panelden yönetilir");
+  const sesTesti = ses.testDurumu;
+  if (sesTesti) uyariCiz(ctx, W, H, `Hoparlör testi: ${sesTesti.ad}`, `kanal ${sesTesti.kanal} / ${sesTesti.toplam} · ${ses.duzenBilgisi}${ses.sessiz ? " · SESSİZ (M ile aç)" : ""} · T durdurur`);
+  else if (baglanti === "kopuk") uyariCiz(ctx, W, H, "Köprü sunucusu bekleniyor…", "Oynatıcı, köprüye (port 4000) bağlanınca panelden yönetilir");
   if (hud) {
     hudCiz(
       ctx,
       [
-        `Duvar Oynatıcı · ${W}×${H} · ${fps.toFixed(0)} fps · köprü ${baglanti}${durumGeldi ? "" : " (durum bekleniyor)"} · ses ${ses.hazir ? (ses.sessiz ? "sessiz" : "açık") : "kapalı"}`,
+        `Duvar Oynatıcı · ${W}×${H} · ${fps.toFixed(0)} fps · köprü ${baglanti}${durumGeldi ? "" : " (durum bekleniyor)"} · ses ${ses.hazir ? (ses.sessiz ? "sessiz" : "açık") : "kapalı"}: ${ses.duzenBilgisi}`,
         `${durum.oda === "oda1" ? "Oda 1" : "Oda 2"} · ${BOLGE_ETIKETLERI[durum.bolge]} · ${durum.ortam.mevsim} · saat ${durum.ortam.saat.toFixed(2)} (${zamanDilimi(durum.ortam.saat)}) · ışık ${gok.isik.toFixed(2)}`,
         `bulut ${durum.ortam.bulut.toFixed(2)} · sis ${durum.ortam.sis.toFixed(2)} · yağış ${durum.ortam.yagis} · rüzgâr ${durum.ortam.ruzgarSiddeti.toFixed(2)} @ ${durum.ortam.ruzgarYonu}°`,
         `izli mermi ${durum.izliMermi.aktif ? `açık (duvar ${durum.izliMermi.cikisNoktasi}, ${durum.izliMermi.yon}°, ${durum.izliMermi.siklik}/sn)` : "kapalı"} · oda2 ${GUVENLI_ALAN_ETIKETLERI[durum.oda2.guvenliAlan]} · helikopter ${HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}`,

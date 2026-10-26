@@ -181,13 +181,38 @@ Kurulum notları:
 - Donanım gelmeden test: `node araclar/artnet-dinle.mjs` (bu depo) veya ücretsiz **QLC+**
   (Art-Net girişi + sanal armatür görünümü).
 
-## 6. Ses (kısa)
+## 6. Ses
 
-Konumsal ses için en az 4 hoparlör (ön sol/sağ, arka sol/sağ) + subwoofer:
+Konumsal ses için en az 4 hoparlör (ön sol/sağ, arka sol/sağ) + subwoofer. Duvar Oynatıcı (tarayıcı) Windows'un
+varsayılan ses cihazına çok kanallı çıkış verir (4 kanal, 5.1 ya da 7.1): her ses sahnedeki yönüne göre iki komşu
+hoparlöre dağılır (ön/arka ayrılır), patlama ve top basları subwoofer'a (LFE) gider, rüzgâr/ortam sesi tüm hoparlörlere
+yayılır, helikopter rotoru konumundan gelir. Ayrıntı: `docs/duvar-oynatici.md` "Çok kanallı ses".
 
 - Basit yol: 5.1 AV alıcı + HDMI (render PC HDMI → alıcı; alıcı HDMI çıkışı operatör ekranına);
-  Windows'ta varsayılan çıkış 5.1 seçilince UE otomatik konumlandırır.
-- Alternatif: 4+ çıkışlı USB ses kartı (ör. Focusrite Scarlett 4i4) + 4 aktif hoparlör.
+  Windows'ta varsayılan çıkış 5.1 seçilince oynatıcı (ve UE) otomatik konumlandırır.
+- Alternatif: 4+ çıkışlı USB ses kartı (ör. Focusrite Scarlett 4i4) + 4 aktif hoparlör (+ aktif subwoofer).
+- U oda yerleşimi (öneri): ön sol/sağ orta duvarın iki yanında (izleyiciden ±30–45°), arka sol/sağ eğitim alanının
+  arkasında (±110–135°), 5.1'de orta hoparlör orta duvarın altında, subwoofer yerde ön duvar boyunca.
+
+Kurulum ve test (render PC, Windows 11):
+
+1. Ayarlar → Sistem → Ses → **Diğer ses ayarları** (ya da Win+R → `mmsys.cpl`) → Kayıttan yürütme → cihaz →
+   **Yapılandır**: "5.1 Surround" / "7.1 Surround" (4 hoparlörde "Quadraphonic"); Windows'un testiyle her hoparlörü
+   dinleyin. Bu seçilmezse tarayıcı yalnızca 2 kanal görür ve oynatıcı stereo çalar.
+2. AV alıcıda giriş "Multi-channel PCM" görünmeli; stereoyu tüm hoparlörlere yayan yukarı karıştırma modları
+   (Dolby Surround, DTS Neural:X, "All Channel Stereo") kapalı olsun, yoksa yön bilgisi bozulur.
+3. Panel → Sistem → Ses düzeni: Otomatik (ya da 5.1 / 7.1); üst çubuktaki "Oynatıcı" ile oynatıcıyı yeniden açın
+   (Windows ayarı değiştiyse Chrome'u kapatıp açın). Kiosk betiği (`oynatici-baslat.bat`) ayrı tarayıcı profili
+   kullanır; otomatik seçim çoğu kurulumda yeterlidir, zorlamak için betikteki adrese `&ses=5.1` eklenir.
+4. Oynatıcıda **H**: HUD ilk satırında "ses açık: 5.1 (6 kanal)". İstenen düzen cihazda yoksa köprü günlüğünde
+   (panel Sistem → Günlük) uyarı çıkar.
+5. Oynatıcıda **T** (hoparlör testi): her kanalda sırayla ~0,7 sn gürültü, ekranda kanal adı ("Ön sol", "Orta",
+   "Bas (LFE)" …). Ses başka hoparlörden geliyorsa kablo/kanal eşlemesini düzeltin.
+6. Hoparlörler varsayılan açılarda değilse gerçek açıları girin (kanal sırasıyla, 0 = orta duvar, sağa artı, LFE için
+   `lfe`): ör. `?hoparlor=-40,40,0,lfe,-120,120`. Panelden farklı yönlere patlama/bağırma tetikleyip kulakla kontrol edin
+   (30° ile 150° ayrı duyulmalı).
+7. Seviye: alıcıda kanal seviyelerini pembe gürültü + SPL ölçerle (telefon uygulaması yeterli) eşitleyin; subwoofer
+   seviyesini patlamada rahatsız etmeyecek, ama hissedilecek şekilde ayarlayın.
 
 ## 7. Kapalı ağ
 

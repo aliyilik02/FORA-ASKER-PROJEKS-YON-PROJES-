@@ -36,6 +36,12 @@ export class Helikopter3B {
   get inisAzimutu() {
     return this.inisAzimut;
   }
+  /** Rotor sesi için konum (ses.ts): sahne azimutu (derece), yatay mesafe ve zeminden irtifa (m); yokken null. */
+  get sesKonumu(): { azimut: number; mesafe: number; irtifa: number } | null {
+    if (this.mevcutDurum === "yok" || !this.hazir) return null;
+    const p = this.grup.position;
+    return { azimut: (Math.atan2(p.x, -p.z) * 180) / Math.PI, mesafe: Math.hypot(p.x, p.z), irtifa: Math.max(0, p.y - zeminY(p.x, p.z)) };
+  }
 
   get hazir() {
     return this.model !== null;

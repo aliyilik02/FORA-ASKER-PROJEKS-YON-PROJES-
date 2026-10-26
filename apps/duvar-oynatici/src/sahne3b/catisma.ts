@@ -20,15 +20,16 @@ interface Iz {
   sekti: boolean;
 }
 
+/** Ses geri çağrıları sahne azimutuyla (derece; 0 = orta duvar, sağa artı); yerleşimi ses motoru yapar (stereo / çok kanal). */
 export interface CatismaSesleri {
-  /** Yakına çarpan/vızıldayan mermi (pan -1..1). */
-  carpma: (pan: number) => void;
-  /** Tek atış sesi; uzak = düşman tarafı. */
-  atis: (pan: number, uzak: boolean) => void;
+  /** Yakına çarpan/vızıldayan mermi (çarpma noktasının azimutu). */
+  carpma: (azimut: number) => void;
+  /** Tek atış sesi (atıcının azimutu); uzak = düşman tarafı. */
+  atis: (azimut: number, uzak: boolean) => void;
   /** Ağır çatışmada düşman hattında rastgele uzak patlama (azimut, sahne). */
   uzakPatlama?: (azimut: number) => void;
-  /** Tank top atışı sesi (pan). */
-  topAtisi?: (pan: number) => void;
+  /** Tank top atışı sesi (tankın azimutu). */
+  topAtisi?: (azimut: number) => void;
 }
 
 export interface AgirSilahKonumu {
@@ -145,7 +146,7 @@ export class CatismaSistemi {
     this.izEkle(kaynak, v, false);
     // Düşman hattında namlu parıltısı (uzak, kısa) ve uzak atış sesi
     if (Math.random() < 0.6) this.parcaciklar.parlama(kaynak, rnd(1.5, 2.5));
-    if (Math.random() < 0.35) this.sesler.atis(Math.sin(radyan(kaynakAzimut)), true);
+    if (Math.random() < 0.35) this.sesler.atis(konumAzimutu(kaynak), true);
   }
 
   private dostAtis(konum: THREE.Vector3) {
@@ -158,7 +159,7 @@ export class CatismaSistemi {
     hedef.y = ZEMIN_Y + rnd(0, 3);
     const v = hedef.sub(namlu).normalize().multiplyScalar(rnd(160, 200));
     this.izEkle(namlu, v, true);
-    this.sesler.atis(Math.sin(radyan(konumAzimutu(konum))), false);
+    this.sesler.atis(konumAzimutu(konum), false);
   }
 
   /** Tank top atışı: büyük parlama + namlu dumanı + hızlı parlak mermi; düşman hattında patlama ile biter. */
@@ -190,12 +191,11 @@ export class CatismaSistemi {
     v.y = 2;
     this.mermiler.push({ p: t.namlu.clone(), v, kalan: rnd(0.55, 0.8), hedefAz });
     this.izEkle(t.namlu, v, true);
-    this.sesler.topAtisi?.(Math.sin(radyan(konumAzimutu(t.konum))));
+    this.sesler.topAtisi?.(konumAzimutu(t.konum));
   }
 
   private carpma(iz: Iz) {
     const p = iz.p;
-    const pan = Math.sin(radyan(konumAzimutu(p)));
     const yakin = p.length() < 26;
     if (yakin) {
       // Toz + birkaç kıvılcım; sekme %30
@@ -223,7 +223,7 @@ export class CatismaSistemi {
         const a = rnd(0, 6.28);
         this.parcaciklar.kivilcim.ekle({ x: p.x, y: zeminY(p.x, p.z) + 0.05, z: p.z, vx: Math.cos(a) * rnd(1, 4), vy: rnd(2, 6), vz: Math.sin(a) * rnd(1, 4), boyut: rnd(0.04, 0.09), buyume: 0, alfa: 1, aci: 0, donus: 0, t: 0, sure: rnd(0.25, 0.6), renk: [1, 0.8, 0.5], yercekimi: 9.8, surtunme: 0.3 });
       }
-      this.sesler.carpma(pan);
+      this.sesler.carpma(konumAzimutu(p));
       if (!iz.sekti && Math.random() < 0.3) {
         const v = iz.v.clone();
         v.y = Math.abs(v.y) * rnd(0.4, 1.2) + rnd(10, 40);

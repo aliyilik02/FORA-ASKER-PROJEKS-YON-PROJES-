@@ -630,6 +630,10 @@ export class Sahne3B {
   get helikopterAzimutu() {
     return this.heli.inisAzimutu;
   }
+  /** Rotor sesinin konumu (sahne azimutu, yatay mesafe, irtifa; ses.ts helikopter); helikopter yokken null. */
+  get helikopterSesKonumu() {
+    return this.heli.sesKonumu;
+  }
 
   catismaSesleriAyarla(s: CatismaSesleri) {
     this.catismaSesleri = s;
