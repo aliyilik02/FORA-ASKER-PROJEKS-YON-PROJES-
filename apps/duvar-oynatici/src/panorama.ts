@@ -3,8 +3,9 @@
  *
  * Fotogerçekçi içeriğin ana taşıyıcısı: gerçek 360° çekim, yapay zekâ ile üretilmiş panorama
  * veya oyun motorundan alınmış equirectangular render, hepsi aynı dosya biçimiyle gelir.
- * Her duvar için piksel → bakış yönü → panorama UV dönüşümü GPU'da (WebGL) yapılır; böylece
- * U duvarın köşelerinde perspektif kırılmaz ve duvar açıları (yaw/fov) sahada değiştirilebilir.
+ * Her duvar için piksel → bakış yönü → panorama UV dönüşümü GPU'da (WebGL) yapılır. Bakış yönü duvarın
+ * izdüşümünden (projeksiyon.ts: düzlem eksenleri + teğet sınırları, Kooima) gelir; böylece U duvarın
+ * köşelerinde perspektif kırılmaz, ölçülmüş odada (`?oda=`) simetrik olmayan duvarlar da doğru çizilir.
  */
 import type { Yerlesim } from "./projeksiyon";
 
@@ -13,36 +14,33 @@ attribute vec2 a;
 void main() { gl_Position = vec4(a, 0.0, 1.0); }
 `;
 
+/** Shader'daki duvar dizisi boyutu (duvar başına 3 vec3: en düşük WebGL 1 sınırı 16 vektöre sığar). */
+const EN_COK_DUVAR = 4;
+
 const FRAGMENT = `
 precision highp float;
 uniform sampler2D doku;
 uniform vec2 boyut;        // tuval genişlik/yükseklik
 uniform float duvarSayisi;
-uniform vec3 duvarlar[8];  // x: yaw (rad), y: fov yarım tanjantı, z: dikey yarım tanjant
+// Duvar başına bakış yönü (sahne koordinatı: sağ +x, yukarı +y, orta duvarın ilerisi -z):
+// yon = A·fx + B·fy + C; fx, fy duvar içinde 0..1 (soldan, alttan). Ufuk kaydırması C'ye katılı.
+uniform vec3 duvarA[${EN_COK_DUVAR}];
+uniform vec3 duvarB[${EN_COK_DUVAR}];
+uniform vec3 duvarC[${EN_COK_DUVAR}];
 uniform float yawKaydirma; // panoramanın döndürülmesi (rad)
-uniform float yukseklikKaydirma; // ufuk kaydırma (-1..1)
 const float PI = 3.14159265358979;
 void main() {
   vec2 p = gl_FragCoord.xy;
   float g = boyut.x / duvarSayisi;
   float i = floor(p.x / g);
   // GLSL ES 1.0: fragment shader'da uniform dizisi değişken indeksle okunamaz → sabit indeks zinciri
-  vec3 d = duvarlar[0];
-  if (i >= 1.0) d = duvarlar[1];
-  if (i >= 2.0) d = duvarlar[2];
-  if (i >= 3.0) d = duvarlar[3];
-  if (i >= 4.0) d = duvarlar[4];
-  if (i >= 5.0) d = duvarlar[5];
-  if (i >= 6.0) d = duvarlar[6];
-  if (i >= 7.0) d = duvarlar[7];
-  float nx = ((p.x - i * g) / g) * 2.0 - 1.0;   // -1..1 duvar içinde
-  float ny = (p.y / boyut.y) * 2.0 - 1.0 + yukseklikKaydirma; // alt -1, üst +1
-  // Bakış yönü: ileri = +z, sağ = +x, yukarı = +y
-  vec3 yon = normalize(vec3(nx * d.y, ny * d.z, 1.0));
-  float c = cos(d.x); float s = sin(d.x);
-  vec3 dondur = vec3(yon.x * c + yon.z * s, yon.y, -yon.x * s + yon.z * c);
-  float azimut = atan(dondur.x, dondur.z) + yawKaydirma;
-  float yukseklik = asin(clamp(dondur.y, -1.0, 1.0));
+  vec3 a = duvarA[0]; vec3 b = duvarB[0]; vec3 c = duvarC[0];
+  if (i >= 1.0) { a = duvarA[1]; b = duvarB[1]; c = duvarC[1]; }
+  if (i >= 2.0) { a = duvarA[2]; b = duvarB[2]; c = duvarC[2]; }
+  if (i >= 3.0) { a = duvarA[3]; b = duvarB[3]; c = duvarC[3]; }
+  vec3 yon = normalize(a * ((p.x - i * g) / g) + b * (p.y / boyut.y) + c);
+  float azimut = atan(yon.x, -yon.z) + yawKaydirma;
+  float yukseklik = asin(clamp(yon.y, -1.0, 1.0));
   // Doku FLIP_Y ile yüklenir (v=1 üst satır): yukarı bakış → üst yarı
   vec2 uv = vec2(0.5 + azimut / (2.0 * PI), 0.5 + yukseklik / PI);
   gl_FragColor = texture2D(doku, vec2(fract(uv.x), clamp(uv.y, 0.0, 1.0)));
@@ -68,6 +66,10 @@ export class PanoramaKatmani {
   private yuklenen = "";
   private kayit: PanoramaKaydi | null = null;
   private konumlar: Record<string, WebGLUniformLocation | null> = {};
+  /** Duvar yön katsayıları (A, B, C); her karede doldurulur, yeniden ayrılmaz. */
+  private readonly duvarA = new Float32Array(EN_COK_DUVAR * 3);
+  private readonly duvarB = new Float32Array(EN_COK_DUVAR * 3);
+  private readonly duvarC = new Float32Array(EN_COK_DUVAR * 3);
   hazir = false;
   hata = "";
 
@@ -100,7 +102,7 @@ export class PanoramaKatmani {
       const a = gl.getAttribLocation(p, "a");
       gl.enableVertexAttribArray(a);
       gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
-      for (const ad of ["doku", "boyut", "duvarSayisi", "duvarlar", "yawKaydirma", "yukseklikKaydirma"]) this.konumlar[ad] = gl.getUniformLocation(p, ad);
+      for (const ad of ["doku", "boyut", "duvarSayisi", "duvarA", "duvarB", "duvarC", "yawKaydirma"]) this.konumlar[ad] = gl.getUniformLocation(p, ad);
       this.doku = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, this.doku);
       // WebGL 1: ikinin kuvveti olmayan dokular (2912x1440, 12288x6144 ...) REPEAT ile "eksik" sayılır ve
@@ -120,6 +122,10 @@ export class PanoramaKatmani {
   }
   get kaynakAdi() {
     return this.yuklenen;
+  }
+  /** Seçili panoramanın ufuk kaydırması (−1..1); 2B katmanların ufuk satırı için. */
+  get yukseklikKaydirma() {
+    return this.kayit?.yukseklikKaydirma ?? 0;
   }
 
   /** Aynı dosya zaten yüklüyse hiçbir şey yapmaz. null → katmanı kapat. */
@@ -204,18 +210,26 @@ export class PanoramaKatmani {
     gl.useProgram(this.program);
     gl.uniform1i(this.konumlar.doku, 0);
     gl.uniform2f(this.konumlar.boyut, W, H);
-    gl.uniform1f(this.konumlar.duvarSayisi, yerlesimler.length);
-    const dizi = new Float32Array(8 * 3);
-    yerlesimler.forEach((y, i) => {
-      const yarimFov = (y.duvar.fov * Math.PI) / 360;
-      const yatayTan = Math.tan(yarimFov);
-      dizi[i * 3] = (y.duvar.yaw * Math.PI) / 180;
-      dizi[i * 3 + 1] = yatayTan;
-      dizi[i * 3 + 2] = yatayTan * (H / y.genislik);
-    });
-    gl.uniform3fv(this.konumlar.duvarlar, dizi);
+    const n = Math.min(yerlesimler.length, EN_COK_DUVAR);
+    gl.uniform1f(this.konumlar.duvarSayisi, n);
+    // Teğet düzleminde (u, v) = (sol + (sağ−sol)·fx, alt + (üst−alt)·fy + k·(üst−alt)/2); yön = u·sağ + v·yukarı − normal.
+    // k (yukseklikKaydirma) ufku k·H/2 aşağı indirir: eski "ny + k" ile ve 3B kamera eğimiyle aynı satır.
+    const k = this.kayit?.yukseklikKaydirma ?? 0;
+    for (let i = 0; i < n; i++) {
+      const iz = yerlesimler[i].izdusum;
+      const yatay = iz.sag - iz.sol;
+      const dikey = iz.ust - iz.alt;
+      const v0 = iz.alt + (k * dikey) / 2;
+      for (let e = 0; e < 3; e++) {
+        this.duvarA[i * 3 + e] = yatay * iz.sagEksen[e];
+        this.duvarB[i * 3 + e] = dikey * iz.yukariEksen[e];
+        this.duvarC[i * 3 + e] = iz.sol * iz.sagEksen[e] + v0 * iz.yukariEksen[e] - iz.normal[e];
+      }
+    }
+    gl.uniform3fv(this.konumlar.duvarA, this.duvarA);
+    gl.uniform3fv(this.konumlar.duvarB, this.duvarB);
+    gl.uniform3fv(this.konumlar.duvarC, this.duvarC);
     gl.uniform1f(this.konumlar.yawKaydirma, ((this.kayit?.yawKaydirma ?? 0) * Math.PI) / 180);
-    gl.uniform1f(this.konumlar.yukseklikKaydirma, this.kayit?.yukseklikKaydirma ?? 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     hedef.drawImage(this.tuval, 0, 0);
     return true;

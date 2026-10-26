@@ -1,5 +1,6 @@
 /** Gökyüzü: saate göre renk, güneş/ay, yıldızlar, bulutlar (rüzgârla sürüklenir). */
 import {
+  aciGenisligi,
   alacakaranlik,
   azimutX,
   gunesKonumu,
@@ -134,7 +135,8 @@ export function gokyuzuCiz(ctx: CanvasRenderingContext2D, y: Yerlesim, ufukY: nu
     const cx = azimutX(az, y, b.genislik);
     if (cx === null) continue;
     const cy = b.yuk * ufukY;
-    const gen = (b.genislik / y.duvar.fov) * y.genislik;
+    // Perspektif: aynı açı duvar kenarına doğru daha geniş (projeksiyon.ts; ölçülmüş odada duvarlar farklı açıda)
+    const gen = aciGenisligi(az, b.genislik, y);
     const alfa = 0.55 + ortam.bulut * 0.4;
     for (const p of b.parcalar) {
       const r = p.r * gen * 0.5;

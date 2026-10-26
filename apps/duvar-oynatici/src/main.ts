@@ -3,7 +3,9 @@
  *
  * Köprüden gelen durum (bölge, ortam, izli mermi, Oda 2) ve efekt olaylarını 3 duvara çizer.
  * Sorgu parametreleri:
- *   ?fov=90      duvar başına yatay açı (U duvar 90; düz tek duvar 3 projektör ≈ 40)
+ *   ?fov=90      duvar başına yatay açı (U duvar 90; düz tek duvar 3 projektör ≈ 40); ölçü yokken
+ *   ?oda=u,on=6,yan=4,yuk=3,alt=0.3,x=0,z=3,goz=1.7   ölçülmüş oda (U ya da "duz"; metre), duvar başına doğru
+ *                perspektif; yerel kayıtta kalır, "?oda=sifirla" siler (bkz. projeksiyon.ts odaGeometrisiCoz)
  *   ?doldur=1    48:9 oranını koruma, pencereyi tamamen doldur
  *   ?hud=1       hata ayıklama katmanı açık başlasın
  *   ?uc=0        3B sahne katmanını kapat (yalnızca 2B yol)
@@ -17,7 +19,7 @@ import { Helikopter } from "./efektler/helikopter";
 import { IzliMermiSistemi } from "./efektler/izliMermi";
 import { hudCiz, kalibrasyonCiz, uyariCiz } from "./hud";
 import { KlipKatmani } from "./klipler";
-import { azimutPan, duvarYerlesimleri, duvarlariOlustur, type Yerlesim, yonAzimut, zamanDilimi } from "./projeksiyon";
+import { azimutPan, duvarYerlesimleri, duvarlariOlustur, geometriOzeti, odaDuvarlari, odaGeometrisiCoz, odaGeometrisiYaz, type OdaGeometrisi, ufukSatiri, type Yerlesim, yonAzimut, zamanDilimi } from "./projeksiyon";
 import { araziCiz, araziGuncelle, ufukY as bolgeUfukY } from "./sahne/arazi";
 import { gokyuzuCiz, gokyuzuGuncelle, gokyuzuRenkleri } from "./sahne/gokyuzu";
 import { HavaSistemi, kararmaCiz, sisCiz } from "./sahne/hava";
@@ -38,7 +40,30 @@ const params = new URLSearchParams(location.search);
 const fov = Number(params.get("fov") ?? 90);
 const doldur = params.get("doldur") === "1";
 const ucBoyut = params.get("uc") !== "0";
-const duvarlar = duvarlariOlustur(Number.isFinite(fov) && fov > 10 ? fov : 90);
+/**
+ * Duvar geometrisi: ?oda= (adres çubuğu > yerel kayıt > ölçüsüz varsayılan). Geçerli adres değeri kaydedilir;
+ * "?oda=sifirla" kaydı siler. Geçersiz değer yok sayılır (uyarı HUD ve K ızgarasında), varsayılan kullanılır.
+ * Ölçü yoksa eski yol: duvar başına ?fov= derece (varsayılan 90), döndürülmüş simetrik kameralar.
+ */
+const odaParam = params.get("oda");
+let odaUyarisi = "";
+let oda: OdaGeometrisi | null = null;
+if (odaParam === "sifirla") localStorage.removeItem("oda");
+else if (odaParam) {
+  oda = odaGeometrisiCoz(odaParam);
+  if (oda) localStorage.setItem("oda", odaGeometrisiYaz(oda));
+  else odaUyarisi = `?oda=${odaParam} geçersiz; ölçüsüz yerleşim kullanılıyor`;
+} else {
+  const kayitli = localStorage.getItem("oda");
+  oda = odaGeometrisiCoz(kayitli);
+  if (kayitli && !oda) localStorage.removeItem("oda");
+}
+if (odaUyarisi) console.warn(odaUyarisi);
+const duvarlar = oda ? odaDuvarlari(oda) : duvarlariOlustur(Number.isFinite(fov) && fov > 10 ? fov : 90);
+/** HUD ve K ızgarası için geometri özeti (iki satır). */
+const duvarOzeti = geometriOzeti(oda, duvarlar);
+if (odaUyarisi) duvarOzeti[0] = `${odaUyarisi} · ${duvarOzeti[0]}`;
+const duvarAcilari = `${duvarlar.map((d) => d.fov.toFixed(0)).join("/")}°`;
 
 let W = 0;
 let H = 0;
@@ -154,7 +179,11 @@ addEventListener("resize", boyutlandir);
 boyutlandir();
 
 function ufuk(): number {
-  return sahne3b.hazir ? sahne3b.ufukY : bolgeUfukY(durum.bolge, H);
+  if (sahne3b.hazir) return sahne3b.ufukY;
+  // 360° video panorama (WebGL): göz hizası satırı + ufuk kaydırması; yer tutucu sahne kendi ufkunu çizer
+  const orta = yerlesimler[Math.floor(yerlesimler.length / 2)];
+  if (panorama.aktif && orta) return ufukSatiri(orta, panorama.yukseklikKaydirma);
+  return bolgeUfukY(durum.bolge, H);
 }
 
 /** 3B sahne hazır değilken (panorama yükleniyor) gelen patlama/toz efektleri: hazır olunca uygulanır (10 sn içinde). */
@@ -538,7 +567,7 @@ function kare(simdi: number) {
   bekleyenFigurleriUygula();
   bekleyenEfektleriUygula();
   onizlemeGonder(simdi);
-  if (kalibrasyon) kalibrasyonCiz(ctx, W, H, duvarlar.map((d) => d.ad));
+  if (kalibrasyon) kalibrasyonCiz(ctx, W, H, yerlesimler, duvarOzeti);
   if (baglanti === "kopuk") uyariCiz(ctx, W, H, "Köprü sunucusu bekleniyor…", "Oynatıcı, köprüye (port 4000) bağlanınca panelden yönetilir");
   if (hud) {
     hudCiz(
@@ -548,7 +577,8 @@ function kare(simdi: number) {
         `${durum.oda === "oda1" ? "Oda 1" : "Oda 2"} · ${BOLGE_ETIKETLERI[durum.bolge]} · ${durum.ortam.mevsim} · saat ${durum.ortam.saat.toFixed(2)} (${zamanDilimi(durum.ortam.saat)}) · ışık ${gok.isik.toFixed(2)}`,
         `bulut ${durum.ortam.bulut.toFixed(2)} · sis ${durum.ortam.sis.toFixed(2)} · yağış ${durum.ortam.yagis} · rüzgâr ${durum.ortam.ruzgarSiddeti.toFixed(2)} @ ${durum.ortam.ruzgarYonu}°`,
         `izli mermi ${durum.izliMermi.aktif ? `açık (duvar ${durum.izliMermi.cikisNoktasi}, ${durum.izliMermi.yon}°, ${durum.izliMermi.siklik}/sn)` : "kapalı"} · oda2 ${GUVENLI_ALAN_ETIKETLERI[durum.oda2.guvenliAlan]} · helikopter ${HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}`,
-        `içerik: ${ucCizildi ? "3B sahne + panorama" : panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""}${sahne3b.hata ? ` · 3B hatası: ${sahne3b.hata}` : ""} · aktif klip ${klipler.aktifSayisi} · fov ${duvarlar[0].fov}° · H hud · K kalibrasyon · F tam ekran · M sessiz · 1/2/3 test`,
+        `içerik: ${ucCizildi ? "3B sahne + panorama" : panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""}${sahne3b.hata ? ` · 3B hatası: ${sahne3b.hata}` : ""} · aktif klip ${klipler.aktifSayisi} · duvar ${duvarAcilari} · H hud · K kalibrasyon · F tam ekran · M sessiz · 1/2/3 test`,
+        `geometri: ${duvarOzeti[0]} | ${duvarOzeti[1]}`,
         `3B: ${ucAktifOlabilir ? (sahne3b.hazir ? "açık" : "bekliyor") : ucBoyut ? "desteklenmiyor" : "kapalı (?uc=0)"} · kalite ${sahne3b.kalite} · arazi ${sahne3b.araziDurumu} · ${sahne3b.gunesBilgisi} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi} · parçacık ${sahne3b.parcacikSayisi} · çizim/duvar ${sahne3b.cizimCagrisi} · iz ${sahne3b.izSayisi} · çatışma ${durum.catisma?.aktif ? `%${Math.round(durum.catisma.siddet * 100)} @ ${durum.catisma.yon}°` : "kapalı"} · helikopter ${sahne3b.helikopterHazir ? `model, iniş ${sahne3b.helikopterAzimutu.toFixed(0)}°` : "siluet"}`,
       ],
       H,

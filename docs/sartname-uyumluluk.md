@@ -25,7 +25,7 @@ oynatıcıdaki karşılığı:
 
 | No | Oynatıcıda karşılığı | Durum |
 |---|---|---|
-| §1 | 3 duvar tek tarayıcı penceresinde (`?fov=` duvar açısı, kalibrasyon ızgarası K tuşu), köprü 4000 portundan panel + oynatıcı | Hazır; saha ölçüleri → `?fov=` |
+| §1 | 3 duvar tek tarayıcı penceresinde (ölçülmüş oda `?oda=`: U ya da düz duvar, duvar başına doğru perspektif, ufuk göz hizasında; kalibrasyon ızgarası K tuşu), köprü 4000 portundan panel + oynatıcı | Hazır; saha ölçüleri → `?oda=` (panel Sistem › Duvar geometrisi) |
 | §2 | 5 bölge × mevsim × zaman: 23 Poly Haven CC0 8K çekim panoraması + AI kırsal panorama; panorama başına yerleşim planı (patlama/figür ağaç ve bina içine düşmez) | Hazır (içerik kullanıcının makinesinde) |
 | §3 | Mevsim/saat/bulut/sis/yağış/rüzgâr: panorama seçimi + IBL karartma, güneş yönü panoramadan (yükseklik ≥18° gündüz, gece ay ışığı), yağmurda zayıf güneş ve yumuşak gölge | Hazır |
 | §4 | Patlama: 3B ateş topu, toprak sütunu, moloz, kalıcı krater + tüten duman, flaş + sarsıntı; bağırma/çağırma sesleri (Mixkit/OGA); **figürler**: asker (mevzide, diz çökmüş, yere yatmış, koşan), tank (kule düşmana döner, top atar), **yaralı** (vurulma → düşme → yerde nefes ve yardım işareti, tüfek yere düşer), **sıhhiyeci** yaralının başında; panelde tek dokunuş ("Asker vuruldu!", "Sıhhiyeci gönder") | Hazır; Türkçe bağırma kaydı ve müdahale animasyonu (yeşil perde) bekliyor |

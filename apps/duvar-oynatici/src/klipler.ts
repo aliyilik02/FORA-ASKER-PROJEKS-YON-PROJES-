@@ -6,9 +6,58 @@
  *  - figürler (yeşil perdede çekilmiş asker/araç klipleri, yapay zekâ ile üretilip keylenmiş klipler),
  *  - sprite sayfaları (PNG ızgara; birçok VFX paketi böyle gelir).
  * Konum azimut + ufka göre yükseklik; boyut manifestteki "genislikDerece" (görsel açı) ile verilir,
- * böylece farklı duvar açılarında ve çözünürlüklerde ölçek tutarlı kalır.
+ * böylece farklı duvar açılarında ve çözünürlüklerde ölçek tutarlı kalır. Yerleşim 3B kameralarla aynı
+ * perspektif izdüşümüyle yapılır (projeksiyon.ts); köşeye taşan klibin her duvar kendi parçasını çizer.
  */
-import { azimutKonum, type Yerlesim } from "./projeksiyon";
+import { aciGenisligi, aciNormalize, azimutGorunur, azimutX, type TuvalNoktasi, ufukSatiri, yonuIzdusur, type Yerlesim } from "./projeksiyon";
+
+/** Kare döngüsünde ayırma olmasın diye ortak ara nesneler. */
+const nokta: TuvalNoktasi = { x: 0, y: 0 };
+const parca: KlipParcasi = { xSol: 0, xSag: 0, yUst: 0, yAlt: 0, f0: 0, f1: 1 };
+
+/** Klibin bir duvardaki parçası: tuval dikdörtgeni + kaynakta görünen sütun aralığı. */
+export interface KlipParcasi {
+  xSol: number;
+  xSag: number;
+  yUst: number;
+  yAlt: number;
+  /** Kaynak sütun aralığı (0–1, klibin solundan; aynalama çizimde uygulanır). */
+  f0: number;
+  f1: number;
+}
+
+/**
+ * Klibin `y` duvarındaki parçası. Klip `azimut` ± genişlik/2 aralığını kaplar; duvarın açı aralığıyla kesişimi
+ * çizilir (köşede kesilir), kaynak sütunları azimutla doğrusal. Satırlar klibin ortasında; köşede kesilen parçada
+ * kesim azimutunda: iki duvarın parçaları köşede aynı sütun ve satırda birleşir (boşluk, tekrar ya da basamak yok).
+ * `kaydirma`: sahne ufku − izdüşümün göz hizası satırı (piksel). Parça yoksa false; sonuç `cikti`ya yazılır.
+ */
+export function klipParcasi(azimut: number, acisalGenislik: number, altAci: number, acisalYukseklik: number, y: Yerlesim, kaydirma: number, cikti: KlipParcasi): boolean {
+  if (!azimutGorunur(azimut, y.duvar, acisalGenislik / 2)) return false;
+  const azSol = azimut - acisalGenislik / 2;
+  const s0 = aciNormalize(y.duvar.solAzimut - azSol); // duvarın sol kenarı, klibin sol kenarından derece
+  const p0 = Math.max(0, s0);
+  const p1 = Math.min(acisalGenislik, s0 + y.duvar.fov);
+  if (p1 <= p0) return false;
+  const xSol = azimutX(azSol + p0, y, 180, altAci);
+  const xSag = azimutX(azSol + p1, y, 180, altAci);
+  if (xSol === null || xSag === null || xSag - xSol < 0.5) return false;
+  const kesikSol = p0 > 0;
+  const kesikSag = p1 < acisalGenislik;
+  const azSatir = azSol + (kesikSol === kesikSag ? (p0 + p1) / 2 : kesikSol ? p0 : p1);
+  if (!yonuIzdusur(azSatir, altAci, y, nokta, 180)) return false;
+  const yAlt = nokta.y + kaydirma;
+  if (!yonuIzdusur(azSatir, altAci + acisalYukseklik, y, nokta, 180)) return false;
+  const yUst = nokta.y + kaydirma;
+  if (yAlt - yUst < 0.5) return false;
+  cikti.xSol = xSol;
+  cikti.xSag = xSag;
+  cikti.yUst = yUst;
+  cikti.yAlt = yAlt;
+  cikti.f0 = p0 / acisalGenislik;
+  cikti.f1 = p1 / acisalGenislik;
+  return true;
+}
 
 export interface KlipTanimi {
   dosya: string;
@@ -194,21 +243,14 @@ export class KlipKatmani {
 
   /**
    * Çizim. `isik` gece karartması için (0–1). Kategori süzgeci ile figürler ve efektler ayrı
-   * aşamalarda çizilebilir (figürler sisin altında, efektler üstünde).
+   * aşamalarda çizilebilir (figürler sisin altında, efektler üstünde). `ufukY`: sahnenin ufuk satırı; izdüşümün
+   * göz hizası satırından farklıysa (yer tutucu sahne, düz video döngüsü) klipler o kadar kaydırılır.
    */
   ciz(ctx: CanvasRenderingContext2D, yerlesimler: Yerlesim[], ufukY: number, H: number, isik: number, kategoriler?: Array<KlipTanimi["kategori"]>) {
     for (const a of this.aktifler) {
       if (!a.hazir) continue;
       const kategori = a.tanim.kategori ?? "diger";
       if (kategoriler && !kategoriler.includes(kategori)) continue;
-      const konum = azimutKonum(a.azimut, yerlesimler, a.tanim.genislikDerece * a.olcek);
-      if (!konum) continue;
-      const y = konum.yerlesim;
-      const genislik = (a.tanim.genislikDerece * a.olcek * y.genislik) / y.duvar.fov;
-      // Dikey görüş açısı (yaklaşık): derece başına piksel
-      const dikeyFov = (2 * Math.atan(Math.tan((y.duvar.fov * Math.PI) / 360) * (H / y.genislik)) * 180) / Math.PI;
-      const pxDerece = H / dikeyFov;
-      const kayitY = ufukY - a.yukseklik * pxDerece;
 
       let kaynak: CanvasImageSource;
       let sx = 0;
@@ -235,29 +277,45 @@ export class KlipKatmani {
         }
       } else continue;
       if (!sw || !sh) continue;
-      const yukseklik = genislik * (sh / sw);
-      const x0 = konum.x - genislik / 2;
-      const y0 = (a.tanim.taban ?? "zemin") === "zemin" ? kayitY - yukseklik : kayitY - yukseklik / 2;
+      // Açısal boyut: genişlik manifestten, yükseklik klibin en/boy oranından; ikisi de duvara izdüşürülür
+      // (kenara yakın klip perspektifle büyür, izleyici noktasından bakınca oranı korunur)
+      const acisalGenislik = a.tanim.genislikDerece * a.olcek;
+      const acisalYukseklik = acisalGenislik * (sh / sw);
+      const zemin = (a.tanim.taban ?? "zemin") === "zemin";
+      const altAci = zemin ? a.yukseklik : a.yukseklik - acisalYukseklik / 2;
+      let golge = (a.tanim.golge ?? kategori === "figur") && zemin;
 
-      ctx.save();
-      // Zemin gölgesi (figürler): temas hissi
-      if ((a.tanim.golge ?? kategori === "figur") && (a.tanim.taban ?? "zemin") === "zemin") {
-        ctx.fillStyle = `rgba(0,0,0,${0.12 + 0.25 * isik})`;
-        ctx.beginPath();
-        ctx.ellipse(konum.x, kayitY, genislik * 0.42, genislik * 0.1, 0, 0, Math.PI * 2);
-        ctx.fill();
+      for (const y of yerlesimler) {
+        if (!klipParcasi(a.azimut, acisalGenislik, altAci, acisalYukseklik, y, ufukY - ufukSatiri(y), parca)) continue;
+        const { xSol, xSag, yUst, yAlt, f0, f1 } = parca;
+
+        ctx.save();
+        // Zemin gölgesi (figürler): temas hissi; klibin ortasını gösteren duvarda bir kez
+        if (golge && azimutGorunur(a.azimut, y.duvar)) {
+          const xOrta = azimutX(a.azimut, y, 0, altAci);
+          if (xOrta !== null) {
+            const g = aciGenisligi(a.azimut, acisalGenislik, y, altAci);
+            ctx.fillStyle = `rgba(0,0,0,${0.12 + 0.25 * isik})`;
+            ctx.beginPath();
+            ctx.ellipse(xOrta, yAlt, g * 0.42, g * 0.1, 0, 0, Math.PI * 2);
+            ctx.fill();
+            golge = false;
+          }
+        }
+        // Gece karartması ve mavi tonlama (efektler kendi ışığını yayar, karartılmaz)
+        if (kategori !== "efekt" && isik < 0.98) {
+          ctx.filter = `brightness(${(0.22 + 0.78 * isik).toFixed(3)}) saturate(${(0.6 + 0.4 * isik).toFixed(3)})`;
+        }
+        if (kategori === "efekt") ctx.globalCompositeOperation = "source-over";
+        // Aynalı klipte konum p, kaynağın 1 − p/genişlik sütununu gösterir
+        const kx = sx + (a.yansit ? 1 - f1 : f0) * sw;
+        if (a.yansit) {
+          ctx.translate(xSol + xSag, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(kaynak, kx, sy, (f1 - f0) * sw, sh, xSol, yUst, xSag - xSol, yAlt - yUst);
+        ctx.restore();
       }
-      // Gece karartması ve mavi tonlama (efektler kendi ışığını yayar, karartılmaz)
-      if (kategori !== "efekt" && isik < 0.98) {
-        ctx.filter = `brightness(${(0.22 + 0.78 * isik).toFixed(3)}) saturate(${(0.6 + 0.4 * isik).toFixed(3)})`;
-      }
-      if (kategori === "efekt") ctx.globalCompositeOperation = "source-over";
-      if (a.yansit) {
-        ctx.translate(konum.x * 2, 0);
-        ctx.scale(-1, 1);
-      }
-      ctx.drawImage(kaynak, sx, sy, sw, sh, x0, y0, genislik, yukseklik);
-      ctx.restore();
     }
   }
 }

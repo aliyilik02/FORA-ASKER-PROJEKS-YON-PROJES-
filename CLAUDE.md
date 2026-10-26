@@ -25,8 +25,9 @@ yaz/kış, gece/gündüz, hava durumu, patlama/gürültü/bağırma/çağırma/i
    klipleri kullanılır. Hat: `docs/fotogercekci-icerik-hatti.md`.
 3. **Ortak içerik biçimi:** 360° equirectangular (resim 12K×6K, video 8K×4K); alfa klipler VP9
    alpha WebM (`-pix_fmt yuva420p`). Manifest: `apps/duvar-oynatici/public/icerik/manifest.json`.
-4. **U duvar, 3 projektör, duvar başına 90°** varsayılan; gerçek ölçüler saha keşfinden sonra
-   `?fov=` ile ayarlanır. İlk bölge: **kırsal açık arazi**.
+4. **U duvar, 3 projektör, duvar başına 90°** varsayılan (ölçü girilmezse); gerçek ölçüler saha keşfinden sonra
+   `?oda=` ile girilir (panel Sistem › Duvar geometrisi; duvar başına genelleştirilmiş perspektif, ufuk göz
+   hizasında, K ızgarasıyla doğrulanır). `?fov=` yalnız ölçüsüz açı ayarıdır. İlk bölge: **kırsal açık arazi**.
 5. Arayüz ve kod adlandırması **Türkçe** (dosya/sınıf/fonksiyon adları Türkçe, ASCII; örn.
    `FigurYoneticisi`, `klipler.ts`). İngilizce teknik terim gerekirse yorumla açıkla.
 
@@ -74,6 +75,10 @@ demo.bat yeniden            # Windows: yeniden derleyip başlat
 ## Oynatıcı kısa özet
 
 Silindirik panorama; her nesnenin azimutu var (0 = orta duvar ortası, sola eksi, sağa artı).
+Her duvar izleyicinin gözünden genelleştirilmiş perspektifle (Kooima, `projeksiyon.ts` + `sahne3b/duvarKamerasi.ts`)
+çizilir; 3B, video panorama, 2B klipler/efektler ve K ızgarası aynı izdüşümü kullanır. Sorgu
+`?oda=u,on=6,yan=4,yuk=3,alt=0.3,x=0,z=3,goz=1.7` ya da `?oda=duz,on=9,yuk=2.5,alt=0.3,z=4,goz=1.7` (metre; yerel
+kayıtta kalır, `?oda=sifirla` siler; panel Sistem › Duvar geometrisi); yoksa duvar başına `?fov=` (90), görüntü aynen.
 Arka plan önceliği: 360° panorama (manifest `panorama`) > düz 5760×1080 döngü (`dongu`) >
 parametrik yer tutucu. Üstüne: Oda 2 ön planları, **figür klipleri** (`klipler`, kategori
 `figur`), sis, helikopter, hava, **efekt plakaları** (`klipler`, kategori `efekt`; adı
