@@ -19,7 +19,7 @@ export function UstCubuk({
   onOda: (oda: Oda) => void;
   calistir: Calistir;
 }) {
-  const { oynaticiKalite } = useArayuz();
+  const { oynaticiKalite, oynaticiAdresi } = useArayuz();
   const ue = baglanti?.unreal;
   const oynatici = baglanti?.oynatici;
   const saat = durum.ortam.saat;
@@ -75,7 +75,7 @@ export function UstCubuk({
         <button type="button" className="ikincil kucuk ikonlu" onClick={() => void calistir(() => api.yenidenSenkron())} title="Durumu oynatıcı ve Unreal'a yeniden gönder">
           <Ikon.yenile /> Senkron
         </button>
-        <a className="dugme ikincil kucuk ikonlu" href={`/oynatici/?kalite=${oynaticiKalite}`} target="_blank" rel="noreferrer" title={`Oynatıcıyı yeni pencerede aç (kalite: ${oynaticiKalite})`}>
+        <a className="dugme ikincil kucuk ikonlu" href={oynaticiAdresi} target="_blank" rel="noreferrer" title={`Oynatıcıyı yeni pencerede aç (kalite: ${oynaticiKalite})`}>
           <Ikon.pencere /> Oynatıcı
         </a>
       </div>

@@ -3,6 +3,7 @@ import { api } from "./api";
 import { ArayuzSaglayici, useArayuz } from "./arayuz";
 import { Bildirimler } from "./bilesenler/Bildirimler";
 import { CanliSahne } from "./bilesenler/CanliSahne";
+import { DuvarGeometrisiAyari } from "./bilesenler/DuvarGeometrisiAyari";
 import { EfektPaneli } from "./bilesenler/EfektPaneli";
 import { FigurPaneli } from "./bilesenler/FigurPaneli";
 import { GunlukPaneli } from "./bilesenler/GunlukPaneli";
@@ -13,6 +14,7 @@ import { OrnekPaneli } from "./bilesenler/OrnekPaneli";
 import { OynaticiAyarlari } from "./bilesenler/OynaticiAyarlari";
 import { BolgePaneli, OrtamPaneli } from "./bilesenler/OrtamPaneli";
 import { SenaryoPaneli } from "./bilesenler/SenaryoPaneli";
+import { SesDuzeniAyari } from "./bilesenler/SesDuzeniAyari";
 import { UnrealKomutlariPaneli } from "./bilesenler/UnrealKomutlariPaneli";
 import { UstCubuk } from "./bilesenler/UstCubuk";
 import { SEKME_KISAYOLLARI, YanMenu } from "./bilesenler/YanMenu";
@@ -123,6 +125,8 @@ function Govde() {
             {sekme === "sistem" && (
               <>
                 <OynaticiAyarlari baglanti={baglanti} />
+                <SesDuzeniAyari />
+                <DuvarGeometrisiAyari />
                 <OrnekPaneli ornek={ornek} calistir={calistir} />
                 <UnrealKomutlariPaneli istekler={unrealIstekler} baglanti={baglanti} />
                 <GunlukPaneli gunluk={gunluk} durum={durum} />

@@ -29,12 +29,26 @@ interface ArayuzDegerleri {
   bildirimKapat: (id: number) => void;
   oynaticiKalite: OynaticiKalite;
   setOynaticiKalite: (k: OynaticiKalite) => void;
+  /** Oynatıcıya adres çubuğuyla geçen ek ayarlar (ör. ses düzeni, duvar geometrisi); yerel kayıtta kalır. */
+  oynaticiParametreleri: Record<string, string>;
+  /** null veya "" → parametre kaldırılır (oynatıcı kendi varsayılanını / yerel kaydını kullanır). */
+  setOynaticiParametresi: (ad: string, deger: string | null) => void;
+  /** Üst çubuktaki "Oynatıcı" düğmesinin açtığı adres: kalite + ek ayarlar. */
+  oynaticiAdresi: string;
 }
 
 const Baglam = createContext<ArayuzDegerleri | null>(null);
 
 const SEKME_ANAHTARI = "duvar.panel.sekme";
 const KALITE_ANAHTARI = "duvar.panel.kalite";
+const PARAMETRE_ANAHTARI = "duvar.panel.oynaticiParametreleri";
+
+/** Oynatıcı adresi: `?kalite=` + ek parametreler (ad sırasıyla, kararlı adres). */
+export function oynaticiAdresiOlustur(kalite: OynaticiKalite, ek: Record<string, string>): string {
+  const p = new URLSearchParams({ kalite });
+  for (const ad of Object.keys(ek).sort()) if (ek[ad]) p.set(ad, ek[ad]);
+  return `/oynatici/?${p.toString()}`;
+}
 
 export function ArayuzSaglayici({ children }: { children: ReactNode }) {
   const [seciliYon, setSeciliYonHam] = useState(0);
@@ -63,6 +77,28 @@ export function ArayuzSaglayici({ children }: { children: ReactNode }) {
       /* özel pencere */
     }
   }, []);
+  const [oynaticiParametreleri, setParametrelerHam] = useState<Record<string, string>>(() => {
+    try {
+      const k = JSON.parse(localStorage.getItem(PARAMETRE_ANAHTARI) ?? "{}") as unknown;
+      return k && typeof k === "object" && !Array.isArray(k) ? Object.fromEntries(Object.entries(k).filter(([, v]) => typeof v === "string")) : {};
+    } catch {
+      return {};
+    }
+  });
+  const setOynaticiParametresi = useCallback((ad: string, deger: string | null) => {
+    setParametrelerHam((eski) => {
+      const yeni = { ...eski };
+      if (deger) yeni[ad] = deger;
+      else delete yeni[ad];
+      try {
+        localStorage.setItem(PARAMETRE_ANAHTARI, JSON.stringify(yeni));
+      } catch {
+        /* özel pencere */
+      }
+      return yeni;
+    });
+  }, []);
+  const oynaticiAdresi = useMemo(() => oynaticiAdresiOlustur(oynaticiKalite, oynaticiParametreleri), [oynaticiKalite, oynaticiParametreleri]);
   const sayac = useRef(0);
 
   const setSeciliYon = useCallback((yon: number) => setSeciliYonHam(((Math.round(yon) % 360) + 360) % 360), []);
@@ -85,8 +121,8 @@ export function ArayuzSaglayici({ children }: { children: ReactNode }) {
   );
 
   const deger = useMemo(
-    () => ({ seciliYon, setSeciliYon, sekme, setSekme, bildirimler, bildir, bildirimKapat, oynaticiKalite, setOynaticiKalite }),
-    [seciliYon, setSeciliYon, sekme, setSekme, bildirimler, bildir, bildirimKapat, oynaticiKalite, setOynaticiKalite],
+    () => ({ seciliYon, setSeciliYon, sekme, setSekme, bildirimler, bildir, bildirimKapat, oynaticiKalite, setOynaticiKalite, oynaticiParametreleri, setOynaticiParametresi, oynaticiAdresi }),
+    [seciliYon, setSeciliYon, sekme, setSekme, bildirimler, bildir, bildirimKapat, oynaticiKalite, setOynaticiKalite, oynaticiParametreleri, setOynaticiParametresi, oynaticiAdresi],
   );
   return <Baglam.Provider value={deger}>{children}</Baglam.Provider>;
 }
