@@ -30,6 +30,15 @@ const HEDEF = {
   kutuk: 10000,
   cimen_1: 12000,
   cimen_2: 6000,
+  // 26 Ekim: ormanlık seti (fidan yaprak kartları çok; 20–30k yeter)
+  fidan_goknar: 30000,
+  fidan_cam: 24000,
+  cali_1: 16000,
+  cali_2: 12000,
+  cali_3: 12000,
+  egrelti: 8000,
+  kutuk_2: 8000,
+  cam_koku: 12000,
 };
 
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);

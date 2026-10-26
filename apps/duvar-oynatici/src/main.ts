@@ -66,14 +66,16 @@ if (kaliteParam) localStorage.setItem("kalite", kalite);
 const sahne3b = new Sahne3B(tuval3b, params.get("gunes") === "1", kalite);
 /**
  * 3B arazi kipi: ?arazi=kapali|hibrit|tam (adres çubuğu > yerel kayıt > bölgeye göre varsayılan).
- * Varsayılan: kırsal açık arazide "hibrit" (yakın alan 3B, uzak panorama); diğer bölgelerde kapalı (panorama).
+ * Varsayılan: açık arazili bölgelerde "hibrit" (yakın alan 3B, uzak panorama). Meskûn mahalde kapalı: panoramada
+ * binalar 5–15 m'de, 3B zemin duvar diplerini gömer (bkz. sahne3b/arazi.ts profil notu).
  */
 const araziParam = params.get("arazi");
 const araziSecimi: AraziModu | null = (["kapali", "hibrit", "tam"] as const).find((k) => k === (araziParam ?? localStorage.getItem("arazi"))) ?? null;
 if (araziParam && araziSecimi) localStorage.setItem("arazi", araziSecimi);
+const ARAZI_VARSAYILAN: Record<string, AraziModu> = { kirsal_acik_arazi: "hibrit", daglik: "hibrit", ormanlik: "hibrit", us_bolgesi: "hibrit", meskun_mahal: "kapali" };
 function araziModuSec(bolge: string): AraziModu {
   if (araziSecimi) return araziSecimi;
-  return bolge === "kirsal_acik_arazi" ? "hibrit" : "kapali";
+  return ARAZI_VARSAYILAN[bolge] ?? "kapali";
 }
 const ucAktifOlabilir = ucBoyut && sahne3b.destekli;
 sahne3b.catismaSesleriAyarla({

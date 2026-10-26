@@ -6,6 +6,7 @@
  */
 import * as THREE from "three";
 import type { ParcacikSistemi } from "./parcaciklar";
+import { zeminY } from "./uzay";
 
 interface Krater {
   mesh: THREE.Mesh;
@@ -78,7 +79,10 @@ export class HasarKatmani {
       const boyut = (0.04 + Math.random() * 0.09) * (0.7 + siddet * 0.6);
       q.setFromEuler(new THREE.Euler(Math.random() * 3, Math.random() * 3, Math.random() * 3));
       olcekV.set(boyut * (0.7 + Math.random()), boyut * 0.6, boyut * (0.7 + Math.random()));
-      mat.compose(new THREE.Vector3(konum.x + Math.cos(aci) * r, konum.y + boyut * 0.3, konum.z + Math.sin(aci) * r), q, olcekV);
+      // Her kesek kendi altındaki zemine oturur: 3B arazide krater çukurlaştığından merkezde zemin daha alçaktır
+      const mx = konum.x + Math.cos(aci) * r;
+      const mz = konum.z + Math.sin(aci) * r;
+      mat.compose(new THREE.Vector3(mx, zeminY(mx, mz) + boyut * 0.3, mz), q, olcekV);
       moloz.setMatrixAt(i, mat);
     }
     moloz.castShadow = true;

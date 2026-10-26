@@ -22,7 +22,7 @@ import { ParcacikSistemi } from "./parcaciklar";
 import { SutreKatmani, type SutreEsyasi } from "./sutre";
 import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, type AraziModu } from "./arazi";
 import { Gokyuzu } from "./gokyuzu";
-import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu } from "./uzay";
+import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu, zeminY } from "./uzay";
 import { birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
@@ -401,8 +401,12 @@ export class Sahne3B {
       const profil = ARAZI_PROFILLERI[bolge] ?? ARAZI_PROFILLERI.kirsal_acik_arazi;
       const k = this.kaynak?.yawKaydirma ?? 0;
       this.arazi.temizNoktalar = (this.kaynak?.plan?.noktalar ?? []).map((n) => yerKonumu(panoramadanSahneAzimutu(n.azimut, k), n.mesafe));
+      this.arazi.uyari = (m) => this.uyari?.(m);
       this.arazi.kur(mod, profil, ARAZI_KALITE[this.kalite], kok, kar);
       zeminFonksiyonu(this.arazi.aktif ? (x, z) => this.arazi.yukseklik(x, z) : null);
+      // Yere oturan mevcut nesneler yeni yüksekliğe (bölge değişti: profil farklı; kip değişti: düz ↔ engebeli)
+      this.figurler.zemineOturt();
+      this.sutre.zemineOturt();
       if (this.golgeZemini) this.golgeZemini.visible = !this.arazi.aktif;
       this.hasar.cikartmaCiz = !this.arazi.aktif;
       if (mod !== "tam") {
@@ -460,9 +464,10 @@ export class Sahne3B {
       return;
     }
     if (this.arazi.mod === "hibrit" && this.arkaPlan) {
-      // Hibrit: arazi kenarı panoramanın ufuk rengine karışsın
+      // Hibrit: arazi kenarı (profil yarıçapı) panoramanın ufuk rengine karışsın; kaya/çalı da aynı sise girer
       const ufuk = this.ufukRengi();
-      this.sahne.fog = new THREE.Fog(ufuk.multiplyScalar(faktor), 90, 230);
+      const r = this.arazi.yaricap;
+      this.sahne.fog = new THREE.Fog(ufuk.multiplyScalar(faktor), r * 0.55, r * 1.45);
     }
     if (this.gunesTahmini && this.gunesTahmini.guc > 0.05) {
       azimut = panoramadanSahneAzimutu(this.gunesTahmini.azimut, this.kaynak?.yawKaydirma ?? 0);
@@ -522,8 +527,12 @@ export class Sahne3B {
     // Gerçek çekilmiş plaka 2B katmanda oynuyorsa 3B ateş topu çizilmez; krater, moloz ve ışık yine eklenir.
     if (!plakaVar) this.parcaciklar.patlama(p, r);
     else this.parcaciklar.tozBulutu(p, r, s * 0.6);
+    // Önce arazi çukurlaşır, sonra moloz/duman yeni (alçak) zemine yerleşir
+    if (this.arazi.aktif) {
+      this.arazi.krater(p, 1.6 + s * 2.6, s);
+      p.y = zeminY(p.x, p.z);
+    }
     this.hasar.krater(p, 1.6 + s * 2.6, s);
-    if (this.arazi.aktif) this.arazi.krater(p, 1.6 + s * 2.6, s);
     this.flas.position.set(p.x, p.y + r, p.z);
     this.flasGuc = Math.max(this.flasGuc, s);
   }

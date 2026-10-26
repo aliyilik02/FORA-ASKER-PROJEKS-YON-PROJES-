@@ -87,7 +87,7 @@ Panel API'si (`apps/kopru/src/api.ts`): `/api/durum`, `/oda`, `/bolge`, `/ortam`
 `/sahne/sifirla` (yeni grup: figür/çatışma/izli/helikopter kapanır, oynatıcıda krater-duman silinir). Köprü son
 durumu `apps/kopru/veri/son-durum.json`'a yazar ve açılışta geri yükler (12 saat).
 
-## Mevcut durum (23 Ekim 2026)
+## Mevcut durum (26 Ekim 2026)
 
 Çalışan: panel, köprü, oynatıcı, senaryo editörü, ön ayarlar, Art-Net çıkışı (donanımsız
 doğrulandı), figür paneli, demo.bat. **Oynatıcıda 3B sahne katmanı** (`apps/duvar-oynatici/src/sahne3b/`,
@@ -154,7 +154,7 @@ fare imleci 3 sn'de gizlenir, `docs/gosterim-rehberi.md`. Köprü son durumu dis
 "Sahneyi sıfırla" (`/sahne/sifirla` + `sahne` WS mesajı); oynatıcı uyarıları köprü günlüğüne (`gunluk` istemci
 mesajı), önizleme fps/kalite bilgisi taşır; HUD varsayılan kapalı; panelde `figurYardimcilari.ts`.
 
-**3B arazi (23 Ekim akşam, devam ediyor):** `sahne3b/arazi.ts` (yükseklik haritası, splat doku karışımı, krater deformasyonu, çimen demetleri, Poly Haven CC0 kaya/çalı LOD), `gokyuzu.ts` (tam kip), `uzay.ts` zeminY. Kip: `?arazi=kapali|hibrit|tam`, kırsal varsayılan hibrit. İçerik `icerik/arazi/` (depo dışı; `araclar/arazi-indir.mjs`, `araclar/arazi-sadelestir.mjs`). Kalan: tam kip görsel testi, diğer bölgelerin profilleri, çimen/kaya gölgesi, Oda 2 düzlük kontrolü, performans (dizüstünde dusuk), belgeler.
+**3B arazi (23–26 Ekim):** `sahne3b/arazi.ts` (yükseklik haritası, splat doku karışımı, krater deformasyonu, çimen demetleri, Poly Haven CC0 kaya/çalı/fidan LOD), `gokyuzu.ts` (tam kip), `uzay.ts` zeminY. Kip: `?arazi=kapali|hibrit|tam` (yerel kayıtta kalır); varsayılan (`main.ts` `ARAZI_VARSAYILAN`) kırsal/dağlık/ormanlık/üs hibrit, meskûn mahal kapalı (panoramada binalar 5–15 m'de, 3B zemin duvar diplerini gömüyor). 26 Ekim: 5 bölge profili (doku seti, bitki seti `BITKI_SETLERI`, hibrit görünür yarıçap `yaricap` 30–160 m + kenar çanağı `kenarCukuru`), ormanlık bitkileri (fidan/çalı/eğrelti/kütük), normal haritası teğet çerçevesi düzeltmesi, `sok()` GPU kaynaklarını bırakır, krater molozu çukurun yeni zeminine, arazi yeniden kurulunca figür/sütre `zemineOturt`, düşük kalitede 1K doku, eksik içerik uyarısı köprü günlüğüne. İçerik `icerik/arazi/` (depo dışı; `araclar/arazi-indir.mjs`, `araclar/arazi-sadelestir.mjs`, lisans `icerik/arazi/LISANS.txt`). **Kullanıcı bu katmanı değiştirmeyi, yeni modeller ve yeni alan eklemeyi planlıyor (26 Ekim): derin/çok ajanlı inceleme yapma, önce yönü sor.** Açık: orman ayarı (çimen 0,35, gölge lekesi, 2–3 m fidan) gözle doğrulanmadı ve yaz orman panoraması park çimi olduğundan 3B orman tabanıyla renk uyumsuz; tam kipte gök ufukta beyaza patlıyor (olası neden: three `Sky` HDR çıktı + `NoToneMapping`); Oda 2 düzlük kontrolü; belgeler.
 
 ## Sıradaki işler (öncelik sırasıyla)
 

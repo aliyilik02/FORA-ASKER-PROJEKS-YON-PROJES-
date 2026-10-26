@@ -227,6 +227,11 @@ export class FigurKatmani {
   private readonly rezerveler = new Map<string, THREE.Vector3>();
 
   /** Verilen zemin noktasının `yaricap` m içinde figür (ya da yüklenmekte olan rezervasyon) var mı. */
+  /** Arazi yeniden kurulduğunda (bölge/kip değişimi) figürleri yeni zemin yüksekliğine oturtur. */
+  zemineOturt() {
+    for (const a of this.aktifler) a.nesne.position.y = zeminY(a.nesne.position.x, a.nesne.position.z);
+  }
+
   doluMu(konum: THREE.Vector3, yaricap = 2.2): boolean {
     if (this.aktifler.some((a) => a.nesne.position.distanceTo(konum) < yaricap)) return true;
     for (const r of this.rezerveler.values()) if (r.distanceTo(konum) < yaricap) return true;

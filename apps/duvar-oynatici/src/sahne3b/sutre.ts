@@ -6,7 +6,7 @@
  */
 import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { radyan, yerKonumu } from "./uzay";
+import { radyan, yerKonumu, zeminY } from "./uzay";
 
 export interface SutreEsyasi {
   /** glTF dosyası; `tip: "hesco"` ise gerekmez (prosedürel). */
@@ -123,6 +123,11 @@ export class SutreKatmani {
   temizle() {
     for (const c of [...this.grup.children]) this.grup.remove(c);
     this.aktifTip = null;
+  }
+
+  /** Arazi yeniden kurulduğunda sütreleri yeni zemin yüksekliğine oturtur (izleyici çevresi düzdür ama kip değişebilir). */
+  zemineOturt() {
+    for (const c of this.grup.children) c.position.y = zeminY(c.position.x, c.position.z);
   }
 
   /** Dizilimi değiştirir; aynı tip zaten açıksa dokunmaz. */
