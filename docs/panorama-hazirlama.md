@@ -60,10 +60,13 @@ yakın bir ağacın/duvarın üstüne düşen nesne yapıştırma gibi görünü
   90° en işe yaramaz yön olsun (yakın engel, fotoğrafçı tarafı).
 - Her duvarda en az bir `patlama` ve bir `asker` noktası (zemin varsa, ağaç/bina önünde 6–15 m de olur).
   Tipik: 3–6 patlama, 4–7 asker/figür, 1–2 helikopter, 2–3 tank, 0–2 toz. Arka 90°'de nokta yok.
-- `asker` 8–25 m, siper yanında; `figur` yürüyen/koşan için yanlara açık alan; `patlama` 10–35 m, su/buz,
-  çatı, ağaç/bina içi değil, askerlerden ≥ 5 m uzak; `tank` 25–45 m düz alan/yol; `helikopter` 25–50 m,
+- `asker` / `figur`: plan noktası askerin **yönünü** belirler; oynatıcı mesafeyi 4–7 m'ye çeker
+  (`sahne3b.ts` `ASKER_EN_UZAK`/`ASKER_EN_YAKIN`: asker duvarda iri ve net okunsun; 7 m'de 1080p duvarda ~265 px).
+  Yön, yakın zemini açık olan (siper, kaya, hendek kenarı yanı) bir yer seçilmeli; `figur` yürüyen/koşan için
+  yanlara açık alan. `patlama` 12–30 m, su/buz, çatı, ağaç/bina içi değil (oynatıcı askerin/tankın 4,5 m
+  yakınına patlama düşürmez, boş noktaya kaydırır); `tank` 22–35 m düz alan/yol; `helikopter` 25–45 m,
   ≥ 15 m açık düz alan, en az biri sahne −55..+80° arasında (paneldeki varsayılan iniş yönü +12°);
-  `toz` toprak yol / çakıl.
+  `toz` toprak yol / çakıl. Oda 2'de askerler sütre eşyalarının (kaya, HESCO) içine konmaz.
 - Hibrit 3B arazi (kırsal/dağlık 160 m, ormanlık 48 m, üs 90 m): ormanlıkta noktalar ≤ 30 m, üste ≤ 55 m
   (kenarda arazi alçalır). Sırt/tepe üstünden çekilmiş panoramada zemin uzakta düşer: noktalar yakın zeminde.
 - `yasak` aralıkları [baslangic → bitis, saat yönünde]: yakın engellerin (gövde, bina, duvar, araç, direk)
