@@ -83,7 +83,7 @@ Arka plan önceliği: 360° panorama (manifest `panorama`) > düz 5760×1080 dö
 parametrik yer tutucu. Üstüne: Oda 2 ön planları, **figür klipleri** (`klipler`, kategori
 `figur`), sis, helikopter, hava, **efekt plakaları** (`klipler`, kategori `efekt`; adı
 `patlama_*`, `toz_*`, `uzak_patlama_*` olanlar panel efektlerine otomatik bağlanır), izli mermi,
-flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test. Sorgu: `?fov=`, `?panorama=`,
+flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test. Sorgu: `?oda=`, `?fov=`, `?panorama=`,
 `?yaw=`, `?hud=1`, `?doldur=1`, `?kalite=dusuk|orta|yuksek` (dizüstü: dusuk; yerel kayıtta kalır). Ayrıntı: `docs/duvar-oynatici.md`.
 
 Panel API'si (`apps/kopru/src/api.ts`): `/api/durum`, `/oda`, `/bolge`, `/ortam`, `/isik`,
@@ -170,7 +170,8 @@ mesajı), önizleme fps/kalite bilgisi taşır; HUD varsayılan kapalı; panelde
    diziliminde iki hat). Sıhhiyeci "Interact" klibiyle idare ediyor; gerçek
    müdahale animasyonu (turnike) için yeşil perde çekimi (docs §2.5). Yaralı taşıma (iki kişi) yok.
 3. VFX plakaları (gerçek çekim, alfa) ve helikopter inişi için 3B toz + ses ayarı; izli mermiyi 3B'ye taşıma.
-4. 4 kanal ses; Türkçe bağırma/yaralı inleme kaydı; U duvar ölçüleri → `?fov=`.
+4. 4 kanal ses; Türkçe bağırma/yaralı inleme kaydı; U duvar ölçüleri → `?oda=` (panel Sistem › Duvar geometrisi,
+   sahada K ızgarasıyla doğrula).
 5. İdareye gösterim: kırsal 4 varyant + patlama/krater + 3 asker + yaralı + helikopter.
 
 ## Belgeler
