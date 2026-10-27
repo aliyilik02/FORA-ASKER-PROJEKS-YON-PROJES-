@@ -121,6 +121,13 @@ Idle_Gun ↔ Idle_Gun_Shoot geçişi, elde tüfek (`silahModeli`, kemik adı GLT
 Oda 2 sütreleri: manifest `sutreler` (kum torbası, kaya, toprak yığını, bariyer; `modeller/sutre/`).
 Bone/klip adları: GLTFLoader noktayı siler; kısa klip adı `klipBul` ile eşleşir.
 
+**Helikopter ve izli mermi (27 Ekim):** helikopter hareketi saf uçuş modelinde (`sahne3b/helikopterUcusu.ts`,
+testli: kavisli yaklaşma, virajda yatış, flare, kızakta sekme, 5 m askıdan burun aşağı kalkış, 80 m ileriye bakan
+arazi kaçınması); rotor tozu zemine göre (`rotorTozu.ts`: kış kar, kırsal/dağlık toprak, ormanlık koyu toprak +
+yaprak, üs/meskûn beton; `Helikopter3B.tozTuru` `araziAyarla`dan). İzli mermi "yön"ü artık iz doğrultusu: 0 izleyiciye
+doğru, ±90 önünden yandan geçer (`catisma.ts` `izliAtis`, yardımcılar `izliYol.ts`); uzak iz ≥ 1,5 px kalın, başın
+6 m yakınından geçende "çat". Tarayıcıda gözle doğrulanmadı.
+
 **Figür duruşları (23 Ekim):** `FigurKomutu.poz` (ayakta / comelmis / yarali) ve `islem: "poz"`;
 yaralı = SWAT "HitRecieve" → "Death" (son karede kalır) + prosedürel nefes ve kol kaldırma (yardım
 çağrısı, sesli), tüfek yere düşer; diz çökme prosedürel kemik ofseti (`figurler3b.ts`, Quaternius riginde

@@ -14,6 +14,13 @@ const ODA1_EFEKTLERI: Array<{ tur: EfektTuru; aciklama: string; sinif?: string }
   { tur: "cagirma", aciklama: "Sıhhiye! Sedye getirin!" },
 ];
 
+/** İzli mermi yönü: 0 izleyiciye doğru; + sağdan sola (←), − soldan sağa (→); ±90'a yakın önünden yandan geçer. */
+function izliYonMetni(v: number): string {
+  const d = Math.round(v);
+  if (Math.abs(d) <= 5) return `${d}° · izleyiciye`;
+  return `${d > 0 ? "+" : ""}${d}° · ${Math.abs(d) >= 70 ? "yandan" : "çapraz"} ${d > 0 ? "←" : "→"}`;
+}
+
 export function EfektPaneli({ durum, calistir }: { durum: SimulasyonDurumu; calistir: Calistir }) {
   const { seciliYon, bildir } = useArayuz();
   const [siddet, setSiddet] = useState(1);
@@ -81,9 +88,14 @@ export function EfektPaneli({ durum, calistir }: { durum: SimulasyonDurumu; cali
             </div>
           </div>
           <div className="iki-sutun">
-            <Kaydirici etiket="Mermi yönü" deger={m.yon} min={-90} max={90} adim={1} birim="°" onChange={(yon) => mermiGuncelle({ yon })} />
+            <Kaydirici etiket="Mermi yönü" deger={m.yon} min={-90} max={90} adim={1} bicim={izliYonMetni} onChange={(yon) => mermiGuncelle({ yon })} />
             <Kaydirici etiket="Sıklık" deger={m.siklik} min={0.5} max={20} adim={0.5} birim=" /sn" onChange={(siklik) => mermiGuncelle({ siklik })} />
           </div>
+          <p className="aciklama">
+            Mermiler seçilen duvarın uzağından gelir. Yön 0°: izleyiciye doğru (yakına çarpar, seker, bazısı başın üstünden
+            geçer). ±90°: izleyicinin 10–60 m önünden yandan geçip gider; + sağdan sola, − soldan sağa. Başın yakınından geçen
+            mermi "çat" diye ses verir.
+          </p>
         </div>
       </Bolum>
     </>

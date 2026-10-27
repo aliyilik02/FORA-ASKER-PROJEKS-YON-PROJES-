@@ -18,6 +18,7 @@ import { FigurKatmani, type FigurPozu, type FigurSecenekleri, type ModelTanimi }
 import { gunesTahmin, panoramadanSahneAzimutu, type GunesTahmini } from "./gunes";
 import { HasarKatmani } from "./hasar";
 import { Helikopter3B } from "./helikopter3b";
+import { rotorTozuTuru } from "./rotorTozu";
 import { ParcacikSistemi } from "./parcaciklar";
 import { SutreKatmani, type SutreEsyasi } from "./sutre";
 import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, type AraziModu } from "./arazi";
@@ -412,6 +413,8 @@ export class Sahne3B {
    * Bölge değişince arazi yeniden kurulur (profil bölgeye göre).
    */
   araziAyarla(mod: AraziModu, bolge: string, mevsim: string, kok: string) {
+    // Rotor tozu zemin malzemesine göre: kışın kar, ormanda koyu toprak + yaprak, üs/meskûn mahalde beton tozu
+    this.heli.tozTuru = rotorTozuTuru(bolge, mevsim);
     if (!this.renderer) return;
     const kar = mevsim === "kis" ? 1 : mevsim === "sonbahar" ? 0.12 : 0;
     const anahtar = `${mod}|${bolge}`;
@@ -639,10 +642,14 @@ export class Sahne3B {
     this.catisma.catismaAyarla({ aktif: c.aktif, siddet: c.siddet, azimut, dostAtes: c.dostAtes });
     this.figurler.dusmanAzimutu = c.aktif ? azimut : null;
   }
-  /** Klasik izli mermi ayarı 3B'de: duvar yaw'ı + yön → kaynak azimutu. */
+  /**
+   * Klasik izli mermi ayarı 3B'de: kaynak seçilen duvarın ortası yönünde (duvar yaw'ı; ±10° dağılım, 150–300 m),
+   * `yon` iz doğrultusunu döndürür: 0 izleyiciye doğru gelir, ±90 izleyicinin 10–60 m önünden yandan geçer
+   * (+ sağdan sola, − soldan sağa). Bkz. CatismaSistemi.izliAtis.
+   */
   izliMermiAyarla(a: IzliMermiAyarlari, duvarYawlari: number[]) {
     const yaw = duvarYawlari[a.cikisNoktasi] ?? 0;
-    this.catisma.izliAyarla({ aktif: a.aktif, azimut: yaw + a.yon * 0.5, siklik: a.siklik });
+    this.catisma.izliAyarla({ aktif: a.aktif, azimut: yaw, yon: Math.max(-90, Math.min(90, a.yon)), siklik: a.siklik });
   }
   get izSayisi() {
     return this.catisma.aktifIzSayisi;
