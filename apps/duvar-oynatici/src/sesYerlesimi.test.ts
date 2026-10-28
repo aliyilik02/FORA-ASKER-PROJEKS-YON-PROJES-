@@ -187,17 +187,33 @@ describe("adres değerleri", () => {
     expect(sesDuzeniAyristir(null)).toBeNull();
   });
 
-  it("?hoparlor= geçerli değerler", () => {
+  it("?hoparlor= geçerli değerler (4, 6, 8 kanal)", () => {
     expect(hoparlorAyristir("-45,45,-135,135")).toEqual([-45, 45, -135, 135]);
     expect(hoparlorAyristir("-30, 30, 0, LFE, -110, 110")).toEqual([-30, 30, 0, null, -110, 110]);
-    expect(hoparlorAyristir("+20;340")).toEqual([20, -20]); // 340 → -20
+    expect(hoparlorAyristir("+20;340;-160;160")).toEqual([20, -20, -160, 160]); // 340 → -20
     expect(hoparlorAyristir("-60,60,-120,180")).toEqual([-60, 60, -120, -180]);
+    expect(hoparlorAyristir("-30,30,0,lfe,-150,150,-90,90")).toEqual([-30, 30, 0, null, -150, 150, -90, 90]);
   });
 
   it("?hoparlor= geçersiz değerler null", () => {
-    for (const kotu of ["", "45", "a,b", "-45,45,lfe,lfe", "lfe,30", "30,30", "180,-180", "1e3,4", "0x10,20", "-45,45,,135", "1,2,3,4,5,6,7,8,9", "400,10"]) {
-      expect(hoparlorAyristir(kotu), kotu).toBeNull();
-    }
+    const kotuler = [
+      "",
+      "45",
+      "a,b",
+      "-45,45,lfe,lfe", // iki LFE
+      "30,30,-135,135", // aynı yöne iki hoparlör
+      "180,-180,45,-45", // 180 ile -180 aynı yön
+      "1e3,4,90,-90",
+      "0x10,20,90,-90",
+      "-45,45,,135",
+      "400,10,90,-90",
+      "-90,90", // 2 kanal: stereo hoparlör açısı kullanmaz
+      "-45,45,180", // 3, 5, 7 kanal hiçbir düzene uymaz
+      "-30,30,0,-110,110",
+      "-30,30,0,lfe,-150,150,-90",
+      "1,2,3,4,5,6,7,8,9",
+    ];
+    for (const kotu of kotuler) expect(hoparlorAyristir(kotu), kotu).toBeNull();
     expect(hoparlorAyristir(null)).toBeNull();
   });
 
@@ -249,6 +265,16 @@ describe("?ses= / ?hoparlor= çözümü (adres > yerel kayıt > otomatik)", () =
     expect(a.hoparlor).toBeNull();
     expect(a.uyarilar).toHaveLength(2);
     expect(d.veri).toEqual({ ses: "dortlu" });
+  });
+
+  it("hiçbir düzene uymayan kanal sayısı (3, 5) kayda yazılmaz, eski kayıt kalır", () => {
+    for (const kotu of ["-45,45,180", "-30,30,0,-110,110"]) {
+      const d = depo({ hoparlor: "-60,60,-120,120" });
+      const a = sesAyariniCoz({ ses: null, hoparlor: kotu }, d);
+      expect(a.hoparlor).toEqual([-60, 60, -120, 120]);
+      expect(a.uyarilar[0]).toContain("4, 6 ya da 8 kanal");
+      expect(d.veri).toEqual({ hoparlor: "-60,60,-120,120" });
+    }
   });
 
   it("kayıt erişimi hata verirse (özel pencere) otomatiğe düşer", () => {

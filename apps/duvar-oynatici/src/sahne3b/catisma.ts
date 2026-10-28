@@ -2,7 +2,7 @@
  * Çatışma sistemi (3B): izli mermiler ve ateş alışverişi.
  *
  *  - Düşman ateşi: panelde seçilen yönden (uzak, 150–260 m) salvolar hâlinde gelen izli mermiler;
- *    yere çarpınca toz ve kıvılcım, bazıları seker; vızıltı/çarpma sesi stereo yerleşimli.
+ *    yere çarpınca toz ve kıvılcım, bazıları seker; vızıltı/çarpma sesi sahne azimutuyla (stereo / çok kanal ses motorda).
  *  - Dost ateşi: sahnedeki silahlı figürler düşman yönüne karşılık verir: namlu alevi + giden iz + atış sesi.
  *  - Klasik "izli mermi" ayarı (duvar + yön + sıklık) da burada sürekli akış olarak çizilir.
  * İzler tek bir instanced kutu mesh'idir (katkı karışımı, parlak); yön hız vektöründen gelir.
@@ -20,16 +20,28 @@ interface Iz {
   sekti: boolean;
 }
 
-/** Ses geri çağrıları sahne azimutuyla (derece; 0 = orta duvar, sağa artı); yerleşimi ses motoru yapar (stereo / çok kanal). */
+/**
+ * Ses geri çağrılarının konum argümanı: sahne azimutu (derece; 0 = orta duvar, sağa artı, ±180 arka), stereo pan
+ * (−1..1) değil. Yerleşimi ses motoru yapar (stereoda pan = sin(azimut), çok kanalda hoparlör kazançları). İkisi de
+ * sayı olduğundan ayrı (markalı) tip: düz number ya da Math.sin(...) gibi pan değeri geçilirse derleme hatası verir
+ * (yoksa bütün çatışma sesleri sessizce ortaya toplanırdı; çalışma anı denetimi `catismaSesleri.test.ts`). Değer
+ * `sesAzimutu(konum)` ya da `azimutDerece(derece)` ile üretilir; çalışma anında düz sayıdır.
+ */
+export type AzimutDerece = number & { readonly __birim: "sahneAzimutuDerece" };
+/** Sahne azimutu (derece) → ses argümanı (yalnız tip işareti, değer aynen). */
+const azimutDerece = (azimut: number) => azimut as AzimutDerece;
+/** Sahne konumunun izleyiciden azimutu (derece) → ses argümanı. */
+const sesAzimutu = (p: THREE.Vector3) => konumAzimutu(p) as AzimutDerece;
+
 export interface CatismaSesleri {
   /** Yakına çarpan/vızıldayan mermi (çarpma noktasının azimutu). */
-  carpma: (azimut: number) => void;
+  carpma: (azimut: AzimutDerece) => void;
   /** Tek atış sesi (atıcının azimutu); uzak = düşman tarafı. */
-  atis: (azimut: number, uzak: boolean) => void;
+  atis: (azimut: AzimutDerece, uzak: boolean) => void;
   /** Ağır çatışmada düşman hattında rastgele uzak patlama (azimut, sahne). */
-  uzakPatlama?: (azimut: number) => void;
+  uzakPatlama?: (azimut: AzimutDerece) => void;
   /** Tank top atışı sesi (tankın azimutu). */
-  topAtisi?: (azimut: number) => void;
+  topAtisi?: (azimut: AzimutDerece) => void;
 }
 
 export interface AgirSilahKonumu {
@@ -146,7 +158,7 @@ export class CatismaSistemi {
     this.izEkle(kaynak, v, false);
     // Düşman hattında namlu parıltısı (uzak, kısa) ve uzak atış sesi
     if (Math.random() < 0.6) this.parcaciklar.parlama(kaynak, rnd(1.5, 2.5));
-    if (Math.random() < 0.35) this.sesler.atis(konumAzimutu(kaynak), true);
+    if (Math.random() < 0.35) this.sesler.atis(sesAzimutu(kaynak), true);
   }
 
   private dostAtis(konum: THREE.Vector3) {
@@ -159,7 +171,7 @@ export class CatismaSistemi {
     hedef.y = ZEMIN_Y + rnd(0, 3);
     const v = hedef.sub(namlu).normalize().multiplyScalar(rnd(160, 200));
     this.izEkle(namlu, v, true);
-    this.sesler.atis(konumAzimutu(konum), false);
+    this.sesler.atis(sesAzimutu(konum), false);
   }
 
   /** Tank top atışı: büyük parlama + namlu dumanı + hızlı parlak mermi; düşman hattında patlama ile biter. */
@@ -191,7 +203,7 @@ export class CatismaSistemi {
     v.y = 2;
     this.mermiler.push({ p: t.namlu.clone(), v, kalan: rnd(0.55, 0.8), hedefAz });
     this.izEkle(t.namlu, v, true);
-    this.sesler.topAtisi?.(konumAzimutu(t.konum));
+    this.sesler.topAtisi?.(sesAzimutu(t.konum));
   }
 
   private carpma(iz: Iz) {
@@ -223,7 +235,7 @@ export class CatismaSistemi {
         const a = rnd(0, 6.28);
         this.parcaciklar.kivilcim.ekle({ x: p.x, y: zeminY(p.x, p.z) + 0.05, z: p.z, vx: Math.cos(a) * rnd(1, 4), vy: rnd(2, 6), vz: Math.sin(a) * rnd(1, 4), boyut: rnd(0.04, 0.09), buyume: 0, alfa: 1, aci: 0, donus: 0, t: 0, sure: rnd(0.25, 0.6), renk: [1, 0.8, 0.5], yercekimi: 9.8, surtunme: 0.3 });
       }
-      this.sesler.carpma(konumAzimutu(p));
+      this.sesler.carpma(sesAzimutu(p));
       if (!iz.sekti && Math.random() < 0.3) {
         const v = iz.v.clone();
         v.y = Math.abs(v.y) * rnd(0.4, 1.2) + rnd(10, 40);
@@ -244,7 +256,7 @@ export class CatismaSistemi {
         this.uzakPatlamaSayac -= dt;
         if (this.uzakPatlamaSayac <= 0) {
           this.uzakPatlamaSayac = rnd(14, 45) * (1.5 - s);
-          this.sesler.uzakPatlama(this.ayar.azimut + rnd(-40, 40));
+          this.sesler.uzakPatlama(azimutDerece(this.ayar.azimut + rnd(-40, 40)));
         }
       }
       if (this.dusmanSalvoKalan > 0) {
@@ -303,7 +315,7 @@ export class CatismaSistemi {
     // --- Top mermileri: uçuş bitince düşman hattında patlama ---
     for (const m of this.mermiler) {
       m.kalan -= dt;
-      if (m.kalan <= 0) this.sesler.uzakPatlama?.(m.hedefAz + rnd(-3, 3));
+      if (m.kalan <= 0) this.sesler.uzakPatlama?.(azimutDerece(m.hedefAz + rnd(-3, 3)));
     }
     this.mermiler = this.mermiler.filter((m) => m.kalan > 0);
 

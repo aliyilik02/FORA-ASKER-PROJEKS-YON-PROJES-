@@ -156,9 +156,10 @@ describe("SesMotoru (sahte Web Audio)", () => {
       expect(p.baglantilar[0].hedef).toBe(ana);
     }
     expect(b.dugumler.some((d) => d.tur === "birlestirici")).toBe(false);
-    // Ortam (rüzgâr) doğrudan ana kazanca, eskisi gibi
+    // Ortam (rüzgâr) doğrudan ana kazanca, eskisi gibi (tek kanallı gürültü)
     ses.ortamAyarla(ORTAM);
     const ruzgarKaynagi = b.dugumler.filter((d) => d.tur === "kaynak").find((d) => d.loop);
+    expect((ruzgarKaynagi!.buffer as SahteTampon).numberOfChannels).toBe(1);
     const filtre = ruzgarKaynagi!.baglantilar[0].hedef as SahteDugum;
     const kazanc = filtre.baglantilar[0].hedef as SahteDugum;
     expect(kazanc.baglantilar[0].hedef).toBe(ana);
@@ -198,6 +199,18 @@ describe("SesMotoru (sahte Web Audio)", () => {
     const giris = kazanc.baglantilar[0].hedef as SahteDugum;
     expect(giris.channelCount).toBe(2);
     expect(giris.channelCountMode).toBe("explicit");
+    // Rüzgâr gürültüsü iki bağımsız kanal: sol ve sağ hoparlör grupları ilintisiz (ortada hayalet kaynak yok)
+    const tampon = ruzgarKaynagi.buffer as SahteTampon;
+    expect(tampon.numberOfChannels).toBe(2);
+    const [sol, sag] = [tampon.getChannelData(0), tampon.getChannelData(1)];
+    let ilinti = 0;
+    let guc = 0;
+    for (let i = 0; i < sol.length; i++) {
+      ilinti += sol[i] * sag[i];
+      guc += sol[i] * sol[i];
+    }
+    expect(guc).toBeGreaterThan(0);
+    expect(Math.abs(ilinti / guc)).toBeLessThan(0.02);
   });
 
   it("uzak ses çok kanalda yayılır, LFE'siz düzende bas kopyası yok", async () => {
@@ -229,6 +242,40 @@ describe("SesMotoru (sahte Web Audio)", () => {
     ses.vizilti(120); // tam arka sağ hoparlör
     const girisler = b.dugumler.slice(once).flatMap((d) => d.baglantilar.filter((k) => k.hedef === birlestirici).map((k) => k.giris));
     expect(girisler).toEqual([3]);
+    const uyarilar: string[] = [];
+    ses.uyariDinle((m) => uyarilar.push(m));
+    expect(uyarilar).toEqual([]);
+  });
+
+  it("?hoparlor= kullanılamazsa her durumda uyarı: stereo cihaz, ?ses=stereo, kanal sayısı tutmuyor", async () => {
+    const dortlu = [-45, 45, -135, 135];
+    const durumlar: Array<[number, ConstructorParameters<typeof SesMotoru>[0], string[]]> = [
+      [2, { duzen: null, hoparlor: dortlu, uyarilar: [] }, ["?hoparlor= 4 kanallı (dortlu) ama ses cihazı 2 kanal veriyor", "?hoparlor= kullanılmadı: stereo"]],
+      [8, { duzen: "stereo", hoparlor: dortlu, uyarilar: [] }, ["?hoparlor= kullanılmadı: stereo"]],
+      [6, { duzen: "5.1", hoparlor: dortlu, uyarilar: [] }, ["?hoparlor= kullanılmadı: 4 kanal veriyor, 5.1 düzeni 6 kanal"]],
+    ];
+    for (const [maxKanal, ayar, beklenen] of durumlar) {
+      const { ses } = await motor(maxKanal, ayar);
+      const uyarilar: string[] = [];
+      ses.uyariDinle((m) => uyarilar.push(m));
+      expect(uyarilar, `${maxKanal} kanal, ${ayar?.duzen}`).toHaveLength(beklenen.length);
+      beklenen.forEach((b, i) => expect(uyarilar[i]).toContain(b));
+      expect(ses.duzenBilgisi).not.toContain("özel açılar");
+    }
+  });
+
+  it("5.1 / 7.1'de ?hoparlor= 4. kanala (LFE) açı verilirse uyarı; lfe 4. sıradaysa uyarı yok", async () => {
+    const acili = await motor(6, { duzen: null, hoparlor: [-30, 30, 0, -90, -150, 150], uyarilar: [] });
+    const uyarilar: string[] = [];
+    acili.ses.uyariDinle((m) => uyarilar.push(m));
+    expect(acili.ses.duzenBilgisi).toBe("5.1 (6 kanal, özel açılar)");
+    expect(uyarilar).toHaveLength(1);
+    expect(uyarilar[0]).toContain("4. kanalda açı var (-90°)");
+    const dogru = await motor(8, { duzen: null, hoparlor: [-30, 30, 0, null, -150, 150, -90, 90], uyarilar: [] });
+    const uyarilar2: string[] = [];
+    dogru.ses.uyariDinle((m) => uyarilar2.push(m));
+    expect(dogru.ses.duzenBilgisi).toBe("7.1 (8 kanal, özel açılar)");
+    expect(uyarilar2).toEqual([]);
   });
 
   it("helikopter (stereo): konumsuz eski seviye ve yönsüz; konumla zayıflama, yön, boğuklaşma, Doppler", async () => {

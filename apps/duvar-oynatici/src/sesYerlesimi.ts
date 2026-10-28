@@ -68,15 +68,19 @@ export function sesDuzeniAyristir(metin: string | null | undefined): SesDuzeni |
   return null;
 }
 
+/** `?hoparlor=` listesinin olabilecek uzunlukları: çok kanallı düzenlerin kanal sayıları (4, 6, 8). */
+const HOPARLOR_KANAL_SAYILARI: readonly number[] = SES_DUZENLERI.filter((d) => d !== "stereo").map(kanalSayisi);
+
 /**
  * `?hoparlor=` değeri: kanal sırasıyla virgülle ayrılmış azimutlar, LFE kanalı için "lfe"
- * (ör. "-45,45,-135,135" ya da "-30,30,0,lfe,-110,110"). 2–8 kanal, en çok bir LFE, LFE dışında en az
- * iki hoparlör, aynı yöne iki hoparlör yok. Geçersizse null (çağıran varsayılana döner).
+ * (ör. "-45,45,-135,135" ya da "-30,30,0,lfe,-110,110"). Yalnız çok kanallı düzenlerin kanal sayıları: 4, 6 ya da 8
+ * (stereo hoparlör açısı kullanmaz, 3/5/7 hiçbir düzene uymaz). En çok bir LFE, LFE dışında en az iki hoparlör,
+ * aynı yöne iki hoparlör yok. Geçersizse null (çağıran varsayılana döner, kayda yazılmaz).
  */
 export function hoparlorAyristir(metin: string | null | undefined): Array<number | null> | null {
   if (!metin) return null;
   const parcalar = metin.split(/[,;]/).map((p) => p.trim().toLowerCase());
-  if (parcalar.length < 2 || parcalar.length > 8) return null;
+  if (!HOPARLOR_KANAL_SAYILARI.includes(parcalar.length)) return null;
   const sonuc: Array<number | null> = [];
   for (const p of parcalar) {
     if (p === "lfe") {
@@ -279,7 +283,7 @@ export function sesAyariniCoz(adres: { ses: string | null; hoparlor: string | nu
     hoparlor = hoparlorAyristir(hoparlorMetin);
     if (hoparlor) yaz("hoparlor", hoparlorMetni(hoparlor));
     else {
-      uyarilar.push(`?hoparlor=${hoparlorMetin} geçersiz (kanal sırasıyla azimutlar, LFE için "lfe"; ör. -45,45,-135,135)`);
+      uyarilar.push(`?hoparlor=${hoparlorMetin} geçersiz (4, 6 ya da 8 kanal; kanal sırasıyla azimutlar, LFE için "lfe"; ör. -45,45,-135,135)`);
       hoparlor = hoparlorAyristir(oku("hoparlor"));
     }
   } else hoparlor = hoparlorAyristir(oku("hoparlor"));

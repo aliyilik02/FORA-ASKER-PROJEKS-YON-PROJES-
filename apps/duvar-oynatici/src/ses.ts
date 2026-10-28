@@ -66,6 +66,8 @@ export class SesMotoru {
   private lfeKanali = -1;
   private maxKanal = 0;
   private gurultuTampon: AudioBuffer | null = null;
+  /** Çok kanalda rüzgâr sentezinin iki bağımsız kanallı gürültüsü (dağınık); stereoda null (tek kanallı tampon). */
+  private ruzgarTampon: AudioBuffer | null = null;
   private pembeTampon: AudioBuffer | null = null;
   private tamponlar = new Map<string, AudioBuffer>();
   private manifest: SesManifesti = {};
@@ -133,6 +135,15 @@ export class SesMotoru {
       this.gurultuTampon = this.ctx.createBuffer(1, this.ctx.sampleRate * sn, this.ctx.sampleRate);
       const d = this.gurultuTampon.getChannelData(0);
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      // Çok kanalda rüzgâr iki bağımsız gürültü kanalından: tek kanallı gürültü her hoparlörde aynı (ilintili) olur,
+      // odanın ortasında hayalet bir kaynak gibi duyulur; sol/sağ ayrı gürültü dağınık bir alan verir. Stereo eskisi gibi.
+      if (this.ortamGirisi) {
+        this.ruzgarTampon = this.ctx.createBuffer(2, this.ctx.sampleRate * sn, this.ctx.sampleRate);
+        for (let k = 0; k < 2; k++) {
+          const r = this.ruzgarTampon.getChannelData(k);
+          for (let i = 0; i < r.length; i++) r[i] = Math.random() * 2 - 1;
+        }
+      }
     }
     try {
       await this.ctx.resume();
@@ -154,7 +165,8 @@ export class SesMotoru {
     this.maxKanal = c.destination.maxChannelCount;
     let duzen = duzenSec(this.maxKanal, istenen);
     if (istenen && duzen !== istenen) {
-      this.uyar(`${istenen} istendi ama ses cihazı ${this.maxKanal} kanal veriyor, ${duzen} kullanılıyor (Windows ses ayarlarında hoparlör yapılandırmasını ${istenen} yapın)`);
+      const neden = this.ayar.duzen ? `${istenen} istendi` : `?hoparlor= ${ozel?.length} kanallı (${istenen})`;
+      this.uyar(`${neden} ama ses cihazı ${this.maxKanal} kanal veriyor, ${duzen} kullanılıyor (Windows ses ayarlarında hoparlör yapılandırmasını ${istenen} yapın)`);
     }
     this.ana = c.createGain();
     this.ana.gain.value = this.sessiz ? 0 : 0.8;
@@ -175,10 +187,23 @@ export class SesMotoru {
         }
       }
     }
-    if (ozel && duzen !== "stereo" && ozel.length !== kanalSayisi(duzen)) {
-      this.uyar(`?hoparlor= ${ozel.length} kanal veriyor, ${duzen} düzeni ${kanalSayisi(duzen)} kanal; varsayılan açılar kullanılıyor`);
-    }
     this.yerlesim = hoparlorDuzeni(duzen, ozel);
+    // ?hoparlor= verilip kullanılamadıysa (stereo düzen ya da kanal sayısı tutmuyor) her durumda söylenir
+    if (ozel && !this.yerlesim.ozel) {
+      this.uyar(
+        duzen === "stereo"
+          ? "?hoparlor= kullanılmadı: stereo düzende hoparlör açısı yok (sol/sağ pan)"
+          : `?hoparlor= kullanılmadı: ${ozel.length} kanal veriyor, ${duzen} düzeni ${kanalSayisi(duzen)} kanal; varsayılan açılar`,
+      );
+    }
+    // 5.1 / 7.1'de 4. kanal (indeks 3) Windows'ta ve AV alıcıda bas (LFE) kanalıdır: oraya açı verilirse o yöndeki
+    // sesler yalnız subwoofer'dan (~120 Hz altı) duyulur. LFE işlemesi olmayan ayrık çıkışlı ses kartında sorun yok.
+    const dorduncu = this.yerlesim.azimutlar[3];
+    if (this.yerlesim.ozel && (duzen === "5.1" || duzen === "7.1") && dorduncu !== null) {
+      this.uyar(
+        `?hoparlor= 4. kanalda açı var (${dorduncu}°): ${duzen} düzeninde 4. kanal bas (LFE) kanalıdır, AV alıcı onu subwoofer'a verir, o yöndeki sesler yalnız bas duyulur; ayrık çıkışlı ses kartı değilse 4. sıraya "lfe" yazın`,
+      );
+    }
     if (duzen === "stereo") {
       this.ana.connect(c.destination);
       return;
@@ -191,7 +216,8 @@ export class SesMotoru {
     birlestirici.connect(this.ana).connect(c.destination);
     this.birlestirici = birlestirici;
     this.lfeKanali = this.yerlesim.azimutlar.indexOf(null);
-    // Dağınık ortam girişi: tek kanallı kaynak (rüzgâr sentezi) iki kanala açılır, stereo döngü olduğu gibi kalır
+    // Dağınık ortam girişi (2 kanal): stereo döngü ve rüzgâr (iki bağımsız gürültü kanalı) sol/sağ hoparlör gruplarına;
+    // tek kanallı kayıt iki kanala açılır
     const giris = c.createGain();
     giris.channelCount = 2;
     giris.channelCountMode = "explicit";
@@ -434,7 +460,7 @@ export class SesMotoru {
     const c = this.ctx!;
     if (!this.ortamKaynak) {
       const kaynak = c.createBufferSource();
-      kaynak.buffer = this.gurultuTampon;
+      kaynak.buffer = this.ruzgarTampon ?? this.gurultuTampon;
       kaynak.loop = true;
       const filtre = c.createBiquadFilter();
       filtre.type = "lowpass";

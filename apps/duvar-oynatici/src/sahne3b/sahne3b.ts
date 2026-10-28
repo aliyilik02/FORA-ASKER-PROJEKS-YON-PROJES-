@@ -118,13 +118,13 @@ export class Sahne3B {
     this.hasar = new HasarKatmani([kraterDokusu(256, 3), kraterDokusu(256, 9), kraterDokusu(256, 21)], this.parcaciklar, Math.round(320 * k.parcacikCarpani));
     this.heli = new Helikopter3B(this.parcaciklar);
     this.catisma = new CatismaSistemi(this.parcaciklar, {
-      carpma: (p) => this.catismaSesleri.carpma(p),
-      atis: (p, u) => this.catismaSesleri.atis(p, u),
+      carpma: (az) => this.catismaSesleri.carpma(az),
+      atis: (az, uzak) => this.catismaSesleri.atis(az, uzak),
       uzakPatlama: (az) => {
         this.patlama(az, 0.7, true, false);
         this.catismaSesleri.uzakPatlama?.(az);
       },
-      topAtisi: (pan) => this.catismaSesleri.topAtisi?.(pan),
+      topAtisi: (az) => this.catismaSesleri.topAtisi?.(az),
     });
     this.catisma.dostlar = () => this.figurler.silahliKonumlar();
     this.catisma.agirSilahlar = () => this.figurler.agirSilahlar();

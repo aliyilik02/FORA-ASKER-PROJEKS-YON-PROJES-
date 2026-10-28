@@ -203,14 +203,18 @@ Kurulum ve test (render PC, Windows 11):
    (Dolby Surround, DTS Neural:X, "All Channel Stereo") kapalı olsun, yoksa yön bilgisi bozulur.
 3. Panel → Sistem → Ses düzeni: Otomatik (ya da 5.1 / 7.1); üst çubuktaki "Oynatıcı" ile oynatıcıyı yeniden açın
    (Windows ayarı değiştiyse Chrome'u kapatıp açın). Kiosk betiği (`oynatici-baslat.bat`) ayrı tarayıcı profili
-   kullanır; otomatik seçim çoğu kurulumda yeterlidir, zorlamak için betikteki adrese `&ses=5.1` eklenir.
+   kullanır; otomatik seçim çoğu kurulumda yeterlidir, zorlamak için betikteki adrese `&ses=5.1` eklenir. Cihazın
+   düzeninden küçük düzen (ör. 5.1 alıcıda "4 kanal") seçilirse kanallar cihazın ilk kanallarına (ön, orta, bas)
+   düşebilir; hangi hoparlörün çaldığını 5. adımdaki testle doğrulayın, en güvenlisi Otomatik.
 4. Oynatıcıda **H**: HUD ilk satırında "ses açık: 5.1 (6 kanal)". İstenen düzen cihazda yoksa köprü günlüğünde
    (panel Sistem → Günlük) uyarı çıkar.
 5. Oynatıcıda **T** (hoparlör testi): her kanalda sırayla ~0,7 sn gürültü, ekranda kanal adı ("Ön sol", "Orta",
    "Bas (LFE)" …). Ses başka hoparlörden geliyorsa kablo/kanal eşlemesini düzeltin.
 6. Hoparlörler varsayılan açılarda değilse gerçek açıları girin (kanal sırasıyla, 0 = orta duvar, sağa artı, LFE için
-   `lfe`): ör. `?hoparlor=-40,40,0,lfe,-120,120`. Panelden farklı yönlere patlama/bağırma tetikleyip kulakla kontrol edin
-   (30° ile 150° ayrı duyulmalı).
+   `lfe`): ör. `?hoparlor=-40,40,0,lfe,-120,120`. 5.1 / 7.1'de `lfe` 4. sırada kalır (alıcı bu kanalı subwoofer'a
+   verir; oraya açı yazılırsa günlükte uyarı çıkar). Panelden farklı yönlere patlama/bağırma tetikleyip kulakla
+   kontrol edin (30° ile 150° ayrı duyulmalı).
+   Açılar kullanılamazsa (kanal sayısı düzene uymuyor) köprü günlüğünde "?hoparlor= kullanılmadı" uyarısı çıkar.
 7. Seviye: alıcıda kanal seviyelerini pembe gürültü + SPL ölçerle (telefon uygulaması yeterli) eşitleyin; subwoofer
    seviyesini patlamada rahatsız etmeyecek, ama hissedilecek şekilde ayarlayın.
 
