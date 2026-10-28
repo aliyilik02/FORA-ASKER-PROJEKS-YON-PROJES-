@@ -1,0 +1,194 @@
+{
+  "_aciklama": "Tek ekranda (1920x1080 dizustu/masaustu) 3 duvarin on izlemesi: uc-duvar.ndisplay ile ayni sahne/duvar geometrisi, ancak pencere 1920x360 ve her viewport 640x360 (1/3 olcek). Perspektif kirilmasi olmadan 3 duvar goruntusunu projektor olmadan denemek icin. Sahada uc-duvar.ndisplay kullanilir.",
+  "nDisplay": {
+    "description": "Duvar Simulasyonu - tek ekran on izleme (3 viewport, 1920x360)",
+    "version": "5.0",
+    "assetPath": "/Game/nDisplay/UcDuvarOnizleme.UcDuvarOnizleme",
+    "misc": {
+      "bFollowLocalPlayerCamera": false,
+      "bExitOnEsc": true
+    },
+    "scene": {
+      "xforms": {},
+      "cameras": {
+        "AnaKamera": {
+          "parentId": "",
+          "location": {
+            "x": 0,
+            "y": 0,
+            "z": 170
+          },
+          "rotation": {
+            "pitch": 0,
+            "yaw": 0,
+            "roll": 0
+          },
+          "interpupillaryDistance": 6.4,
+          "swapEyes": false,
+          "stereoOffset": "none"
+        }
+      },
+      "screens": {
+        "SolDuvar": {
+          "parentId": "",
+          "location": {
+            "x": 212,
+            "y": -300,
+            "z": 170
+          },
+          "rotation": {
+            "pitch": 0,
+            "yaw": -90,
+            "roll": 0
+          },
+          "size": {
+            "width": 600,
+            "height": 337.5
+          }
+        },
+        "OrtaDuvar": {
+          "parentId": "",
+          "location": {
+            "x": 512,
+            "y": 0,
+            "z": 170
+          },
+          "rotation": {
+            "pitch": 0,
+            "yaw": 0,
+            "roll": 0
+          },
+          "size": {
+            "width": 600,
+            "height": 337.5
+          }
+        },
+        "SagDuvar": {
+          "parentId": "",
+          "location": {
+            "x": 212,
+            "y": 300,
+            "z": 170
+          },
+          "rotation": {
+            "pitch": 0,
+            "yaw": 90,
+            "roll": 0
+          },
+          "size": {
+            "width": 600,
+            "height": 337.5
+          }
+        }
+      }
+    },
+    "cluster": {
+      "masterNode": {
+        "id": "Render1",
+        "port": {
+          "ClusterSync": 41001,
+          "RenderSync": 41002,
+          "ClusterEventsJson": 41003,
+          "ClusterEventsBinary": 41004
+        }
+      },
+      "sync": {
+        "renderSyncPolicy": {
+          "type": "ethernet",
+          "parameters": {}
+        },
+        "inputSyncPolicy": {
+          "type": "ReplicateMaster",
+          "parameters": {}
+        }
+      },
+      "network": {
+        "ConnectRetriesAmount": 300,
+        "ConnectRetryDelay": 1000,
+        "GameStartBarrierTimeout": 30000,
+        "FrameStartBarrierTimeout": 5000,
+        "FrameEndBarrierTimeout": 5000,
+        "RenderSyncBarrierTimeout": 5000
+      },
+      "nodes": {
+        "Render1": {
+          "host": "127.0.0.1",
+          "sound": true,
+          "fullScreen": false,
+          "window": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 360
+          },
+          "postprocess": {},
+          "viewports": {
+            "VP_Sol": {
+              "camera": "AnaKamera",
+              "projectionPolicy": {
+                "type": "simple",
+                "parameters": {
+                  "screen": "SolDuvar"
+                }
+              },
+              "overlapOrder": 0,
+              "region": {
+                "x": 0,
+                "y": 0,
+                "w": 640,
+                "h": 360
+              },
+              "bufferRatio": 1.0,
+              "gpuIndex": -1,
+              "isShared": false
+            },
+            "VP_Orta": {
+              "camera": "AnaKamera",
+              "projectionPolicy": {
+                "type": "simple",
+                "parameters": {
+                  "screen": "OrtaDuvar"
+                }
+              },
+              "overlapOrder": 0,
+              "region": {
+                "x": 640,
+                "y": 0,
+                "w": 640,
+                "h": 360
+              },
+              "bufferRatio": 1.0,
+              "gpuIndex": -1,
+              "isShared": false
+            },
+            "VP_Sag": {
+              "camera": "AnaKamera",
+              "projectionPolicy": {
+                "type": "simple",
+                "parameters": {
+                  "screen": "SagDuvar"
+                }
+              },
+              "overlapOrder": 0,
+              "region": {
+                "x": 1280,
+                "y": 0,
+                "w": 640,
+                "h": 360
+              },
+              "bufferRatio": 1.0,
+              "gpuIndex": -1,
+              "isShared": false
+            }
+          }
+        }
+      }
+    },
+    "customParameters": {},
+    "diagnostics": {
+      "simulateLag": false,
+      "minLagTime": 0.01,
+      "maxLagTime": 0.3
+    }
+  }
+}

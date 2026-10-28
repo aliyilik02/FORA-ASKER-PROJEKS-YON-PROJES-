@@ -1,0 +1,559 @@
+/**
+ * Duvar Oynatıcı – giriş noktası.
+ *
+ * Köprüden gelen durum (bölge, ortam, izli mermi, Oda 2) ve efekt olaylarını 3 duvara çizer.
+ * Sorgu parametreleri:
+ *   ?fov=90      duvar başına yatay açı (U duvar 90; düz tek duvar 3 projektör ≈ 40)
+ *   ?doldur=1    48:9 oranını koruma, pencereyi tamamen doldur
+ *   ?hud=1       hata ayıklama katmanı açık başlasın
+ *   ?uc=0        3B sahne katmanını kapat (yalnızca 2B yol)
+ *   ?gunes=1     3B sahnede güneş tahminini küreyle göster (panoramadaki güneşle çakışmalı)
+ * Tuşlar: H hud · K kalibrasyon ızgarası · F tam ekran · M sessiz · 1 patlama · 2 toz · 3 izli mermi aç/kapa
+ */
+import * as THREE from "three";
+import { KopruBaglantisi, type BaglantiDurumu } from "./baglanti";
+import { EfektSistemi } from "./efektler/patlama";
+import { Helikopter } from "./efektler/helikopter";
+import { IzliMermiSistemi } from "./efektler/izliMermi";
+import { hudCiz, kalibrasyonCiz, uyariCiz } from "./hud";
+import { KlipKatmani } from "./klipler";
+import { azimutPan, duvarYerlesimleri, duvarlariOlustur, type Yerlesim, yonAzimut, zamanDilimi } from "./projeksiyon";
+import { araziCiz, araziGuncelle, ufukY as bolgeUfukY } from "./sahne/arazi";
+import { gokyuzuCiz, gokyuzuGuncelle, gokyuzuRenkleri } from "./sahne/gokyuzu";
+import { HavaSistemi, kararmaCiz, sisCiz } from "./sahne/hava";
+import { oda2OnPlanCiz } from "./sahne/oda2";
+import { PanoramaKatmani } from "./panorama";
+import { type Kalite, Sahne3B } from "./sahne3b/sahne3b";
+import type { AraziModu } from "./sahne3b/arazi";
+import { SesMotoru } from "./ses";
+import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type EfektIstegi, type FigurKomutu, type SimulasyonDurumu, varsayilanDurum } from "./tipler";
+import { panoramaSec, VideoKatmani } from "./video";
+
+const tuval = document.getElementById("tuval") as HTMLCanvasElement;
+const tuval3b = document.getElementById("tuval3b") as HTMLCanvasElement;
+// 2B tuval saydam: 3B sahne aktifken altındaki tuval görünür
+const ctx = tuval.getContext("2d", { alpha: true })!;
+const uyariKutusu = document.getElementById("uyari")!;
+const params = new URLSearchParams(location.search);
+const fov = Number(params.get("fov") ?? 90);
+const doldur = params.get("doldur") === "1";
+const ucBoyut = params.get("uc") !== "0";
+const duvarlar = duvarlariOlustur(Number.isFinite(fov) && fov > 10 ? fov : 90);
+
+let W = 0;
+let H = 0;
+let yerlesimler: Yerlesim[] = [];
+let hud = params.get("hud") === "1";
+let kalibrasyon = false;
+let durum: SimulasyonDurumu = varsayilanDurum();
+let durumGeldi = false;
+let baglanti: BaglantiDurumu = "kopuk";
+let fps = 0;
+
+const ses = new SesMotoru();
+const izli = new IzliMermiSistemi((x, genislik) => ses.vizilti((x / genislik) * 2 - 1));
+const efektler = new EfektSistemi();
+const heli = new Helikopter();
+const hava = new HavaSistemi();
+const video = new VideoKatmani("icerik/"); // belge tabanına göreli: /oynatici/icerik/ veya dev'de /icerik/
+const panorama = new PanoramaKatmani();
+const klipler = new KlipKatmani();
+/** 3B sahne katmanı: panorama resmi arka plan + IBL, 3B figür/efekt/helikopter. Video panoramada 2B yol kalır. */
+/** Kalite kademesi: ?kalite=dusuk|orta|yuksek (adres çubuğu > yerel kayıt > yüksek). Dizüstünde "dusuk" önerilir. */
+const kaliteParam = params.get("kalite");
+const kalite: Kalite = (["dusuk", "orta", "yuksek"] as const).find((k) => k === (kaliteParam ?? localStorage.getItem("kalite"))) ?? "yuksek";
+if (kaliteParam) localStorage.setItem("kalite", kalite);
+const sahne3b = new Sahne3B(tuval3b, params.get("gunes") === "1", kalite);
+/**
+ * 3B arazi kipi: ?arazi=kapali|hibrit|tam (adres çubuğu > yerel kayıt > bölgeye göre varsayılan).
+ * Varsayılan: açık arazili bölgelerde "hibrit" (yakın alan 3B, uzak panorama). Meskûn mahalde kapalı: panoramada
+ * binalar 5–15 m'de, 3B zemin duvar diplerini gömer (bkz. sahne3b/arazi.ts profil notu).
+ */
+const araziParam = params.get("arazi");
+const araziSecimi: AraziModu | null = (["kapali", "hibrit", "tam"] as const).find((k) => k === (araziParam ?? localStorage.getItem("arazi"))) ?? null;
+if (araziParam && araziSecimi) localStorage.setItem("arazi", araziSecimi);
+const ARAZI_VARSAYILAN: Record<string, AraziModu> = { kirsal_acik_arazi: "hibrit", daglik: "hibrit", ormanlik: "hibrit", us_bolgesi: "hibrit", meskun_mahal: "kapali" };
+function araziModuSec(bolge: string): AraziModu {
+  if (araziSecimi) return araziSecimi;
+  return ARAZI_VARSAYILAN[bolge] ?? "kapali";
+}
+const ucAktifOlabilir = ucBoyut && sahne3b.destekli;
+sahne3b.catismaSesleriAyarla({
+  carpma: (pan) => ses.carpma(pan),
+  atis: (pan, uzak) => ses.tekAtis(pan, uzak),
+  uzakPatlama: (az) => void ses.patlama(azimutPan(az), 0.7, true, 600),
+  topAtisi: (pan) => void ses.patlama(pan, 0.55),
+});
+// Yaralı figür: vurulunca bağırma, yerde ara ara yardım çağrısı (figürün yönünden)
+sahne3b.figurSesleriAyarla((tur, azimut) => {
+  if (tur === "vuruldu") void ses.bagirma(azimutPan(azimut));
+  else void ses.cagirma(azimutPan(azimut));
+});
+// Hata ayıklama: tarayıcı konsolundan sahneye erişim (window.duvar.sahne3b, window.duvar.THREE)
+(window as unknown as { duvar: unknown }).duvar = { sahne3b, THREE };
+/** ?panorama=<url> ile hızlı deneme: manifestten bağımsız, her bölgede bu 360° kaynak gösterilir. */
+const testPanorama = params.get("panorama");
+const testYaw = Number(params.get("yaw") ?? 0);
+
+function videoMu(dosya: string, tip?: string) {
+  return tip === "video" || /\.(mp4|webm|mov)(\?|$)/i.test(dosya);
+}
+
+function panoramayiGuncelle() {
+  const kayit = testPanorama
+    ? { dosya: testPanorama, tip: undefined, yawKaydirma: testYaw, yukseklikKaydirma: 0, zaman: undefined, noktalar: undefined, yasak: undefined, gunes: undefined }
+    : panoramaSec(video.manifest, durum.bolge, durum.ortam.mevsim, zamanDilimi(durum.ortam.saat));
+  if (!kayit) {
+    panorama.sec(null, video.kok);
+    sahne3b.panoramaAyarla(null);
+    return;
+  }
+  if (ucAktifOlabilir && !videoMu(kayit.dosya, kayit.tip)) {
+    // Resim panorama → 3B katman (arka plan + ışık); eski WebGL panorama katmanı kapalı
+    panorama.sec(null, video.kok);
+    const url = /^(https?:|data:|blob:|\/)/.test(kayit.dosya) ? kayit.dosya : video.kok + kayit.dosya;
+    sahne3b.panoramaAyarla({
+      url,
+      yawKaydirma: kayit.yawKaydirma ?? 0,
+      yukseklikKaydirma: kayit.yukseklikKaydirma ?? 0,
+      zaman: kayit.zaman,
+      plan: { noktalar: kayit.noktalar, yasak: kayit.yasak },
+      gunes: kayit.gunes,
+    });
+    return;
+  }
+  sahne3b.panoramaAyarla(null);
+  panorama.sec({ dosya: kayit.dosya, tip: kayit.tip, yawKaydirma: kayit.yawKaydirma, yukseklikKaydirma: kayit.yukseklikKaydirma }, video.kok);
+}
+
+function boyutlandir() {
+  const vw = innerWidth;
+  const vh = innerHeight;
+  const oran = 16 / 3; // 48:9
+  let w = vw;
+  let h = Math.round(vw / oran);
+  if (h > vh) {
+    h = vh;
+    w = Math.round(vh * oran);
+  }
+  if (doldur) {
+    w = vw;
+    h = vh;
+  }
+  tuval.width = W = w;
+  tuval.height = H = h;
+  const sol = `${Math.floor((vw - w) / 2)}px`;
+  const ust = `${Math.floor((vh - h) / 2)}px`;
+  tuval.style.left = tuval3b.style.left = sol;
+  tuval.style.top = tuval3b.style.top = ust;
+  yerlesimler = duvarYerlesimleri(W, H, duvarlar);
+  hava.boyutlandir(W, H);
+  sahne3b.boyutlandir(W, H, yerlesimler);
+}
+addEventListener("resize", boyutlandir);
+boyutlandir();
+
+function ufuk(): number {
+  return sahne3b.hazir ? sahne3b.ufukY : bolgeUfukY(durum.bolge, H);
+}
+
+/** 3B sahne hazır değilken (panorama yükleniyor) gelen patlama/toz efektleri: hazır olunca uygulanır (10 sn içinde). */
+const bekleyenEfektler: Array<{ e: EfektIstegi; zaman: number }> = [];
+function bekleyenEfektleriUygula() {
+  if (!sahne3b.hazir || bekleyenEfektler.length === 0) return;
+  const simdi = performance.now();
+  const liste = bekleyenEfektler.splice(0);
+  for (const b of liste) if (simdi - b.zaman < 10000) efektUygula(b.e);
+}
+
+function efektUygula(e: EfektIstegi) {
+  if (ucAktifOlabilir && !sahne3b.hazir && (e.tur === "patlama" || e.tur === "toz_duman" || e.tur === "uzak_patlama")) {
+    bekleyenEfektler.push({ e, zaman: performance.now() });
+    return;
+  }
+  const azimut = yonAzimut(e.yon ?? 0);
+  const pan = azimutPan(azimut);
+  const siddet = e.siddet ?? 1;
+  // Gerçek plaka varsa (manifest "klipler": patlama_*, toz_*) onu kullan, yoksa prosedürel efekt.
+  // 3B sahne açıkken "yedek" işaretli (sentetik test) plakalar atlanır; 3B efekt daha iyidir.
+  const plaka = (onek: string, yukseklik: number, olcek: number) => {
+    const ad = klipler.rastgele(onek, sahne3b.hazir);
+    if (!ad) return false;
+    // 2B plaka da yerleşim planına uyar (ağaç/bina içinde oynamasın)
+    const tur = onek.startsWith("toz") ? "toz" : "patlama";
+    const plakaAzimut = sahne3b.hazir ? sahne3b.noktaSec(azimut, tur, 0).azimut : azimut;
+    klipler.oynat({ klip: ad, azimut: plakaAzimut, yukseklik, olcek, yansit: Math.random() < 0.5 });
+    return true;
+  };
+  const uc = sahne3b.hazir;
+  switch (e.tur) {
+    case "patlama": {
+      const plakaVar = plaka("patlama", -3, 0.7 + siddet * 0.6);
+      if (uc) {
+        // 3B: ateş/toprak/moloz (plaka yoksa), anlık ışık, kalıcı krater ve tüten duman; 2B: flaş + sarsıntı
+        sahne3b.patlama(azimut, siddet, false, plakaVar);
+        efektler.flasVeSarsinti(siddet);
+      } else if (plakaVar) efektler.flasVeSarsinti(siddet);
+      else efektler.patlama(azimut, siddet, yerlesimler, ufuk(), H);
+      void ses.patlama(pan, siddet);
+      break;
+    }
+    case "toz_duman":
+      if (uc) sahne3b.tozDuman(azimut, siddet);
+      if (!plaka("toz", -3, 0.7 + siddet * 0.6) && !uc) efektler.tozDuman(azimut, siddet, yerlesimler, ufuk(), H);
+      break;
+    case "gurultu":
+      void ses.gurultu(pan, siddet);
+      break;
+    case "bagirma":
+      void ses.bagirma(pan);
+      break;
+    case "cagirma":
+      void ses.cagirma(pan);
+      break;
+    case "uzak_patlama": {
+      const plakaVar = plaka("uzak_patlama", 0.5, 0.25 + siddet * 0.15);
+      if (uc) {
+        sahne3b.patlama(azimut, siddet, true, plakaVar);
+        efektler.flasVeSarsinti(siddet * 0.2);
+      } else if (plakaVar) efektler.flasVeSarsinti(siddet * 0.2);
+      else efektler.uzakPatlama(azimut, siddet, yerlesimler, ufuk(), H);
+      void ses.patlama(pan, siddet, true, e.mesafe ?? 800);
+      break;
+    }
+    case "uzak_mermi_sesi":
+      void ses.mermi(pan, true);
+      break;
+  }
+}
+
+/** Ortam ses döngüsü anahtarı (manifest `sesler.ortam`): yağmur > gece > kış > bölge. */
+function ortamSesAnahtari(d: SimulasyonDurumu): string {
+  if (d.ortam.yagis === "hafif_yagmur" || d.ortam.yagis === "siddetli_yagmur") return "yagmur";
+  if (zamanDilimi(d.ortam.saat) === "gece") return "gece";
+  if (d.ortam.mevsim === "kis") return "kis";
+  return d.bolge;
+}
+
+function durumUygula(d: SimulasyonDurumu) {
+  if (d.bolge !== durum.bolge) sahne3b.sahneyiSifirla(); // kraterler ve duman bölgeyle birlikte gider
+  durum = d;
+  durumGeldi = true;
+  // İzli mermi ve çatışma: 3B sahne açıkken 3B izler, değilse 2B çizgiler
+  const uc = sahne3b.hazir;
+  izli.ayarla({ ...d.izliMermi, aktif: d.izliMermi.aktif && !uc });
+  sahne3b.izliMermiAyarla(d.izliMermi, duvarlar.map((x) => x.yaw));
+  const catisma = d.catisma ?? { aktif: false, siddet: 0.5, yon: 0, dostAtes: true };
+  sahne3b.catismaAyarla(catisma, yonAzimut(catisma.yon));
+  const heliDurumu = d.oda === "oda2" ? d.oda2.helikopter : "yok";
+  const heliYon = yonAzimut(d.oda2.helikopterYonu ?? 12);
+  // 3B model varsa helikopter 3B sahnede uçar; yoksa 2B siluet
+  if (sahne3b.helikopterHazir && sahne3b.hazir) {
+    sahne3b.helikopterAyarla(heliDurumu, heliYon);
+    heli.durumAyarla("yok");
+  } else {
+    sahne3b.helikopterAyarla("yok");
+    heli.azimutAyarla(heliYon);
+    heli.durumAyarla(heliDurumu);
+  }
+  ses.ortamAyarla(d.ortam);
+  void ses.ortamDongusu(ortamSesAnahtari(d));
+  sahne3b.ortamAyarla(d.ortam, gokyuzuRenkleri(d.ortam).isik);
+  // Oda 2 sütre (3B eşya dizilimi): manifest sutreler[guvenliAlan]
+  const sutreTipi = d.oda === "oda2" ? d.oda2.guvenliAlan : null;
+  sahne3b.sutreAyarla(sutreTipi, sutreTipi ? video.manifest.sutreler?.[sutreTipi] : undefined, video.kok);
+  video.secim(d.bolge, d.ortam.mevsim, zamanDilimi(d.ortam.saat));
+  panoramayiGuncelle();
+  if (sahne3b.destekli) sahne3b.araziAyarla(araziModuSec(d.bolge), d.bolge, d.ortam.mevsim, video.kok);
+}
+
+function figurKomutu(k: FigurKomutu & { id: string }) {
+  if (k.islem === "temizle") {
+    bekleyenFigurler.clear();
+    klipler.temizle();
+    sahne3b.figurTemizle();
+    return;
+  }
+  if (k.islem === "durdur") {
+    bekleyenFigurler.delete(k.id);
+    klipler.durdur(k.id);
+    sahne3b.figurDurdur(k.id);
+    return;
+  }
+  if (k.islem === "poz") {
+    const bekleyen = bekleyenFigurler.get(k.id);
+    if (bekleyen) bekleyen.poz = k.poz;
+    else if (k.poz) sahne3b.figurPoz(k.id, k.poz);
+    return;
+  }
+  if (!k.klip) return;
+  const tanim = klipler.tanim(k.klip);
+  if (tanim?.tip === "model" && sahne3b.hazir) {
+    sahne3b.figurOynat(tanim, { id: k.id, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, yansit: k.yansit, dongu: k.dongu, poz: k.poz, yaninda: k.yaninda }, video.kok);
+    return;
+  }
+  if (tanim?.tip === "model") {
+    // 3B sahne henüz hazır değil (panorama yükleniyor / oynatıcı yeni açıldı): köprünün gönderdiği
+    // aktif figürler kaybolmasın, sahne hazır olunca uygulanır
+    if (ucAktifOlabilir) bekleyenFigurler.set(k.id, k);
+    return;
+  }
+  klipler.oynat({ id: k.id, klip: k.klip, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, dongu: k.dongu, yansit: k.yansit });
+}
+/**
+ * Açılışta durum, 3B sahne / helikopter modeli / manifest hazır olmadan gelir; bu parçalar hazır olunca
+ * (geçiş anında) durum yeniden uygulanır: sütre dizilimi, 3B helikopter, panorama seçimi kaybolmaz.
+ */
+let oncekiHazirImzasi = "";
+function hazirOluncaYenidenUygula() {
+  const imza = `${sahne3b.hazir ? 1 : 0}${sahne3b.helikopterHazir ? 1 : 0}${video.manifest.sutreler ? 1 : 0}${video.manifest.klipler ? 1 : 0}`;
+  if (imza === oncekiHazirImzasi) return;
+  oncekiHazirImzasi = imza;
+  if (durumGeldi) durumUygula(durum);
+}
+/** 3B sahne hazır olmadan gelen model figürleri (oynatıcı açılışında köprü aktif listeyi yollar). */
+const bekleyenFigurler = new Map<string, FigurKomutu & { id: string }>();
+function bekleyenFigurleriUygula() {
+  if (!sahne3b.hazir || bekleyenFigurler.size === 0) return;
+  const liste = [...bekleyenFigurler.values()];
+  bekleyenFigurler.clear();
+  for (const k of liste) figurKomutu(k);
+}
+
+// Projeksiyonda fare imleci görünmesin: 3 sn hareketsizlikte gizlenir, hareket edince döner
+let imlecZamanlayici: number | null = null;
+function imleciGoster() {
+  document.body.style.cursor = "";
+  if (imlecZamanlayici) clearTimeout(imlecZamanlayici);
+  imlecZamanlayici = window.setTimeout(() => {
+    document.body.style.cursor = "none";
+  }, 3000);
+}
+window.addEventListener("mousemove", imleciGoster);
+imleciGoster();
+
+const kopru = new KopruBaglantisi(
+  (m) => {
+    if (m.tip === "durum") durumUygula(m.durum);
+    else if (m.tip === "efekt") efektUygula(m.efekt);
+    else if (m.tip === "figur") figurKomutu(m.komut);
+    else if (m.tip === "sahne" && m.islem === "sifirla") {
+      sahne3b.sahneyiSifirla();
+      klipler.temizle();
+      bekleyenEfektler.length = 0;
+    }
+  },
+  (d) => {
+    baglanti = d;
+  },
+);
+
+async function sesiAc() {
+  const tamam = await ses.etkinlestir();
+  if (tamam) {
+    uyariKutusu.style.display = "none";
+    ses.ortamAyarla(durum.ortam);
+    void ses.ortamDongusu(ortamSesAnahtari(durum));
+  }
+}
+
+function tamEkran() {
+  if (!document.fullscreenElement) void document.documentElement.requestFullscreen().catch(() => undefined);
+  else void document.exitFullscreen();
+}
+
+addEventListener("keydown", (e) => {
+  switch (e.key.toLowerCase()) {
+    case "h":
+      hud = !hud;
+      break;
+    case "k":
+      kalibrasyon = !kalibrasyon;
+      break;
+    case "f":
+      tamEkran();
+      break;
+    case "m":
+      ses.sessizlik(!ses.sessiz);
+      break;
+    case "1":
+      efektUygula({ tur: "patlama", siddet: 1, yon: 20 });
+      break;
+    case "2":
+      efektUygula({ tur: "toz_duman", siddet: 0.8, yon: -30 });
+      break;
+    case "3":
+      izli.ayarla({ ...durum.izliMermi, aktif: !izli.aktif });
+      break;
+  }
+  void sesiAc();
+});
+addEventListener("pointerdown", () => void sesiAc());
+
+// Kiosk: otomatik oynatma izni varsa ses hemen açılır; yoksa tıklama/tuş beklenir.
+void ses.etkinlestir().then((tamam) => {
+  if (!tamam) {
+    uyariKutusu.textContent = "Sesi etkinleştirmek için ekrana dokunun veya bir tuşa basın";
+    uyariKutusu.style.display = "block";
+  }
+});
+
+void video.yukle().then((m) => {
+  if (m.sesler) {
+    ses.manifestAyarla(m.sesler, `${video.kok}sesler/`);
+    void ses.ortamDongusu(ortamSesAnahtari(durum));
+  }
+  klipler.ayarla(m.klipler, video.kok);
+  // 3B modeller: ön yükleme; "helikopter" adlı model Oda 2 helikopteri olur
+  if (ucAktifOlabilir) {
+    sahne3b.dokulariYukle(video.kok);
+    for (const [ad, t] of Object.entries(klipler.tumTanimlar)) {
+      if (t.tip !== "model") continue;
+      const url = /^(https?:|data:|blob:|\/)/.test(t.dosya) ? t.dosya : video.kok + t.dosya;
+      if (ad === "helikopter") sahne3b.helikopterYukle(url, t.boy, t.rotor, t.renk);
+      else sahne3b.figurOnYukle(url);
+    }
+  }
+  video.secim(durum.bolge, durum.ortam.mevsim, zamanDilimi(durum.ortam.saat));
+  panoramayiGuncelle();
+});
+
+kopru.baslat();
+// Oynatıcı uyarıları köprü günlüğüne (panelde görünür): model yüklenemedi, 3B katman hatası
+sahne3b.uyari = (mesaj) => kopru.gonder({ tip: "gunluk", seviye: "uyari", mesaj });
+if (sahne3b.hata) kopru.gonder({ tip: "gunluk", seviye: "hata", mesaj: `3B katman açılamadı: ${sahne3b.hata}` });
+
+/**
+ * Panel için küçük önizleme: iki tuval (3B + 2B) 384×(oran) JPEG'e indirgenir, ~2 sn'de bir köprüye
+ * gönderilir (köprü yalnızca panellere iletir). Kontrol odasında duvarı görmeyen eğitmen "duvarda şu an ne var"
+ * sorusunu canlı sahne kartından yanıtlar.
+ */
+const onizlemeTuval = document.createElement("canvas");
+let sonOnizleme = 0;
+function onizlemeGonder(simdi: number) {
+  if (kopru.durum !== "bagli" || simdi - sonOnizleme < 2000 || W === 0 || H === 0) return;
+  sonOnizleme = simdi;
+  try {
+    const g = 384;
+    const y = Math.max(24, Math.round((g * H) / W));
+    if (onizlemeTuval.width !== g || onizlemeTuval.height !== y) {
+      onizlemeTuval.width = g;
+      onizlemeTuval.height = y;
+    }
+    const c = onizlemeTuval.getContext("2d");
+    if (!c) return;
+    c.fillStyle = "#000";
+    c.fillRect(0, 0, g, y);
+    if (tuval3b.style.visibility !== "hidden") c.drawImage(tuval3b, 0, 0, g, y);
+    c.drawImage(tuval, 0, 0, g, y);
+    const bilgi = `${fps.toFixed(0)} fps · ${W}×${H} · kalite ${sahne3b.kalite} · 3B ${sahne3b.hazir ? "açık" : "kapalı"} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi}`;
+    kopru.gonder({ tip: "onizleme", veri: onizlemeTuval.toDataURL("image/jpeg", 0.55), bilgi });
+  } catch {
+    /* tuval okunamazsa (tainted) önizleme yok */
+  }
+}
+
+let sonZaman = performance.now();
+let fpsSayac = 0;
+let fpsZaman = 0;
+
+function kare(simdi: number) {
+  const dt = Math.min(0.1, (simdi - sonZaman) / 1000);
+  sonZaman = simdi;
+  fpsSayac++;
+  fpsZaman += dt;
+  if (fpsZaman >= 1) {
+    fps = fpsSayac / fpsZaman;
+    fpsSayac = 0;
+    fpsZaman = 0;
+  }
+
+  // Güncelle
+  const ufukYy = ufuk();
+  gokyuzuGuncelle(dt, durum.ortam);
+  araziGuncelle(dt);
+  hava.guncelle(dt, durum.ortam);
+  izli.guncelle(dt, yerlesimler, ufukYy, H, W);
+  efektler.guncelle(dt);
+  heli.guncelle(dt);
+  video.guncelle(dt);
+  klipler.guncelle(dt);
+  sahne3b.guncelle(dt);
+  if (sahne3b.helikopterHazir && sahne3b.hazir) ses.helikopter(durum.oda === "oda2" ? durum.oda2.helikopter : "yok", sahne3b.helikopterTozu);
+  else ses.helikopter(heli.mevcutDurum, heli.tozSiddeti);
+
+  // Çiz
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const s = efektler.sallantiMiktari * (H / 1080);
+  const sx = s > 0.5 ? (Math.random() - 0.5) * s : 0;
+  const sy = s > 0.5 ? (Math.random() - 0.5) * s : 0;
+  if (s > 0.5) ctx.translate(sx, sy);
+  tuval3b.style.transform = s > 0.5 ? `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px)` : "";
+  const gok = gokyuzuRenkleri(durum.ortam);
+
+  // Arka plan önceliği: 3B sahne (panorama resmi + 3B nesneler, alt tuval) → 360° panorama (WebGL) → düz video döngüsü → parametrik sahne
+  const ucCizildi = sahne3b.ciz();
+  if (ucCizildi) {
+    tuval3b.style.visibility = "visible";
+    ctx.clearRect(-50, -50, W + 100, H + 100);
+  } else tuval3b.style.visibility = "hidden";
+  const arkaPlanVar = ucCizildi || (panorama.aktif && panorama.ciz(ctx, yerlesimler, W, H)) || (video.aktif && video.ciz(ctx, W, H));
+  for (const y of yerlesimler) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(y.x, 0, y.genislik, H);
+    ctx.clip();
+    if (!arkaPlanVar) {
+      gokyuzuCiz(ctx, y, ufukYy, durum.ortam, gok);
+      araziCiz(ctx, y, H, durum.bolge, durum.ortam, gok);
+    }
+    // Oda 2'nin 2B ön planı (kum torbası, kaya) 3B sahneyle uyuşmaz; 3B'de çizilmez (3B sütre modelleri gelecek)
+    if (durum.oda === "oda2" && !ucCizildi) oda2OnPlanCiz(ctx, y, H, durum.oda2.guvenliAlan, gok.isik);
+    ctx.restore();
+  }
+  // Figürler ve diğer klipler sahnenin içinde: sisin altında kalır
+  klipler.ciz(ctx, yerlesimler, ufukYy, H, gok.isik, ["figur", "diger", "hava"]);
+  for (const y of yerlesimler) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(y.x, 0, y.genislik, H);
+    ctx.clip();
+    sisCiz(ctx, y, ufukYy, H, durum.ortam, gok);
+    ctx.restore();
+  }
+  heli.ciz(ctx, yerlesimler, ufukYy, H, gok.isik);
+  kararmaCiz(ctx, W, H, durum.ortam, gok.isik);
+  hava.ciz(ctx, durum.ortam, gok.isik);
+  // Efekt plakaları (patlama, toz) kendi ışığıyla en üstte
+  klipler.ciz(ctx, yerlesimler, ufukYy, H, gok.isik, ["efekt"]);
+  efektler.ciz(ctx);
+  izli.ciz(ctx, H);
+  if (efektler.flasAlfa > 0.01) {
+    ctx.fillStyle = `rgba(255,245,220,${efektler.flasAlfa})`;
+    ctx.fillRect(-50, -50, W + 100, H + 100);
+  }
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  hazirOluncaYenidenUygula();
+  bekleyenFigurleriUygula();
+  bekleyenEfektleriUygula();
+  onizlemeGonder(simdi);
+  if (kalibrasyon) kalibrasyonCiz(ctx, W, H, duvarlar.map((d) => d.ad));
+  if (baglanti === "kopuk") uyariCiz(ctx, W, H, "Köprü sunucusu bekleniyor…", "Oynatıcı, köprüye (port 4000) bağlanınca panelden yönetilir");
+  if (hud) {
+    hudCiz(
+      ctx,
+      [
+        `Duvar Oynatıcı · ${W}×${H} · ${fps.toFixed(0)} fps · köprü ${baglanti}${durumGeldi ? "" : " (durum bekleniyor)"} · ses ${ses.hazir ? (ses.sessiz ? "sessiz" : "açık") : "kapalı"}`,
+        `${durum.oda === "oda1" ? "Oda 1" : "Oda 2"} · ${BOLGE_ETIKETLERI[durum.bolge]} · ${durum.ortam.mevsim} · saat ${durum.ortam.saat.toFixed(2)} (${zamanDilimi(durum.ortam.saat)}) · ışık ${gok.isik.toFixed(2)}`,
+        `bulut ${durum.ortam.bulut.toFixed(2)} · sis ${durum.ortam.sis.toFixed(2)} · yağış ${durum.ortam.yagis} · rüzgâr ${durum.ortam.ruzgarSiddeti.toFixed(2)} @ ${durum.ortam.ruzgarYonu}°`,
+        `izli mermi ${durum.izliMermi.aktif ? `açık (duvar ${durum.izliMermi.cikisNoktasi}, ${durum.izliMermi.yon}°, ${durum.izliMermi.siklik}/sn)` : "kapalı"} · oda2 ${GUVENLI_ALAN_ETIKETLERI[durum.oda2.guvenliAlan]} · helikopter ${HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}`,
+        `içerik: ${ucCizildi ? "3B sahne + panorama" : panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""}${sahne3b.hata ? ` · 3B hatası: ${sahne3b.hata}` : ""} · aktif klip ${klipler.aktifSayisi} · fov ${duvarlar[0].fov}° · H hud · K kalibrasyon · F tam ekran · M sessiz · 1/2/3 test`,
+        `3B: ${ucAktifOlabilir ? (sahne3b.hazir ? "açık" : "bekliyor") : ucBoyut ? "desteklenmiyor" : "kapalı (?uc=0)"} · kalite ${sahne3b.kalite} · arazi ${sahne3b.araziDurumu} · ${sahne3b.gunesBilgisi} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi} · parçacık ${sahne3b.parcacikSayisi} · çizim/duvar ${sahne3b.cizimCagrisi} · iz ${sahne3b.izSayisi} · çatışma ${durum.catisma?.aktif ? `%${Math.round(durum.catisma.siddet * 100)} @ ${durum.catisma.yon}°` : "kapalı"} · helikopter ${sahne3b.helikopterHazir ? `model, iniş ${sahne3b.helikopterAzimutu.toFixed(0)}°` : "siluet"}`,
+      ],
+      H,
+    );
+  }
+  requestAnimationFrame(kare);
+}
+requestAnimationFrame(kare);

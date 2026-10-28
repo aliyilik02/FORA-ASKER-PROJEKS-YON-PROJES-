@@ -1,0 +1,15 @@
+3B arazi içeriği – Poly Haven (https://polyhaven.com), hepsi CC0 1.0 (kamu malı; atıf gerekmez, verilmesi iyidir).
+
+Dokular (dokular/, 2K JPG: *_renk = Diffuse, *_normal = nor_gl, *_arm = AO/Roughness/Metal, *_yukseklik = Displacement):
+  kuru_toprak = dry_ground_01, bozkir = dry_ground_rocks, makro_kahve = dirt_aerial_02, cimen_kaya = aerial_grass_rock, uzak_arazi = rocky_terrain_02, cakil = gravelly_sand,
+  kaya = rock_boulder_dry, yanik = burned_ground_01, kar = snow_02, yol = pebble_ground_01, tasli_zemin = rocks_ground_02
+  (26 Ekim 2026, bölge profilleri) orman_zemini = forest_floor, orman_yaprak = leaves_forest_ground, orman_cimen = leafy_grass,
+  dag_kaya = aerial_rocks_02, dag_tasli = rocky_terrain_03, us_cakil = gravel_floor_02, us_toprak = dirt_aerial_03,
+  kent_toprak = dirt, kent_yol = gravel_road
+Modeller (modeller/<ad>/, 1K glTF + bin + textures; *_lod.glb = araclar/arazi-sadelestir.mjs çıktısı):
+  kaya_buyuk = boulder_01, kaya_orta = namaqualand_boulder_02, kaya_kucuk = namaqualand_boulder_03, kaya_yuvarlak = rock_09,
+  tas_kume = sand_rocks_small_01, taslar = namaqualand_stones_01, cimen_1 = grass_medium_01, cimen_2 = grass_medium_02,
+  cali = searsia_burchellii, kuru_dal = dry_branches_medium_01, kutuk = dead_tree_trunk_02
+  (26 Ekim 2026, ormanlık seti) fidan_goknar = fir_sapling, fidan_cam = pine_sapling_small, cali_1 = shrub_01, cali_2 = shrub_02,
+  cali_3 = shrub_03, egrelti = fern_02, kutuk_2 = tree_stump_01, cam_koku = pine_roots
+Yeniden indirme: node araclar/arazi-indir.mjs (liste: araclar/arazi-indir-listesi.txt). Bu klasör depoya girmez (.gitignore).
