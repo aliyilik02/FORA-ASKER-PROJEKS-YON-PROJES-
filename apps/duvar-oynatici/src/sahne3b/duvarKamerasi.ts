@@ -7,7 +7,39 @@
  * eşdeğerlerdir (dikey açı aralığı, sınır oranı).
  */
 import * as THREE from "three";
-import type { DuvarIzdusumu } from "../projeksiyon";
+import type { DuvarIzdusumu, Yerlesim } from "../projeksiyon";
+
+/** three'nin sis köşe kodu: görüş uzayı derinliği (−z, kamera eksenine izdüşüm). */
+const SIS_DERINLIK_KODU = THREE.ShaderChunk.fog_vertex;
+/** Gerçek uzaklık: kameranın baktığı yöne bağlı değil (tüm duvar kameraları göz noktasında). */
+const SIS_UZAKLIK_KODU = `
+#ifdef USE_FOG
+
+	vFogDepth = length( mvPosition.xyz );
+
+#endif
+`;
+
+/**
+ * Sis neye göre: three sisi görüş uzayı derinliğiyle hesaplar; duvar kameraları farklı yönlere baktığından aynı
+ * nokta iki duvarda farklı sis alabilir. Ölçüsüz yerleşimde köşe iki kamera eksenine eşit açıdadır (derinlikler
+ * eşit), düz duvarda üç kamera aynı yöne bakar; ölçülmüş U odada izleyici ön ve yan duvara eşit uzaklıkta değilse
+ * köşede sis kırılır (ön 6, yan 4, z 2,2: köşedeki 100 m'lik nokta sol kamerada 80,6 m, orta kamerada 59,1 m
+ * derinlikte). Ölçülmüş odada (`?oda=`, dikey sınırlar ölçüden) gerçek uzaklık kullanılır; ölçüsüzde bugünkü
+ * görüntü korunur.
+ */
+export function uzaklikSisiGerekir(yerlesimler: readonly Yerlesim[]): boolean {
+  return yerlesimler.some((y) => !y.duvar.dikeyOrandan);
+}
+
+/**
+ * Sis köşe kodunu seçer (`true`: gerçek uzaklık, `false`: three'nin derinliği). Malzemeler derlenmeden, ilk
+ * çizimden önce çağrılmalı: three program önbelleği köşe kodunu anahtara katmaz, sonradan değişen kod derlenmiş
+ * malzemelere geçmez. Geometri sayfa ömrünce sabit (adres parametresi), yeniden boyutlandırmada aynı değer gelir.
+ */
+export function sisUzakligiAyarla(acik: boolean) {
+  THREE.ShaderChunk.fog_vertex = acik ? SIS_UZAKLIK_KODU : SIS_DERINLIK_KODU;
+}
 
 const matris = new THREE.Matrix4();
 const sag = new THREE.Vector3();

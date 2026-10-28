@@ -271,6 +271,57 @@ describe("düz duvar, 3 projektör", () => {
   });
 });
 
+describe("köşe ötesi: kenarı aşan sprite (yer tutucu bulut/güneş/ağaç, figür gölgesi)", () => {
+  it("ölçüsüz 90° duvar: köşe ötesindeki yön komşu duvardaki noktasına düşer, genişlik iki duvarda aynı", () => {
+    const y = duvarYerlesimleri(5760, 1080);
+    const a: TuvalNoktasi = { x: 0, y: 0 };
+    const b: TuvalNoktasi = { x: 0, y: 0 };
+    for (const az of [38, 44, 46, 50, 53]) {
+      expect(azimutX(az, y[1], 8)).toBeCloseTo(azimutX(az, y[2], 8)!, 9);
+      expect(azimutX(-az, y[1], 8)).toBeCloseTo(azimutX(-az, y[0], 8)!, 9);
+      expect(aciGenisligi(az, 30, y[1])).toBeCloseTo(aciGenisligi(az, 30, y[2]), 9);
+      for (const e of [-6, 0, 14]) {
+        expect(yonuIzdusur(az, e, y[1], a, 8)).toBe(true);
+        expect(yonuIzdusur(az, e, y[2], b, 8)).toBe(true);
+        expect(a.x).toBeCloseTo(b.x, 9);
+        expect(a.y).toBeCloseTo(b.y, 9);
+      }
+    }
+    // 50°: sağ duvardaki yeri köşeden (1 − tan 40°)/2 · 1920 ≈ 154,5 px (orta duvarın kendi uzantısı 184 px derdi)
+    expect(azimutX(50, y[1], 8)! - 3840).toBeCloseTo(((1 - Math.tan(radyan(40))) / 2) * 1920, 6);
+    // 30°'lik bulut 50°'de: iki duvarda da aynı (önce orta 1387 px, sağ 923 px)
+    expect(aciGenisligi(50, 30, y[1])).toBeCloseTo(azimutX(65, y[2])! - azimutX(35, y[1])!, 6);
+    // dış kenarın ötesi (komşu yok): duvarın kendi perspektif uzantısı, arka boşlukta da eskisi gibi
+    expect(azimutX(-140, y[0], 8)).toBeCloseTo(((1 + Math.tan(radyan(-50))) / 2) * 1920, 6);
+    expect(azimutKonum(-140, y, 20)?.x).toBeCloseTo(((1 + Math.tan(radyan(-50))) / 2) * 1920, 6);
+    expect(azimutX(150, y[1], 120)).toBeCloseTo(4800 + Math.tan(radyan(60)) * 960, 6);
+  });
+
+  it("ölçülmüş U oda (kaymış izleyici) ve düz duvar: köşe / sınır ötesinde iki duvar aynı nokta ve genişlik", () => {
+    const u: OdaGeometrisi = { tip: "u", on: 6, yan: 4, yukseklik: 3, alt: 0.3, izleyiciX: 0.8, izleyiciZ: 2.2, goz: 1.7 };
+    for (const oda of [u, { ...u, tip: "duz" as const, on: 9, yan: 0, izleyiciZ: 4, izleyiciX: -0.6 }]) {
+      const yer = duvarYerlesimleri(5760, 1080, odaDuvarlari(oda));
+      for (const [i, j] of [
+        [0, 1],
+        [1, 2],
+      ]) {
+        const kose = yer[j].duvar.solAzimut;
+        for (const d of [-7, -2, 2, 7]) {
+          expect(azimutX(kose + d, yer[i], 10)).toBeCloseTo(azimutX(kose + d, yer[j], 10)!, 6);
+          expect(aciGenisligi(kose + d, 20, yer[i])).toBeCloseTo(aciGenisligi(kose + d, 20, yer[j]), 6);
+        }
+      }
+      // tuvalde soldan sağa artar (köşe ötesi komşu duvarın bölgesine düşer)
+      const xler = [-60, -50, -40, -20, 0, 20, 40, 50, 60].map((az) => azimutX(az, yer[1], 70)!);
+      for (let k = 1; k < xler.length; k++) expect(xler[k]).toBeGreaterThan(xler[k - 1]);
+    }
+    // düz duvarda sınır ötesi = aynı düzlemin perspektif uzantısı (komşu duvarın noktası onunla aynı)
+    const duz = duvarYerlesimleri(5760, 1080, odaDuvarlari({ ...u, tip: "duz", on: 9, yan: 0, izleyiciZ: 4, izleyiciX: 0 }));
+    const az = derece(Math.atan(2 / 4)); // orta üçte birin (±1,5 m) ötesinde, 2 m sağda
+    expect(azimutX(az, duz[1], 10)).toBeCloseTo(2880 + (2 / 1.5) * 960, 6);
+  });
+});
+
 describe("ters izdüşüm", () => {
   it("yön → tuval → yön gidiş-dönüş (ölçüsüz, U oda, kaymış izleyici, düz duvar)", () => {
     const u: OdaGeometrisi = { tip: "u", on: 6, yan: 4, yukseklik: 3, alt: 0.3, izleyiciX: 0, izleyiciZ: 3, goz: 1.7 };

@@ -11,9 +11,10 @@
  */
 import { aciGenisligi, aciNormalize, azimutGorunur, azimutX, type TuvalNoktasi, ufukSatiri, yonuIzdusur, type Yerlesim } from "./projeksiyon";
 
-/** Kare döngüsünde ayırma olmasın diye ortak ara nesneler. */
+/** Kare döngüsünde ayırma olmasın diye ortak ara nesneler (parçalar duvar sayısına bir kez büyür). */
 const nokta: TuvalNoktasi = { x: 0, y: 0 };
-const parca: KlipParcasi = { xSol: 0, xSag: 0, yUst: 0, yAlt: 0, f0: 0, f1: 1 };
+const parcalar: KlipParcasi[] = [];
+const parcaDuvarlari: number[] = [];
 
 /** Klibin bir duvardaki parçası: tuval dikdörtgeni + kaynakta görünen sütun aralığı. */
 export interface KlipParcasi {
@@ -283,25 +284,49 @@ export class KlipKatmani {
       const acisalYukseklik = acisalGenislik * (sh / sw);
       const zemin = (a.tanim.taban ?? "zemin") === "zemin";
       const altAci = zemin ? a.yukseklik : a.yukseklik - acisalYukseklik / 2;
-      let golge = (a.tanim.golge ?? kategori === "figur") && zemin;
+      const golge = (a.tanim.golge ?? kategori === "figur") && zemin;
 
-      for (const y of yerlesimler) {
-        if (!klipParcasi(a.azimut, acisalGenislik, altAci, acisalYukseklik, y, ufukY - ufukSatiri(y), parca)) continue;
-        const { xSol, xSag, yUst, yAlt, f0, f1 } = parca;
+      // Önce duvar parçaları (köşeye taşan klip iki duvarda); `ev`: klibin ortasını gösteren duvarın parçası
+      let n = 0;
+      let ev = -1;
+      for (let i = 0; i < yerlesimler.length; i++) {
+        const y = yerlesimler[i];
+        if (n === parcalar.length) parcalar.push({ xSol: 0, xSag: 0, yUst: 0, yAlt: 0, f0: 0, f1: 1 });
+        if (!klipParcasi(a.azimut, acisalGenislik, altAci, acisalYukseklik, y, ufukY - ufukSatiri(y), parcalar[n])) continue;
+        parcaDuvarlari[n] = i;
+        if (ev < 0 && azimutGorunur(a.azimut, y.duvar)) ev = n;
+        n++;
+      }
+      if (n === 0) continue;
 
-        ctx.save();
-        // Zemin gölgesi (figürler): temas hissi; klibin ortasını gösteren duvarda bir kez
-        if (golge && azimutGorunur(a.azimut, y.duvar)) {
-          const xOrta = azimutX(a.azimut, y, 0, altAci);
-          if (xOrta !== null) {
-            const g = aciGenisligi(a.azimut, acisalGenislik, y, altAci);
+      // Zemin gölgesi (figürler): temas hissi. Klibin tüm parçalarından önce (köşede bacakların üstüne düşmez),
+      // değdiği her duvarda o duvara kırpılır; köşe ötesi izdüşüm komşu duvarınkiyle aynı noktayı verdiğinden
+      // (projeksiyon.ts cizenYerlesim) elips iki duvarda aynı yerde birleşir.
+      if (golge && ev >= 0) {
+        const evDuvari = yerlesimler[parcaDuvarlari[ev]];
+        const xOrta = azimutX(a.azimut, evDuvari, 0, altAci);
+        if (xOrta !== null) {
+          const g = aciGenisligi(a.azimut, acisalGenislik, evDuvari, altAci);
+          const rx = g * 0.42;
+          const yAlt = parcalar[ev].yAlt;
+          for (const y of yerlesimler) {
+            if (xOrta + rx < y.x || xOrta - rx > y.x + y.genislik) continue;
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(y.x, 0, y.genislik, H);
+            ctx.clip();
             ctx.fillStyle = `rgba(0,0,0,${0.12 + 0.25 * isik})`;
             ctx.beginPath();
-            ctx.ellipse(xOrta, yAlt, g * 0.42, g * 0.1, 0, 0, Math.PI * 2);
+            ctx.ellipse(xOrta, yAlt, rx, g * 0.1, 0, 0, Math.PI * 2);
             ctx.fill();
-            golge = false;
+            ctx.restore();
           }
         }
+      }
+
+      for (let k = 0; k < n; k++) {
+        const { xSol, xSag, yUst, yAlt, f0, f1 } = parcalar[k];
+        ctx.save();
         // Gece karartması ve mavi tonlama (efektler kendi ışığını yayar, karartılmaz)
         if (kategori !== "efekt" && isik < 0.98) {
           ctx.filter = `brightness(${(0.22 + 0.78 * isik).toFixed(3)}) saturate(${(0.6 + 0.4 * isik).toFixed(3)})`;

@@ -49,6 +49,9 @@ function aciMetni(a: number): string {
  */
 export function kalibrasyonCiz(ctx: CanvasRenderingContext2D, W: number, H: number, yerlesimler: Yerlesim[], ozet: readonly string[]) {
   const yazi = Math.max(11, Math.round(H / 42));
+  // Geometri özeti kutusu (altta, ortada): satır yüksekliği ve üst kenarı; duvar adları bunun üstünde kalır
+  const ozetSatiri = yazi * 1.35;
+  const ozetUst = ozet.length > 0 ? H - ozetSatiri * ozet.length - yazi * 0.8 : H;
   ctx.save();
   ctx.lineCap = "round";
   for (const y of yerlesimler) {
@@ -103,7 +106,7 @@ export function kalibrasyonCiz(ctx: CanvasRenderingContext2D, W: number, H: numb
       if (yonuIzdusur(xAzimut(y.x + yazi * 0.6, y), e, y, izNokta, 180)) ctx.fillText(aciMetni(e), y.x + yazi * 0.6, izNokta.y - 2);
     }
 
-    // Ufuk = göz hizası
+    // Ufuk = göz hizası (göz görüntünün altında ya da üstündeyse çizgi tuvalin dışında kalır; aşağıda not)
     const ufuk = ufukSatiri(y);
     ctx.strokeStyle = "rgba(255,200,60,0.95)";
     ctx.lineWidth = 2.5;
@@ -112,17 +115,25 @@ export function kalibrasyonCiz(ctx: CanvasRenderingContext2D, W: number, H: numb
     ctx.lineTo(y.x + y.genislik, ufuk);
     ctx.stroke();
     ctx.fillStyle = "rgba(255,210,90,0.95)";
-    ctx.fillText("ufuk · göz hizası", y.x + yazi * 0.6, ufuk - 3);
+    ctx.fillText("ufuk · göz hizası", y.x + yazi * 0.6, ufuk < yazi * 1.2 ? ufuk + 3 + yazi : ufuk - 3);
 
-    // Duvar adı ve açı aralığı
+    // Duvar adı ve açı aralığı: ufka yakın, ama ufuk nerede olursa olsun tuvalde ve alttaki özet kutusunun üstünde
+    // (doğrulama gözün görüntünün çok altında/üstünde olmasına izin verir: alt=2, yuk=1, goz=0,5 → ufuk 2,5·H)
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = `bold ${Math.round(H / 12)}px "Segoe UI", system-ui, sans-serif`;
     ctx.fillStyle = "rgba(255,255,255,0.8)";
-    const adY = ufuk > H * 0.3 ? ufuk - H * 0.16 : ufuk + H * 0.16;
+    const adYEnCok = Math.max(H * 0.3, ozetUst - H / 14 - yazi);
+    const adY = Math.min(adYEnCok, Math.max(H * 0.12, ufuk > H * 0.3 ? ufuk - H * 0.16 : ufuk + H * 0.16));
     ctx.fillText(DUVAR_ADI[d.ad], y.x + y.genislik / 2, adY);
     ctx.font = `${yazi}px ui-monospace, Consolas, monospace`;
     ctx.fillText(`${d.fov.toFixed(1)}° · ${aciMetni(d.solAzimut)} … ${aciMetni(d.solAzimut + d.fov)}`, y.x + y.genislik / 2, adY + H / 14);
+    if (ufuk < 0 || ufuk > H) {
+      // Ufuk tuvalin dışında: not, ufuk üstteyse açı satırının altına, alttaysa adın üstüne (özet kutusuna değmez)
+      ctx.fillStyle = "rgba(255,210,90,0.95)";
+      const notY = ufuk < 0 ? adY + H / 14 + yazi * 1.5 : adY - H / 24 - yazi;
+      ctx.fillText(`${ufuk < 0 ? "↑" : "↓"} ufuk (göz hizası) görüntünün ${ufuk < 0 ? "üstünde" : "altında"}`, y.x + y.genislik / 2, notY);
+    }
     ctx.restore();
   }
 
@@ -144,13 +155,11 @@ export function kalibrasyonCiz(ctx: CanvasRenderingContext2D, W: number, H: numb
     ctx.font = `${yazi}px ui-monospace, Consolas, monospace`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    const satir = yazi * 1.35;
     const genislik = Math.min(W - 8, Math.max(...ozet.map((s) => ctx.measureText(s).width)) + yazi * 1.5);
-    const ust = H - satir * ozet.length - yazi * 0.8;
     ctx.fillStyle = "rgba(0,0,0,0.62)";
-    ctx.fillRect(W / 2 - genislik / 2, ust, genislik, satir * ozet.length + yazi * 0.5);
+    ctx.fillRect(W / 2 - genislik / 2, ozetUst, genislik, ozetSatiri * ozet.length + yazi * 0.5);
     ctx.fillStyle = "#e8eaf0";
-    ozet.forEach((s, i) => ctx.fillText(s, W / 2, ust + satir * (i + 0.5) + yazi * 0.25, W - 16));
+    ozet.forEach((s, i) => ctx.fillText(s, W / 2, ozetUst + ozetSatiri * (i + 0.5) + yazi * 0.25, W - 16));
   }
   ctx.restore();
 }

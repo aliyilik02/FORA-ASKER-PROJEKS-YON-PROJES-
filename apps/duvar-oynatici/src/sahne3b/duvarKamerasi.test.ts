@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { duvarlariOlustur, duvarYerlesimleri, odaDuvarlari, type OdaGeometrisi, type TuvalNoktasi, ufukSatiri, type Yerlesim, yonuIzdusur } from "../projeksiyon";
-import { DuvarKamerasi } from "./duvarKamerasi";
+import { DuvarKamerasi, sisUzakligiAyarla, uzaklikSisiGerekir } from "./duvarKamerasi";
 import { dikeyFov, radyan } from "./uzay";
 
 /** Yön (azimut, yükseklik; derece) → sahne koordinatında nokta (göz başlangıçta), `uzaklik` metre ötede. */
@@ -82,5 +82,54 @@ describe("duvar kamerası (3B)", () => {
     // ters matris de güncel (three'nin ışın atma / unproject yolu)
     const birim = new THREE.Matrix4().multiplyMatrices(kam.projectionMatrix, kam.projectionMatrixInverse);
     birim.elements.forEach((v, i) => expect(v).toBeCloseTo(i % 5 === 0 ? 1 : 0, 9));
+  });
+
+  it("sis: kaymış izleyicide köşedeki nokta iki komşu kamerada aynı sis uzaklığını alır (ölçülmüş odada gerçek uzaklık)", () => {
+    const oda: OdaGeometrisi = { tip: "u", on: 6, yan: 4, yukseklik: 3, alt: 0.3, izleyiciX: 0, izleyiciZ: 2.2, goz: 1.7 };
+    const yer = duvarYerlesimleri(5760, 1080, odaDuvarlari(oda));
+    const gorus = (kam: THREE.Camera, p: THREE.Vector3) => p.clone().applyMatrix4(kam.matrixWorldInverse); // mvPosition
+    for (const [i, j] of [
+      [0, 1],
+      [1, 2],
+    ]) {
+      const a = kameraKur(yer[i]);
+      const b = kameraKur(yer[j]);
+      const kose = yer[j].duvar.solAzimut; // ön köşe −53,75° / +53,75°
+      for (const e of [-1, -8, 5]) {
+        const p = yonNoktasi(kose, e, 100);
+        // three'nin varsayılanı (vFogDepth = −mvPosition.z): iki kamerada çok farklı → köşede sis kırılır
+        expect(Math.abs(gorus(a, p).z - gorus(b, p).z)).toBeGreaterThan(15);
+        // gerçek uzaklık (vFogDepth = length(mvPosition.xyz)): iki kamerada aynı, kameranın yönünden bağımsız
+        expect(gorus(a, p).length()).toBeCloseTo(100, 9);
+        expect(gorus(b, p).length()).toBeCloseTo(100, 9);
+      }
+    }
+    // ön köşe −53,75°: sol kamerada 80,6 m, orta kamerada 59,1 m derinlik (ön 6, yan 4, z 2,2)
+    const p = yonNoktasi(yer[1].duvar.solAzimut, 0, 100);
+    expect(-gorus(kameraKur(yer[0]), p).z).toBeCloseTo(80.6, 1);
+    expect(-gorus(kameraKur(yer[1]), p).z).toBeCloseTo(59.1, 1);
+
+    // Seçim: ölçülmüş oda (U ve düz) → gerçek uzaklık; ölçüsüz (varsayılan, ?fov=) → three'nin derinliği (bugünkü görüntü)
+    expect(uzaklikSisiGerekir(yer)).toBe(true);
+    expect(uzaklikSisiGerekir(duvarYerlesimleri(5760, 1080, odaDuvarlari({ ...oda, tip: "duz" as const, on: 9, yan: 0 })))).toBe(true);
+    expect(uzaklikSisiGerekir(duvarYerlesimleri(5760, 1080))).toBe(false);
+    expect(uzaklikSisiGerekir(duvarYerlesimleri(1920, 360, duvarlariOlustur(40)))).toBe(false);
+    // ölçüsüzde köşe iki kamera eksenine eşit açıda: derinlik zaten eşit (sis kipini değiştirmeye gerek yok)
+    const v = duvarYerlesimleri(5760, 1080);
+    const q = yonNoktasi(45, -3, 100);
+    expect(gorus(kameraKur(v[1]), q).z).toBeCloseTo(gorus(kameraKur(v[2]), q).z, 9);
+
+    // Köşe kodu: three'nin sis parçası değişir ve geri döner
+    const ozgun = THREE.ShaderChunk.fog_vertex;
+    expect(ozgun).toContain("vFogDepth = - mvPosition.z;");
+    try {
+      sisUzakligiAyarla(true);
+      expect(THREE.ShaderChunk.fog_vertex).toContain("vFogDepth = length( mvPosition.xyz );");
+      expect(THREE.ShaderChunk.fog_vertex).toContain("#ifdef USE_FOG");
+      sisUzakligiAyarla(false);
+      expect(THREE.ShaderChunk.fog_vertex).toBe(ozgun);
+    } finally {
+      THREE.ShaderChunk.fog_vertex = ozgun;
+    }
   });
 });

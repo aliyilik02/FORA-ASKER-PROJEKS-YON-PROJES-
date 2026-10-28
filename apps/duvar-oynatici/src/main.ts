@@ -3,7 +3,7 @@
  *
  * Köprüden gelen durum (bölge, ortam, izli mermi, Oda 2) ve efekt olaylarını 3 duvara çizer.
  * Sorgu parametreleri:
- *   ?fov=90      duvar başına yatay açı (U duvar 90; düz tek duvar 3 projektör ≈ 40); ölçü yokken
+ *   ?fov=90      ölçü yokken duvar başına yatay açı (U duvar 90); düz tek duvara 3 projektör için ?oda=duz,...
  *   ?oda=u,on=6,yan=4,yuk=3,alt=0.3,x=0,z=3,goz=1.7   ölçülmüş oda (U ya da "duz"; metre), duvar başına doğru
  *                perspektif; yerel kayıtta kalır, "?oda=sifirla" siler (bkz. projeksiyon.ts odaGeometrisiCoz)
  *   ?doldur=1    48:9 oranını koruma, pencereyi tamamen doldur

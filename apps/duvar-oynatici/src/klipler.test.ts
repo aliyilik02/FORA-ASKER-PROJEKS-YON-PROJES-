@@ -1,8 +1,76 @@
-import { describe, expect, it } from "vitest";
-import { klipParcasi, type KlipParcasi } from "./klipler";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { KlipKatmani, klipParcasi, type KlipParcasi } from "./klipler";
 import { duvarYerlesimleri, odaDuvarlari, type TuvalNoktasi, ufukSatiri, yonuIzdusur } from "./projeksiyon";
 
 const yeni = (): KlipParcasi => ({ xSol: 0, xSag: 0, yUst: 0, yAlt: 0, f0: 0, f1: 0 });
+
+/** Çizim sırasını kaydeden sahte 2B bağlam (yalnız klip katmanının kullandığı çağrılar). */
+function sahteBaglam() {
+  const kayit: string[] = [];
+  let kirpma = "";
+  let sonRect = "";
+  const ctx = {
+    save: () => kayit.push("save"),
+    restore: () => {
+      kayit.push("restore");
+      kirpma = "";
+    },
+    beginPath: () => undefined,
+    rect: (x: number, _y: number, w: number) => {
+      sonRect = `${x}-${x + w}`;
+    },
+    clip: () => {
+      kirpma = sonRect;
+    },
+    ellipse: (x: number) => kayit.push(`golge x=${x.toFixed(3)} kirpma=${kirpma}`),
+    fill: () => undefined,
+    translate: () => undefined,
+    scale: () => undefined,
+    drawImage: (...a: number[]) => kayit.push(`resim ${a[5].toFixed(1)}-${(a[5] + a[7]).toFixed(1)}`),
+    fillStyle: "",
+    filter: "none",
+    globalCompositeOperation: "source-over",
+  };
+  return { ctx: ctx as unknown as CanvasRenderingContext2D, kayit };
+}
+
+describe("figür gölgesi köşede", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("gölge klibin tüm parçalarından önce, değdiği her duvarda o duvara kırpılmış ve aynı yerde çizilir", () => {
+    // Node'da Image yok: yüklenmiş gibi davranan sahte resim
+    vi.stubGlobal(
+      "Image",
+      class {
+        naturalWidth = 100;
+        naturalHeight = 300;
+        onload: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        set src(_: string) {
+          this.onload?.();
+        }
+      },
+    );
+    const katman = new KlipKatmani();
+    katman.ayarla({ asker: { dosya: "asker.png", kategori: "figur", genislikDerece: 10 } }, "");
+    // 42° … 52°: köşeyi (45°) aşar, ortası (47°) döngüde sonra gelen sağ duvarda
+    katman.oynat({ klip: "asker", azimut: 47 });
+    const y = duvarYerlesimleri(5760, 1080);
+    const { ctx, kayit } = sahteBaglam();
+    katman.ciz(ctx, y, 540, 1080, 1, ["figur"]);
+    const golgeler = kayit.filter((k) => k.startsWith("golge"));
+    const resimler = kayit.filter((k) => k.startsWith("resim"));
+    expect(resimler).toHaveLength(2); // orta + sağ duvar parçası
+    expect(golgeler).toHaveLength(2); // elips köşeyi aşıyor: iki duvarda, her biri kendi duvarına kırpılmış
+    expect(golgeler[0]).toContain("kirpma=1920-3840");
+    expect(golgeler[1]).toContain("kirpma=3840-5760");
+    expect(golgeler[0].split(" ")[1]).toBe(golgeler[1].split(" ")[1]); // aynı merkez
+    // önce gölgeler, sonra resim parçaları (bacakların üstü kararmaz)
+    expect(kayit.indexOf(golgeler[1])).toBeLessThan(kayit.indexOf(resimler[0]));
+    expect(resimler[0]).toMatch(/-3840\.0$/);
+    expect(resimler[1]).toMatch(/^resim 3840\.0-/);
+  });
+});
 
 describe("klip yerleşimi (perspektif, köşede parçalı)", () => {
   const y = duvarYerlesimleri(5760, 1080);

@@ -15,7 +15,7 @@ import { gunesKonumu, ufukSatiri, type Yerlesim } from "../projeksiyon";
 import type { CatismaAyarlari, HelikopterDurumu, IzliMermiAyarlari, OrtamAyarlari } from "../tipler";
 import { CatismaSistemi, type CatismaSesleri } from "./catisma";
 import { atesDokusu, dumanDokusu, kivilcimDokusu, kraterDokusu } from "./dokular";
-import { DuvarKamerasi } from "./duvarKamerasi";
+import { DuvarKamerasi, sisUzakligiAyarla, uzaklikSisiGerekir } from "./duvarKamerasi";
 import { FigurKatmani, type FigurPozu, type FigurSecenekleri, type ModelTanimi } from "./figurler3b";
 import { gunesTahmin, panoramadanSahneAzimutu, type GunesTahmini } from "./gunes";
 import { HasarKatmani } from "./hasar";
@@ -250,6 +250,8 @@ export class Sahne3B {
     this.yerlesimler = yerlesimler;
     this.renderer?.setSize(W, H, false);
     this.kameralar = yerlesimler.map(() => new DuvarKamerasi(0.1, 3000));
+    // Ölçülmüş odada sis gerçek uzaklıkla (kaymış izleyicide köşede kırılmaz); ilk çizimden önce (duvarKamerasi.ts)
+    sisUzakligiAyarla(uzaklikSisiGerekir(yerlesimler));
     this.kameralariYonlendir();
   }
 

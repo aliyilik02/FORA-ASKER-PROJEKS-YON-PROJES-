@@ -57,7 +57,10 @@ function derece(r: number): number {
   return (r * 180) / Math.PI;
 }
 
-/** Ölçüsüz yerleşim: duvar başına `fov` derece, yaw (i−1)·fov (U duvar 90; düz tek duvara 3 projektör ≈ 40). */
+/**
+ * Ölçüsüz yerleşim: duvar başına `fov` derece, yaw (i−1)·fov (U duvar 90). Düz tek duvara 3 projektör için
+ * `?oda=duz,...` (`odaDuvarlari`) kullanılır: döndürülmüş kameralar düz duvarda yan görüntüleri bozar.
+ */
 export function duvarlariOlustur(fov: number): Duvar[] {
   const t = Math.tan(radyan(fov / 2));
   return DUVAR_ADLARI.map((ad, i) => {
@@ -288,6 +291,9 @@ export interface Yerlesim {
   yukseklik: number;
   /** Bu bölgenin izdüşümü (dikey sınırlar çözülmüş): 3B kamera, 2B panorama ve 2B katmanlar bunu kullanır. */
   izdusum: DuvarIzdusumu;
+  /** Tuvalde soldaki / sağdaki duvar (köşe ötesi izdüşüm için; `duvarYerlesimleri` bağlar, dış kenarlarda yok). */
+  solKomsu?: Yerlesim;
+  sagKomsu?: Yerlesim;
 }
 
 export function aciNormalize(a: number): number {
@@ -296,13 +302,18 @@ export function aciNormalize(a: number): number {
 
 export function duvarYerlesimleri(W: number, H: number, duvarlar: Duvar[] = VARSAYILAN_DUVARLAR): Yerlesim[] {
   const g = W / duvarlar.length;
-  return duvarlar.map((duvar, indeks) => {
+  const yerlesimler: Yerlesim[] = duvarlar.map((duvar, indeks) => {
     const iz = duvar.izdusum;
     // Ölçüsüz yerleşim: dikey sınır yatay sınırın duvar piksel oranıyla ölçeklenmiş hâli (kare piksel)
     const yarim = ((iz.sag - iz.sol) / 2) * (H / g);
     const izdusum = duvar.dikeyOrandan ? { ...iz, alt: -yarim, ust: yarim } : iz;
     return { duvar, indeks, x: indeks * g, genislik: g, yukseklik: H, izdusum };
   });
+  yerlesimler.forEach((y, i) => {
+    y.solKomsu = yerlesimler[i - 1];
+    y.sagKomsu = yerlesimler[i + 1];
+  });
+  return yerlesimler;
 }
 
 /** Azimut duvarın yatay açı aralığında mı; `pay` derece tolerans (köşedeki geniş klip iki duvarda da çizilir). */
@@ -339,14 +350,49 @@ function tuvalY(v: number, y: Yerlesim): number {
   return ((iz.ust - v) / (iz.ust - iz.alt)) * y.yukseklik;
 }
 
+/** Kenardaki (köşedeki) azimut kayan nokta hatasıyla komşu duvara geçmesin (derece). */
+const KENAR_PAYI = 1e-9;
+
+/** Azimut duvarın açı aralığında mı (kenarlar dahil). */
+function aralikta(azimut: number, d: Duvar): boolean {
+  const s = aciNormalize(azimut - d.solAzimut);
+  return s >= -KENAR_PAYI && s <= d.fov + KENAR_PAYI;
+}
+
+/**
+ * Yönü çizen duvar: azimut `y`nin aralığındaysa `y`; kenarın ötesindeyse o yandaki komşu duvarlardan azimutu
+ * içeren (yoksa o yandaki en dış duvar, perspektif uzantısıyla). Köşe ötesindeki yön böylece komşu duvarda
+ * çizildiği tuval noktasına düşer: kenarı aşan sprite (bulut, güneş, ağaç, figür gölgesi) iki duvarda aynı yere
+ * çizilir, her duvar kendi kırpılmış parçasını gösterir. Duvarın kendi perspektif uzantısı köşede kırılırdı
+ * (1920 px'lik 90° duvarda 50°'deki nesne orta duvarda köşeden 184 px, sağ duvarda 154 px ötede); düz duvarda
+ * (aynı düzlem) ikisi aynıdır.
+ */
+function cizenYerlesim(azimut: number, y: Yerlesim): Yerlesim {
+  if (aralikta(azimut, y.duvar)) return y;
+  const sagda = aciNormalize(azimut - y.duvar.solAzimut - y.duvar.fov / 2) > 0;
+  let w = y;
+  for (;;) {
+    const k = sagda ? w.sagKomsu : w.solKomsu;
+    if (!k) return w;
+    if (aralikta(azimut, k.duvar)) return k;
+    // Komşu ile arada boşluk varsa (bitişik olmayan duvarlar) bu duvarın uzantısı
+    const s = aciNormalize(azimut - k.duvar.solAzimut - k.duvar.fov / 2);
+    if (sagda ? s <= 0 : s >= 0) return w;
+    w = k;
+  }
+}
+
 /**
  * Azimut bu duvarda görünüyorsa tuval x koordinatı, değilse null. `pay` ile kenar dışı tolerans (derece);
  * `yukseklik` ufka göre açı (dikey duvarda x'i değiştirmez). Perspektif: duvar kenarına doğru derece başına
- * piksel artar, 3B kameralarla aynı izdüşüm.
+ * piksel artar, 3B kameralarla aynı izdüşüm. Kenar ötesinde (pay içinde) komşu duvarın tuval noktası
+ * (`cizenYerlesim`); dış kenarın ötesinde duvarın perspektif uzantısı.
  */
 export function azimutX(azimut: number, y: Yerlesim, pay = 0, yukseklik = 0): number | null {
-  if (!azimutGorunur(azimut, y.duvar, pay) || !tegeteIzdusur(azimut, yukseklik, y.izdusum)) return null;
-  return tuvalX(teget.u, y);
+  if (!azimutGorunur(azimut, y.duvar, pay)) return null;
+  const w = cizenYerlesim(azimut, y);
+  if (!tegeteIzdusur(azimut, yukseklik, w.izdusum)) return null;
+  return tuvalX(teget.u, w);
 }
 
 /** Tuval x'inden azimut (ufuk hizasında; dikey duvarda her satırda aynı). Duvar içinde süreklidir (yaw çevresinde). */
@@ -357,8 +403,8 @@ export function xAzimut(x: number, y: Yerlesim): number {
 }
 
 /**
- * Azimutu gösteren duvarı ve x'i bulur. Önce azimutu gerçekten içeren duvar (köşenin ötesinde her duvarın
- * izdüşümü farklıdır), yoksa `pay` toleransıyla ilk duvar.
+ * Azimutu gösteren duvarı ve x'i bulur. Önce azimutu gerçekten içeren duvar, yoksa (duvarların dışı: arka boşluk)
+ * `pay` toleransıyla ilk duvar; x o yandaki dış duvarın perspektif uzantısı.
  */
 export function azimutKonum(azimut: number, yerlesimler: Yerlesim[], pay = 0, yukseklik = 0): { x: number; yerlesim: Yerlesim } | null {
   for (const y of yerlesimler) {
@@ -381,12 +427,15 @@ export interface TuvalNoktasi {
 
 /**
  * Yön (azimut, ufka göre yükseklik; derece) → tuval noktası (y üstten). Duvarda (± `pay` derece) görünmüyorsa
- * false. Sonuç `cikti`ya yazılır; kare döngüsünde ayırma yapılmaz.
+ * false. Kenar ötesinde `azimutX` gibi komşu duvarın noktası. Sonuç `cikti`ya yazılır; kare döngüsünde ayırma
+ * yapılmaz.
  */
 export function yonuIzdusur(azimut: number, yukseklik: number, y: Yerlesim, cikti: TuvalNoktasi, pay = 0): boolean {
-  if (!azimutGorunur(azimut, y.duvar, pay) || !tegeteIzdusur(azimut, yukseklik, y.izdusum)) return false;
-  cikti.x = tuvalX(teget.u, y);
-  cikti.y = tuvalY(teget.v, y);
+  if (!azimutGorunur(azimut, y.duvar, pay)) return false;
+  const w = cizenYerlesim(azimut, y);
+  if (!tegeteIzdusur(azimut, yukseklik, w.izdusum)) return false;
+  cikti.x = tuvalX(teget.u, w);
+  cikti.y = tuvalY(teget.v, w);
   return true;
 }
 
@@ -420,7 +469,8 @@ export function ufukSatiri(y: Yerlesim, kaydirma = 0): number {
 
 /**
  * `azimut` çevresindeki `genislikDerece` açının bu duvardaki piksel genişliği (perspektif: kenara yakın daha
- * geniş). Uçlardan biri duvar düzleminin arkasındaysa (çok geniş açı) eşdeğer doğrusal ölçek.
+ * geniş). Köşeyi aşan uç komşu duvarın noktasıdır: aynı sprite iki duvarda aynı genişlikte çıkar. Uçlardan biri
+ * duvar düzleminin arkasındaysa (çok geniş açı) eşdeğer doğrusal ölçek.
  */
 export function aciGenisligi(azimut: number, genislikDerece: number, y: Yerlesim, yukseklik = 0): number {
   const yarim = genislikDerece / 2;

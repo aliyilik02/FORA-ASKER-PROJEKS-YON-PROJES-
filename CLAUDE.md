@@ -78,7 +78,9 @@ Silindirik panorama; her nesnenin azimutu var (0 = orta duvar ortası, sola eksi
 Her duvar izleyicinin gözünden genelleştirilmiş perspektifle (Kooima, `projeksiyon.ts` + `sahne3b/duvarKamerasi.ts`)
 çizilir; 3B, video panorama, 2B klipler/efektler ve K ızgarası aynı izdüşümü kullanır. Sorgu
 `?oda=u,on=6,yan=4,yuk=3,alt=0.3,x=0,z=3,goz=1.7` ya da `?oda=duz,on=9,yuk=2.5,alt=0.3,z=4,goz=1.7` (metre; yerel
-kayıtta kalır, `?oda=sifirla` siler; panel Sistem › Duvar geometrisi); yoksa duvar başına `?fov=` (90), görüntü aynen.
+kayıtta kalır, `?oda=sifirla` siler; panel Sistem › Duvar geometrisi); yoksa duvar başına `?fov=` (90): 3B görüntü
+eskisiyle aynı, 2B klip/efekt/yer tutucu perspektif eşlemeye geçti (azimuta doğrusal değil; manifest `genislikDerece`
+gerekirse yeniden ayarlanır). Ölçülmüş odada 3B sis gerçek uzaklıkla (köşede kırılmaz), düz duvar için `?fov=40` değil `?oda=duz`.
 Arka plan önceliği: 360° panorama (manifest `panorama`) > düz 5760×1080 döngü (`dongu`) >
 parametrik yer tutucu. Üstüne: Oda 2 ön planları, **figür klipleri** (`klipler`, kategori
 `figur`), sis, helikopter, hava, **efekt plakaları** (`klipler`, kategori `efekt`; adı

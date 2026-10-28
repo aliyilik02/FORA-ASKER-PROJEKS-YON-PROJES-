@@ -95,7 +95,8 @@ export function gokyuzuCiz(ctx: CanvasRenderingContext2D, y: Yerlesim, ufukY: nu
   // Güneş ve ay
   const gunes = gunesKonumu(ortam.saat);
   const ufukUstu = (yuk: number) => ufukY - (yuk / 70) * ufukY * 0.95;
-  const gx = azimutX(gunes.azimut, y, 6);
+  // Pay 9°: hale (4·r) 90° duvarın kenarında ≈ 8°; köşe ötesindeki güneşin halesi bu duvarda da çizilir (kesilmez)
+  const gx = azimutX(gunes.azimut, y, 9);
   if (gx !== null && gunes.yukseklik > -4) {
     const gy = ufukUstu(gunes.yukseklik);
     const r = y.genislik * 0.035;
@@ -135,7 +136,8 @@ export function gokyuzuCiz(ctx: CanvasRenderingContext2D, y: Yerlesim, ufukY: nu
     const cx = azimutX(az, y, b.genislik);
     if (cx === null) continue;
     const cy = b.yuk * ufukY;
-    // Perspektif: aynı açı duvar kenarına doğru daha geniş (projeksiyon.ts; ölçülmüş odada duvarlar farklı açıda)
+    // Perspektif: aynı açı duvar kenarına doğru daha geniş (projeksiyon.ts; ölçülmüş odada duvarlar farklı açıda).
+    // Köşeyi aşan bulut iki duvarda aynı yer ve genişlikte (köşe ötesi komşu duvarın izdüşümü): köşede sürekli.
     const gen = aciGenisligi(az, b.genislik, y);
     const alfa = 0.55 + ortam.bulut * 0.4;
     for (const p of b.parcalar) {
