@@ -78,8 +78,14 @@ Arka plan önceliği: 360° panorama (manifest `panorama`) > düz 5760×1080 dö
 parametrik yer tutucu. Üstüne: Oda 2 ön planları, **figür klipleri** (`klipler`, kategori
 `figur`), sis, helikopter, hava, **efekt plakaları** (`klipler`, kategori `efekt`; adı
 `patlama_*`, `toz_*`, `uzak_patlama_*` olanlar panel efektlerine otomatik bağlanır), izli mermi,
-flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test. Sorgu: `?fov=`, `?panorama=`,
+flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test, T hoparlör testi. Sorgu: `?fov=`, `?panorama=`,
 `?yaw=`, `?hud=1`, `?doldur=1`, `?kalite=dusuk|orta|yuksek` (dizüstü: dusuk; yerel kayıtta kalır). Ayrıntı: `docs/duvar-oynatici.md`.
+
+Ses (`ses.ts` + saf hesap `sesYerlesimi.ts`): her ses sahne azimutuyla çalınır; stereoda eski StereoPanner yolu (pan =
+sin azimut), 4 kanal / 5.1 / 7.1'de ChannelMerger (iki komşu hoparlöre sabit güçlü kaydırma, ön/arka ayrılır, uzak
+sesler yayılır, patlama/top basları LFE'ye, ortam dağınık, 3B helikopter rotoru konumlu). Sorgu
+`?ses=stereo|dortlu|5.1|7.1|otomatik` (varsayılan otomatik = cihazın kanal sayısı; yerel kayıtta kalır), `?hoparlor=`
+kanal sırasıyla azimutlar (`-30,30,0,lfe,-110,110`); tuş **T** hoparlör testi; panel Sistem → Ses düzeni.
 
 Panel API'si (`apps/kopru/src/api.ts`): `/api/durum`, `/oda`, `/bolge`, `/ortam`, `/isik`,
 `/izli-mermi`, `/oda2`, `/efekt`, `/figur` (oynat/durdur/temizle/poz), `/klipler`, `/figurler`,
@@ -165,7 +171,8 @@ mesajı), önizleme fps/kalite bilgisi taşır; HUD varsayılan kapalı; panelde
    diziliminde iki hat). Sıhhiyeci "Interact" klibiyle idare ediyor; gerçek
    müdahale animasyonu (turnike) için yeşil perde çekimi (docs §2.5). Yaralı taşıma (iki kişi) yok.
 3. VFX plakaları (gerçek çekim, alfa) ve helikopter inişi için 3B toz + ses ayarı; izli mermiyi 3B'ye taşıma.
-4. 4 kanal ses; Türkçe bağırma/yaralı inleme kaydı; U duvar ölçüleri → `?fov=`.
+4. Çok kanallı ses yazılımda hazır: sahada T testi + gerçek hoparlör açıları (`?hoparlor=`); Türkçe bağırma/yaralı
+   inleme kaydı; U duvar ölçüleri → `?fov=`.
 5. İdareye gösterim: kırsal 4 varyant + patlama/krater + 3 asker + yaralı + helikopter.
 
 ## Belgeler
