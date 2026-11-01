@@ -40,6 +40,8 @@ export const KALITE_AYARLARI: Record<Kalite, { golgeHaritasi: number; kenarYumus
  */
 export const ASKER_EN_UZAK = 7;
 export const ASKER_EN_YAKIN = 4;
+/** Asker yerleşiminde istenen yöne bu açı içindeki boş noktalar (asker, sonra figür) önce denenir. */
+export const ASKER_YAKIN_TOLERANS = 50;
 
 export interface PanoramaKaynagi {
   url: string;
@@ -639,7 +641,8 @@ export class Sahne3B {
     const askerMi = !turler.includes("tank");
     const kisalt = (m: number) => (askerMi ? Math.min(ASKER_EN_UZAK, Math.max(ASKER_EN_YAKIN, m)) : m);
     const dolu = (p: THREE.Vector3) => this.figurler.doluMu(p) || this.sutre.doluMu(p);
-    const secim = birlikNoktasiSec(this.kaynak?.plan, s.azimut + k, turler, varsayilan, (az, m) => dolu(yerKonumu(panoramadanSahneAzimutu(az, k), kisalt(m))));
+    // Asker: istenen duvarda (±50°) boş asker, sonra figür noktası; ancak o duvar doluysa başka duvara geçilir
+    const secim = birlikNoktasiSec(this.kaynak?.plan, s.azimut + k, turler, varsayilan, (az, m) => dolu(yerKonumu(panoramadanSahneAzimutu(az, k), kisalt(m))), askerMi ? ASKER_YAKIN_TOLERANS : undefined);
     const azimut = panoramadanSahneAzimutu(secim.azimut, k);
     // Seçilen yer hâlâ bir sütre eşyasının içindeyse (Oda 2 kaya/HESCO hattı) aynı yönde biraz dışarı
     let mesafe = kisalt(secim.mesafe);

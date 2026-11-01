@@ -86,4 +86,27 @@ describe("birlikNoktasiSec", () => {
   it("plan yoksa serbest yön", () => {
     expect(birlikNoktasiSec(undefined, 33, ["asker"], 18, () => false)).toEqual({ azimut: 33, mesafe: 18, degisti: false });
   });
+  const q: YerlesimPlani = {
+    noktalar: [
+      { ad: "orta mevzi", azimut: 0, mesafe: 11, tur: ["asker"] },
+      { ad: "orta yuruyus", azimut: 30, mesafe: 12, tur: ["figur"] },
+      { ad: "sol mevzi", azimut: -90, mesafe: 11, tur: ["asker"] },
+      { ad: "tank yeri", azimut: 20, mesafe: 28, tur: ["tank"] },
+      { ad: "tarla", azimut: -20, mesafe: 22, tur: ["patlama"] },
+    ],
+  };
+  const ortaDolu = (az: number) => Math.abs(az) < 0.5;
+  it("bir türün noktaları doluysa sıradaki türe geçer (yana kaydırmadan önce)", () => {
+    expect(birlikNoktasiSec(q, 0, ["tank", "patlama", "figur"], 28, (az) => Math.abs(az - 20) < 0.5).nokta?.ad).toBe("tarla");
+    const hepsi = (az: number) => [0, 30, -90].some((a) => Math.abs(az - a) < 0.5);
+    const kayik = birlikNoktasiSec(q, 0, ["asker", "figur"], 20, hepsi);
+    expect(kayik.nokta?.ad).toBe("orta mevzi");
+    expect(Math.abs(kayik.azimut)).toBeGreaterThan(5);
+  });
+  it("yakın tolerans: aynı duvardaki figür noktası başka duvardaki asker noktasından önce", () => {
+    expect(birlikNoktasiSec(q, 0, ["asker", "figur"], 20, ortaDolu).nokta?.ad).toBe("sol mevzi");
+    expect(birlikNoktasiSec(q, 0, ["asker", "figur"], 20, ortaDolu, 50).nokta?.ad).toBe("orta yuruyus");
+    // Tolerans içinde boş nokta yoksa uzaktaki boş noktaya düşer
+    expect(birlikNoktasiSec(q, 0, ["asker", "figur"], 20, (az) => Math.abs(az) < 0.5 || Math.abs(az - 30) < 0.5, 50).nokta?.ad).toBe("sol mevzi");
+  });
 });

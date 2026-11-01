@@ -69,9 +69,12 @@ export function yasaktanKacin(azimut: number, yasak: YasakAralik[] | undefined, 
 }
 
 /**
- * Birlik yerleşimi: türler sırayla denenir (ör. ["tank", "figur"]), istenen yöne en yakın **boş**
- * nokta seçilir. `dolu(azimut, mesafe)` o noktada figür var mı der. Hepsi doluysa en yakın nokta
- * yana 2,5 m kaydırılarak kullanılır (hat oluşur). Hiç nokta yoksa serbest yön + varsayılan mesafe.
+ * Birlik yerleşimi: türler sırayla denenir (ör. ["asker", "figur"]), istenen yöne en yakın **boş**
+ * nokta seçilir. `dolu(azimut, mesafe)` o noktada figür var mı der. `yakinTolerans` verilirse önce bu
+ * açı içindeki boş noktalara bakılır (asker noktaları doluysa aynı duvardaki figür noktası, başka duvardaki
+ * asker noktasından önce gelir). Bir türün noktalarının hepsi doluysa sıradaki türe geçilir; hiç boş nokta
+ * kalmadıysa ilk türün en yakın noktası yana 2,5 m kaydırılarak kullanılır (hat oluşur). Hiç nokta yoksa
+ * serbest yön + varsayılan mesafe.
  */
 export function birlikNoktasiSec(
   plan: YerlesimPlani | undefined,
@@ -79,22 +82,33 @@ export function birlikNoktasiSec(
   turler: YerlesimTuru[],
   varsayilanMesafe: number,
   dolu: (azimut: number, mesafe: number) => boolean,
+  yakinTolerans?: number,
 ): YerlesimSecimi {
   const istenen = aciNormalize(azimutIstenen);
-  for (const tur of turler) {
-    const adaylar = (plan?.noktalar ?? []).filter((n) => n.tur?.includes(tur)).sort((a, b) => Math.abs(aciNormalize(a.azimut - istenen)) - Math.abs(aciNormalize(b.azimut - istenen)));
-    if (adaylar.length === 0) continue;
+  const fark = (n: YerlesimNoktasi) => Math.abs(aciNormalize(n.azimut - istenen));
+  const gruplar = turler.map((tur) => (plan?.noktalar ?? []).filter((n) => n.tur?.includes(tur)).sort((a, b) => fark(a) - fark(b)));
+  const sec = (n: YerlesimNoktasi): YerlesimSecimi => ({ azimut: n.azimut, mesafe: n.mesafe, nokta: n, degisti: true });
+  if (yakinTolerans !== undefined) {
+    for (const adaylar of gruplar) {
+      const bos = adaylar.find((n) => fark(n) <= yakinTolerans && !dolu(n.azimut, n.mesafe));
+      if (bos) return sec(bos);
+    }
+  }
+  for (const adaylar of gruplar) {
     const bos = adaylar.find((n) => !dolu(n.azimut, n.mesafe));
-    if (bos) return { azimut: bos.azimut, mesafe: bos.mesafe, nokta: bos, degisti: true };
-    // Hepsi dolu: en yakın noktanın yanına (2,5 m sağ/sol; o da doluysa 5 m)
-    const n = adaylar[0];
+    if (bos) return sec(bos);
+  }
+  // Hepsi dolu: ilk türün en yakın noktasının yanına (2,5 m sağ/sol; o da doluysa 5 m)
+  const ilk = gruplar.find((a) => a.length > 0);
+  if (ilk) {
+    const n = ilk[0];
     for (const kaydirma of [2.5, -2.5, 5, -5, 7.5, -7.5]) {
       const yanAci = (Math.atan2(kaydirma, n.mesafe) * 180) / Math.PI;
       const az = aciNormalize(n.azimut + yanAci);
       const mesafe = Math.hypot(n.mesafe, kaydirma);
       if (!dolu(az, mesafe)) return { azimut: az, mesafe, nokta: n, degisti: true };
     }
-    return { azimut: n.azimut, mesafe: n.mesafe, nokta: n, degisti: true };
+    return sec(n);
   }
   const serbest = yasaktanKacin(istenen, plan?.yasak);
   return { azimut: serbest, mesafe: varsayilanMesafe, degisti: Math.abs(aciNormalize(serbest - istenen)) > 0.5 };
