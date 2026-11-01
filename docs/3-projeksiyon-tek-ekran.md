@@ -2,7 +2,30 @@
 
 Üç duvara (sol – orta – sağ) tek bir sahneyi kesintisiz yaymanın üç yolu vardır. Projede
 **Yöntem 1 (nDisplay)** hedeflenir; Yöntem 2 hızlı demo/prototip için, Yöntem 3 ise harici
-warp cihazı olan sahalar için uygundur.
+warp cihazı olan sahalar için uygundur. Hibrit yolda (çalışma zamanı tarayıcıdaki Duvar Oynatıcı) duvar
+perspektifini oynatıcının kendisi hesaplar; aşağıdaki ilk bölüm.
+
+## Hibrit yol – Duvar Oynatıcı (tarayıcı)
+
+Oynatıcı tek pencerede 3 eşit görüntü (3 × 1920×1080 = 5760×1080) üretir; projektörler Windows'ta tek geniş
+masaüstü olarak yan yana durur (NVIDIA Surround / Mosaic ya da "Genişlet" + `oynatici-baslat.bat 5760 1080`).
+nDisplay'deki gibi her görüntü kendi duvarının fiziksel konumuna göre izleyicinin gözünden hesaplanır
+(genelleştirilmiş perspektif); ölçüler adres çubuğundan `?oda=` ile ya da panelin **Sistem › Duvar geometrisi**
+formundan girilir, oynatıcı yerel kaydında tutar. Ayrıntı ve ölçü tablosu: `docs/duvar-oynatici.md` →
+"Duvar geometrisi ve kalibrasyon".
+
+- **U duvar** (3 duvar, yanlar öne dik): `?oda=u,on=6,yan=4,yuk=3,alt=0.3,x=0,z=3,goz=1.7` — ön duvar genişliği,
+  yan duvar boyu (ön köşeden), görüntü yüksekliği ve alt kenarı, izleyicinin ön duvara uzaklığı ve yanal kayması,
+  göz yüksekliği (metre). Yan duvarlar izleyiciye simetrik olmayan açıda görünür (örnekte −108,4° … −45°).
+- **Düz tek duvar, 3 projektör**: `?oda=duz,on=9,yuk=2.5,alt=0.3,z=4,goz=1.7` — üç görüntü aynı düzlemin eşit
+  üçte birleridir, aynı yöne bakar ve sınırlarda birbirine değer (örnekte 27,8° / 41,1° / 27,8°). Eski yaklaşık
+  yol `?fov=40` (üç döndürülmüş kamera) yerine bunu kullanın: düz duvarda döndürülmüş kameralar yan görüntüleri
+  bozar.
+- Model, üç görüntünün duvarda bindirmesiz yan yana durduğunu varsayar (her projektör kendi duvarını ya da üçte
+  birini tam kaplar). Kenar bindirmeli (edge blend) kurulum için oynatıcıda bindirme/harmanlama henüz yok;
+  projektör ya da GPU yazılımı (Mosaic, warp cihazı) üstlenmelidir.
+- Doğrulama: oynatıcıda **K** ızgarası. Sarı ufuk çizgisi yerden göz yüksekliğinde olmalı; izleyici noktasından
+  bakınca azimut/yükseklik çizgileri düz ve köşelerde (düz duvarda görüntü sınırlarında) kesintisiz görünmeli.
 
 ## Yöntem 1 – Unreal Engine nDisplay (hedef çözüm)
 
@@ -117,6 +140,8 @@ aranır; yoksa eklenti paketlenmemiştir.
 - [ ] Yöntem 2 kullanılacaksa `-ForceRes` ve `AspectRatioAxisConstraint=AspectRatio_MaintainYFOV` verildi
 - [ ] Projektör sayısı, çözünürlük ve çıkış tipi (HDMI/DP) alındı
 - [ ] Duvar ölçüleri ve kameraya mesafeler cm olarak config'e girildi
+- [ ] Hibrit yol: ölçüler oynatıcıya `?oda=` (panel Sistem › Duvar geometrisi) ile girildi; kiosk profili de
+      bir kez `&oda=...` ile açıldı; K ızgarasında ufuk göz hizasında, çizgiler köşelerde kesintisiz
 - [ ] 3 projektör Windows'ta tek masaüstünde, doğru sırada (sol-orta-sağ)
 - [ ] GPU saniyede 60 kare veriyor (`stat fps`), gerekirse `bufferRatio` düşürülür
 - [ ] Kenar bindirmesi varsa MPCDI dosyası alındı ve `region` adları eşleşti

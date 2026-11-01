@@ -6,14 +6,16 @@
  *  - güneş yönü panoramadan tahmin edilir, gölgeler o yöne düşer ve zemine oturur,
  *  - patlamalar kalıcı krater + tüten duman bırakır, ortamı anlık aydınlatır,
  *  - helikopter ve figürler gerçek 3B modellerdir.
- * Görüntü, duvar başına bir perspektif kamerayla aynı tuvale (viewport/scissor) çizilir; köşelerde
- * perspektif kırılmaz. Bu tuval 2B tuvalin altındadır; 2B katman (klipler, sis, yağış, HUD) üstüne gelir.
+ * Görüntü, duvar başına bir perspektif kamerayla aynı tuvale (viewport/scissor) çizilir; kameralar duvarın
+ * gerçek düzlemine göre (genelleştirilmiş perspektif, `duvarKamerasi.ts`) kurulduğundan köşelerde perspektif
+ * kırılmaz. Bu tuval 2B tuvalin altındadır; 2B katman (klipler, sis, yağış, HUD) üstüne gelir.
  */
 import * as THREE from "three";
-import { gunesKonumu, type Yerlesim } from "../projeksiyon";
+import { gunesKonumu, ufukSatiri, type Yerlesim } from "../projeksiyon";
 import type { CatismaAyarlari, HelikopterDurumu, IzliMermiAyarlari, OrtamAyarlari } from "../tipler";
 import { CatismaSistemi, type CatismaSesleri } from "./catisma";
 import { atesDokusu, dumanDokusu, kivilcimDokusu, kraterDokusu } from "./dokular";
+import { DuvarKamerasi, sisUzakligiAyarla, uzaklikSisiGerekir } from "./duvarKamerasi";
 import { FigurKatmani, type FigurPozu, type FigurSecenekleri, type ModelTanimi } from "./figurler3b";
 import { gunesTahmin, panoramadanSahneAzimutu, type GunesTahmini } from "./gunes";
 import { HasarKatmani } from "./hasar";
@@ -22,7 +24,7 @@ import { ParcacikSistemi } from "./parcaciklar";
 import { SutreKatmani, type SutreEsyasi } from "./sutre";
 import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, type AraziModu } from "./arazi";
 import { Gokyuzu } from "./gokyuzu";
-import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu, zeminY } from "./uzay";
+import { ZEMIN_Y, azimutYon, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu, zeminY } from "./uzay";
 import { aciNormalize, birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
@@ -73,7 +75,7 @@ export class Sahne3B {
   readonly destekli: boolean;
   private renderer: THREE.WebGLRenderer | null = null;
   private readonly sahne = new THREE.Scene();
-  private kameralar: THREE.PerspectiveCamera[] = [];
+  private kameralar: DuvarKamerasi[] = [];
   private yerlesimler: Yerlesim[] = [];
   private W = 0;
   private H = 0;
@@ -246,7 +248,11 @@ export class Sahne3B {
   }
   /** 2B katman için ufuk çizgisi (piksel, üstten). */
   get ufukY() {
-    return (this.H * (1 + (this.kaynak?.yukseklikKaydirma ?? 0))) / 2;
+    // İzdüşüm sınırlarından göz hizası satırı (ölçüsüz yerleşimde H/2) + panoramanın yukseklikKaydirma'sı.
+    // Odanın tüm duvarlarında görüntü yüksekliği ve alt kenarı aynı → satır duvarlar arasında ortak.
+    const k = this.kaynak?.yukseklikKaydirma ?? 0;
+    const orta = this.yerlesimler[Math.floor(this.yerlesimler.length / 2)];
+    return orta ? ufukSatiri(orta, k) : (this.H * (1 + k)) / 2;
   }
 
   boyutlandir(W: number, H: number, yerlesimler: Yerlesim[]) {
@@ -254,21 +260,16 @@ export class Sahne3B {
     this.H = H;
     this.yerlesimler = yerlesimler;
     this.renderer?.setSize(W, H, false);
-    this.kameralar = yerlesimler.map((y) => {
-      const k = new THREE.PerspectiveCamera(dikeyFov(y.duvar.fov, y.genislik, H), y.genislik / H, 0.1, 3000);
-      k.rotation.order = "YXZ";
-      return k;
-    });
+    this.kameralar = yerlesimler.map(() => new DuvarKamerasi(0.1, 3000));
+    // Ölçülmüş odada sis gerçek uzaklıkla (kaymış izleyicide köşede kırılmaz); ilk çizimden önce (duvarKamerasi.ts)
+    sisUzakligiAyarla(uzaklikSisiGerekir(yerlesimler));
     this.kameralariYonlendir();
   }
 
+  /** Duvar kameraları: duvar düzlemi + simetrik olmayan kesik piramit; `yukseklikKaydirma` ek eğim. */
   private kameralariYonlendir() {
     const k = this.kaynak?.yukseklikKaydirma ?? 0;
-    this.kameralar.forEach((kam, i) => {
-      const y = this.yerlesimler[i];
-      kam.rotation.y = -radyan(y.duvar.yaw);
-      kam.rotation.x = Math.atan(k * Math.tan(radyan(kam.fov) / 2));
-    });
+    this.kameralar.forEach((kam, i) => kam.duvaraAyarla(this.yerlesimler[i].izdusum, k));
   }
 
   /** Panorama resmi (equirect) → arka plan + ortam ışığı + güneş tahmini. null → katman kapanır. */

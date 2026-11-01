@@ -11,7 +11,8 @@ Oynatıcı bunu U duvarın gerçek geometrisine göre 3 perspektife böler (`app
 WebGL). Avantajları:
 
 - Gerçek çekim (360° kamera), yapay zekâ panoraması ve motor render'ı **aynı yolu** kullanır.
-- Duvar açıları saha keşfinde değişirse içerik yeniden üretilmez; `?fov=` ve `yawKaydirma` ayarlanır.
+- Duvar açıları saha keşfinde değişirse içerik yeniden üretilmez; ölçüler oynatıcıya `?oda=` ile girilir
+  (duvar başına doğru perspektif), gerekirse `yawKaydirma` ayarlanır.
 - Köşelerde perspektif kırılmaz (düz 5760×1080 kliplerde bu ancak 3 kameralı render ile sağlanır).
 - `?panorama=<dosya>` ile her kaynak dakikalar içinde duvarda denenir; manifest `panorama` listesi
   bölge/mevsim/zaman eşlemesini yapar.

@@ -1,3 +1,5 @@
+import { azimutX, type TuvalNoktasi, ufukSatiri, xAzimut, yonuIzdusur, type Yerlesim } from "./projeksiyon";
+
 /** Hata ayıklama katmanı (H tuşu): durum özeti, FPS, bağlantı. */
 export function hudCiz(ctx: CanvasRenderingContext2D, satirlar: string[], H: number) {
   const boyut = Math.max(12, Math.round(H / 40));
@@ -31,35 +33,133 @@ export function uyariCiz(ctx: CanvasRenderingContext2D, W: number, H: number, me
   ctx.restore();
 }
 
-/** Duvar sınırları ve adları (kalibrasyon için, K tuşu). */
-export function kalibrasyonCiz(ctx: CanvasRenderingContext2D, W: number, H: number, adlar: string[]) {
-  const g = W / adlar.length;
+const DUVAR_ADI: Record<Yerlesim["duvar"]["ad"], string> = { sol: "SOL", orta: "ORTA", sag: "SAĞ" };
+const YUKSEKLIK_CIZGILERI = [-20, -10, 10, 20];
+const izNokta: TuvalNoktasi = { x: 0, y: 0 };
+
+function aciMetni(a: number): string {
+  return `${a > 0 ? "+" : a < 0 ? "−" : ""}${Math.abs(Math.round(a))}°`;
+}
+
+/**
+ * Kalibrasyon ızgarası (K tuşu), izdüşümle çizilir: her duvarda 10°'de bir azimut çizgisi (30°'de bir etiketli),
+ * ufuk (göz hizası) çizgisi, −20/−10/+10/+20° yükseklik eğrileri, duvar adları ve sınırları, altta geometri ve
+ * duvar açıları. Ölçüler doğruysa izleyici noktasından bakınca çizgiler düz görünür ve köşelerde kırılmadan
+ * devam eder; kırılıyorsa duvar ölçüsü ya da izleyici konumu yanlıştır (`?oda=`).
+ */
+export function kalibrasyonCiz(ctx: CanvasRenderingContext2D, W: number, H: number, yerlesimler: Yerlesim[], ozet: readonly string[]) {
+  const yazi = Math.max(11, Math.round(H / 42));
+  // Geometri özeti kutusu (altta, ortada): satır yüksekliği ve üst kenarı; duvar adları bunun üstünde kalır
+  const ozetSatiri = yazi * 1.35;
+  const ozetUst = ozet.length > 0 ? H - ozetSatiri * ozet.length - yazi * 0.8 : H;
   ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.8)";
+  ctx.lineCap = "round";
+  for (const y of yerlesimler) {
+    const d = y.duvar;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(y.x, 0, y.genislik, H);
+    ctx.clip();
+    ctx.font = `${yazi}px ui-monospace, Consolas, monospace`;
+    ctx.textBaseline = "top";
+    ctx.textAlign = "center";
+
+    // Azimut çizgileri: dikey duvarda sabit azimut dikey bir doğrudur
+    const ilk = Math.ceil((d.solAzimut - 1e-6) / 10) * 10;
+    for (let az = ilk; az <= d.solAzimut + d.fov + 1e-6; az += 10) {
+      const x = azimutX(az, y, 0.01);
+      if (x === null) continue;
+      const otuz = Math.round(az) % 30 === 0;
+      ctx.strokeStyle = otuz ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.4)";
+      ctx.lineWidth = otuz ? 2 : 1;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+      if (otuz) {
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.fillText(aciMetni(az), x, yazi * 0.5);
+      }
+    }
+
+    // Yükseklik eğrileri: sabit yükseklik düz duvarda eğridir (kenara doğru ufuktan uzaklaşır)
+    const adim = Math.max(8, y.genislik / 48);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "rgba(120,215,255,0.75)";
+    ctx.fillStyle = "rgba(150,225,255,0.95)";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    for (const e of YUKSEKLIK_CIZGILERI) {
+      ctx.beginPath();
+      let basladi = false;
+      for (let x = y.x; x <= y.x + y.genislik + adim - 1e-6; x += adim) {
+        const xx = Math.min(x, y.x + y.genislik);
+        if (!yonuIzdusur(xAzimut(xx, y), e, y, izNokta, 180)) {
+          basladi = false;
+          continue;
+        }
+        if (basladi) ctx.lineTo(izNokta.x, izNokta.y);
+        else ctx.moveTo(izNokta.x, izNokta.y);
+        basladi = true;
+      }
+      ctx.stroke();
+      if (yonuIzdusur(xAzimut(y.x + yazi * 0.6, y), e, y, izNokta, 180)) ctx.fillText(aciMetni(e), y.x + yazi * 0.6, izNokta.y - 2);
+    }
+
+    // Ufuk = göz hizası (göz görüntünün altında ya da üstündeyse çizgi tuvalin dışında kalır; aşağıda not)
+    const ufuk = ufukSatiri(y);
+    ctx.strokeStyle = "rgba(255,200,60,0.95)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(y.x, ufuk);
+    ctx.lineTo(y.x + y.genislik, ufuk);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,210,90,0.95)";
+    ctx.fillText("ufuk · göz hizası", y.x + yazi * 0.6, ufuk < yazi * 1.2 ? ufuk + 3 + yazi : ufuk - 3);
+
+    // Duvar adı ve açı aralığı: ufka yakın, ama ufuk nerede olursa olsun tuvalde ve alttaki özet kutusunun üstünde
+    // (doğrulama gözün görüntünün çok altında/üstünde olmasına izin verir: alt=2, yuk=1, goz=0,5 → ufuk 2,5·H)
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `bold ${Math.round(H / 12)}px "Segoe UI", system-ui, sans-serif`;
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    const adYEnCok = Math.max(H * 0.3, ozetUst - H / 14 - yazi);
+    const adY = Math.min(adYEnCok, Math.max(H * 0.12, ufuk > H * 0.3 ? ufuk - H * 0.16 : ufuk + H * 0.16));
+    ctx.fillText(DUVAR_ADI[d.ad], y.x + y.genislik / 2, adY);
+    ctx.font = `${yazi}px ui-monospace, Consolas, monospace`;
+    ctx.fillText(`${d.fov.toFixed(1)}° · ${aciMetni(d.solAzimut)} … ${aciMetni(d.solAzimut + d.fov)}`, y.x + y.genislik / 2, adY + H / 14);
+    if (ufuk < 0 || ufuk > H) {
+      // Ufuk tuvalin dışında: not, ufuk üstteyse açı satırının altına, alttaysa adın üstüne (özet kutusuna değmez)
+      ctx.fillStyle = "rgba(255,210,90,0.95)";
+      const notY = ufuk < 0 ? adY + H / 14 + yazi * 1.5 : adY - H / 24 - yazi;
+      ctx.fillText(`${ufuk < 0 ? "↑" : "↓"} ufuk (göz hizası) görüntünün ${ufuk < 0 ? "üstünde" : "altında"}`, y.x + y.genislik / 2, notY);
+    }
+    ctx.restore();
+  }
+
+  // Duvar sınırları: dış çerçeve düz, duvarlar arası kesik
+  ctx.strokeStyle = "rgba(255,255,255,0.85)";
   ctx.lineWidth = 2;
   ctx.setLineDash([12, 8]);
-  for (let i = 1; i < adlar.length; i++) {
+  for (let i = 1; i < yerlesimler.length; i++) {
     ctx.beginPath();
-    ctx.moveTo(i * g, 0);
-    ctx.lineTo(i * g, H);
+    ctx.moveTo(yerlesimler[i].x, 0);
+    ctx.lineTo(yerlesimler[i].x, H);
     ctx.stroke();
   }
   ctx.setLineDash([]);
   ctx.strokeRect(1, 1, W - 2, H - 2);
-  ctx.font = `bold ${Math.round(H / 12)}px "Segoe UI", system-ui, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "rgba(255,255,255,0.85)";
-  adlar.forEach((ad, i) => ctx.fillText(ad.toUpperCase(), i * g + g / 2, H / 2));
-  // Köşe çarpıları
-  for (let i = 0; i < adlar.length; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i * g, 0);
-    ctx.lineTo(i * g + g, H);
-    ctx.moveTo(i * g + g, 0);
-    ctx.lineTo(i * g, H);
-    ctx.strokeStyle = "rgba(255,255,255,0.25)";
-    ctx.stroke();
+
+  // Geometri özeti (altta, ortada)
+  if (ozet.length > 0) {
+    ctx.font = `${yazi}px ui-monospace, Consolas, monospace`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const genislik = Math.min(W - 8, Math.max(...ozet.map((s) => ctx.measureText(s).width)) + yazi * 1.5);
+    ctx.fillStyle = "rgba(0,0,0,0.62)";
+    ctx.fillRect(W / 2 - genislik / 2, ozetUst, genislik, ozetSatiri * ozet.length + yazi * 0.5);
+    ctx.fillStyle = "#e8eaf0";
+    ozet.forEach((s, i) => ctx.fillText(s, W / 2, ozetUst + ozetSatiri * (i + 0.5) + yazi * 0.25, W - 16));
   }
   ctx.restore();
 }
