@@ -85,7 +85,7 @@ let fps = 0;
  */
 const ses = new SesMotoru(sesAyariniCoz({ ses: params.get("ses"), hoparlor: params.get("hoparlor") }, localStorage));
 const izli = new IzliMermiSistemi((x) => ses.vizilti(tuvalAzimutu(x)));
-/** 2B tuval x'i → sahne azimutu (2B izli mermi vızıltısı): x'in düştüğü duvarın yaw/fov'u; kenar dışı en yakın duvardan. */
+/** 2B tuval x'i → sahne azimutu (2B izli mermi vızıltısı): x'in düştüğü duvarın izdüşümüyle (perspektif); kenar dışı en yakın duvardan. */
 function tuvalAzimutu(x: number): number {
   const y = yerlesimler.find((d) => x < d.x + d.genislik) ?? yerlesimler[yerlesimler.length - 1];
   return y ? xAzimut(x, y) : 0;
@@ -118,10 +118,10 @@ function araziModuSec(bolge: string): AraziModu {
 const ucAktifOlabilir = ucBoyut && sahne3b.destekli;
 // Çatışma sesleri sahne azimutuyla (derece) gelir; ses motoru stereo / çok kanala kendisi yerleştirir
 sahne3b.catismaSesleriAyarla({
-  carpma: (az) => ses.carpma(az),
-  atis: (az, uzak) => ses.tekAtis(az, uzak),
-  uzakPatlama: (az) => void ses.patlama(az, 0.7, true, 600),
-  topAtisi: (az) => void ses.patlama(az, 0.55),
+  carpma: (azimut) => ses.carpma(azimut),
+  atis: (azimut, uzak) => ses.tekAtis(azimut, uzak),
+  uzakPatlama: (azimut) => void ses.patlama(azimut, 0.7, true, 600),
+  topAtisi: (azimut) => void ses.patlama(azimut, 0.55),
 });
 // Yaralı figür: vurulunca bağırma, yerde ara ara yardım çağrısı (figürün yönünden)
 sahne3b.figurSesleriAyarla((tur, azimut) => {

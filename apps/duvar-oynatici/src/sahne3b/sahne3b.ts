@@ -130,14 +130,15 @@ export class Sahne3B {
     this.parcaciklar = new ParcacikSistemi(dumanDokusu(128, 1), atesDokusu(128, 7), kivilcimDokusu(32), k.parcacikCarpani);
     this.hasar = new HasarKatmani([kraterDokusu(256, 3), kraterDokusu(256, 9), kraterDokusu(256, 21)], this.parcaciklar, Math.round(320 * k.parcacikCarpani));
     this.heli = new Helikopter3B(this.parcaciklar);
+    // Ses geri çağrıları sahne azimutuyla (derece, AzimutDerece): pan değil, ses motoru yerleştirir
     this.catisma = new CatismaSistemi(this.parcaciklar, {
-      carpma: (az) => this.catismaSesleri.carpma(az),
-      atis: (az, uzak) => this.catismaSesleri.atis(az, uzak),
-      uzakPatlama: (az) => {
-        this.patlama(az, 0.7, true, false);
-        this.catismaSesleri.uzakPatlama?.(az);
+      carpma: (azimut) => this.catismaSesleri.carpma(azimut),
+      atis: (azimut, uzak) => this.catismaSesleri.atis(azimut, uzak),
+      uzakPatlama: (azimut) => {
+        this.patlama(azimut, 0.7, true, false);
+        this.catismaSesleri.uzakPatlama?.(azimut);
       },
-      topAtisi: (az) => this.catismaSesleri.topAtisi?.(az),
+      topAtisi: (azimut) => this.catismaSesleri.topAtisi?.(azimut),
     });
     this.catisma.dostlar = () => this.figurler.silahliKonumlar();
     this.figurler.engel = (p) => this.sutre.doluMu(p, 0.3);

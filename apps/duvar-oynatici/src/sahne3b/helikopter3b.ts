@@ -56,16 +56,19 @@ export class Helikopter3B {
     return this.inisAzimut;
   }
   /**
-   * Rotor sesi için konum (ses.ts): sahne azimutu (derece), yatay mesafe ve zeminden irtifa (m); yokken null.
+   * Rotor sesi için konum (ses.ts): sahne azimutu (derece), izleyiciden yatay mesafe ve yerel zeminden irtifa (m);
+   * yokken (ya da model yüklenmemişken) null. Uçuş modelinden okunur (`guncelle`den sonra; main.ts'te sahne
+   * güncellemesi ses çağrısından önce): askı salınımı irtifaya girmez. Görüş sınırını (1500 m) aşan helikopterde son
+   * konum kalır: ses taban seviyede ve boğuk, "yok" gelince susar (null, konumsuz eski sesi tam seviyede açardı).
    * Her karede okunur: hep aynı nesne doldurulur (ayırma yok), okuyan değeri hemen kullanır, saklamaz.
    */
   get sesKonumu(): { azimut: number; mesafe: number; irtifa: number } | null {
     if (this.mevcutDurum === "yok" || !this.hazir) return null;
-    const p = this.grup.position;
+    const u = this.ucus;
     const k = this.sesKonumuDegeri;
-    k.azimut = (Math.atan2(p.x, -p.z) * 180) / Math.PI;
-    k.mesafe = Math.hypot(p.x, p.z);
-    k.irtifa = Math.max(0, p.y - zeminY(p.x, p.z));
+    k.azimut = (Math.atan2(u.x, -u.z) * 180) / Math.PI;
+    k.mesafe = Math.hypot(u.x, u.z);
+    k.irtifa = u.irtifa;
     return k;
   }
   private readonly sesKonumuDegeri = { azimut: 0, mesafe: 0, irtifa: 0 };

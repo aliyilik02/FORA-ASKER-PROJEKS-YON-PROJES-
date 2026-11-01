@@ -180,13 +180,15 @@ katmanda:
   şiddette ~200, karda ~350 canlı parçacık), parçacık nesneleri havuzdan; yeni çizim çağrısı yok.
 - **Çatışma ve izli mermi** (`catisma.ts`, yardımcılar `izliYol.ts` testli): izler tek instanced kutu (katkı karışımı;
   köşe rengiyle baş beyazımsı, kuyruk sönük kızıl). Uzaktaki iz piksel altına inip titremesin diye kalınlık
-  mesafeyle büyür (1080p duvarda en az ~1,5 px; piksel açısı çizilen duvarın kamerasından ölçülür), uzunluk da
+  mesafeyle büyür (1080p duvarda en az ~1,5 px; piksel açısı çizilen duvar kameralarının izdüşümünden ölçülür,
+  ölçülmüş odada duvarların ve yatay/dikeyin en büyüğü: duvar uzaklığı ve piksel en/boyu farklı olabilir), uzunluk da
   biraz uzar. Panelin **izli mermi** akışı: kaynak seçilen duvarın ortası yönünde (±10°) 150–300 m'de, yerden
   0,8–4 m; **yön** iz doğrultusunu döndürür: 0° izleyiciye doğru (yakına çarpar, seker, bir kısmı başın üstünden
   geçer), ±90° izleyicinin 10–60 m önünden yandan geçip görüş dışına uçar (+ sağdan sola, − soldan sağa; yan
   duvarlarda da duvara göre), ara açılar çapraz. Kaynak sırt/tepe arkasında kalırsa mermi araziyi aşacak kadar
   yukarıdan gelir (`kaynakYukseltmesi`; düz zeminde etkisiz, çatışma ateşine de uygulanır). Başın ~6 m yakınından
-  geçen düşman mermisi bir kez ses hızı üstü "çat" (çarpma sesi geri çağrısı; yere çarpacak mermi çatlamaz).
+  geçen düşman mermisi bir kez ses hızı üstü "çat" (çarpma sesi geri çağrısı, en yakın geçiş noktasının yönünden;
+  yere çarpacak mermi çatlamaz).
 - **Yerleşim planı** (`yerlesim.ts`, testli): panorama kaydında `noktalar` (azimut, mesafe, tür:
   patlama/figur/helikopter/toz) ve `yasak` açı aralıkları (ağaç kümesi, bina). Panelden gelen yön en
   yakın uygun noktaya yapışır (patlama 55°, figür 35° tolerans); nokta yoksa yön yasak aralığın
@@ -271,13 +273,20 @@ Sahada U odada 4 hoparlör (ön sol/sağ, arka sol/sağ) + subwoofer beklenir, b
   hoparlörlere gider, ön/arka ortadaki hoparlör ikisini yarım kazançla alır (giriş gücü korunur). Rüzgâr çok kanalda
   iki bağımsız gürültü kanalından üretilir (sol ve sağ grup ilintisiz; tek gürültü her hoparlörde aynı olur, odanın
   ortasında hayalet kaynak gibi duyulurdu); stereoda eski tek kanallı gürültü.
-- **Helikopter:** 3B modelin konumundan (azimut, mesafe, irtifa), kalıcı bir düğüm zinciriyle (kare başına düğüm
-  üretmeden, en çok 20 Hz güncelleme): 40 m'ye kadar tam seviye, ötesinde 1/r (taban %12), uzakta alçak geçiren
-  (boğuk), yaklaşırken / uzaklaşırken ±%5 Doppler. 2B siluette (model yok) eski yönsüz ses.
+- **Çatışma ve izli mermi sesleri** (`sahne3b/catisma.ts`): atış atıcının / mermi kaynağının, çarpma çarpma
+  noktasının, ses hızı üstü "çat" en yakın geçiş noktasının azimutundan. Geri çağrılar (`CatismaSesleri`) markalı
+  `AzimutDerece` (sahne azimutu, derece) alır: değer `sesAzimutu(konum)` ya da `azimutDerece(derece)` ile üretilir, düz
+  sayı ya da `Math.sin(...)` gibi pan değeri derleme hatası verir (çalışma anı denetimi `catismaSesleri.test.ts`).
+- **Helikopter:** 3B uçuş modelinin konumundan (`Helikopter3B.sesKonumu`: sahne azimutu, izleyiciden yatay mesafe,
+  yerel zeminden irtifa), kalıcı bir düğüm zinciriyle (kare başına düğüm üretmeden, en çok 20 Hz güncelleme): 40 m'ye
+  kadar tam seviye, ötesinde 1/r (taban %12), uzakta alçak geçiren (boğuk), yaklaşırken / uzaklaşırken ±%5 Doppler.
+  Kalkıştan sonra görüş sınırı (1500 m) aşılırsa son konumda taban seviyede kalır, "yok" gelince söner. 2B siluette
+  (model yok) eski yönsüz ses.
 - **Konuşma sentezi** (manifestte bağırma/çağırma kaydı yoksa) Web Audio'dan geçmez, konumlanamaz; kayıtlar konumludur.
 - **Hoparlör testi (T):** kanal sırasıyla her hoparlörde ~0,7 sn pembe gürültü (LFE'de 30–120 Hz bant), ekranda
   "Hoparlör testi: Ön sol · kanal 1 / 6"; test sürerken T durdurur. Ana kazançtan geçer, sessiz kipte (M) duyulmaz.
-- HUD (H) ilk satırı: "ses açık: 5.1 (6 kanal) · T hoparlör testi"; istenen düzen cihazda yoksa "istenen 7.1, cihaz 2 kanal".
+- HUD (H) ilk satırı: "ses açık: 5.1 (6 kanal)"; istenen düzen cihazda yoksa "istenen 7.1, cihaz 2 kanal". "T hoparlör
+  testi" tuş ipucu satırında (H hud · K kalibrasyon · … ile birlikte).
 - Windows'ta hoparlör yapılandırması 5.1 / 7.1 seçilmezse Chrome 2 kanal görür; kurulum ve test adımları
   `docs/donanim-onerileri.md` §6.
 

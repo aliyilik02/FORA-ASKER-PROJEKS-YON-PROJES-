@@ -106,8 +106,10 @@ export class CatismaSistemi {
   private havuz: Iz[] = [];
   private eklenecek: Iz[] = [];
   private readonly yol: IzliYol = { sx: 0, sy: 0, sz: 0, hx: 0, hy: 0, hz: 0 };
-  /** Bir pikselin açısı (radyan); son duvar çiziminden ölçülür. Uzak izin kalınlığı buna göre. */
+  /** Bir pikselin açısı (radyan); son karede çizilen duvarların en büyüğü. Uzak izin kalınlığı buna göre. */
   private pikselAcisi = VARSAYILAN_PIKSEL_ACISI;
+  /** Bu karede çizilen duvarlardan ölçülen en büyük piksel açısı (0: henüz ölçülmedi); guncelle devralır. */
+  private olculenPikselAcisi = 0;
   private dusmanSalvoSayac = 0;
   private dusmanSalvoKalan = 0;
   private dusmanAtisSayac = 0;
@@ -144,11 +146,18 @@ export class CatismaSistemi {
     this.mesh.count = 0;
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 25;
-    // Piksel açısı çizilen duvarın görüş açısı ve çözünürlüğünden (üç duvar aynı); sonraki karenin kalınlığına girer
+    // Piksel açısı her duvarın izdüşümü ve çözünürlüğünden; sonraki karenin kalınlığına girer. elements[0] = 2/(sağ−sol),
+    // elements[5] = 2/(üst−alt) (teğet, simetrik olmayan duvar piramidinde de; kayma elements[8]/[9]'da): piksel
+    // başına teğet = piksel açısı optik eksende, eksenden uzakta daha küçük, yani alt sınır güvenli. Ölçülmüş odada
+    // (`?oda=`) duvarların uzaklığı ve piksel en/boy oranı farklı olabilir: yatay/dikey ve duvarlar arasında en büyüğü
+    // (her duvarda en az ~1,5 px). Ölçüsüz yerleşimde üç duvar aynı, pikseller kare: değer öncekiyle aynı.
     this.mesh.onBeforeRender = (renderer, _sahne, kamera) => {
-      const e = (kamera as THREE.PerspectiveCamera).projectionMatrix.elements[5];
+      const e = (kamera as THREE.PerspectiveCamera).projectionMatrix.elements;
       renderer.getCurrentViewport(_gorunum);
-      if (e > 0 && _gorunum.w > 0) this.pikselAcisi = 2 / (e * _gorunum.w);
+      if (e[0] > 0 && e[5] > 0 && _gorunum.z > 0 && _gorunum.w > 0) {
+        const p = Math.max(2 / (e[0] * _gorunum.z), 2 / (e[5] * _gorunum.w));
+        if (p > this.olculenPikselAcisi) this.olculenPikselAcisi = p;
+      }
     };
     this.grup.add(this.mesh);
   }
@@ -482,6 +491,10 @@ export class CatismaSistemi {
     this.eklenenleriAl();
 
     // --- Çizim verisi: uzaktaki iz piksel altına inip titremesin (kalınlık ve biraz uzunluk mesafeyle büyür) ---
+    if (this.olculenPikselAcisi > 0) {
+      this.pikselAcisi = this.olculenPikselAcisi;
+      this.olculenPikselAcisi = 0;
+    }
     const n = Math.min(KAPASITE, izler.length);
     for (let i = 0; i < n; i++) {
       const iz = izler[i];

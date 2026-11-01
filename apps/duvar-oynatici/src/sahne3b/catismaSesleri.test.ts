@@ -5,6 +5,7 @@
  * çalışma anında atış, çarpma, top ve uzak patlama seslerinin yönünü sahnedeki gerçek açılarla denetler (tohumlu
  * rastgelelik: her çalıştırmada aynı atışlar).
  */
+import type { Vector3 } from "three";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CatismaSistemi, type CatismaSesleri, type IzliAyari } from "./catisma";
 import type { ParcacikSistemi } from "./parcaciklar";
@@ -74,6 +75,49 @@ describe("çatışma sesleri sahne azimutuyla (derece) çağrılır", () => {
     expect(ses.carpma.length).toBeGreaterThan(8);
     expect(ses.carpma.filter((az) => Math.abs(az) > 1.5).length).toBeGreaterThanOrEqual(ses.carpma.length * 0.8);
     expect(Math.max(...ses.carpma.map(Math.abs))).toBeGreaterThan(45);
+  });
+
+  it("izli mermi (kaynak 60°, izliAtis): atış sesi ~60° gelir, sin(60°) ≈ 0,87 pan değeri değil", () => {
+    const { ses, sistem } = kur();
+    sistem.izliAyarla({ aktif: true, azimut: 60, yon: 0, siklik: 30 });
+    calistir(sistem, 20);
+    expect(ses.uzakAtis.length).toBeGreaterThan(50);
+    for (const az of ses.uzakAtis) expect(aciFarki(az, 60)).toBeLessThanOrEqual(10.5);
+    expect(Math.abs(ortanca(ses.uzakAtis) - 60)).toBeLessThan(4);
+    // Çapraz akışta (yön 45°) da: ses kaynağın gerçek konumundan, yine derece (pan aralığı −1..1'in çok dışında)
+    const capraz = kur();
+    capraz.sistem.izliAyarla({ aktif: true, azimut: 60, yon: 45, siklik: 30 });
+    calistir(capraz.sistem, 20);
+    expect(capraz.ses.uzakAtis.length).toBeGreaterThan(50);
+    for (const az of capraz.ses.uzakAtis) expect(Math.abs(az)).toBeGreaterThan(1.5);
+    expect(Math.abs(ortanca(capraz.ses.uzakAtis))).toBeGreaterThan(30);
+  });
+
+  it("ses hızı üstü 'çat': başın yanından geçen iz, en yakın geçiş noktasının azimutunu (derece) iz başına bir kez verir", () => {
+    const { ses, sistem } = kur();
+    // İz eklemek için iç yöntem (yalnız test; akışın rastgele hedefleri olmadan, bilinen bir yoldan)
+    const izEkle = (sistem as unknown as { izEkle(p: Vector3, v: Vector3, dost: boolean): void }).izEkle.bind(sistem);
+    /** Baş yüksekliğinde `mesafe` m'de, `azimut` yönündeki noktadan dik geçen iz: 150 m geriden, 160 m/sn. */
+    const gecir = (azimut: number, mesafe: number) => {
+      const gecis = azimutYon(azimut).multiplyScalar(mesafe);
+      const d = azimutYon(azimut + 90); // yatay doğrultu, geçiş yönüne dik
+      // İzin hafif düşüşü (0,15 g, ~0,94 sn'de ~0,65 m) karşılansın: baş hizasından geçer, çok ötede yere iner
+      izEkle(gecis.clone().addScaledVector(d, -150).setY(0.65), d.multiplyScalar(160), false);
+    };
+    gecir(60, 3);
+    calistir(sistem, 2.5);
+    // Yalnız "çat" (yere 26 m'den uzakta çarpar, çarpma sesi yok); değer derece: sin(60°) ≈ 0,87 değil
+    expect(ses.carpma.length).toBe(1);
+    expect(ses.carpma[0]).toBeCloseTo(60, 0);
+    gecir(-120, 4); // sol arka: pan −1..1 aralığında olamayacak bir yön
+    calistir(sistem, 2.5);
+    expect(ses.carpma.length).toBe(2);
+    expect(aciFarki(ses.carpma[1], -120)).toBeLessThan(0.5);
+    // Dost izi ve uzaktan geçen iz çatlamaz
+    izEkle(azimutYon(150).multiplyScalar(-150).setY(0.65), azimutYon(150).multiplyScalar(160), true);
+    gecir(10, 8);
+    calistir(sistem, 2.5);
+    expect(ses.carpma.length).toBe(2);
   });
 
   it("dost ateşi ve tank: atış sesi atıcının, top sesi tankın yönünden; top mermisi namlu yönünde patlar", () => {

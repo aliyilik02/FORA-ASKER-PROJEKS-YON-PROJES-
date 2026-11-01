@@ -93,7 +93,9 @@ Ses (`ses.ts` + saf hesap `sesYerlesimi.ts`): her ses sahne azimutuyla çalını
 sin azimut), 4 kanal / 5.1 / 7.1'de ChannelMerger (iki komşu hoparlöre sabit güçlü kaydırma, ön/arka ayrılır, uzak
 sesler yayılır, patlama/top basları LFE'ye, ortam dağınık, 3B helikopter rotoru konumlu). Sorgu
 `?ses=stereo|dortlu|5.1|7.1|otomatik` (varsayılan otomatik = cihazın kanal sayısı; yerel kayıtta kalır), `?hoparlor=`
-kanal sırasıyla azimutlar (`-30,30,0,lfe,-110,110`); tuş **T** hoparlör testi; panel Sistem → Ses düzeni.
+kanal sırasıyla azimutlar (`-30,30,0,lfe,-110,110`); tuş **T** hoparlör testi; panel Sistem → Ses düzeni. Yeni ses
+çağrıları sahne azimutu (derece) geçer, `azimutPan` değil; çatışma ses geri çağrıları markalı `AzimutDerece` alır
+(`sesAzimutu(konum)` / `azimutDerece(derece)`; pan geçmek derleme hatası). Rotor sesi `Helikopter3B.sesKonumu`ndan.
 
 Panel API'si (`apps/kopru/src/api.ts`): `/api/durum`, `/oda`, `/bolge`, `/ortam`, `/isik`,
 `/izli-mermi`, `/oda2`, `/efekt`, `/figur` (oynat/durdur/temizle/poz), `/klipler`, `/figurler`,
@@ -185,7 +187,8 @@ mesajı), önizleme fps/kalite bilgisi taşır; HUD varsayılan kapalı; panelde
 2. HESCO artık prosedürel (`sutre.ts` `tip: "hesco"`, canvas doku: tel kafes + jeotekstil + kum; üs bölgesi
    diziliminde iki hat). Sıhhiyeci "Interact" klibiyle idare ediyor; gerçek
    müdahale animasyonu (turnike) için yeşil perde çekimi (docs §2.5). Yaralı taşıma (iki kişi) yok.
-3. VFX plakaları (gerçek çekim, alfa) ve helikopter inişi için 3B toz + ses ayarı; izli mermiyi 3B'ye taşıma.
+3. VFX plakaları (gerçek çekim, alfa). Helikopter inişi (uçuş modeli, zemine göre rotor tozu, konumlu rotor sesi) ve
+   3B izli mermi yazılımda; duvarda gözle/kulakla ayar ve helikopter/izli mermi inceleme bulgularının düzeltilmesi bekliyor.
 4. Çok kanallı ses (4 kanal / 5.1 / 7.1) ve ölçülmüş duvar geometrisi (`?oda=`) yazılımda hazır; kalan saha ayarı:
    gerçek hoparlör açıları (`?hoparlor=`), T testi + kulak testi (LFE seviyesi), U duvar ölçüleri → `?oda=` (panel
    Sistem › Duvar geometrisi, sahada K ızgarasıyla doğrula). Türkçe bağırma/yaralı inleme kaydı.
