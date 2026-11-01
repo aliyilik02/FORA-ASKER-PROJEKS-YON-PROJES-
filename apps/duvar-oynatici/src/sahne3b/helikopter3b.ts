@@ -1,13 +1,17 @@
 /**
  * Oda 2 helikopter (3B): yaklaşma → iniş → yerde → kalkış. Model manifestten gelir
- * (klipler → tip "model", ad "helikopter"); rotor düğümleri adından bulunup döndürülür,
- * yere yakınken rotor tozu savrulur.
+ * (klipler → tip "model", ad "helikopter"); rotor düğümleri adından bulunup döndürülür.
+ * Hareket `helikopterUcusu.ts` uçuş modelinden (kavisli yaklaşma, virajda yatış, iniş öncesi burun yukarı
+ * "flare", kızakta sekme, 5 m askıdan burun aşağı kalkış); yere yakınken zemin malzemesine göre rotor tozu
+ * (kar / kuru toprak / orman / beton, `rotorTozu.ts`) savrulur.
  */
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { HelikopterDurumu } from "../tipler";
+import { HelikopterUcusu } from "./helikopterUcusu";
+import { ROTOR_TOZU_PROFILLERI, type RotorTozuProfili, type RotorTozuTuru } from "./rotorTozu";
 import type { ParcacikSistemi } from "./parcaciklar";
-import { azimutYon, radyan, zeminY } from "./uzay";
+import { radyan, zeminY } from "./uzay";
 
 export class Helikopter3B {
   /** İniş noktası (panorama yerleşim planından; varsayılan azimut 12°, 38 m). */
@@ -24,9 +28,24 @@ export class Helikopter3B {
   private yukleniyor = false;
   /** Rotor tozu şiddeti 0–1 (ses için de kullanılır). */
   tozSiddeti = 0;
+  /** Uçuş modeli (saf, testli): konum, burun yönü, yunuslama/yatış, rotor devri, toz şiddeti. */
+  private readonly ucus = new HelikopterUcusu();
+  /**
+   * Gövde pivotu (ağırlık merkezi yakını): yön/yunuslama/yatış burada döner, kızaklar dönmezken grubun tabanındadır.
+   * Model burnu yerel −z'de (OGA modeli: glTF yönlendirmesiyle +Y burun → −z); burun azimutu h için y dönüşü −h.
+   */
+  private readonly govde = new THREE.Group();
+  private govdeYuksekligi = 1.8;
+  private rotorYaricapi = 5.5;
+  /** İniş noktasının zemin yüksekliği (m): uçuş rotası buna göre, yerel arazi farkı engel ve toz için. */
+  private inisZemini = 0;
+  private tozProfili: RotorTozuProfili = ROTOR_TOZU_PROFILLERI.toprak;
+  private readonly tozMerkezi = new THREE.Vector3();
 
   constructor(private readonly parcaciklar: ParcacikSistemi) {
     this.grup.visible = false;
+    this.grup.add(this.govde);
+    this.ucus.zeminFarki = (x, z) => zeminY(x, z) - this.inisZemini;
   }
 
   inisNoktasi(azimut: number, mesafe: number) {
@@ -56,6 +75,11 @@ export class Helikopter3B {
   }
   get mevcutDurum() {
     return this.durum;
+  }
+
+  /** Rotor tozu zemin malzemesi; sahne3b bölge + mevsimden seçer (kar / toprak / orman / beton). */
+  set tozTuru(tur: RotorTozuTuru) {
+    this.tozProfili = ROTOR_TOZU_PROFILLERI[tur];
   }
 
   /**
@@ -102,9 +126,14 @@ export class Helikopter3B {
         kutu.getSize(boyut);
         const olcek = boyut.y > 1e-4 ? boy / boyut.y : 1;
         m.scale.setScalar(olcek);
-        m.position.y = -kutu.min.y * olcek;
+        // Pivot boyun ~%35'inde (ağırlık merkezi); model kızaklar grup tabanına gelecek kadar aşağıda
+        this.govdeYuksekligi = boy * 0.35;
+        this.govde.position.y = this.govdeYuksekligi;
+        m.position.y = -kutu.min.y * olcek - this.govdeYuksekligi;
+        // Rotor yarıçapı ≈ gövde boyunun yarısı (rotor diski gövdeyi aşağı yukarı örter); toz bu diskin altından
+        this.rotorYaricapi = Math.min(6.5, Math.max(4, 0.42 * Math.max(boyut.x, boyut.z) * olcek));
         this.model = m;
-        this.grup.add(m);
+        this.govde.add(m);
         this.yukleniyor = false;
       },
       undefined,
@@ -118,17 +147,11 @@ export class Helikopter3B {
     if (d === this.durum) return;
     this.durum = d;
     this.faz = 0;
-    if (d === "yaklasiyor") {
-      this.mesafe = 420;
-      this.irtifa = 70;
-    } else if (d === "yerde") {
-      this.mesafe = this.inisMesafe;
-      this.irtifa = 0;
-    } else if (d === "iniyor" && this.mesafe > 200) {
-      this.mesafe = 120;
-      this.irtifa = 35;
-    }
-    this.grup.visible = d !== "yok" && this.model !== null;
+    // İniş noktası önce: yaklaşma/iniş başlangıcı yeni noktaya göre kurulsun
+    this.inisZeminiGuncelle();
+    this.ucus.inisNoktasi(this.inisAzimut, this.inisMesafe);
+    this.ucus.durumAyarla(d);
+    this.grup.visible = d !== "yok" && this.model !== null && this.ucus.gorunur;
   }
 
   guncelle(dt: number) {
@@ -136,46 +159,36 @@ export class Helikopter3B {
       this.tozSiddeti = 0;
       return;
     }
-    this.grup.visible = true;
+    const u = this.ucus;
+    this.inisZeminiGuncelle();
+    u.inisNoktasi(this.inisAzimut, this.inisMesafe);
+    u.guncelle(dt);
     this.faz += dt;
-    const yaklas = (hedef: number, deger: number, sure: number) => deger + (hedef - deger) * Math.min(1, dt / sure);
-    switch (this.durum) {
-      case "yaklasiyor":
-        this.mesafe = yaklas(this.inisMesafe, this.mesafe, 9);
-        this.irtifa = yaklas(22, this.irtifa, 10);
-        break;
-      case "iniyor":
-        this.mesafe = yaklas(this.inisMesafe, this.mesafe, 3);
-        this.irtifa = yaklas(0, this.irtifa, 7);
-        break;
-      case "yerde":
-        this.irtifa = 0;
-        break;
-      case "kalkiyor":
-        this.irtifa = yaklas(90, this.irtifa, 12);
-        this.mesafe = yaklas(500, this.mesafe, 16);
-        break;
-    }
-    const yon = azimutYon(this.inisAzimut);
-    const sallanti = this.irtifa > 0.3 ? Math.sin(this.faz * 1.1) * 0.6 : 0;
-    const gx = yon.x * this.mesafe;
-    const gz = yon.z * this.mesafe;
-    this.grup.position.set(gx, zeminY(gx, gz) + this.irtifa + sallanti, gz);
-    // Burun izleyiciye doğru hafif çapraz; uçuşta öne eğik
-    this.grup.rotation.y = radyan(-this.inisAzimut + 150);
-    this.grup.rotation.x = this.durum === "yaklasiyor" || this.durum === "kalkiyor" ? -0.08 : -0.02;
-    const rotorHiz = this.durum === "yerde" && this.faz > 25 ? Math.max(8, 40 - (this.faz - 25) * 2) : 40;
+    // Eski alanlar güncel kalır: irtifa yerel zeminden, mesafe izleyiciden yatay (ses konumu da kullanabilir)
+    this.irtifa = u.irtifa;
+    this.mesafe = Math.hypot(u.x, u.z);
+    this.tozSiddeti = u.tozSiddeti;
+    this.grup.visible = u.gorunur;
+    if (!u.gorunur) return;
+    this.grup.position.set(u.x, this.inisZemini + u.yukseklik + u.salinim, u.z);
+    this.govde.position.y = this.govdeYuksekligi + u.govdeOfseti;
+    // YXZ: önce burun yönü (dünya y), sonra yunuslama (yerel x), sonra yatış (yerel z, burun ekseni)
+    this.govde.rotation.set(u.yunuslama, -radyan(u.yonelim), u.yatis, "YXZ");
+    const rotorHiz = u.rotorHizi;
     this.karistirici?.update(dt * (rotorHiz / 40) * 2);
     for (const r of this.rotorlar) {
       if (r.eksen === "y") r.nesne.rotation.y += rotorHiz * dt;
       else r.nesne.rotation.x += rotorHiz * 1.5 * dt;
     }
-    // Rotor tozu: yere yakınlık × güç
-    const yakin = Math.max(0, 1 - this.irtifa / 18);
-    this.tozSiddeti = this.durum === "yerde" ? 0.45 * Math.max(0.3, Math.min(1, rotorHiz / 40)) : yakin;
-    if (this.tozSiddeti > 0.05) {
-      const yer = new THREE.Vector3(this.grup.position.x, zeminY(this.grup.position.x, this.grup.position.z), this.grup.position.z);
-      this.parcaciklar.rotorTozu(yer, 9, this.tozSiddeti, dt);
+    // Rotor tozu: diskin altındaki zeminden, zemin malzemesine göre (alçaklık × rotor gücü)
+    if (this.tozSiddeti > 0.03) {
+      this.tozMerkezi.set(u.x, zeminY(u.x, u.z), u.z);
+      this.parcaciklar.rotorTozu(this.tozMerkezi, this.rotorYaricapi, this.tozSiddeti, dt, this.tozProfili);
     }
+  }
+
+  private inisZeminiGuncelle() {
+    const a = radyan(this.inisAzimut);
+    this.inisZemini = zeminY(Math.sin(a) * this.inisMesafe, -Math.cos(a) * this.inisMesafe);
   }
 }
