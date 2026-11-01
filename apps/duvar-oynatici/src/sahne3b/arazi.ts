@@ -109,6 +109,8 @@ export const ARAZI_KALITE: Record<"dusuk" | "orta" | "yuksek", AraziKalitesi> = 
 /** Yakın arazi boyutu (m) ve ızgara adımı (m). */
 const YAKIN_BOYUT = 320;
 const YAKIN_ADIM = 1;
+/** Görüş koridoru plan noktasının bu kadar metre ötesine kadar sürer (tavan orada yavaşça yükselir, dik duvar kalmaz). */
+const KORIDOR_ARKA = 25;
 const UZAK_BOYUT = 2400;
 const UZAK_BOLUM = 160;
 const SPLAT_BOYUT = 1024;
@@ -315,20 +317,26 @@ export class AraziKatmani {
     return this.koridorUygula(h, x, z);
   }
 
-  /** Plan noktalarına görüş koridoru ve nokta çevresinde düz alan (bkz. `koridorlar`). Yalnız alçaltır/düzler. */
+  /**
+   * Plan noktalarına görüş koridoru ve nokta çevresinde düz alan (bkz. `koridorlar`). Yalnız alçaltır/düzler.
+   * Kesim yumuşak: çekirdekte göz → ayak çizgisinin altına iner, yanlara ve noktanın arkasına doğru geniş bir geçişle
+   * asıl araziye döner. Dar geçiş tepede hendek, noktanın hemen arkasında dik duvar bırakıyordu (dik yamaçta kaya
+   * dokusu beyaz bir şerit gibi görünüyordu; birden çok nokta yan yana olunca tepe boyunca teras oluşuyordu).
+   */
   private koridorUygula(h: number, x: number, z: number): number {
     for (const k of this.koridorlar) {
       // Nokta çevresi: düz zemin (panorama düz zemin varsayımı; asker, krater, tank, iniş aynı seviyede)
       const dn = Math.hypot(x - k.x, z - k.z);
-      if (dn < k.yaricap) h *= smooth(k.yaricap * 0.55, k.yaricap, dn);
-      // Hat boyunca: göz (zeminden 1,7 m) → ayak çizgisinin 0,25 m altı; tümsekler kesilir, çukurlar kalır
+      if (dn < k.yaricap * 1.8) h *= smooth(k.yaricap * 0.55, k.yaricap * 1.8, dn);
+      // Hat boyunca: göz (zeminden 1,7 m) → ayak çizgisinin 0,25 m altı; noktanın ötesinde tavan yavaşça yükselir
       const t = (x * k.x + z * k.z) / k.d;
-      if (t <= 0 || t >= k.d) continue;
+      if (t <= 0 || t >= k.d + KORIDOR_ARKA) continue;
       const yan = Math.abs(x * k.z - z * k.x) / k.d;
       const genislik = 1.4 + 0.07 * t;
-      if (yan >= genislik * 1.7) continue;
-      const tavan = 1.7 * (1 - t / k.d) - 0.25;
-      if (h > tavan) h -= (h - tavan) * (1 - smooth(genislik, genislik * 1.7, yan));
+      const dis = genislik * 3 + 6;
+      if (yan >= dis) continue;
+      const tavan = t < k.d ? 1.7 * (1 - t / k.d) - 0.25 : -0.25 + 0.3 * (t - k.d);
+      if (h > tavan) h -= (h - tavan) * (1 - smooth(genislik, dis, yan));
     }
     return h;
   }
