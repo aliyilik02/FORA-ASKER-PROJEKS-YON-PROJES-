@@ -369,7 +369,19 @@
       "bolge": "daglik",
       "mevsim": "yaz",
       "zaman": "gece",
-      "dosya": "daglik/pano_yaz_gece_foto_8k.jpg",
+      "dosya": "daglik/pano_yaz_gece_foto_8k_gece.jpg",
+      "kaynakDosya": "daglik/pano_yaz_gece_foto_8k.jpg",
+      "gece": {
+        "pozlama": -2.4,
+        "doygunluk": 0.35,
+        "ton": [
+          0.6,
+          0.74,
+          1
+        ],
+        "ay": true,
+        "gokKarartma": 0.5
+      },
       "tip": "resim",
       "yawKaydirma": 0,
       "yukseklikKaydirma": 0,
@@ -1034,7 +1046,19 @@
       "bolge": "kirsal_acik_arazi",
       "mevsim": "yaz",
       "zaman": "gece",
-      "dosya": "kirsal_acik_arazi/pano_yaz_gece_foto_8k.jpg",
+      "dosya": "kirsal_acik_arazi/pano_yaz_gece_foto_8k_gece.jpg",
+      "kaynakDosya": "kirsal_acik_arazi/pano_yaz_gece_foto_8k.jpg",
+      "gece": {
+        "pozlama": -1.4,
+        "doygunluk": 0.5,
+        "ton": [
+          0.7,
+          0.8,
+          1
+        ],
+        "gokKarartma": 0.75,
+        "ay": true
+      },
       "tip": "resim",
       "yawKaydirma": -40,
       "yukseklikKaydirma": 0,
@@ -1408,7 +1432,20 @@
       "bolge": "meskun_mahal",
       "mevsim": "kis",
       "zaman": "gece",
-      "dosya": "meskun_mahal/pano_kis_gece_foto_8k.jpg",
+      "dosya": "meskun_mahal/pano_kis_gece_foto_8k_gece.jpg",
+      "kaynakDosya": "meskun_mahal/pano_kis_gece_foto_8k.jpg",
+      "gece": {
+        "pozlama": -2.2,
+        "doygunluk": 0.55,
+        "ton": [
+          0.72,
+          0.83,
+          1
+        ],
+        "gokKarartma": 1,
+        "cekirdek": 0.9,
+        "isikliRenk": 0.8
+      },
       "tip": "resim",
       "yawKaydirma": -10,
       "yukseklikKaydirma": 0,
@@ -1676,7 +1713,20 @@
       "bolge": "meskun_mahal",
       "mevsim": "yaz",
       "zaman": "gece",
-      "dosya": "meskun_mahal/pano_yaz_gece_foto_8k.jpg",
+      "dosya": "meskun_mahal/pano_yaz_gece_foto_8k_gece.jpg",
+      "kaynakDosya": "meskun_mahal/pano_yaz_gece_foto_8k.jpg",
+      "gece": {
+        "pozlama": -1.7,
+        "doygunluk": 0.6,
+        "ton": [
+          0.75,
+          0.85,
+          1
+        ],
+        "gokKarartma": 1,
+        "cekirdek": 0.9,
+        "isikliRenk": 0.8
+      },
       "tip": "resim",
       "yawKaydirma": -20,
       "yukseklikKaydirma": 0,
@@ -2330,7 +2380,19 @@
       "bolge": "ormanlik",
       "mevsim": "yaz",
       "zaman": "gece",
-      "dosya": "ormanlik/pano_yaz_gece_foto_8k.jpg",
+      "dosya": "ormanlik/pano_yaz_gece_foto_8k_gece.jpg",
+      "kaynakDosya": "ormanlik/pano_yaz_gece_foto_8k.jpg",
+      "gece": {
+        "pozlama": -2.4,
+        "doygunluk": 0.3,
+        "ton": [
+          0.6,
+          0.74,
+          1
+        ],
+        "ay": true,
+        "gokKarartma": 0.45
+      },
       "tip": "resim",
       "yawKaydirma": 25,
       "yukseklikKaydirma": 0,
