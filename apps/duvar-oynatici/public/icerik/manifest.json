@@ -631,134 +631,165 @@
       "_not": "Karsiz kis gun batimi, kuru tarla; soguk mavi gok",
       "noktalar": [
         {
-          "ad": "on sol",
-          "azimut": -25,
-          "mesafe": 20,
+          "ad": "agac onu",
+          "azimut": -124,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "agac sagi",
+          "azimut": -116,
+          "mesafe": 21,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "tank · agac yani",
+          "azimut": -110,
+          "mesafe": 30,
+          "tur": [
+            "tank"
+          ]
+        },
+        {
+          "ad": "misir onu",
+          "azimut": -86,
+          "mesafe": 15,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "misir kosesi",
+          "azimut": -66,
+          "mesafe": 10,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "cit onu sol",
+          "azimut": -38,
+          "mesafe": 10,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "cit onu",
+          "azimut": -8,
+          "mesafe": 12,
           "tur": [
             "patlama",
             "toz"
+          ]
+        },
+        {
+          "ad": "cit onu sag",
+          "azimut": 18,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
           ]
         },
         {
           "ad": "on sag",
-          "azimut": 25,
-          "mesafe": 22,
-          "tur": [
-            "patlama",
-            "toz"
-          ]
-        },
-        {
-          "ad": "sol",
-          "azimut": -70,
-          "mesafe": 18,
+          "azimut": 26,
+          "mesafe": 19,
           "tur": [
             "patlama"
           ]
         },
         {
-          "ad": "sag",
-          "azimut": 70,
-          "mesafe": 20,
+          "ad": "tank · on sag",
+          "azimut": 36,
+          "mesafe": 27,
           "tur": [
-            "patlama"
+            "tank"
           ]
         },
         {
-          "ad": "arka sol",
-          "azimut": -120,
-          "mesafe": 22,
+          "ad": "inis onu",
+          "azimut": 55,
+          "mesafe": 10,
           "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "arka sag",
-          "azimut": 120,
-          "mesafe": 24,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "figur on",
-          "azimut": 0,
-          "mesafe": 16,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "figur sol",
-          "azimut": -40,
-          "mesafe": 14,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "figur sag",
-          "azimut": 45,
-          "mesafe": 15,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "figur sag arka",
-          "azimut": 95,
-          "mesafe": 14,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "figur sol arka",
-          "azimut": -95,
-          "mesafe": 16,
-          "tur": [
-            "figur",
             "asker"
           ]
         },
         {
           "ad": "inis",
-          "azimut": 40,
-          "mesafe": 42,
+          "azimut": 60,
+          "mesafe": 32,
           "tur": [
             "helikopter"
           ]
         },
         {
-          "ad": "tank · arka sag",
-          "azimut": 120,
-          "mesafe": 28,
+          "ad": "sag",
+          "azimut": 68,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "mera",
+          "azimut": 80,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag uzak",
+          "azimut": 89,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "tank · sag",
+          "azimut": 100,
+          "mesafe": 32,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · on sag",
-          "azimut": 25,
-          "mesafe": 26,
+          "ad": "saz yani",
+          "azimut": 106,
+          "mesafe": 10,
           "tur": [
-            "tank"
-          ]
-        },
-        {
-          "ad": "tank · arka sol",
-          "azimut": -120,
-          "mesafe": 26,
-          "tur": [
-            "tank"
+            "asker"
           ]
         }
       ],
-      "yasak": []
+      "yasak": [
+        {
+          "ad": "kose diregi",
+          "baslangic": -64,
+          "bitis": -51
+        },
+        {
+          "ad": "saz kumesi",
+          "baslangic": 125,
+          "bitis": 140
+        }
+      ],
+      "gunes": {
+        "azimut": 37,
+        "yukseklik": 4,
+        "guc": 0.45,
+        "aciklama": "gunes kavaklik sirtinin arkasinda ufukta (~2-3 derece), tarla golgede; yalniz turuncu isima"
+      }
     },
     {
       "bolge": "kirsal_acik_arazi",
@@ -772,17 +803,88 @@
       "_not": "Karli tarla, uzakta kiragi tutmus orman, acik gok; 29K kaynak",
       "noktalar": [
         {
-          "ad": "on sol",
+          "ad": "orta mevzi",
+          "azimut": -3,
+          "mesafe": 10.5,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "orta sol mevzi",
           "azimut": -25,
-          "mesafe": 20,
+          "mesafe": 12,
           "tur": [
-            "patlama",
-            "toz"
+            "asker"
           ]
         },
         {
-          "ad": "on sag",
-          "azimut": 25,
+          "ad": "orta sag mevzi",
+          "azimut": 19,
+          "mesafe": 11,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sol mevzi",
+          "azimut": -62,
+          "mesafe": 11,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sol arka mevzi",
+          "azimut": -108,
+          "mesafe": 12,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sag mevzi",
+          "azimut": 63,
+          "mesafe": 11,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sag arka mevzi",
+          "azimut": 108,
+          "mesafe": 12,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "orta yuruyus",
+          "azimut": 41,
+          "mesafe": 13.5,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol yuruyus",
+          "azimut": -85,
+          "mesafe": 13.5,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag yuruyus",
+          "azimut": 85,
+          "mesafe": 13.5,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "tarla orta sol",
+          "azimut": -15,
           "mesafe": 22,
           "tur": [
             "patlama",
@@ -790,116 +892,94 @@
           ]
         },
         {
-          "ad": "sol",
-          "azimut": -70,
-          "mesafe": 18,
+          "ad": "tarla orta sag",
+          "azimut": 30,
+          "mesafe": 21,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sol tarla",
+          "azimut": -97,
+          "mesafe": 23,
           "tur": [
             "patlama"
           ]
         },
         {
-          "ad": "sag",
-          "azimut": 70,
+          "ad": "sol yakin tarla",
+          "azimut": -73,
           "mesafe": 20,
           "tur": [
             "patlama"
           ]
         },
         {
-          "ad": "arka sol",
-          "azimut": -120,
-          "mesafe": 22,
+          "ad": "sag tarla",
+          "azimut": 97,
+          "mesafe": 23,
           "tur": [
             "patlama"
           ]
         },
         {
-          "ad": "arka sag",
-          "azimut": 120,
-          "mesafe": 24,
+          "ad": "sag yakin tarla",
+          "azimut": 74,
+          "mesafe": 20,
           "tur": [
             "patlama"
           ]
         },
         {
-          "ad": "figur on",
-          "azimut": 0,
-          "mesafe": 16,
+          "ad": "tank · orta sol",
+          "azimut": -33,
+          "mesafe": 32,
           "tur": [
-            "figur",
-            "asker"
+            "tank"
           ]
         },
         {
-          "ad": "figur sol",
-          "azimut": -40,
-          "mesafe": 14,
+          "ad": "tank · sol",
+          "azimut": -117,
+          "mesafe": 30,
           "tur": [
-            "figur",
-            "asker"
+            "tank"
           ]
         },
         {
-          "ad": "figur sag",
-          "azimut": 45,
-          "mesafe": 15,
+          "ad": "tank · sag",
+          "azimut": 117,
+          "mesafe": 30,
           "tur": [
-            "figur",
-            "asker"
+            "tank"
           ]
         },
         {
-          "ad": "figur sag arka",
-          "azimut": 95,
-          "mesafe": 14,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "figur sol arka",
-          "azimut": -95,
-          "mesafe": 16,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "inis",
-          "azimut": 40,
-          "mesafe": 42,
+          "ad": "inis orta",
+          "azimut": 8,
+          "mesafe": 36,
           "tur": [
             "helikopter"
           ]
         },
         {
-          "ad": "tank · arka sag",
-          "azimut": 120,
-          "mesafe": 28,
+          "ad": "inis sag",
+          "azimut": 85,
+          "mesafe": 38,
           "tur": [
-            "tank"
-          ]
-        },
-        {
-          "ad": "tank · on sag",
-          "azimut": 25,
-          "mesafe": 26,
-          "tur": [
-            "tank"
-          ]
-        },
-        {
-          "ad": "tank · arka sol",
-          "azimut": -120,
-          "mesafe": 26,
-          "tur": [
-            "tank"
+            "helikopter"
           ]
         }
       ],
-      "yasak": []
+      "yasak": [],
+      "gunes": {
+        "azimut": 36,
+        "yukseklik": 18,
+        "guc": 0.95,
+        "aciklama": "Açık gökte net güneş diski: panorama 36°, 18° yükseklik (orta duvarın sağ üstü; otomatik tahmin 36,2°/18,3°, gözden geçirici 35,8°/18,2° ile uyumlu). Kar tümseklerinin gölgeleri izleyiciye doğru düşüyor; güç 0,95."
+      }
     },
     {
       "bolge": "kirsal_acik_arazi",
@@ -907,140 +987,177 @@
       "zaman": "alacakaranlik",
       "dosya": "kirsal_acik_arazi/pano_yaz_alacakaranlik_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": 10,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"plains_sunset\" (CC0), tonemapped 8K JPG",
       "_not": "Kuru sari otlak uzerinde gun batimi, acik gok; yumusak isik",
       "noktalar": [
         {
-          "ad": "on sol",
-          "azimut": -25,
+          "ad": "sol yakin",
+          "azimut": -48,
+          "mesafe": 9,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol seyrek ot",
+          "azimut": -76,
+          "mesafe": 11,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "orta sol",
+          "azimut": -8,
+          "mesafe": 11,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "orta sag",
+          "azimut": 16,
+          "mesafe": 11,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "gunes onu",
+          "azimut": 45,
+          "mesafe": 13,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag yakin",
+          "azimut": 66,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "sag toprak",
+          "azimut": 86,
+          "mesafe": 11,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol tarla",
+          "azimut": -60,
           "mesafe": 20,
           "tur": [
-            "patlama",
-            "toz"
+            "patlama"
           ]
         },
         {
-          "ad": "on sag",
-          "azimut": 25,
-          "mesafe": 22,
+          "ad": "sol uzak",
+          "azimut": -92,
+          "mesafe": 20,
           "tur": [
-            "patlama",
-            "toz"
+            "patlama"
           ]
         },
         {
-          "ad": "sol",
-          "azimut": -70,
+          "ad": "toprak orta",
+          "azimut": 4,
           "mesafe": 18,
           "tur": [
-            "patlama"
+            "patlama",
+            "toz"
           ]
         },
         {
-          "ad": "sag",
-          "azimut": 70,
-          "mesafe": 20,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "arka sol",
-          "azimut": -120,
-          "mesafe": 22,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "arka sag",
-          "azimut": 120,
+          "ad": "gunes alti",
+          "azimut": 40,
           "mesafe": 24,
           "tur": [
             "patlama"
           ]
         },
         {
-          "ad": "figur on",
-          "azimut": 0,
-          "mesafe": 16,
+          "ad": "sag tarla",
+          "azimut": 76,
+          "mesafe": 18,
           "tur": [
-            "figur",
-            "asker"
+            "patlama",
+            "toz"
           ]
         },
         {
-          "ad": "figur sol",
-          "azimut": -40,
-          "mesafe": 14,
+          "ad": "sag uzak",
+          "azimut": 116,
+          "mesafe": 20,
           "tur": [
-            "figur",
-            "asker"
+            "patlama"
           ]
         },
         {
-          "ad": "figur sag",
-          "azimut": 45,
-          "mesafe": 15,
+          "ad": "inis orta",
+          "azimut": 4,
+          "mesafe": 40,
           "tur": [
-            "figur",
-            "asker"
+            "helikopter"
           ]
         },
         {
-          "ad": "figur sag arka",
-          "azimut": 95,
-          "mesafe": 14,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "figur sol arka",
-          "azimut": -95,
-          "mesafe": 16,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "inis",
-          "azimut": 40,
+          "ad": "inis mesa onu",
+          "azimut": 132,
           "mesafe": 42,
           "tur": [
             "helikopter"
           ]
         },
         {
-          "ad": "tank · arka sag",
-          "azimut": 120,
-          "mesafe": 28,
+          "ad": "tank · orta sol",
+          "azimut": -20,
+          "mesafe": 32,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · on sag",
-          "azimut": 25,
-          "mesafe": 26,
+          "ad": "tank · sol",
+          "azimut": -108,
+          "mesafe": 30,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · arka sol",
-          "azimut": -120,
-          "mesafe": 26,
+          "ad": "tank · sag",
+          "azimut": 100,
+          "mesafe": 30,
           "tur": [
             "tank"
           ]
         }
       ],
-      "yasak": []
+      "yasak": [
+        {
+          "ad": "yakin kuru cali",
+          "baslangic": 21,
+          "bitis": 35
+        }
+      ],
+      "gunes": {
+        "azimut": 37,
+        "yukseklik": 5,
+        "guc": 0.4,
+        "aciklama": "Gunes mesa sirtinda batiyor (az 37, ~4 derece); disk secilmiyor, yalniz sari parlama; zeminde keskin golge yok, isik yumusak"
+      }
     },
     {
       "bolge": "kirsal_acik_arazi",
@@ -1453,116 +1570,166 @@
       "_not": "Karli kilise meydani gece; Noel isiklari var",
       "noktalar": [
         {
-          "ad": "sokak",
-          "azimut": -40,
-          "mesafe": 28,
+          "ad": "dukkan onu",
+          "azimut": -122,
+          "mesafe": 8,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "dukkan kosesi",
+          "azimut": -82,
+          "mesafe": 8,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "8 nolu ev onu",
+          "azimut": -60,
+          "mesafe": 14,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sokak agzi",
+          "azimut": -50,
+          "mesafe": 8,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "yokus sokak",
+          "azimut": -48,
+          "mesafe": 24,
           "tur": [
             "patlama",
             "toz"
           ]
         },
         {
-          "ad": "sag sokak",
-          "azimut": 165,
-          "mesafe": 26,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "meydan",
-          "azimut": 0,
-          "mesafe": 15,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "meydan on",
-          "azimut": -5,
-          "mesafe": 12,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "meydan sag",
-          "azimut": 30,
-          "mesafe": 12,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "sokak on",
-          "azimut": -45,
-          "mesafe": 16,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "sag on",
-          "azimut": 120,
-          "mesafe": 14,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "inis",
-          "azimut": -30,
-          "mesafe": 40,
-          "tur": [
-            "helikopter"
-          ]
-        },
-        {
-          "ad": "tank · sokak",
-          "azimut": -40,
-          "mesafe": 32,
-          "tur": [
-            "tank"
-          ]
-        },
-        {
-          "ad": "tank · sag sokak",
-          "azimut": 165,
+          "ad": "tank · yokus sokak",
+          "azimut": -48,
           "mesafe": 30,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · meydan",
-          "azimut": 0,
-          "mesafe": 22,
+          "ad": "meydan on",
+          "azimut": -25,
+          "mesafe": 9,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "meydan",
+          "azimut": -22,
+          "mesafe": 26,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "inis meydan",
+          "azimut": -25,
+          "mesafe": 44,
+          "tur": [
+            "helikopter"
+          ]
+        },
+        {
+          "ad": "agac onu",
+          "azimut": 3,
+          "mesafe": 8,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "kilise kosesi",
+          "azimut": 25,
+          "mesafe": 9,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "kilise onu",
+          "azimut": 47,
+          "mesafe": 9,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "kilise duvari dibi",
+          "azimut": 62,
+          "mesafe": 13.5,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "ara sokak agzi",
+          "azimut": 90,
+          "mesafe": 9,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "ara sokak",
+          "azimut": 89,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "tank · ara sokak",
+          "azimut": 90,
+          "mesafe": 26,
           "tur": [
             "tank"
+          ]
+        },
+        {
+          "ad": "ahsap ev onu",
+          "azimut": 117,
+          "mesafe": 8,
+          "tur": [
+            "asker",
+            "figur"
           ]
         }
       ],
       "yasak": [
         {
-          "ad": "dukkan binasi",
-          "baslangic": -180,
-          "bitis": -74
-        },
-        {
-          "ad": "kilise",
-          "baslangic": 11,
-          "bitis": 74
-        },
-        {
-          "ad": "ahsap ev",
-          "baslangic": 97,
-          "bitis": 157
+          "ad": "tas bloklar",
+          "baslangic": -44,
+          "bitis": -32
         }
-      ]
+      ],
+      "gunes": {
+        "azimut": 165,
+        "yukseklik": 40,
+        "guc": 0.15,
+        "aciklama": "Ay görünmüyor; gök bulutlu, kasabanın ışığıyla hafifçe aydınlanıyor. En parlak gök bölgesi arkadaki alışveriş sokağının üstü (+150..+175°, 50–90° yükseklik). Otomatik tahmin (−136°, güç 0,54) gök değil, sokak lambasının aydınlattığı Pfetsch cephesi. Gece kuralı gereği yükseklik 40°, güç 0,15 seçildi; gölgeler soluk olacak."
+      }
     },
     {
       "bolge": "meskun_mahal",
@@ -2518,12 +2685,37 @@
       "_not": "Gunesli cam ormani, otlu zemin, uzun golgeler; 24K, JPG 63MB (en iyi kalite)",
       "noktalar": [
         {
-          "ad": "acik cim",
-          "azimut": 20,
-          "mesafe": 18,
+          "ad": "sol yamac",
+          "azimut": -124,
+          "mesafe": 21,
           "tur": [
             "patlama",
             "toz"
+          ]
+        },
+        {
+          "ad": "acik cim sol",
+          "azimut": -20,
+          "mesafe": 14,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "acik cim orta",
+          "azimut": -5,
+          "mesafe": 17,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "acik cim",
+          "azimut": 27,
+          "mesafe": 17,
+          "tur": [
+            "patlama"
           ]
         },
         {
@@ -2535,16 +2727,52 @@
           ]
         },
         {
-          "ad": "acik cim sol",
-          "azimut": -30,
+          "ad": "sag yamac",
+          "azimut": 100,
           "mesafe": 16,
           "tur": [
             "patlama"
           ]
         },
         {
+          "ad": "sol cim",
+          "azimut": -119,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "agac onu",
+          "azimut": -99,
+          "mesafe": 9,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "cim sol",
+          "azimut": -37,
+          "mesafe": 12,
+          "tur": [
+            "figur",
+            "asker"
+          ]
+        },
+        {
+          "ad": "cim orta",
+          "azimut": -16,
+          "mesafe": 11,
+          "tur": [
+            "figur",
+            "asker"
+          ]
+        },
+        {
           "ad": "cim on",
-          "azimut": 10,
+          "azimut": 4,
           "mesafe": 12,
           "tur": [
             "figur",
@@ -2561,8 +2789,8 @@
           ]
         },
         {
-          "ad": "cim sol",
-          "azimut": -40,
+          "ad": "cim arka sag",
+          "azimut": 110,
           "mesafe": 12,
           "tur": [
             "figur",
@@ -2570,42 +2798,25 @@
           ]
         },
         {
-          "ad": "cim arka sag",
-          "azimut": 110,
-          "mesafe": 16,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
           "ad": "inis",
-          "azimut": 30,
-          "mesafe": 45,
+          "azimut": -14,
+          "mesafe": 27,
           "tur": [
             "helikopter"
           ]
         },
         {
-          "ad": "tank · acik cim sag",
-          "azimut": 70,
+          "ad": "tank · acik cim",
+          "azimut": 24,
           "mesafe": 24,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · acik cim",
-          "azimut": 20,
-          "mesafe": 22,
-          "tur": [
-            "tank"
-          ]
-        },
-        {
-          "ad": "tank · acik cim sol",
-          "azimut": -30,
-          "mesafe": 22,
+          "ad": "tank · acik cim sag",
+          "azimut": 85,
+          "mesafe": 23,
           "tur": [
             "tank"
           ]
@@ -2613,16 +2824,27 @@
       ],
       "yasak": [
         {
-          "ad": "buyuk govde",
-          "baslangic": -82,
-          "bitis": -62
+          "ad": "govde sol",
+          "baslangic": -143,
+          "bitis": -131
         },
         {
-          "ad": "govde sag",
-          "baslangic": 118,
-          "bitis": 128
+          "ad": "buyuk govde",
+          "baslangic": -93,
+          "bitis": -59
+        },
+        {
+          "ad": "orta govde",
+          "baslangic": 6,
+          "bitis": 15
         }
-      ]
+      ],
+      "gunes": {
+        "azimut": 36,
+        "yukseklik": 21,
+        "guc": 0.9,
+        "aciklama": "Gunes diski acik gokte net (yildiz parlamasi), az 36, yukseklik 21; otomatik tahmin (az 42, yuk 20) 6 derece saga kaymis. Govde golgeleri kameraya ve sol-arkaya (az ~-144) uzaniyor."
+      }
     },
     {
       "bolge": "us_bolgesi",
@@ -2630,120 +2852,175 @@
       "zaman": "alacakaranlik",
       "dosya": "us_bolgesi/pano_kis_alacakaranlik_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": 180,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"abandoned_tank_farm_05\" (CC0), tonemapped 8K JPG",
       "_not": "Kis gun batimi, toprak yiginlari ve terk edilmis binalar (karsiz)",
       "noktalar": [
         {
-          "ad": "kum on",
-          "azimut": 0,
-          "mesafe": 24,
+          "ad": "yol",
+          "azimut": 160,
+          "mesafe": 17,
           "tur": [
             "patlama",
             "toz"
           ]
         },
         {
-          "ad": "kum sag",
-          "azimut": 40,
-          "mesafe": 22,
+          "ad": "depo onu",
+          "azimut": -162,
+          "mesafe": 21,
           "tur": [
             "patlama"
-          ]
-        },
-        {
-          "ad": "kum sol",
-          "azimut": -30,
-          "mesafe": 26,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "arka sag",
-          "azimut": 120,
-          "mesafe": 24,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "on",
-          "azimut": 0,
-          "mesafe": 13,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "sag",
-          "azimut": 30,
-          "mesafe": 14,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "sol",
-          "azimut": -40,
-          "mesafe": 14,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "arka",
-          "azimut": 150,
-          "mesafe": 15,
-          "tur": [
-            "figur",
-            "asker"
           ]
         },
         {
           "ad": "inis",
-          "azimut": 60,
-          "mesafe": 42,
+          "azimut": -165,
+          "mesafe": 40,
           "tur": [
             "helikopter"
           ]
         },
         {
-          "ad": "tank · kum sol",
-          "azimut": -30,
-          "mesafe": 30,
+          "ad": "tank · yol agzi",
+          "azimut": 176,
+          "mesafe": 26,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · kum on",
-          "azimut": 0,
+          "ad": "yol basi",
+          "azimut": 150,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "orta",
+          "azimut": -175,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "depo sag",
+          "azimut": -150,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "tarla",
+          "azimut": -114,
+          "mesafe": 17,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "tank · tarla",
+          "azimut": -122,
+          "mesafe": 24,
+          "tur": [
+            "tank"
+          ]
+        },
+        {
+          "ad": "inis tarla",
+          "azimut": -110,
+          "mesafe": 34,
+          "tur": [
+            "helikopter"
+          ]
+        },
+        {
+          "ad": "direkler onu",
+          "azimut": -128,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "direk onu",
+          "azimut": -100,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "fidan onu",
+          "azimut": 66,
+          "mesafe": 15,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "set ustu",
+          "azimut": 125,
+          "mesafe": 16,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "tank · agaclik onu",
+          "azimut": 128,
           "mesafe": 28,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · arka sag",
-          "azimut": 120,
-          "mesafe": 28,
+          "ad": "kum patika",
+          "azimut": 75,
+          "mesafe": 9,
           "tur": [
-            "tank"
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "set dibi",
+          "azimut": 103,
+          "mesafe": 9,
+          "tur": [
+            "asker",
+            "figur"
           ]
         }
       ],
       "yasak": [
         {
-          "ad": "tugla bina",
+          "ad": "pompa binasi ve yiginlar (arka dahil)",
           "baslangic": -80,
-          "bitis": -45
+          "bitis": -5
+        },
+        {
+          "ad": "sari borular",
+          "baslangic": 86,
+          "bitis": 99
         }
-      ]
+      ],
+      "gunes": {
+        "azimut": 36,
+        "yukseklik": 18,
+        "guc": 0.6,
+        "aciklama": "Güneş ince bulut arkasında belirgin bir parlak leke olarak görünüyor: panorama az +36°, ufkun ~18,5° üstünde. Disk keskin değil, gölgeler yumuşak. Pompa binasının yan cephesi parlak, ön cephesi sıyırma ışıkta kalıyor; depo cephesi önden aydınlanıyor, bu da yönle tutarlı. k=180 ile güneş izleyicinin arkasına düşüyor (sahne −144°)."
+      }
     },
     {
       "bolge": "us_bolgesi",
@@ -2894,56 +3171,39 @@
       "zaman": "alacakaranlik",
       "dosya": "us_bolgesi/pano_yaz_alacakaranlik_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": 10,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"rooftop_night\" (CC0), tonemapped 8K JPG",
       "_not": "Alacakaranlikta projektorle aydinlatilmis beton cati otoparki; us gece aydinlatmasi hissi",
       "noktalar": [
         {
-          "ad": "beton on",
-          "azimut": 0,
-          "mesafe": 26,
+          "ad": "bina onu",
+          "azimut": -118,
+          "mesafe": 8.5,
           "tur": [
-            "patlama",
-            "toz"
+            "asker"
           ]
         },
         {
-          "ad": "beton sag",
-          "azimut": 30,
-          "mesafe": 24,
+          "ad": "kose yani",
+          "azimut": -48,
+          "mesafe": 12,
           "tur": [
-            "patlama"
+            "asker"
           ]
         },
         {
-          "ad": "beton sol",
+          "ad": "sol",
           "azimut": -20,
-          "mesafe": 22,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "cit onu",
-          "azimut": 120,
-          "mesafe": 28,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "on",
-          "azimut": 5,
-          "mesafe": 14,
+          "mesafe": 12,
           "tur": [
             "figur",
             "asker"
           ]
         },
         {
-          "ad": "sol",
-          "azimut": -25,
+          "ad": "on",
+          "azimut": 10,
           "mesafe": 12,
           "tur": [
             "figur",
@@ -2953,49 +3213,115 @@
         {
           "ad": "sag",
           "azimut": 40,
-          "mesafe": 15,
+          "mesafe": 12,
           "tur": [
             "figur",
             "asker"
           ]
         },
         {
-          "ad": "sag arka",
-          "azimut": 100,
-          "mesafe": 14,
+          "ad": "kulube yani",
+          "azimut": 78,
+          "mesafe": 12,
           "tur": [
             "figur",
             "asker"
+          ]
+        },
+        {
+          "ad": "cit sol",
+          "azimut": 104,
+          "mesafe": 12,
+          "tur": [
+            "figur",
+            "asker"
+          ]
+        },
+        {
+          "ad": "cit sag",
+          "azimut": 132,
+          "mesafe": 12,
+          "tur": [
+            "figur",
+            "asker"
+          ]
+        },
+        {
+          "ad": "beton derin",
+          "azimut": -42,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "beton sol",
+          "azimut": -14,
+          "mesafe": 16,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "beton sag",
+          "azimut": 22,
+          "mesafe": 15,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "korkuluk onu",
+          "azimut": 45,
+          "mesafe": 15,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "kulube onu",
+          "azimut": 66,
+          "mesafe": 13,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "cit onu",
+          "azimut": 118,
+          "mesafe": 12,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "bina dibi",
+          "azimut": -120,
+          "mesafe": 8.5,
+          "tur": [
+            "toz"
           ]
         },
         {
           "ad": "inis",
-          "azimut": 10,
-          "mesafe": 45,
+          "azimut": -22,
+          "mesafe": 28,
           "tur": [
             "helikopter"
           ]
         },
         {
-          "ad": "tank · cit onu",
-          "azimut": 120,
-          "mesafe": 32,
+          "ad": "tank · derin sol",
+          "azimut": -44,
+          "mesafe": 38,
           "tur": [
             "tank"
           ]
         },
         {
           "ad": "tank · beton on",
-          "azimut": 0,
-          "mesafe": 30,
-          "tur": [
-            "tank"
-          ]
-        },
-        {
-          "ad": "tank · beton sag",
-          "azimut": 30,
-          "mesafe": 28,
+          "azimut": 4,
+          "mesafe": 21,
           "tur": [
             "tank"
           ]
@@ -3003,16 +3329,17 @@
       ],
       "yasak": [
         {
-          "ad": "hangar",
-          "baslangic": -146,
-          "bitis": -54
-        },
-        {
-          "ad": "kulube",
-          "baslangic": 58,
-          "bitis": 81
+          "ad": "bina",
+          "baslangic": -115,
+          "bitis": -51
         }
-      ]
+      ],
+      "gunes": {
+        "azimut": 120,
+        "yukseklik": 6,
+        "guc": 0.4,
+        "aciklama": "Güneş batmış: ufuktaki turuncu ışıma az ~120'de (sağ duvar arkası, ağaçların ardında), alacakaranlık kuralıyla alçak (6°) ve zayıf (0,4). Ay az -81 / 49°'de görünüyor ama ışıması zayıf. Tabliyedeki keskin gölgeler direk projektörlerinden (az -25, +31, -155); sokak lambası sayıldığı için ışık yönü olarak kullanılmadı."
+      }
     },
     {
       "bolge": "us_bolgesi",
