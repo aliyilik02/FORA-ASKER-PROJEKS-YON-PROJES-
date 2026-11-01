@@ -357,6 +357,53 @@ export class Sahne3B {
     return renk;
   }
 
+  private parlaklikOnbellek: { url: string; zemin: number; gok: number } | null = null;
+  /**
+   * Panoramanın doğrusal parlaklığı: zemin bandı (ufkun 8–35° altı) ve gök (ufkun 10–60° üstü) ortalaması.
+   * Gece panoramasında 3B ışık bu ölçüye eşlenir (bkz. isikGuncelle); kaynak başına bir kez hesaplanır.
+   */
+  private panoramaParlakligi(): { zemin: number; gok: number } | null {
+    if (this.parlaklikOnbellek && this.parlaklikOnbellek.url === this.yuklenen) return this.parlaklikOnbellek;
+    const img = this.arkaPlan?.image as HTMLImageElement | undefined;
+    if (!img) return null;
+    try {
+      const c = document.createElement("canvas");
+      c.width = 128;
+      c.height = 64;
+      const ctx = c.getContext("2d", { willReadFrequently: true })!;
+      ctx.drawImage(img, 0, 0, 128, 64);
+      const d = ctx.getImageData(0, 0, 128, 64).data;
+      const dogrusal = (v: number) => {
+        const s = v / 255;
+        return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      };
+      let zemin = 0;
+      let nz = 0;
+      let gok = 0;
+      let ng = 0;
+      for (let y = 0; y < 64; y++) {
+        const yukseklik = 90 - ((y + 0.5) / 64) * 180;
+        const zemindeMi = yukseklik <= -8 && yukseklik >= -35;
+        if (!zemindeMi && !(yukseklik >= 10 && yukseklik <= 60)) continue;
+        for (let x = 0; x < 128; x++) {
+          const i = (y * 128 + x) * 4;
+          const l = 0.2126 * dogrusal(d[i]) + 0.7152 * dogrusal(d[i + 1]) + 0.0722 * dogrusal(d[i + 2]);
+          if (zemindeMi) {
+            zemin += l;
+            nz++;
+          } else {
+            gok += l;
+            ng++;
+          }
+        }
+      }
+      this.parlaklikOnbellek = { url: this.yuklenen, zemin: zemin / Math.max(1, nz), gok: gok / Math.max(1, ng) };
+      return this.parlaklikOnbellek;
+    } catch {
+      return null; // tainted canvas: sabit gece sınırları kullanılır
+    }
+  }
+
   private gunesiTahminEt(img: HTMLImageElement): GunesTahmini | null {
     try {
       const c = document.createElement("canvas");
@@ -542,10 +589,23 @@ export class Sahne3B {
     // Gece panoraması: parlak nokta sokak lambası/ay olabilir; figürler gündüz gibi aydınlanmasın.
     // Ay ışığı: zayıf, mavimsi, yumuşak gölge. Alacakaranlıkta orta. Gündüz panoraması gece saatinde zaten faktörle kısılır.
     if (z === "gece") {
-      this.gunes.intensity = Math.min(this.gunes.intensity, 0.45);
       this.gunes.color.lerp(new THREE.Color(0.72, 0.8, 1), 0.7);
       this.gunes.shadow.radius = Math.max(this.gunes.shadow.radius, 6);
-      this.dolgu.intensity = Math.max(this.dolgu.intensity, 0.08);
+      // Karartılmış gece çekiminde sabit sınır (ay 0,45, dolgu 0,15) 3B zemini ve figürleri çevresinden 3–5 kat parlak
+      // bırakıyordu. Işık panoramanın kendi zemin parlaklığına eşlenir: yansıtması 0,3 olan yatay yüzey
+      // 0,3·((ay·sin + dolgu·0,7)/π + gök) ≈ zemin olsun; gereken ışığın ¾'ü ay (gölge), ¼'ü dolgu.
+      const p = this.panoramaParlakligi();
+      if (p) {
+        const gerekli = Math.max(0, p.zemin / 0.3 - p.gok) * Math.PI;
+        const sinY = Math.max(0.2, Math.sin(radyan(yukseklik)));
+        this.gunes.intensity = Math.min(this.gunes.intensity, 0.45, Math.max(0.015, (0.75 * gerekli) / sinY));
+        this.dolgu.intensity = Math.min(0.15, Math.max(0.005, (0.25 * gerekli) / 0.7));
+        // Duman/toz ay ışığında koyu (alevler ve izli mermi kendi ışığıyla parlak kalır)
+        this.parcaciklar.isik = Math.max(0.08, Math.min(1, Math.sqrt(p.zemin / 0.15)));
+      } else {
+        this.gunes.intensity = Math.min(this.gunes.intensity, 0.45);
+        this.dolgu.intensity = Math.max(this.dolgu.intensity, 0.08);
+      }
     } else if (z === "alacakaranlik") {
       this.gunes.intensity = Math.min(this.gunes.intensity, 1.2);
     }
