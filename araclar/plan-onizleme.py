@@ -17,6 +17,8 @@ Anahtar: <bolge>_<mevsim>_<zaman>[_foto] (ör. daglik_kis_gunduz_foto, kirsal_ac
 (sahne azimutu = panorama azimutu − yawKaydirma); noktanın tabanı, o mesafedeki düz zeminin panoramada
 düştüğü yerdir. İşaretler: kırmızı halka = patlama krateri (r 2,5 m), mavi dikdörtgen = asker (1,8 m),
 turuncu kutu = tank (7×3,5×2,4 m), sarı halka + kutu = helikopter (r 7 m, 11×2,5×3,5 m), kahve = toz.
+Asker/figür oynatıcıdaki gibi plan yönünde 4–7 m'ye çekilmiş yerinde çizilir (dolu mavi; etikette "7 m (plan 11)");
+plandaki mesafe ince beyaz çerçevedir. Uyarılar patlamanın askerin durduğu yere 5 m'den yakın olduğunu da söyler.
 Üst cetvel panorama azimutudur (plan bu sayıları kullanır); kesikli beyaz eğriler zemin mesafe halkaları,
 camgöbeği eğri hibrit 3B arazinin görünür yarıçapı.
 
@@ -57,6 +59,26 @@ RENK = {
 }
 KISA = {"patlama": "P", "figur": "F", "asker": "A", "tank": "T", "helikopter": "H", "toz": "Z"}
 DUVARLAR = [("sol", -1), ("orta", 0), ("sag", 1)]
+# sahne3b.ts ASKER_EN_UZAK / ASKER_EN_YAKIN: asker ve figür plan noktasının yönünde bu aralığa çekilir (duvarda iri
+# okunsun); tank, patlama, helikopter ve toz plandaki mesafede kalır.
+ASKER_EN_UZAK = 7.0
+ASKER_EN_YAKIN = 4.0
+PATLAMA_ASKER_PAYI = 5.0  # patlama noktası ile askerin durduğu yer arasında en az bu kadar metre olsun
+
+
+def asker_mesafesi(d: float) -> float:
+    return min(ASKER_EN_UZAK, max(ASKER_EN_YAKIN, d))
+
+
+def yalniz_asker(n: dict) -> bool:
+    turler = n.get("tur") or []
+    return bool(turler) and all(t in ("asker", "figur") for t in turler)
+
+
+def cizim_mesafesi(n: dict) -> float:
+    """Noktanın duvarda görüneceği mesafe: yalnız asker/figür noktası oynatıcıda yakına çekilir."""
+    d = float(n.get("mesafe", 20))
+    return asker_mesafesi(d) if yalniz_asker(n) else d
 
 
 def yazi_tipi(boyut: int):
@@ -344,16 +366,33 @@ def duvar_ciz(pano: np.ndarray, kayit: dict, plan: dict, kam: Kamera, baslik: st
             halka(2.5, RENK["patlama"], 2, 50)
         if "toz" in turler and "patlama" not in turler:
             halka(2.0, RENK["toz"], 2, 40)
+        de = asker_mesafesi(d)
         if "asker" in turler or "figur" in turler:
-            ust = kam.izdusum(X, Yz + 1.8, Z)
-            if ust:
-                g2 = max(2.0, 0.55 * pxm / 2)
-                c.rectangle((alt[0] - g2, ust[1], alt[0] + g2, alt[1]), fill=RENK["asker"] + (120,), outline=(255, 255, 255, 230))
-                bas = max(2.0, 0.24 * pxm / 2)
-                c.ellipse((alt[0] - bas, ust[1] - bas * 2, alt[0] + bas, ust[1]), fill=RENK["asker"] + (200,))
+            # Oynatıcı askeri plan yönünde 4–7 m'ye koyar: dolu işaret orada; plandaki mesafe ince çerçeve
+            Xa, Ya, Za = yer(a, de)
+            alt_a = kam.izdusum(Xa, Ya, Za)
+            ust = kam.izdusum(Xa, Ya + 1.8, Za)
+            if alt_a and ust:
+                pxa = (G / 2) / (kam.tx * max(0.3, Xa * math.sin(math.radians(kam.yaw)) + Za * math.cos(math.radians(kam.yaw))))
+                if abs(de - d) > 0.05:
+                    ust_p = kam.izdusum(X, Yz + 1.8, Z)
+                    if ust_p:
+                        g2p = max(2.0, 0.55 * pxm / 2)
+                        c.rectangle((alt[0] - g2p, ust_p[1], alt[0] + g2p, alt[1]), outline=(255, 255, 255, 150), width=1)
+                    c.line((alt[0], alt[1], alt_a[0], alt_a[1]), fill=(255, 255, 255, 110), width=1)
+                g2 = max(2.0, 0.55 * pxa / 2)
+                c.rectangle((alt_a[0] - g2, ust[1], alt_a[0] + g2, alt_a[1]), fill=RENK["asker"] + (60,), outline=(255, 255, 255, 235), width=2)
+                bas = max(2.0, 0.24 * pxa / 2)
+                c.ellipse((alt_a[0] - bas, ust[1] - bas * 2, alt_a[0] + bas, ust[1]), fill=RENK["asker"] + (200,))
                 ust_y = min(ust_y, ust[1] - bas * 2)
         kodlar = "".join(KISA[t] for t in turler if t in KISA) or "hepsi"
-        bag = et.yaz(alt[0], ust_y - 10, f"{n.get('ad', '?')} · {d:g} m · {kodlar}", renk, alt_sinir=34)
+        if yalniz_asker(n) and abs(de - d) > 0.05:
+            metin = f"{n.get('ad', '?')} · {de:g} m (plan {d:g}) · {kodlar}"
+        elif ("asker" in turler or "figur" in turler or not turler) and abs(de - d) > 0.05:
+            metin = f"{n.get('ad', '?')} · {d:g} m, asker {de:g} m · {kodlar}"
+        else:
+            metin = f"{n.get('ad', '?')} · {d:g} m · {kodlar}"
+        bag = et.yaz(alt[0], ust_y - 10, metin, renk, alt_sinir=34)
         c.line((alt[0], ust_y - 2, bag[0], bag[1]), fill=renk + (180,), width=1)
 
     # Üst cetvel: PANORAMA azimutu (planın kullandığı sayı)
@@ -420,15 +459,18 @@ def genel_ciz(img: Image.Image, kayit: dict, plan: dict, gunes, etkin, gunes_ell
         c.line((0, y, W, y), fill=(255, 255, 255, 50 if el else 110), width=1)
         c.text((2, y - 14), f"{el}°", font=f_kucuk, fill=(255, 255, 255, 150))
     et = Etiketci(c, f_kucuk)
-    for n in sorted(plan.get("noktalar") or [], key=lambda n: -n.get("mesafe", 20)):
+    for n in sorted(plan.get("noktalar") or [], key=lambda n: -cizim_mesafesi(n)):
         x = x_of(n["azimut"])
-        y = (0.5 + math.degrees(math.atan(GOZ / max(0.5, n.get("mesafe", 20)))) / 180) * H
+        dc = cizim_mesafesi(n)
+        y = (0.5 + math.degrees(math.atan(GOZ / max(0.5, dc))) / 180) * H
         turler = n.get("tur") or []
         renk = RENK.get(turler[0] if turler else "genel", RENK["genel"])
         c.line((x, H / 2, x, y), fill=renk + (200,), width=2)
         c.ellipse((x - 5, y - 5, x + 5, y + 5), fill=renk + (255,), outline=(0, 0, 0, 255))
         kodlar = "".join(KISA[t] for t in turler if t in KISA) or "hepsi"
-        et.yaz(x, y + 26, f"{n.get('ad', '?')} {n.get('mesafe', 20):g}m {kodlar}", renk)
+        d = float(n.get("mesafe", 20))
+        mesafe_yazi = f"{dc:g}m (plan {d:g})" if abs(dc - d) > 0.05 else f"{d:g}m"
+        et.yaz(x, y + 26, f"{n.get('ad', '?')} {mesafe_yazi} {kodlar}", renk)
     if gunes:
         x = x_of(gunes["azimut"])
         y = (0.5 - gunes["yukseklik"] / 180) * H
@@ -468,10 +510,27 @@ def uyarilar_uret(kayit: dict, plan: dict, hfov: float) -> list[str]:
                 u.append(f"'{ad}' yasak aralık '{yz.get('ad', '')}' içinde")
         if hib:
             r, cukur = hib
-            if n.get("mesafe", 20) > r * 0.92:
-                u.append(f"'{ad}' {n.get('mesafe')} m: hibrit 3B arazi yarıçapı ({r} m) dışında/kenarında")
-            elif cukur > 0 and n.get("mesafe", 20) > r * 0.5:
-                u.append(f"'{ad}' {n.get('mesafe')} m: hibrit kenar çanağında (arazi {cukur} m'ye kadar alçalıyor, r>{r * 0.45:.0f} m)")
+            dc = cizim_mesafesi(n)
+            if dc > r * 0.92:
+                u.append(f"'{ad}' {dc:g} m: hibrit 3B arazi yarıçapı ({r} m) dışında/kenarında")
+            elif cukur > 0 and dc > r * 0.5:
+                u.append(f"'{ad}' {dc:g} m: hibrit kenar çanağında (arazi {cukur} m'ye kadar alçalıyor, r>{r * 0.45:.0f} m)")
+    # Patlama askerin üstüne düşmesin: asker plan yönünde 4–7 m'de durur (oynatıcı 4,5 m içindeyse patlamayı kaydırır)
+    def zemin_xz(az: float, m: float):
+        r = math.radians(az)
+        return (m * math.sin(r), m * math.cos(r))
+
+    askerler = [n for n in noktalar if {"asker", "figur"} & set(n.get("tur") or TUM_TURLER)]
+    for n in noktalar:
+        if "patlama" not in (n.get("tur") or TUM_TURLER):
+            continue
+        p = zemin_xz(n["azimut"], float(n.get("mesafe", 20)))
+        for s in askerler:
+            ds = asker_mesafesi(float(s.get("mesafe", 20)))
+            q = zemin_xz(s["azimut"], ds)
+            uzak = math.hypot(p[0] - q[0], p[1] - q[1])
+            if uzak < PATLAMA_ASKER_PAYI:
+                u.append(f"patlama '{n.get('ad', '?')}' askerin durduğu yere ('{s.get('ad', '?')}', {ds:g} m) {uzak:.1f} m uzakta (en az {PATLAMA_ASKER_PAYI:g} m olmalı)")
     sayac = {ad: {"patlama": 0, "asker": 0} for ad, _ in DUVARLAR}
     for n in noktalar:
         a = aci_norm(n["azimut"] - k)

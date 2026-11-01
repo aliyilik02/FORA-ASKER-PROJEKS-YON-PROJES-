@@ -69,18 +69,27 @@ def yon(az_der: np.ndarray, el_der: np.ndarray):
 
 
 def ay_bul(kucuk_l: Image.Image):
-    """Uzun pozdaki ay halesinin merkezi: ufkun üstünde parlaklığın 4. kuvvetiyle ağırlıklı yön ortalaması."""
-    l = np.asarray(kucuk_l, dtype=np.float32)
+    """Uzun pozdaki ayın yeri: hafif bulanıklaştırılmış gökte (yıldızlar bastırılır) ufkun üstündeki en parlak
+    nokta, çevresindeki 2,5°'lik parlaklık ağırlıklı yön ortalamasıyla inceltilir. Halenin tamamının ağırlık
+    merkezi ufuk parlaması yüzünden 3–5° aşağı kayıyordu (dağlık/kırsal gece panoramalarında ölçüldü)."""
+    l = np.asarray(kucuk_l.filter(ImageFilter.GaussianBlur(2)), dtype=np.float32)
     h, w = l.shape
     el = (0.5 - (np.arange(h) + 0.5) / h) * 180.0
     az = (np.arange(w) + 0.5) / w * 360.0 - 180.0
     AZ, EL = np.meshgrid(az, el)
-    ag = np.clip(l - 200.0, 0, None) ** 4 * (EL > 1.0) * np.cos(np.radians(EL))
-    if ag.sum() <= 0:
+    gok = np.where(EL > 1.0, l, 0.0)
+    y0, x0 = np.unravel_index(int(np.argmax(gok)), gok.shape)
+    tepe = float(gok[y0, x0])
+    if tepe < 200.0:
         return None
     x, y, z = yon(AZ, EL)
+    px, py, pz = yon(np.array(az[x0]), np.array(el[y0]))
+    yakin = np.degrees(np.arccos(np.clip(x * px + y * py + z * pz, -1.0, 1.0))) <= 2.5
+    ag = np.clip(gok - (tepe - 12.0), 0, None) * yakin
     vx, vy, vz = (x * ag).sum(), (y * ag).sum(), (z * ag).sum()
     n = math.sqrt(vx * vx + vy * vy + vz * vz)
+    if n <= 0:
+        return {"azimut": float(az[x0]), "yukseklik": float(el[y0])}
     return {"azimut": math.degrees(math.atan2(vx, vz)), "yukseklik": math.degrees(math.asin(max(-1.0, min(1.0, vy / n))))}
 
 

@@ -35,11 +35,13 @@ python araclar/plan-onizleme.py --sec ormanlik_yaz_gunduz_foto --tam
 - `genel.jpg`: tüm panorama; duvar sınırları, görünmeyen bölge, yasak aralıklar, noktalar; sarı artı
   otomatik güneş tahmini, yeşil halka manifestteki `gunes`.
 - `bilgi.json`: otomatik uyarılar (arka 90°'deki nokta, yasak içindeki nokta, patlama/asker noktası olmayan
-  duvar, helikopter noktası yok...).
+  duvar, helikopter noktası yok, askerin durduğu yere 5 m'den yakın patlama noktası...).
 
-İşaretler: kırmızı halka patlama krateri (r 2,5 m), mavi dikdörtgen asker (1,8 m), turuncu kutu tank
-(7×3,5×2,4 m), sarı halka + kutu helikopter iniş alanı (r 7 m), kahverengi halka toz. Gece panoramaları
-yalnız önizlemede aydınlatılır.
+İşaretler: kırmızı halka patlama krateri (r 2,5 m), mavi yarı saydam dikdörtgen asker (1,8 m), turuncu kutu
+tank (7×3,5×2,4 m), sarı halka + kutu helikopter iniş alanı (r 7 m), kahverengi halka toz. Asker/figür
+oynatıcıdaki gibi plan yönünde 4–7 m'ye çekilmiş yerinde çizilir (etikette "7 m (plan 11)"); plandaki
+mesafe ince beyaz çerçevedir. Askerin önünde fotoğrafta ondan yakın bir şey (çalı, kaya, direk, araç)
+varsa o yön asker için uygun değildir. Gece panoramaları yalnız önizlemede aydınlatılır.
 
 Planı manifeste yazmadan denemek için öneri dosyası:
 
