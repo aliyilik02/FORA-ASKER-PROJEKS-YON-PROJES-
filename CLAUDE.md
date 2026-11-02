@@ -237,9 +237,18 @@ namlu parıltıları, "Gösterim – Kırsal Tam Tur" ve "Dağlık pusu" duvarda
 
 ## Sıradaki işler (öncelik sırasıyla)
 
-1. Poly Haven panoramaları (23) için yerleşim planı + `yawKaydirma`; güneş tahmini ve gece karartması
-   gözle kontrol (kırsal AI panoramada güneş 5° → çok uzun gölge çizgileri; tahmini sınırla). Oda 2 için
-   3B sütre/kum torbası modelleri (2B ön plan 3B'de kapalı).
+0. **Gösterim hazır (2 Kasım):** örnek senaryo "Gösterim – Güncel Durum (5 dk)" (`sn_gosterim_guncel`; akış
+   `docs/gosterim-rehberi.md` "Önerilen"), başsız Chrome'da baştan sona 60 fps. Kullanıcı bunu idareye gösterecek;
+   gelecek önerilere göre geliştirme yönü belirlenecek. Değişen örnek senaryo mevcut kuruluma kendiliğinden gelmez:
+   `DELETE /api/senaryolar/<id>` + köprüyü yeniden başlat.
+1. Yerleşim planları: 24 panoramadan 15'i doğrulanmış (14 + varsayılan kırsal AI v2 + 2 gözden geçirici önerisi).
+   Kalan 10'un son düzeltme sürümleri doğrulanmadı (dağlık kış/yaz gündüz, meskûn kış/yaz alacakaranlık, yaz gece, yaz
+   gündüz, ormanlık kış alacakaranlık/gündüz, üs kış gündüz); dosyalar oturum scratchpad'inde (`plan3/oneri`), kalıcı
+   değil — gerekirse `araclar/plan-onizleme.py` ile yeniden. Eksik 7 bölge/mevsim/zaman birleşimi en yakın panoramaya düşer.
+   **Kendi 3B modellerimiz:** kullanıcı Meshy AI (Tripo yedek) ile asker, tüfek (MPT-76 benzeri) ve kum torbası sütre
+   üretecek; silah ayrı model (ele `silahModeli` ile takılır), asker A-pozda silahsız, iskelet/animasyon Mixamo (FBX) →
+   oynatıcıya iskelet uyarlaması gerekecek (bugünkü kod Quaternius SWAT kemik/klip adlarına bağlı). Ölçüler: GLB (FBX
+   de olur, dönüştürülür), metre, taban orijinde; asker 20–30 bin üçgen, nesne 5–10 bin; doku 2K.
 2. HESCO artık prosedürel (`sutre.ts` `tip: "hesco"`, canvas doku: tel kafes + jeotekstil + kum; üs bölgesi
    diziliminde iki hat). Sıhhiyeci "Interact" klibiyle idare ediyor; gerçek
    müdahale animasyonu (turnike) için yeşil perde çekimi (docs §2.5). Yaralı taşıma (iki kişi) yok.
