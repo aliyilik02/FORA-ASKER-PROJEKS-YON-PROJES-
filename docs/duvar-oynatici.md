@@ -152,6 +152,30 @@ katmanda:
   yumuşatma (düşükte kapalı), parçacık kapasitesi ×0,5/0,75/1 ve krater dumanı üst sınırı. Adres çubuğundan
   verilince `localStorage`'a yazılır, sonraki açılışlarda kalır; HUD'da görünür. Gölge haritası güneşe bağlı
   olduğundan karede bir kez çizilir (`shadowMap.autoUpdate=false`); iskeletli mesh'ler tek Skeleton paylaşır.
+  **Otomatik varsayılan** (2 Kasım, `src/kaliteSecimi.ts`): ne `?kalite=` ne yerel kayıt varsa ekran kartı geçici bir
+  WebGL bağlamından okunur (WEBGL_debug_renderer_info, sonra WEBGL_lose_context): Intel entegre (Iris Xe, UHD) →
+  `orta`, yazılım çizici → `dusuk`, diğerleri (RTX) → `yuksek`. Otomatik değer kaydedilmez (kart değişirse yeniden
+  seçilir), HUD'da "kalite orta (otomatik: Intel(R) Iris(R) Xe Graphics)", köprü günlüğüne bağlanınca bir kez (istemci
+  günlüğünde bilgi düzeyi olmadığından uyarı satırı). Elle seçim önceliklidir; panelin "Oynatıcı" düğmesi her zaman
+  `?kalite=` verdiğinden (varsayılan `yuksek`) otomatik seçim yalnız düğmesiz açılışta devreye girer.
+- **Bitki ayıklama ve arazi performansı** (2 Kasım, `arazi.ts`, `bitkiSektorleri.ts`, `araziIzgara.ts`, testli): bitki
+  türleri tek InstancedMesh ve `frustumCulled=false` olduğu için her duvar ve gölge geçişi 360°'deki bütün örnekleri
+  çiziyordu (Iris Xe'de karenin ~%75'i). Şimdi: model alt mesh'leri malzemeye göre tek geometride birleşir (çimen
+  modelinin 17 alt mesh'i tek çizim; LOD dosyaları iç içe tampon olduğundan önce ayrılır), örnekler 8 azimut sektörüne
+  bölünür (22,5° kaydırılmış: ölçüsüz U odada duvar başına 3 hücre), her hücre `BitkiHucresi`: three duvar ve gölge
+  kamerası başına `intersectsFrustum` ile ayıklar; sınır küre değil, örneklerin halka dilimini saran dışbükey kabuk
+  (45°, 8–148 m'lik dilimin küresi izleyiciyi neredeyse içine alıyor, hiç ayıklanmıyordu). Saydam iki yüzlü ot/yaprak
+  malzemeleri tek geçişte (`forceSinglePass`); fotogrametri ot ve taş 50 m'de, çalı/dal/kütük 80 m'de biter (yakındaki
+  yoğunluk aynı, adet kesik dağılımla azalır), kayalar profil yarıçapına kadar; `kaya_buyuk` LOD'u 56,5 k → 9 k üçgen
+  (`araclar/arazi-sadelestir.mjs`: yüz normalli modelde normaller atılıp konum+uv ile kaynaklanır, sonra yumuşak
+  normal; eski dosya `icerik/arazi/yedek/`). Gölge geçişi sektörleri ayıklayamaz (gölge kutusu ±45 m her sektöre değer).
+  Krater yalnız kendi ızgara penceresinin normallerini hesaplar (three'nin computeVertexNormals'ıyla birebir aynı) ve
+  yalnız o aralığı yükler (`addUpdateRange`): patlama başına 50–130 ms → 1–5 ms; kraterdeki ot/çalı/taş silinir, kaya
+  yeni zemine iner. `kraterleriTemizle()` (sahneyi sıfırla) pencereleri analitik yüksekliğe döndürür, yanık boyasını
+  kurulumdaki splat kopyasından geri çizer, bitki/çimen matrislerini yedekten geri koyar (~17 ms, birebir ilk hâli).
+  Bölge değişiminde arazi ve çimen malzemesi (splat gölgelendiricisi) ve ortak dokular korunur: geçişte 3–5 doku
+  indirilir (önce ~11–12), program yeniden derlenmez. Çatışma izleri ve parçacıklar yalnız canlı aralığı yükler, boşken
+  hiç yüklemez.
 - **Yere yatma** (`poz: "yatmis"`): gövde ayak ekseninden 90° öne yatırılır (yüzü yere, başı ileri), baş ve
   göğüs kemiği ileri bakacak şekilde döndürülür; bekleme/ateş klibi sürdüğünden tüfek yerde ileri bakar
   (prone atış). **Sıhhiyeci** (`asker_sihhiyeci`: Interact klibi + diz çökme, silahsız) figür komutundaki
@@ -213,8 +237,11 @@ katmanda:
   noktanın zemininden (ofsetler korunur). Kaynak sırt/tepe arkasında kalırsa sınırlı yükselir
   (`izliKaynakYuksekligi`: yerel zeminden en çok 12 m ve izleyiciden bakınca o yöndeki arazi ufkunun en çok 1,5°
   üstü; ufuk `AraziUfku`: 2°'lik yön kovası başına 20–320 m zemin örneği, 2 sn önbellek, kare başına nesne yok).
-  Doğru yine kapalıysa mermi yine atılır ve engellendiği yerde yamaca çarpar: gökten (50–80 m'den) gelmez (sonucu
-  bkz. bilinen sınırlar: kırsal/dağlık sırt). Aynı sınır çatışma ateşinde de (`dusmanAtis`).
+  Doğru yine kapalıysa ve engel izleyiciden ≥ 80 m'deyse kaynak **sırtın tepesine** taşınır (`sirtaTasi`, 2 Kasım
+  kullanıcı kararı): doğru üzerinde hedeften bakınca en yüksek görünen nokta, sırt zemininin 1,5 m üstü (düşman sırt
+  çizgisinden ateş eder, namlu parıltısı sırtta görünür); daha yakın bir tümsek hâlâ kapatıyorsa sınırlı yükseltme
+  oradan yeniden uygulanır (12 m sınırı sırt zeminine göre). Yalnız 80 m'den yakın tümsek kapatıyorsa kaynak yerinde
+  kalır, mermi o tümseğe çarpar. Gökten (50–80 m'den) gelmez. Aynısı çatışma ateşinde de (`dusmanAtis`).
   Başın ~6 m yakınından geçen düşman mermisi bir kez ses hızı üstü "çat" (çarpma sesi geri çağrısı, en yakın geçiş
   noktasının yönünden; yere çarpacak mermi çatlamaz). İzli akışın çarpma ve "çat" sesleri jeton kovasıyla saniyede
   en çok ~1,5 (toz, kıvılcım, sekme her çarpmada; çatışma ateşi sınırsız).
@@ -469,17 +496,21 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   bakılmalı; 2 Kasım: pas geçme, yan/arka noktalardan kalkış çıkışı, "yok"ta sönme, panorama yüklenirken uçuşun
   sürmesi).
 - Kırsal ve dağlık hibritte önde ve sol önde ~115–205 m'de sırt var (`ARAZI_PROFILLERI.sirt`: kırsal 18 m, dağlık
-  40 m; dağlıkta izleyicinin 20–40 m çevresinde 9–13 m'lik tepeler de). Bu yönlerde uzak izli mermi ve çatışma
-  kaynakları sırtın arkasında kalır; kaynak en çok yerden 12 m yükseldiğinden (bilerek gökyüzüne kaldırılmıyor)
-  mermilerin çoğu sırtın arka yamacına çarpar ve duvarda seyrek görünür. Ölçüm (2 Kasım, arazi analitik yüksekliği,
-  koridorsuz): izleyicinin 60 m yakınına ulaşan izli mermi kırsalda orta duvar yön 0 %17, sol %48, sağ %82; dağlıkta
-  orta %8, sol %50, sağ %62; çatışma ateşi kırsal 0° %23, −60° %7, dağlık 0° %12, −60° %0 (sınırsız yükseltmeyle
-  kırsal orta %88; dal öncesi kodda kaynak düz zemin yüksekliğindeydi, kırsal orta %4). Ormanlık ve üs bölgesinde
-  %85–97. Duvarda bakılmalı; gerekirse kaynak engelleyen sırtın üstüne (sırt hattına) alınabilir ya da sınır bölgeye
-  göre gevşetilebilir.
-- Performans (23 Ekim, Iris Xe, 1277×239): boş sahne 60 fps; 4 figür + çatışma + 16 krater ≈ 38 fps (kalite yüksek).
-  Darboğazlar figür iskeletleri ve krater dumanıydı (düzeltildi). 5760×1080 için hedef makine (RTX 4060+)
-  gerekir; dizüstünde `?kalite=dusuk`. Parçacık üst sınırı 2100×kalite çarpanı.
+  40 m). Kaynak sırtın arkasında kalırsa artık sırtın tepesine taşınır (yukarıda `sirtaTasi`). Ölçüm (2 Kasım, gerçek
+  hibrit arazi, ayrı CatismaSistemi örneği, 240 iz): izleyicinin 60 m yakınına ulaşan izli mermi kırsalda orta duvar
+  yön 0 %25 → %96, sol %45 → %65, sağ %82 → %100; dağlıkta orta %94, sol %82, sağ %97; çatışma ateşi (cephe 0)
+  kırsal %30 → %97, dağlık %99. Taşınan kaynaklar ~110–120 m'de, zeminin 1,5 m üstünde. Duvarda gözle bakılmalı
+  (namlu parıltıları sırt çizgisinde).
+- Performans (2 Kasım, Iris Xe, başsız Chrome, 1920×360, kırsal yaz 12:00 hibrit; önce → sonra): yuksek 19 → 54 fps
+  (GPU 48 → 17 ms, 12,6 M → 2,9 M üçgen, 244 → 87 çizim), orta 25 → 58 fps (37 → 13 ms), dusuk 40 → 60 fps (vsync);
+  4 asker + çatışma orta 18 → 55–60, dusuk 25 → 60. Makine uzun süre tam yükte ısınınca (aynı sabit iş yükü serinken
+  11,4 ms, ısınınca 14 ms; Iris Xe güç bütçesini CPU ile paylaşır) yuksek ~48, orta 52–60, 4 asker + çatışma orta ~49;
+  bitki yerleşimi her açılışta rastgele olduğundan üçgen sayısı da ±%10 oynar. Bitki gölgesini kapatmak orta'da 2–3 ms
+  kazandırır (yalnız çalılarınki ~1 ms); görüntü kaybı yüzünden kademelere uygulanmadı. Kalan takılmalar: panel
+  önizlemesi (2 sn'de bir toDataURL, 65–100 ms), panorama yükleme/geçiş ve ilk patlamada gölgelendirici derlemesi
+  (ayrı izler). Ölçerken aynı GPU'da başka bir oynatıcı sekmesi/başsız tarayıcı çizmemeli ve ağır CPU işi (test,
+  derleme) olmamalı: paylaşımlı Iris Xe'de GPU süresi %25–100 uzar. 5760×1080 için hedef makine (RTX 4060+).
+  Parçacık üst sınırı 2100×kalite çarpanı.
 - Yaralı/diz çökme Quaternius rigine göre ayarlandı; Poly Pizza/Mixamo modellerde düşme klibi yok, klipsiz
   model yaralı olunca gövde yere yatırılır (kaba). Yere yatıp ateş (prone) duruşu yok.
 - Çok kanallı ses (4 kanal / 5.1 / 7.1, LFE) yazılımda hazır ve birim testli; gerçek hoparlörlerle kulak testi yapılmadı

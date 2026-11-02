@@ -106,6 +106,54 @@ export function izliKaynakYuksekligi(y: IzliYol, zemin: (x: number, z: number) =
   return Math.min(y.sy + Math.min(gerek, Math.max(0, tavan - y.sy)), ust);
 }
 
+/** Sırta taşınan kaynağın izleyiciden en yakın mesafesi (m): düşman ateşi bundan yakından başlamaz. */
+export const SIRT_EN_YAKIN = 80;
+/** Sırttaki kaynağın zeminden yüksekliği (m): sırt çizgisinde yatan/çömelen atıcının namlusu. */
+export const SIRT_KAYNAK_YUKSEKLIGI = 1.5;
+/** Sırt aramasında doğru boyunca örnek aralığı (m). */
+const SIRT_ADIM = 4;
+
+/**
+ * Sırt üstüne taşıma (kullanıcı kararı): kaynak → hedef doğrusu (sınırlı yükseltmeden sonra da) izleyiciden ≥ 80 m'de
+ * araziyle kesiliyorsa kaynak, doğru üzerinde ≥ 80 m'deki sırtın tepesine taşınır: hedeften bakınca en yüksek görünen
+ * nokta (yükselme açısı en büyük; eşitlikte uzak olan), kaynak orada zeminin 1,5 m üstünde. Düşman sırt çizgisinden
+ * ateş eder: namlu parıltısı sırtta görünür, mermi arka yamaca çarpmadan izleyiciye ulaşır (kırsal hibritte orta
+ * duvardaki izlerin yalnız ~%17–25'i izleyicinin 60 m yakınına ulaşıyordu). Kaynak yerinde (y.sx, y.sz, y.sy) değişir;
+ * taşındıysa true. Çağıran sonra izliKaynakYuksekligi'ni yeniden uygular: daha yakın bir tümsek hâlâ kapatıyorsa kaynak
+ * sırt zemininden en çok 12 m kalkar. Doğru açıksa ya da yalnız 80 m'den yakın bir tümsek kapatıyorsa dokunmaz (kaynak
+ * yakına çekilmez; mermi o tümseğe, yani yine yakına düşer).
+ */
+export function sirtaTasi(y: IzliYol, zemin: (x: number, z: number) => number): boolean {
+  const dx = y.sx - y.hx;
+  const dz = y.sz - y.hz;
+  const uzunluk = Math.hypot(dx, dz);
+  let uzakEngel = false;
+  let enIyi = -Infinity;
+  let bx = 0;
+  let bz = 0;
+  let bZemin = 0;
+  for (let d = SIRT_ADIM; d < uzunluk; d += SIRT_ADIM) {
+    const f = d / uzunluk;
+    const x = y.hx + dx * f;
+    const z = y.hz + dz * f;
+    if (Math.hypot(x, z) < SIRT_EN_YAKIN) continue;
+    const g = zemin(x, z);
+    if (g > y.hy + (y.sy - y.hy) * f) uzakEngel = true;
+    const egim = (g - y.hy) / d;
+    if (egim >= enIyi) {
+      enIyi = egim;
+      bx = x;
+      bz = z;
+      bZemin = g;
+    }
+  }
+  if (!uzakEngel) return false;
+  y.sx = bx;
+  y.sz = bz;
+  y.sy = bZemin + SIRT_KAYNAK_YUKSEKLIGI;
+  return true;
+}
+
 /** Arazi ufku: azimut kovası (derece), örnek uzaklıkları (m) ve önbellek ömrü (sn). */
 const UFUK_KOVA = 2;
 const UFUK_KOVA_SAYISI = 360 / UFUK_KOVA;

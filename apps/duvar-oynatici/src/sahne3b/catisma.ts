@@ -15,7 +15,7 @@
  * vektöründen gelir, uzaktaki iz piksel altına inmesin diye kalınlığı mesafeyle büyür.
  */
 import * as THREE from "three";
-import { AraziUfku, VARSAYILAN_PIKSEL_ACISI, izKalinligi, izUzunlukCarpani, izliKaynakYuksekligi, izliYolu, yakinGecis, type IzliYol } from "./izliYol";
+import { AraziUfku, VARSAYILAN_PIKSEL_ACISI, izKalinligi, izUzunlukCarpani, izliKaynakYuksekligi, izliYolu, sirtaTasi, yakinGecis, type IzliYol } from "./izliYol";
 import type { ParcacikSistemi } from "./parcaciklar";
 import { ZEMIN_Y, azimutYon, derece, konumAzimutu, radyan, zeminY } from "./uzay";
 
@@ -83,6 +83,23 @@ export interface IzliAyari {
 }
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+
+/**
+ * Örneklenmiş iz mesh'inin yalnız ilk `n` örneğini yükler (matris 16, renk 3 öğe); karede bir çağrılır, bekleyen
+ * eski aralıklar düşer (3B çizilmeyen karelerde birikmesin). Çizilen yalnız [0, n) olduğundan ötesi eski kalabilir.
+ */
+export function izTamponuYukle(mesh: THREE.InstancedMesh, n: number) {
+  const im = mesh.instanceMatrix;
+  im.clearUpdateRanges();
+  im.addUpdateRange(0, n * 16);
+  im.needsUpdate = true;
+  const ic = mesh.instanceColor;
+  if (ic) {
+    ic.clearUpdateRanges();
+    ic.addUpdateRange(0, n * 3);
+    ic.needsUpdate = true;
+  }
+}
 /** Ses hızı üstü "çat" mesafesi (m): düşman mermisi izleyicinin başının bu kadar yakınından geçince. */
 const CATLAMA_MESAFESI = 6;
 /** İzlerin hafif düşüşü (m/sn²): guncelle'deki sekmemiş iz yer çekimi (0,15 g) ile aynı; izli akış nişanda karşılar. */
@@ -166,7 +183,9 @@ export class CatismaSistemi {
     g.setAttribute("color", new THREE.BufferAttribute(koseRenkleri, 3));
     const m = new THREE.MeshBasicMaterial({ color: 0xffffff, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
     this.mesh = new THREE.InstancedMesh(g, m, KAPASITE);
+    // Her karede değişir: dinamik tampon, yalnız etkin aralık yüklenir (bkz. guncelle sonu)
     this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(KAPASITE * 3), 3).setUsage(THREE.DynamicDrawUsage);
     this.mesh.count = 0;
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 25;
@@ -255,6 +274,8 @@ export class CatismaSistemi {
       hedef.y = zeminY(hedef.x, hedef.z) + rnd(1.5, 6);
     }
     kaynak.y = this.kaynakYuksekligi(kaynak, hedef);
+    // Sınırlı yükseltme yetmediyse (doğru sırtla kapalı) düşman sırt çizgisinden ateş eder (izliYol.sirtaTasi)
+    if (this.sirtaTasi()) kaynak.set(this.yol.sx, this.yol.sy, this.yol.sz);
     const v = hedef.clone().sub(kaynak).normalize().multiplyScalar(rnd(140, 190));
     this.izEkle(kaynak, v, false);
     // Düşman hattında namlu parıltısı (uzak, kısa) ve uzak atış sesi
@@ -264,7 +285,7 @@ export class CatismaSistemi {
 
   /**
    * Kaynak → hedef doğrusu araziyi aşsın diye kaynağın sınırlı yükseltilmiş yüksekliği (izliKaynakYuksekligi: yerden
-   * ≤ 12 m, o yöndeki arazi ufkunun ≤ 1,5° üstü; düz zeminde değişmez).
+   * ≤ 12 m, o yöndeki arazi ufkunun ≤ 1,5° üstü; düz zeminde değişmez). Doğru `yol`da kalır (sonuç y.sy).
    */
   private kaynakYuksekligi(kaynak: THREE.Vector3, hedef: THREE.Vector3): number {
     const y = this.yol;
@@ -274,7 +295,20 @@ export class CatismaSistemi {
     y.hx = hedef.x;
     y.hy = hedef.y;
     y.hz = hedef.z;
-    return izliKaynakYuksekligi(y, zeminY, this.ufuk.tanjant(konumAzimutu(kaynak), zeminY));
+    y.sy = izliKaynakYuksekligi(y, zeminY, this.ufuk.tanjant(konumAzimutu(kaynak), zeminY));
+    return y.sy;
+  }
+
+  /**
+   * `yol`daki doğru (sınırlı yükseltmeden sonra) hâlâ kapalıysa kaynağı sırtın tepesine taşır (izliYol.sirtaTasi:
+   * izleyiciden ≥ 80 m, sırt zemininin 1,5 m üstü) ve sınırlı yükseltmeyi oradan yeniden uygular (daha yakın tümsek
+   * için; 12 m sınırı sırt zeminine göre). Taşındıysa true; yeni kaynak `yol`da.
+   */
+  private sirtaTasi(): boolean {
+    const y = this.yol;
+    if (!sirtaTasi(y, zeminY)) return false;
+    y.sy = izliKaynakYuksekligi(y, zeminY, this.ufuk.tanjant(derece(Math.atan2(y.sx, -y.sz)), zeminY));
+    return true;
   }
 
   /**
@@ -320,6 +354,8 @@ export class CatismaSistemi {
     y.hy += zeminY(y.hx, y.hz);
     y.sy = Math.max(ZEMIN_Y, zeminY(y.sx, y.sz)) + rnd(0.8, 4);
     y.sy = izliKaynakYuksekligi(y, zeminY, this.ufuk.tanjant(derece(Math.atan2(y.sx, -y.sz)), zeminY));
+    // Sınırlı yükseltme yetmediyse (sırt arkasında) kaynak sırtın tepesine: mermi arka yamaca değil izleyiciye gelir
+    this.sirtaTasi();
     _kaynak.set(y.sx, y.sy, y.sz);
     const hiz = rnd(140, 190);
     _hiz.set(y.hx - y.sx, y.hy - y.sy, y.hz - y.sz);
@@ -561,8 +597,9 @@ export class CatismaSistemi {
       this.mesh.setColorAt(i, iz.renk);
     }
     this.mesh.count = n;
-    this.mesh.instanceMatrix.needsUpdate = true;
-    if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
+    // Yalnız etkin aralık yüklenir (320 örneğin tamamı her karede yükleniyordu: ANGLE/D3D11'de 4 asker + çatışmada
+    // dusuk'ta 45 → 32 fps); iz yokken hiç yükleme yok, sayı 0 olduğundan çizim de yok
+    if (n > 0) izTamponuYukle(this.mesh, n);
   }
 
   /**

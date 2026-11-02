@@ -8,6 +8,8 @@
  *  - 26 m içi çarpma (yakın zemin payı %20), iz başına en çok bir "çat", izli akışın sesleri ≤ ~1,5/sn (sekmeleri
  *    dâhil; görüntü aynı).
  *  - Engebeli arazide uzak kaynak yerden ≤ 12 m ve o yöndeki arazi ufkunun ≤ ~2° üstünde (izli akış, düşman ateşi).
+ *  - Sınırlı yükseltme yetmezse kaynak sırtın tepesine taşınır (≥ 80 m, sırt zemininin 1,5 m üstü): kırsal sırtında
+ *    izlerin ≥ %60'ı izleyicinin 60 m yakınına ulaşır (önceden ~%17–25; çoğu sırtın arka yamacına çarpıyordu).
  *  - Hedef yüksekliği döndürülmüş noktanın zemininden: eğimli arazide yandan geçen merminin hedefi kendi zemininin
  *    ofset kadar üstünde.
  */
@@ -262,9 +264,28 @@ describe("engebeli arazide uzak kaynak: yerden ≤ 12 m, arazi ufkunun ≤ ~2° 
   }
 });
 
-describe("kaynak sınırlı yükselince doğru kapalı kalırsa mermi yamaca çarpar (tepenin içinden geçmez)", () => {
-  it("derin vadideki uzak kaynak: mermiler yükselerek gelir, vadinin yamacına çarpar; hiçbiri arazinin içinden akmaz", () => {
-    // 150 m'den ötesi 14 m çukur vadi, 130–150 m'de dik yamaç: kaynak yerden en çok 12 m, göz hizasının altında kalır
+/** İzi guncelle'nin fiziğiyle uçurur (düşüş 0,15 g, zemine değince durur): yatayda izleyiciye en yakın geçiş (m). */
+function enYakinGecis(d: Dogan): number {
+  let { x, y, z } = d.p;
+  const { x: vx, z: vz } = d.v;
+  let vy = d.v.y;
+  let enYakin = Math.hypot(x, z);
+  for (let t = 0; t < 3; t += 1 / 60) {
+    vy -= (9.8 * 0.15) / 60;
+    x += vx / 60;
+    z += vz / 60;
+    const yy = y + vy / 60;
+    enYakin = Math.min(enYakin, Math.hypot(x, z));
+    if (yy <= zeminY(x, z) + 0.03) break;
+    y = yy;
+  }
+  return enYakin;
+}
+
+describe("sınırlı yükseltme yetmezse kaynak sırtın tepesine taşınır (kullanıcı kararı; tepenin içinden geçmez)", () => {
+  it("derin vadideki uzak kaynak: kapalı doğrularda vadinin kenarına (80–135 m, zeminin 1,5 m üstü) taşınır; mermi yamaca çarpmaz, arazinin içinden akmaz", () => {
+    // 150 m'den ötesi 14 m çukur vadi, 130–150 m'de dik yamaç: kaynak yerden en çok 12 m kalksa da kenarın altında
+    // kalırdı (önceden mermiler yükselerek gelip yamaca çarpıyordu); düşman artık vadinin kenarından ateş eder
     const vadi = (x: number, z: number) => -14 * Math.min(1, Math.max(0, (Math.hypot(x, z) - 130) / 20));
     zeminFonksiyonu(vadi);
     const { sistem, s } = kur();
@@ -282,15 +303,52 @@ describe("kaynak sınırlı yükselince doğru kapalı kalırsa mermi yamaca ça
       for (const iz of ic.izler) if (!iz.dost && !iz.sekti && iz.p.y < zeminY(iz.p.x, iz.p.z) - 0.05) icinde++;
     }
     expect(s.dogan.length).toBeGreaterThan(100);
-    // Kaynak gökyüzüne kaldırılmadı (yerden ≤ 12 m): doğru yamaçla kapalı, mermiler yükselerek gelir
+    let tasinan = 0;
     for (const d of s.dogan) {
-      expect(d.p.y - zeminY(d.p.x, d.p.z)).toBeLessThanOrEqual(12 + 1e-6);
-      expect(d.v.y).toBeGreaterThan(0);
+      const m = Math.hypot(d.p.x, d.p.z);
+      expect(m).toBeGreaterThanOrEqual(80);
+      if (m <= 135) {
+        // Kenara taşınan: kenar zemininin 1,5 m üstü
+        tasinan++;
+        expect(d.p.y - zeminY(d.p.x, d.p.z)).toBeCloseTo(1.5, 6);
+      } else {
+        // Vadide kalan (sınırlı yükseltmeyle doğrusu açılan, örn. üstten geçen hedef): kenarın üstünden geçer
+        expect(d.p.y - zeminY(d.p.x, d.p.z)).toBeLessThanOrEqual(12 + 1e-6);
+      }
     }
+    expect(tasinan).toBeGreaterThan(0.7 * s.dogan.length);
     expect(icinde).toBe(0);
-    const yamacta = carpanlar.filter((m) => m > 125 && m < 150).length;
-    expect(yamacta).toBeGreaterThan(0.8 * s.dogan.length);
+    expect(carpanlar.filter((m) => m > 125 && m < 150).length).toBeLessThan(0.05 * s.dogan.length);
+    expect(s.dogan.filter((d) => enYakinGecis(d) <= 60).length).toBeGreaterThan(0.9 * s.dogan.length);
   });
+
+  /** Kırsal profilin sırtı gibi: arka-sol çaprazında, orta duvar yönünde ~135 m'de ~15 m; dalgalı zemin, izleyici çevresi düz. */
+  const kirsal = (x: number, z: number) => {
+    const d = x * 0.55 + z * 0.83 + 112;
+    const sirt = 15 * Math.exp(-(d * d) / (2 * 38 * 38));
+    const dalga = 3 * Math.sin(x / 41) * Math.cos(z / 33);
+    return (sirt + dalga) * Math.min(1, Math.max(0, (Math.hypot(x, z) - 9) / 17));
+  };
+  for (const [ad, kurulum, sure] of [
+    ["izli akış, orta duvar, yön 0", (x: CatismaSistemi) => x.izliAyarla({ aktif: true, azimut: 0, yon: 0, siklik: 10 }), 20],
+    ["düşman ateşi (çatışma), cephe 0", (x: CatismaSistemi) => x.catismaAyarla({ aktif: true, siddet: 1, azimut: 0, dostAtes: false }), 40],
+  ] as const) {
+    it(`kırsal sırtı, ${ad}: izlerin ≥ %60'ı izleyicinin 60 m yakınına ulaşır; taşınan kaynak sırtta (≥ 80 m, zemininden ≤ 12 m)`, () => {
+      zeminFonksiyonu(kirsal);
+      const { sistem, s } = kur();
+      kurulum(sistem);
+      calistir(sistem, sure);
+      expect(s.dogan.length).toBeGreaterThan(80);
+      const ulasan = s.dogan.filter((d) => enYakinGecis(d) <= 60).length / s.dogan.length;
+      expect(ulasan).toBeGreaterThanOrEqual(0.6);
+      for (const d of s.dogan) {
+        expect(Math.hypot(d.p.x, d.p.z)).toBeGreaterThanOrEqual(80 - 1e-6);
+        expect(d.p.y - zeminY(d.p.x, d.p.z)).toBeLessThanOrEqual(12 + 1e-6);
+      }
+      // Bir kısmı sırta taşındı (150 m'den yakın): sırt orta duvar yönünde ~135 m'de
+      expect(s.dogan.filter((d) => Math.hypot(d.p.x, d.p.z) < 150).length).toBeGreaterThan(0.3 * s.dogan.length);
+    });
+  }
 });
 
 describe("izli akışta hedef yüksekliği döndürülmüş noktanın zemininden", () => {
