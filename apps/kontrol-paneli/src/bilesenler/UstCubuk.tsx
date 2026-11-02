@@ -1,8 +1,12 @@
-/** Üst çubuk: marka, oda seçimi, görev saati (simülasyon saati), bağlantı lambaları, oynatıcı penceresi. */
+/**
+ * Üst çubuk: marka, oda seçimi, görev saati (simülasyon saati), sahneyi sıfırla (her genişlikte görünen tek global
+ * tehlikeli eylem), bağlantı lambaları, oynatıcı penceresi.
+ */
 import { api } from "../api";
 import { useArayuz } from "../arayuz";
 import type { BaglantiDurumu, Oda, SimulasyonDurumu } from "../tipler";
 import { Ikon, Led, saatBicimi } from "./ortak";
+import { SifirlaDugmesi } from "./SifirlaDugmesi";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 
@@ -12,12 +16,15 @@ export function UstCubuk({
   soketAcik,
   onOda,
   calistir,
+  sifirla,
 }: {
   durum: SimulasyonDurumu;
   baglanti: BaglantiDurumu | null;
   soketAcik: boolean;
   onOda: (oda: Oda) => void;
   calistir: Calistir;
+  /** Sıfırla düğmesi: kurulu (onay bekliyor), etkin öğe sayısı, dokunuş. */
+  sifirla: { kurulu: boolean; sayi: number; onDokun: () => void };
 }) {
   const { oynaticiKalite, oynaticiAdresi } = useArayuz();
   const ue = baglanti?.unreal;
@@ -56,7 +63,8 @@ export function UstCubuk({
       </div>
 
       <div className="lambalar">
-        <Led durum={soketAcik ? "iyi" : "bekliyor"} etiket="Köprü" title="Köprü sunucusu (WebSocket)" />
+        <SifirlaDugmesi kurulu={sifirla.kurulu} sayi={sifirla.sayi} onDokun={sifirla.onDokun} />
+        <Led durum={soketAcik ? "iyi" : "bekliyor"} etiket="Köprü" title={`Köprü sunucusu (WebSocket)${baglanti?.panel && baglanti.panel.sayi > 1 ? ` · ${baglanti.panel.sayi} panel bağlı` : ""}`} />
         <Led
           durum={!oynatici?.bagli ? "kotu" : oynatici.sayi > 1 ? "bekliyor" : "iyi"}
           etiket={oynatici?.bagli ? `Oynatıcı ×${oynatici.sayi}` : "Oynatıcı"}

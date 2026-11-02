@@ -27,5 +27,14 @@ etiketi; `.efekt-satir` ad + açıklama + "TETİKLE" ucu; bildirimler sağ altta
 **Hareket:** 160 ms yavaşlayan eğri; bölüm geçişi 220 ms belirme; efekt tetiklenince halka darbesi;
 `prefers-reduced-motion` saygı. Yay/sıçrama yok.
 
-**Düzen:** üst çubuk (marka · oda · görev saati · lambalar) + sol görev rayı (92 px) + sol sütun canlı sahne
+**Düzen:** üst çubuk (marka · oda · görev saati · Sıfırla · lambalar) + sol görev rayı (92 px) + sol sütun canlı sahne
 (400 px, sticky) + sağ sütun bölüm. ≤1180 px tek sütun; ≤900 px ray altta sekme çubuğu olur.
+
+**Tek global tehlikeli eylem — Sıfırla (`SifirlaDugmesi`):** üst çubukta, lambaların başında; üst çubuk her genişlikte
+sticky olduğundan düğme hep görünür. Tehlike tonu (`button.tehlike`), sahnede etkin öğe yokken ikincil; süpürge ikonu
+(`Ikon.temizle`, Senkron'un yenile ikonundan ayrı), etkin öğe sayısı kızıl rozet, `<kbd>Esc</kbd>` (≤900 px'te gizli).
+İki aşama `OnayliDugme` ile aynı dil: ilk dokunuş kurar (`onay-bekliyor` kızıl nabız, "Temizlensin mi?"), 3 sn içinde
+ikinci dokunuş uygular; klavye karşılığı Esc, Esc (tuş tekrarı ve Ctrl/Alt/Meta/Shift yok sayılır, yazı alanında
+devre dışı). Kurulu durum Uygulama'da tutulur, düğme ve klavye paylaşır. Sonuç tek bildirim (her panelde, nesil başına
+bir). Başka global tehlikeli eylem üst çubuğa eklenmez; kart içi dar araçlar (ör. "Hepsi çekilsin mi?") kendi
+`OnayliDugme`'siyle kalır. İleride panele modal gelirse modal açıkken Esc sıfırlamaya gitmemeli.

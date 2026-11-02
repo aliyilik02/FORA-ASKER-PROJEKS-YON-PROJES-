@@ -9,8 +9,9 @@ import type { DurumDeposu } from "./durum.js";
 import type { FigurYoneticisi } from "./figur.js";
 import type { Gunluk } from "./gunluk.js";
 import type { OrnekBaslatici } from "./ornek.js";
+import { sifirlamaKaynagiCoz, type SahneYoneticisi } from "./sahne.js";
 import type { SenaryoMotoru } from "./senaryo.js";
-import type { BaglantiDurumu, OnAyar, Senaryo } from "./tipler.js";
+import type { BaglantiDurumu, OnAyar, Senaryo, SifirlamaYaniti } from "./tipler.js";
 import type { UnrealIstemci } from "./unreal.js";
 
 export interface ApiBagimliliklari {
@@ -23,12 +24,14 @@ export interface ApiBagimliliklari {
   ornek: OrnekBaslatici;
   /** Bağlı Duvar Oynatıcı sayısını döndürür. */
   oynaticiSayisi?: () => number;
+  /** Bağlı kontrol paneli sayısını döndürür. */
+  panelSayisi?: () => number;
   figur?: FigurYoneticisi;
-  /** Sahne sıfırlama yayını (oynatıcılara "sahne/sifirla"). */
-  sahneSifirla?: () => void;
+  /** Sahne sıfırlaması (temel sahne; senaryo, figür, durum, oynatıcı yayını tek yerde). */
+  sahne?: SahneYoneticisi;
 }
 
-export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici, oynaticiSayisi = 0): BaglantiDurumu {
+export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici, oynaticiSayisi = 0, panelSayisi = 0): BaglantiDurumu {
   return {
     unreal: { mod: unreal.mod, bagli: unreal.bagli, adres: unreal.adres, sonHata: unreal.sonHata },
     artnet: {
@@ -38,6 +41,7 @@ export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici, o
       sonGonderim: artnet.sonGonderimZamani || undefined,
     },
     oynatici: { bagli: oynaticiSayisi > 0, sayi: oynaticiSayisi },
+    panel: { sayi: panelSayisi },
   };
 }
 
@@ -51,7 +55,7 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
   r.use(express.json({ limit: "1mb" }));
 
   r.get("/durum", (_req, res) => res.json(b.depo.al()));
-  r.get("/baglanti", (_req, res) => res.json(baglantiDurumu(b.unreal, b.artnet, b.oynaticiSayisi?.() ?? 0)));
+  r.get("/baglanti", (_req, res) => res.json(baglantiDurumu(b.unreal, b.artnet, b.oynaticiSayisi?.() ?? 0, b.panelSayisi?.() ?? 0)));
   r.get("/gunluk", (_req, res) => res.json(b.gunluk.sonKayitlar()));
   r.get("/unreal/son-istekler", (_req, res) => res.json(b.unreal.sonIstekler()));
 
@@ -161,19 +165,16 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
     }),
   );
 
-  // --- Sahneyi sıfırla: yeni eğitim grubu için temiz başlangıç (figürler, çatışma, izli mermi, helikopter, krater/duman) ---
-  r.post(
-    "/sahne/sifirla",
-    sarmala(async (_req, res) => {
-      b.figur?.komut({ islem: "temizle" });
-      await b.depo.catismaGuncelle({ aktif: false });
-      await b.depo.izliMermiGuncelle({ aktif: false });
-      await b.depo.oda2Guncelle({ helikopter: "yok" });
-      b.sahneSifirla?.();
-      b.gunluk.bilgi("Sahne sıfırlandı (figürler, çatışma, izli mermi, helikopter, krater/duman)");
-      res.json({ tamam: true, durum: b.depo.al() });
-    }),
-  );
+  // --- Sahneyi temele döndür: deneme sonrası / yeni eğitim grubu (figürler, efektler, çatışma, izli mermi, helikopter,
+  // senaryo oynatımı, krater/duman, sesler; ortam, bölge, ışık ve yüklü senaryo kalır). Gövde { kaynak? }; gövdesiz eski
+  // çağrı "panel" sayılır. Yanıt: panel WS mesajını beklemeden durumu ve senaryoyu hemen yazar.
+  r.post("/sahne/sifirla", (req, res) => {
+    if (!b.sahne) return res.status(501).json({ hata: "sahne yöneticisi yok" });
+    const kaynak = sifirlamaKaynagiCoz(req.body?.kaynak);
+    const ozet = b.sahne.sifirla(kaynak);
+    const yanit: SifirlamaYaniti = { tamam: true, nesil: b.sahne.nesil, kaynak, ozet, zaman: b.sahne.sonZaman, durum: b.depo.al(), senaryo: b.senaryo.al() };
+    res.json(yanit);
+  });
 
   // --- Senaryolar ---
   r.get("/senaryolar", (_req, res) => res.json(b.veri.senaryolar()));

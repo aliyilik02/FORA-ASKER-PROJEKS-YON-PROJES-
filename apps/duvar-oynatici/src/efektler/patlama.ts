@@ -92,6 +92,14 @@ export class EfektSistemi {
     }
   }
 
+  /** Sahne sıfırlaması: süren ateş topları, duman ve kıvılcımlar silinir; flaş ve ekran sarsıntısı anında biter. */
+  temizle() {
+    this.parcaciklar.length = 0;
+    this.patlamalar.length = 0;
+    this.flas = 0;
+    this.sallanti = 0;
+  }
+
   guncelle(dt: number) {
     for (const p of this.parcaciklar) {
       p.t += dt;

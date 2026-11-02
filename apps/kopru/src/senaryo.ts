@@ -32,6 +32,12 @@ export class SenaryoMotoru {
   private dinleyiciler = new Set<Dinleyici>();
   /** Figür adımları için; `figurBagla` ile verilir (isteğe bağlı, testlerde yok). */
   private figur: Pick<FigurYoneticisi, "komut"> | null = null;
+  /**
+   * Oynatma nesli: oynat, duraklat, dur ve yukle artırır. Bir adımı bekleyen (UE çağrısı, oda değişimi) tik ya da
+   * oynat, await'ten dönünce nesil değiştiyse durur: durdurulan senaryo aynı tikteki sonraki adımları uygulamaz,
+   * "tamamlandı" yazmaz (sahne sıfırlaması senaryoyu durdurup figürleri temizledikten sonra asker geri gelmez).
+   */
+  private nesil = 0;
 
   figurBagla(f: Pick<FigurYoneticisi, "komut">) {
     this.figur = f;
@@ -46,6 +52,11 @@ export class SenaryoMotoru {
 
   al(): SenaryoDurumu {
     return { ...this.durum, tamamlanan: [...this.durum.tamamlanan] };
+  }
+
+  /** Yüklü senaryonun adı (yoksa null). */
+  get yukluAd(): string | null {
+    return this.senaryo?.ad ?? null;
   }
 
   dinle(d: Dinleyici): () => void {
@@ -75,10 +86,13 @@ export class SenaryoMotoru {
   async oynat() {
     if (!this.senaryo) throw new Error("Önce bir senaryo yükleyin");
     if (this.durum.durum === "oynuyor") return;
+    // Oda değişimini beklerken dur/yükle ya da ikinci bir oynat geldiyse bu çağrı bırakılır (çift zamanlayıcı kurulmaz)
+    const nesil = ++this.nesil;
     if (this.durum.durum === "duruyor") {
       this.durum.tamamlanan = [];
       this.duraklatmaKonumu = 0;
       await this.depo.odaSec(this.senaryo.oda);
+      if (nesil !== this.nesil) return;
     }
     this.baslangicZamani = this.zamanlayici.simdi() - this.duraklatmaKonumu;
     this.durum.durum = "oynuyor";
@@ -90,6 +104,7 @@ export class SenaryoMotoru {
 
   duraklat() {
     if (this.durum.durum !== "oynuyor") return;
+    this.nesil++;
     this.duraklatmaKonumu = this.zamanlayici.simdi() - this.baslangicZamani;
     this.durum.konumMs = this.duraklatmaKonumu;
     this.durum.durum = "duraklatildi";
@@ -99,15 +114,17 @@ export class SenaryoMotoru {
     this.yayinla();
   }
 
-  dur() {
+  /** Durdurur ve başa sarar (yüklü senaryo kalır). `sessiz`: günlüğe yazmaz (sahne sıfırlaması kendi satırını yazar). */
+  dur(sessiz = false) {
     const oynuyordu = this.durum.durum !== "duruyor";
+    this.nesil++;
     this.durdur?.();
     this.durdur = null;
     this.durum.durum = "duruyor";
     this.durum.konumMs = 0;
     this.duraklatmaKonumu = 0;
     if (oynuyordu) {
-      this.gunluk.bilgi("Senaryo durduruldu");
+      if (!sessiz) this.gunluk.bilgi("Senaryo durduruldu");
       this.yayinla();
     }
   }
@@ -159,6 +176,7 @@ export class SenaryoMotoru {
   private async tik() {
     if (!this.senaryo || this.durum.durum !== "oynuyor" || this.isleniyor) return;
     this.isleniyor = true;
+    const nesil = this.nesil;
     try {
       const konum = this.zamanlayici.simdi() - this.baslangicZamani;
       this.durum.konumMs = konum;
@@ -167,6 +185,8 @@ export class SenaryoMotoru {
           this.durum.tamamlanan.push(adim.id);
           this.gunluk.bilgi(`Senaryo adımı: ${adim.aciklama}`);
           await this.adimiTetikle(adim);
+          // Adımı beklerken durduruldu / duraklatıldı / yenisi yüklendi: kalan adımlar uygulanmaz, "tamamlandı" yazılmaz
+          if (nesil !== this.nesil || this.durum.durum !== "oynuyor") return;
         }
       }
       if (this.durum.tamamlanan.length >= this.senaryo.adimlar.length) {

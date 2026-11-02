@@ -54,6 +54,40 @@ const SES_HIZI = 343;
 /** Hoparlör testi: kanal başına gürültü süresi ve kanallar arası adım (sn). */
 const TEST_SURE = 0.7;
 const TEST_ADIM = 1.05;
+/**
+ * Tek atış (çatışma) kaydı en çok bu kadar çalar (sn, kayıt zamanı): güvenlik ağı. Manifestteki atış listesi tek
+ * atışlık kesimlerdir (~1–1,4 sn); çok atışlı uzun bir dosya gelirse her atış dosyanın tamamını (15 sn) çalmasın,
+ * çatışmada yüzlerce eşzamanlı kaynak birikmesin.
+ */
+export const TEK_ATIS_EN_UZUN = 1.8;
+/** Sahne sıfırlamasında tek seferlik seslerin sönme zaman sabiti (sn): tık sesi olmadan ~0,1 sn'de susar. */
+const SUSTURMA_TAU = 0.03;
+
+/** Parametreyi o anki değerinden `tau` zaman sabitiyle 0'a indirir; zamanlanmış rampalar kesilir (değer sıçramaz). */
+function sondur(p: AudioParam, t: number, tau: number) {
+  if (typeof p.cancelAndHoldAtTime === "function") p.cancelAndHoldAtTime(t);
+  else {
+    p.cancelScheduledValues(t);
+    p.setValueAtTime(p.value, t);
+  }
+  p.setTargetAtTime(0, t, tau);
+}
+
+/** Kaynağı `zaman`da durdurur (sonraki çağrı öncekinin yerine geçer); durmuş / başlamamışsa sessizce geçer. */
+function durdur(k: AudioScheduledSourceNode, zaman: number) {
+  try {
+    k.stop(zaman);
+  } catch {
+    /* zaten durdu */
+  }
+}
+
+/** "Yok"ta sönmeye bırakılmış rotor (kayıt ya da sentez): kazancı, kaynakları ve duracağı zaman. */
+interface SonenRotor {
+  kazanc: GainNode;
+  kaynaklar: AudioScheduledSourceNode[];
+  bitis: number;
+}
 
 export class SesMotoru {
   private ctx: AudioContext | null = null;
@@ -87,6 +121,18 @@ export class SesMotoru {
   private rotorZayiflama = 1;
   private rotorDoppler = 1;
   private readonly rotorKazanclari: number[] = [];
+  /** Sönmekte olan rotorlar (durum "yok" oldu); sahne sıfırlaması bunları da hızla susturur. */
+  private sonenRotorlar: SonenRotor[] = [];
+  /**
+   * Çalan tek seferlik kaynaklar (patlama, atış, çarpma, bağırma, vızıltı) → kendi kazanç düğümü: sahne sıfırlamasında
+   * hepsi söner ve durur (efektleriSustur). Kaynak bitince (onended, ortak tek işleyici) listeden çıkar; düğüm üretmez.
+   */
+  private readonly anliklar = new Map<AudioScheduledSourceNode, GainNode>();
+  private readonly anlikBitti = (e: Event) => {
+    this.anliklar.delete(e.target as AudioScheduledSourceNode);
+  };
+  /** Sahne sıfırlamasında artar: zamanlanmış atış dizileri (setTimeout) ve tampon bekleyen çalmalar eski nesildeyse çalmaz. */
+  private efektNesli = 0;
   private test: { baslangic: number; etiketler: string[]; kaynaklar: AudioBufferSourceNode[] } | null = null;
   private uyariDinleyici: ((mesaj: string) => void) | null = null;
   private readonly bekleyenUyarilar: string[];
@@ -265,7 +311,7 @@ export class SesMotoru {
    * Çok kanal: kazanç → (uzak) → kanal kazançları → birleştirici; `lfe` > 0 ise 120 Hz altı kopya LFE kanalına
    * (düzende LFE varsa).
    */
-  private cikis(azimut: number, kazanc: number, uzak = false, lfe = 0): AudioNode {
+  private cikis(azimut: number, kazanc: number, uzak = false, lfe = 0): GainNode {
     const c = this.ctx!;
     const g = c.createGain();
     g.gain.value = kazanc;
@@ -306,14 +352,27 @@ export class SesMotoru {
     return this.birlestirici && b.numberOfChannels > 1 ? Math.SQRT2 : 1;
   }
 
-  /** Manifestteki dosyalardan rastgele birini çalar; yoksa false döner. */
+  /** Tek seferlik kaynağı izlemeye alır (sahne sıfırlamasında `kazanc` söner, kaynak durur); bitince kendiliğinden çıkar. */
+  private anlik(kaynak: AudioScheduledSourceNode, kazanc: GainNode) {
+    this.anliklar.set(kaynak, kazanc);
+    kaynak.onended = this.anlikBitti;
+  }
+
+  /**
+   * Manifestteki dosyalardan rastgele birini çalar. true: kayıt çalındı ya da tampon beklenirken sahne sıfırlandı
+   * (yedek sentez gerekmez); false: listede kayıt yok / yüklenemedi (çağıran sentezler).
+   */
   private async dosyaCal(liste: string[] | undefined, azimut: number, kazanc: number, uzak: boolean, lfe = 0): Promise<boolean> {
     if (!this.ctx || !liste || liste.length === 0) return false;
+    const nesil = this.efektNesli;
     const b = await this.tampon(liste[Math.floor(Math.random() * liste.length)]);
+    if (nesil !== this.efektNesli) return true;
     if (!b) return false;
     const s = this.ctx.createBufferSource();
     s.buffer = b;
-    s.connect(this.cikis(azimut, kazanc * this.telafi(b), uzak, lfe));
+    const g = this.cikis(azimut, kazanc * this.telafi(b), uzak, lfe);
+    s.connect(g);
+    this.anlik(s, g);
     s.start();
     return true;
   }
@@ -331,6 +390,7 @@ export class SesMotoru {
     g.gain.setValueAtTime(kazanc, c.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + sure);
     s.connect(f).connect(g).connect(this.cikis(azimut, 1, uzak, lfe));
+    this.anlik(s, g);
     s.start();
     s.stop(c.currentTime + sure + 0.05);
   }
@@ -352,26 +412,37 @@ export class SesMotoru {
     g.gain.setValueAtTime(0.8 * siddet * zayiflama, c.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.9);
     o.connect(g).connect(this.cikis(azimut, 1, uzak, lfe));
+    this.anlik(o, g);
     o.start();
     o.stop(c.currentTime + 1);
   }
 
   async gurultu(azimut: number, siddet: number, uzak = false) {
     if (!this.hazir) return;
+    // Sıfırlamadan sonra dizinin kalan atışları çalmaz
+    const nesil = this.efektNesli;
     // Manifestteki kayıtlar tek atış; seri atış için 6–10 kez hızla art arda çalınır (±6° dağılım)
     if (this.manifest.gurultu?.length) {
       const adet = 6 + Math.floor(Math.random() * 5);
-      for (let i = 0; i < adet; i++) setTimeout(() => void this.dosyaCal(this.manifest.gurultu, azimut + (Math.random() - 0.5) * 12, siddet * 0.8, uzak), i * (85 + Math.random() * 35));
+      for (let i = 0; i < adet; i++)
+        setTimeout(() => {
+          if (nesil === this.efektNesli) void this.dosyaCal(this.manifest.gurultu, azimut + (Math.random() - 0.5) * 12, siddet * 0.8, uzak);
+        }, i * (85 + Math.random() * 35));
       return;
     }
     // Seri atış: 8–14 kısa patlama (±9° dağılım)
     const adet = 8 + Math.floor(Math.random() * 7);
     for (let i = 0; i < adet; i++) {
-      setTimeout(() => this.gurultuPatlamasi(azimut + (Math.random() - 0.5) * 18, 0.5 * siddet, 0.09, 2500, uzak, "bandpass"), i * (70 + Math.random() * 40));
+      setTimeout(() => {
+        if (nesil === this.efektNesli) this.gurultuPatlamasi(azimut + (Math.random() - 0.5) * 18, 0.5 * siddet, 0.09, 2500, uzak, "bandpass");
+      }, i * (70 + Math.random() * 40));
     }
   }
 
-  /** Tek atış (çatışma): manifest kaydı varsa rastgele perde ile, yoksa kısa gürültü vuruşu. */
+  /**
+   * Tek atış (çatışma): manifest kaydı varsa rastgele perde ile, yoksa kısa gürültü vuruşu. Kayıt TEK_ATIS_EN_UZUN'dan
+   * uzunsa o noktada kısa sönümle kesilir (güvenlik ağı; asıl çözüm tek atışlık kesimler, bkz. araclar/silah-tek-atis.mjs).
+   */
   tekAtis(azimut: number, uzak = false) {
     if (!this.hazir || !this.ctx) return;
     const liste = this.manifest.gurultu;
@@ -379,14 +450,29 @@ export class SesMotoru {
       const yol = liste[Math.floor(Math.random() * liste.length)];
       const onbellek = this.tamponlar.get(yol);
       const cal = (b: AudioBuffer) => {
-        const s = this.ctx!.createBufferSource();
+        const c = this.ctx!;
+        const s = c.createBufferSource();
         s.buffer = b;
-        s.playbackRate.value = 0.9 + Math.random() * 0.25;
-        s.connect(this.cikis(azimut, (uzak ? 0.22 : 0.55) * this.telafi(b), uzak));
-        s.start();
+        const hiz = 0.9 + Math.random() * 0.25;
+        s.playbackRate.value = hiz;
+        const kazanc = (uzak ? 0.22 : 0.55) * this.telafi(b);
+        const g = this.cikis(azimut, kazanc, uzak);
+        s.connect(g);
+        this.anlik(s, g);
+        if (b.duration > TEK_ATIS_EN_UZUN) {
+          // Gerçek süre = kayıt süresi / hız; son 80 ms'de söner (kesik tık sesi olmasın)
+          const bitis = c.currentTime + TEK_ATIS_EN_UZUN / hiz;
+          g.gain.setValueAtTime(kazanc, bitis - 0.08);
+          g.gain.linearRampToValueAtTime(0, bitis);
+          s.start();
+          s.stop(bitis + 0.02);
+        } else s.start();
       };
       if (onbellek) cal(onbellek);
-      else void this.tampon(yol).then((b) => b && cal(b));
+      else {
+        const nesil = this.efektNesli;
+        void this.tampon(yol).then((b) => b && nesil === this.efektNesli && cal(b));
+      }
       return;
     }
     this.gurultuPatlamasi(azimut, uzak ? 0.2 : 0.5, 0.09, uzak ? 900 : 2500, uzak, "bandpass");
@@ -402,8 +488,12 @@ export class SesMotoru {
   async mermi(azimut: number, uzak = true) {
     if (!this.hazir) return;
     if (await this.dosyaCal(this.manifest.mermi_vizilti, azimut, 0.6, uzak)) return;
+    const nesil = this.efektNesli;
     const adet = 3 + Math.floor(Math.random() * 4);
-    for (let i = 0; i < adet; i++) setTimeout(() => this.gurultuPatlamasi(azimut, 0.35, 0.08, 1800, uzak, "bandpass"), i * 120);
+    for (let i = 0; i < adet; i++)
+      setTimeout(() => {
+        if (nesil === this.efektNesli) this.gurultuPatlamasi(azimut, 0.35, 0.08, 1800, uzak, "bandpass");
+      }, i * 120);
   }
 
   vizilti(azimut: number) {
@@ -422,6 +512,7 @@ export class SesMotoru {
     g.gain.exponentialRampToValueAtTime(0.12, c.currentTime + 0.03);
     g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.28);
     o.connect(g).connect(this.cikis(azimut, 1));
+    this.anlik(o, g);
     o.start();
     o.stop(c.currentTime + 0.3);
   }
@@ -444,14 +535,70 @@ export class SesMotoru {
 
   async bagirma(azimut: number, uzak = false) {
     if (!this.hazir) return;
+    const nesil = this.efektNesli;
     if (await this.dosyaCal(this.manifest.bagirma, azimut, 1, uzak)) return;
-    this.konus(BAGIRMALAR[Math.floor(Math.random() * BAGIRMALAR.length)], azimut, uzak);
+    if (nesil === this.efektNesli) this.konus(BAGIRMALAR[Math.floor(Math.random() * BAGIRMALAR.length)], azimut, uzak);
   }
 
   async cagirma(azimut: number, uzak = false) {
     if (!this.hazir) return;
+    const nesil = this.efektNesli;
     if (await this.dosyaCal(this.manifest.cagirma, azimut, 1, uzak)) return;
-    this.konus(CAGIRMALAR[Math.floor(Math.random() * CAGIRMALAR.length)], azimut, uzak);
+    if (nesil === this.efektNesli) this.konus(CAGIRMALAR[Math.floor(Math.random() * CAGIRMALAR.length)], azimut, uzak);
+  }
+
+  /**
+   * Sahne sıfırlaması: çalan tek seferlik sesler (patlama kuyrukları, atışlar, çarpma, bağırma, vızıltı) ~0,1 sn'de söner
+   * ve durur (tık sesi yok), zamanlanmış atış dizileri ve tampon bekleyen çalmalar iptal olur, konuşma sentezi kuyruğu
+   * silinir. `rotor`: helikopter rotoru da hızla söner (τ 0,15 sn, 1 sn'de durur); durumda helikopter hâlâ varsa
+   * (kaçırılan sıfırlama senkronu) false verilir. Ortam döngüsü, rüzgâr ve hoparlör testi sürer.
+   */
+  efektleriSustur(rotor = true) {
+    this.efektNesli++;
+    const c = this.ctx;
+    if (c) {
+      const t = c.currentTime;
+      for (const [kaynak, kazanc] of this.anliklar) {
+        sondur(kazanc.gain, t, SUSTURMA_TAU);
+        durdur(kaynak, t + 0.2);
+      }
+      if (rotor) this.rotoruBirak(0.15, 1);
+    }
+    this.anliklar.clear();
+    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
+  }
+
+  /** İzlenen tek seferlik kaynak sayısı (tanı ve test). */
+  get anlikSayisi() {
+    return this.anliklar.size;
+  }
+
+  /**
+   * Çalan rotoru (kayıt ya da sentez) sönmeye bırakır ve sönmekte olanlarla birlikte `tau` zaman sabitiyle söndürür,
+   * `durma` sn sonra durdurur. Daha erken duracak olan rotorun süresi uzatılmaz. Durum "yok" (τ 2, 7 sn) ve sahne
+   * sıfırlaması (τ 0,15, 1 sn) kullanır; her karede değil, yalnız çalan ya da sönen rotor varken çağrılır.
+   */
+  private rotoruBirak(tau: number, durma: number) {
+    const c = this.ctx;
+    if (!c) return;
+    const t = c.currentTime;
+    const bitis = t + durma;
+    if (this.sonenRotorlar.length) this.sonenRotorlar = this.sonenRotorlar.filter((r) => r.bitis > t);
+    if (this.rotorDosya) {
+      this.sonenRotorlar.push({ kazanc: this.rotorDosya.kazanc, kaynaklar: [this.rotorDosya.kaynak], bitis: Infinity });
+      this.rotorDosya = null;
+    }
+    if (this.rotor) {
+      this.sonenRotorlar.push({ kazanc: this.rotor.kazanc, kaynaklar: [this.rotor.osc, this.rotor.lfo], bitis: Infinity });
+      this.rotor = null;
+    }
+    for (const r of this.sonenRotorlar) {
+      if (r.bitis <= bitis) continue;
+      sondur(r.kazanc.gain, t, tau);
+      for (const k of r.kaynaklar) durdur(k, bitis);
+      r.bitis = bitis;
+    }
+    this.rotorOncekiMesafe = -1;
   }
 
   /** Sürekli ortam sesi: rüzgâr ve yağış şiddetine göre filtrelenmiş gürültü (dağınık). */
@@ -517,12 +664,8 @@ export class SesMotoru {
     // Gerçek rotor kaydı varsa onu döngüle (sentez devreye girmez)
     if (this.manifest.helikopter_rotor) {
       if (durum === "yok") {
-        if (this.rotorDosya) {
-          const r = this.rotorDosya;
-          this.rotorDosya = null;
-          r.kazanc.gain.setTargetAtTime(0, c.currentTime, 2);
-          setTimeout(() => r.kaynak.stop(), 7000);
-        }
+        // τ 2 sn ile söner, 7 sn'de durur (sıfırlama bunu hızlandırır)
+        if (this.rotorDosya) this.rotoruBirak(2, 7);
         this.rotorOncekiMesafe = -1;
         return;
       }
@@ -550,15 +693,7 @@ export class SesMotoru {
       return;
     }
     if (durum === "yok") {
-      if (this.rotor) {
-        this.rotor.kazanc.gain.setTargetAtTime(0, c.currentTime, 2);
-        const r = this.rotor;
-        this.rotor = null;
-        setTimeout(() => {
-          r.osc.stop();
-          r.lfo.stop();
-        }, 6000);
-      }
+      if (this.rotor) this.rotoruBirak(2, 6);
       this.rotorOncekiMesafe = -1;
       return;
     }

@@ -223,8 +223,29 @@ export class FigurKatmani {
     return this.aktifler.map((a) => ({ id: a.id, poz: a.poz }));
   }
 
-  /** Yüklenmekte olan figürlerin rezerve konumları (aynı anda çağrılan iki asker aynı mevziye düşmesin). */
+  /**
+   * Yüklenmekte olan figürlerin rezerve konumları (aynı anda çağrılan iki asker aynı mevziye düşmesin); figür sahneye
+   * eklenince, yükleme düşünce ya da iptal edilince kalkar.
+   */
   private readonly rezerveler = new Map<string, THREE.Vector3>();
+  /**
+   * Süren yüklemeler: kimlik → jeton. `durdur` / `temizle` ya da aynı kimlikle yeni `oynat` jetonu geçersiz kılar;
+   * yükleme her await'ten sonra (model, "yanında" hedef bekleme, elde silah) denetler, geçersizse sessizce bırakır
+   * (iptal hata sayılmaz, uyarı çıkmaz). Böylece sahne sıfırlamasından sonra yüklemesi biten figür (ör. 4 sn hedef
+   * bekleyen sıhhiyeci) sahneye çıkmaz.
+   */
+  private readonly yuklemeler = new Map<string, number>();
+  private jeton = 0;
+
+  /** Yüklenmekte olan figür sayısı (tanı). */
+  get yukleniyor() {
+    return this.yuklemeler.size;
+  }
+
+  private yuklemeyiBirak(id: string) {
+    this.yuklemeler.delete(id);
+    this.rezerveler.delete(id);
+  }
 
   /** Verilen zemin noktasının `yaricap` m içinde figür (ya da yüklenmekte olan rezervasyon) var mı. */
   /** Arazi yeniden kurulduğunda (bölge/kip değişimi) figürleri yeni zemin yüksekliğine oturtur. */
@@ -304,23 +325,28 @@ export class FigurKatmani {
     void this.yukle(url).catch(() => undefined);
   }
 
+  /**
+   * Figürü yükleyip sahneye koyar. false: model yüklenemedi (çağıran uyarır). true: sahnede ya da yükleme iptal edildi
+   * (temizle/durdur, aynı kimlikle yeni komut; hata değil).
+   */
   async oynat(tanim: ModelTanimi, s: FigurSecenekleri, kok: string): Promise<boolean> {
     const url = /^(https?:|data:|blob:|\/)/.test(tanim.dosya) ? tanim.dosya : kok + tanim.dosya;
+    // Aynı kimlikli figür ve süren yüklemesi gider (jetonu geçersiz olur)
     this.durdur(s.id);
+    const jeton = ++this.jeton;
+    this.yuklemeler.set(s.id, jeton);
+    const gecerli = () => this.yuklemeler.get(s.id) === jeton;
     const onMesafe = s.mesafe ?? (s.yukseklik !== undefined ? yukseklikMesafe(s.yukseklik) : (tanim.mesafe ?? 20));
     if (!s.yaninda) this.rezerveler.set(s.id, yerKonumu(s.azimut, onMesafe));
     let gltf: GLTF;
     try {
       gltf = await this.yukle(url);
     } catch {
-      this.rezerveler.delete(s.id);
+      if (!gecerli()) return true;
+      this.yuklemeyiBirak(s.id);
       return false;
-    } finally {
-      // Konum artık ya aktif listede ya da hiç gelmeyecek; rezervasyon yükleme bitince kalkar
-      setTimeout(() => this.rezerveler.delete(s.id), 0);
     }
-    // Aynı id için bu arada yeni komut geldiyse eskisini uygulama
-    if (this.aktifler.some((a) => a.id === s.id)) return true; // aynı id için yeni komut geldi: hata değil, eskisi uygulanmaz
+    if (!gecerli()) return true;
     const nesne = iskeletKopyala(gltf.scene) as THREE.Object3D;
     iskeletleriPaylastir(nesne);
     const boya = tanim.renk ? new THREE.Color(tanim.renk) : null;
@@ -376,9 +402,10 @@ export class FigurKatmani {
     let yanindaki = s.yaninda ? this.aktifler.find((x) => x.id === s.yaninda) : undefined;
     for (let deneme = 0; s.yaninda && !yanindaki && deneme < 40; deneme++) {
       await new Promise((r) => setTimeout(r, 100));
+      // Beklerken iptal (sıfırlama, durdur, aynı kimlikle yeni komut): bekleme hemen biter
+      if (!gecerli()) return true;
       yanindaki = this.aktifler.find((x) => x.id === s.yaninda);
     }
-    if (this.aktifler.some((a) => a.id === s.id)) return true; // aynı id için yeni komut geldi: hata değil, eskisi uygulanmaz // beklerken aynı id için yeni komut geldiyse
     if (yanindaki) {
       const hedef = yanindaki.nesne.position;
       const izleyiciYonu = new THREE.Vector3(-hedef.x, 0, -hedef.z).normalize();
@@ -442,7 +469,8 @@ export class FigurKatmani {
       // GLTFLoader düğüm adlarındaki nokta/boşluğu siler ("Wrist.R" → "WristR"); iki biçimi de dene
       const kemik = nesne.getObjectByName(sm.kemik) ?? nesne.getObjectByName(sm.kemik.replace(/[^\w]/g, ""));
       const silahGltf = await this.yukle(silahUrl).catch(() => null);
-      if (kemik && silahGltf && !this.aktifler.some((a) => a.id === s.id)) {
+      if (!gecerli()) return true;
+      if (kemik && silahGltf) {
         const silah = silahGltf.scene.clone(true);
         silah.updateMatrixWorld(true);
         const kendiBoy = new THREE.Box3().setFromObject(silah).getSize(new THREE.Vector3());
@@ -476,6 +504,9 @@ export class FigurKatmani {
         kule.attach(namlu);
       }
     }
+    // Son denetim: sahneye yalnız geçerli yükleme girer; rezervasyon kalkar, konum artık aktif listede
+    if (!gecerli()) return true;
+    this.yuklemeyiBirak(s.id);
     this.grup.add(sarmal);
     const aktif: Aktif = {
       id: s.id,
@@ -713,12 +744,17 @@ export class FigurKatmani {
     from.crossFadeTo(to, 0.35, false);
   }
 
+  /** Figürü kaldırır; yükleniyorsa yüklemesi iptal olur (sahneye çıkmaz). */
   durdur(id: string) {
+    this.yuklemeyiBirak(id);
     for (const a of this.aktifler) if (a.id === id) this.grup.remove(a.nesne);
     this.aktifler = this.aktifler.filter((a) => a.id !== id);
   }
 
+  /** Bütün figürler ve süren yüklemeler (hedef bekleyen "yanında" figürler dahil) gider. */
   temizle() {
+    this.yuklemeler.clear();
+    this.rezerveler.clear();
     for (const a of this.aktifler) this.grup.remove(a.nesne);
     this.aktifler = [];
   }

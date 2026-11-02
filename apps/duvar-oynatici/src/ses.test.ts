@@ -8,9 +8,19 @@ import type { OrtamAyarlari } from "./tipler";
 
 class SahteParam {
   hedef: number | null = null;
+  /** Son cancelAndHoldAtTime / cancelScheduledValues zamanı (sıfırlamada rampalar kesilir). */
+  iptal: number | null = null;
   constructor(public value: number) {}
   setTargetAtTime(v: number) {
     this.hedef = v;
+    return this;
+  }
+  cancelScheduledValues(t: number) {
+    this.iptal = t;
+    return this;
+  }
+  cancelAndHoldAtTime(t: number) {
+    this.iptal = t;
     return this;
   }
   setValueAtTime(v: number) {
@@ -46,6 +56,7 @@ class SahteDugum {
   loop = false;
   baslama: number | null = null;
   durma: number | null = null;
+  onended: ((e: Event) => void) | null = null;
   constructor(
     public tur: string,
     baglam: SahteBaglam,
@@ -62,6 +73,10 @@ class SahteDugum {
   stop(t = 0) {
     this.durma = t;
   }
+  /** Kaynak çalıp bitti (tarayıcı `ended` olayı). */
+  bitir() {
+    this.onended?.({ target: this } as unknown as Event);
+  }
 }
 
 class SahteTampon {
@@ -75,6 +90,9 @@ class SahteTampon {
   }
   getChannelData(i: number) {
     return this.veri[i];
+  }
+  get duration() {
+    return this.length / this.sampleRate;
   }
 }
 
@@ -117,6 +135,14 @@ class SahteBaglam {
   createBuffer(kanal: number, uzunluk: number, oran: number) {
     return new SahteTampon(kanal, uzunluk, oran);
   }
+  async decodeAudioData() {
+    return new SahteTampon(2, 48000, 48000);
+  }
+}
+
+/** Önbelleğe (fetch'siz) kayıt koyar: `sure` sn, stereo. */
+function tamponKoy(ses: SesMotoru, ad: string, sure: number) {
+  (ses as unknown as { tamponlar: Map<string, unknown> }).tamponlar.set(ad, new SahteTampon(2, Math.round(48000 * sure), 48000));
 }
 
 const ORTAM = { yagis: "yok", ruzgarSiddeti: 0.5 } as OrtamAyarlari;
@@ -359,5 +385,135 @@ describe("SesMotoru (sahte Web Audio)", () => {
     expect(ses.testDurumu?.ad).toBe("Sol");
     b.currentTime = 0.15 + 2 * 1.05 + 0.01;
     expect(ses.testDurumu).toBeNull();
+  });
+});
+
+describe("SesMotoru sahne sıfırlaması (efektleriSustur)", () => {
+  const konusmaIptal = vi.fn();
+  beforeEach(() => {
+    vi.stubGlobal("AudioContext", SahteBaglam);
+    vi.stubGlobal("speechSynthesis", { cancel: konusmaIptal });
+    konusmaIptal.mockClear();
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  /** Bir düğümün doğrudan çıkış verdiği kazanç düğümü. */
+  const sonraki = (d: SahteDugum) => d.baglantilar[0].hedef as SahteDugum;
+
+  it("çalan tek seferlik sesler ~0,1 sn'de söner ve durur; biten kaynak listeden çıkar; ortam döngüsü sürer; konuşma silinir", async () => {
+    const { ses, b } = await motor(2);
+    ses.ortamAyarla(ORTAM);
+    const ortamKaynagi = b.dugumler.find((d) => d.tur === "kaynak" && d.loop)!;
+    const once = b.dugumler.length;
+    await ses.patlama(0, 1); // gürültü kaynağı + bas osilatörü
+    ses.tekAtis(20); // kayıt yok: kısa gürültü vuruşu
+    ses.vizilti(-30);
+    const kaynaklar = b.dugumler.slice(once).filter((d) => d.tur === "kaynak" || d.tur === "osc");
+    expect(kaynaklar).toHaveLength(4);
+    expect(ses.anlikSayisi).toBe(4);
+    // Vızıltı çalıp bitti: listeden çıkar, sıfırlama ona dokunmaz
+    const vizilti = kaynaklar[3];
+    const vizBitis = vizilti.durma;
+    vizilti.bitir();
+    expect(ses.anlikSayisi).toBe(3);
+
+    b.currentTime = 1.5;
+    ses.efektleriSustur();
+    expect(ses.anlikSayisi).toBe(0);
+    for (const k of kaynaklar.slice(0, 3)) {
+      expect(k.durma).toBeCloseTo(1.7);
+      // Kaynağın kendi kazancı (zarf): rampası tutulup kesilir, 0'a söner (τ 30 ms)
+      const kazanc = sonraki(k.tur === "kaynak" ? sonraki(k) : k);
+      expect(kazanc.tur).toBe("kazanc");
+      expect(kazanc.gain.iptal).toBe(1.5);
+      expect(kazanc.gain.hedef).toBe(0);
+    }
+    expect(vizilti.durma).toBe(vizBitis);
+    expect(ortamKaynagi.durma).toBeNull();
+    expect(konusmaIptal).toHaveBeenCalledTimes(1);
+  });
+
+  it("zamanlanmış atış dizisinin kalan atışları ve tampon bekleyen çalmalar sıfırlamadan sonra çalmaz (yedek konuşma da yok)", async () => {
+    vi.useFakeTimers();
+    const { ses, b } = await motor(2);
+    const kaynakSayisi = () => b.dugumler.filter((d) => d.tur === "kaynak").length;
+    // Kayıtsız seri atış: 8–14 gürültü vuruşu 70–110 ms arayla
+    void ses.gurultu(0, 1);
+    await vi.advanceTimersByTimeAsync(0);
+    const ilk = kaynakSayisi();
+    expect(ilk).toBeGreaterThanOrEqual(1);
+    ses.efektleriSustur();
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(kaynakSayisi()).toBe(ilk);
+    // Kayıtlı seri atış (manifest tek atışları önbellekte)
+    ses.manifestAyarla({ gurultu: ["silah_tek_1.ogg"], bagirma: ["bagirma_1.ogg"] });
+    tamponKoy(ses, "silah_tek_1.ogg", 1.1);
+    void ses.gurultu(0, 1);
+    await vi.advanceTimersByTimeAsync(0);
+    const ikinci = kaynakSayisi();
+    expect(ikinci).toBe(ilk + 1);
+    ses.efektleriSustur();
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(kaynakSayisi()).toBe(ikinci);
+    // Bağırma kaydı yükleniyor (fetch bekliyor) → sıfırlama → kayıt gelince çalmaz, konuşma sentezine de düşmez
+    let yanitVer: ((v: unknown) => void) | null = null;
+    vi.stubGlobal("fetch", () => new Promise((r) => (yanitVer = r)));
+    const bagirma = ses.bagirma(10);
+    await vi.advanceTimersByTimeAsync(0);
+    ses.efektleriSustur();
+    yanitVer!({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) });
+    await bagirma;
+    expect(kaynakSayisi()).toBe(ikinci);
+  });
+
+  it("rotor: çalan ve 'yok' ile sönmekte olan rotor sıfırlamada hızla söner (1 sn'de durur); rotor=false çalanı bırakır", async () => {
+    const { ses, b } = await motor(2);
+    ses.helikopter("yaklasiyor", 0);
+    const osc = b.dugumler.find((d) => d.tur === "osc" && d.type === "sawtooth")!;
+    const lfo = b.dugumler.find((d) => d.tur === "osc" && d.type === "square")!;
+    const kazanc = sonraki(sonraki(sonraki(osc)));
+    b.currentTime = 2;
+    ses.helikopter("yok", 0);
+    expect(osc.durma).toBe(8); // τ 2 sn, 6 sn sonra durur
+    expect(kazanc.gain.hedef).toBe(0);
+    // Her karede "yok": yeniden zamanlanmaz
+    b.currentTime = 2.1;
+    ses.helikopter("yok", 0);
+    expect(osc.durma).toBe(8);
+    b.currentTime = 2.5;
+    ses.efektleriSustur();
+    expect(osc.durma).toBe(3.5);
+    expect(lfo.durma).toBe(3.5);
+    expect(kazanc.gain.iptal).toBe(2.5);
+
+    const ikinci = await motor(2);
+    ikinci.ses.helikopter("yerde", 0.5);
+    const osc2 = ikinci.b.dugumler.find((d) => d.tur === "osc" && d.type === "sawtooth")!;
+    ikinci.ses.efektleriSustur(false);
+    expect(osc2.durma).toBeNull();
+    ikinci.ses.efektleriSustur(true);
+    expect(osc2.durma).toBe(1);
+  });
+
+  it("tekAtis: uzun (çok atışlı) kayıt en çok 1,8 sn çalar ve sonunda söner; kısa tek atış kesilmez", async () => {
+    const { ses, b } = await motor(2);
+    ses.manifestAyarla({ gurultu: ["silah_uzun.ogg"] });
+    tamponKoy(ses, "silah_uzun.ogg", 15);
+    b.currentTime = 10;
+    const once = b.dugumler.length;
+    ses.tekAtis(0);
+    const kaynak = b.dugumler.slice(once).find((d) => d.tur === "kaynak")!;
+    const hiz = kaynak.playbackRate.value;
+    expect(hiz).toBeGreaterThanOrEqual(0.9);
+    expect(kaynak.durma).toBeCloseTo(10 + 1.8 / hiz + 0.02, 6);
+    expect(kaynak.durma! - 10).toBeLessThanOrEqual(1.8 / 0.9 + 0.03);
+    ses.manifestAyarla({ gurultu: ["silah_tek_2.ogg"] });
+    tamponKoy(ses, "silah_tek_2.ogg", 1.2);
+    const once2 = b.dugumler.length;
+    ses.tekAtis(0);
+    expect(b.dugumler.slice(once2).find((d) => d.tur === "kaynak")!.durma).toBeNull();
   });
 });

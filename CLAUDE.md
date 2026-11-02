@@ -85,7 +85,8 @@ Arka plan önceliği: 360° panorama (manifest `panorama`) > düz 5760×1080 dö
 parametrik yer tutucu. Üstüne: Oda 2 ön planları, **figür klipleri** (`klipler`, kategori
 `figur`), sis, helikopter, hava, **efekt plakaları** (`klipler`, kategori `efekt`; adı
 `patlama_*`, `toz_*`, `uzak_patlama_*` olanlar panel efektlerine otomatik bağlanır), izli mermi,
-flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test, T hoparlör testi. Sorgu: `?oda=`, `?fov=`, `?panorama=`,
+flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test (basılı tutma tekrar etmez), T hoparlör testi,
+⇧0 sahneyi sıfırla (köprüye istek; köprü yoksa yalnız o oynatıcı). Sorgu: `?oda=`, `?fov=`, `?panorama=`,
 `?yaw=`, `?hud=1`, `?doldur=1`, `?kalite=dusuk|orta|yuksek` (dizüstü: dusuk; yerel kayıtta kalır), `?ses=`, `?hoparlor=`
 (Ses, aşağıda). Ayrıntı: `docs/duvar-oynatici.md`.
 
@@ -100,8 +101,21 @@ kanal sırasıyla azimutlar (`-30,30,0,lfe,-110,110`); tuş **T** hoparlör test
 Panel API'si (`apps/kopru/src/api.ts`): `/api/durum`, `/oda`, `/bolge`, `/ortam`, `/isik`,
 `/izli-mermi`, `/oda2`, `/efekt`, `/figur` (oynat/durdur/temizle/poz), `/klipler`, `/figurler`,
 `/senaryolar`, `/senaryo/*`, `/on-ayarlar`, `/unreal/son-istekler`, `/ornek/*`, `/baglanti`, `/gunluk`,
-`/sahne/sifirla` (yeni grup: figür/çatışma/izli/helikopter kapanır, oynatıcıda krater-duman silinir). Köprü son
-durumu `apps/kopru/veri/son-durum.json`'a yazar ve açılışta geri yükler (12 saat).
+`/sahne/sifirla` (temel sahne, aşağıda; gövde `{kaynak?: panel|kisayol|oynatici}`, yanıt `{tamam, nesil, kaynak, ozet,
+zaman, durum, senaryo}`). Köprü son durumu (sıfırlama nesli dahil) `apps/kopru/veri/son-durum.json`'a yazar ve açılışta
+geri yükler (12 saat).
+
+**Temel sahne (Sıfırla, 2 Kasım):** panel üst çubuğundaki **Sıfırla** (iki dokunuş) / **Esc, Esc** / oynatıcıda **⇧0**.
+KALIR: oda, bölge, ortam (mevsim/saat/hava/sis), ışık, Oda 2 güvenli alanı ve sütre, ayar değerleri (çatışma şiddet/yön,
+izli mermi çıkış/sıklık, iniş yönü…), yüklü senaryo (durmuş, 00:00). GİDER: bütün figürler (yüklenmekte olanlar dahil),
+efektler (2B/3B patlama, ateş, duman, toz, moloz, flaş, sarsıntı, uçuştaki iz ve tank mermisi), krater, çatışma, izli
+mermi, helikopter, sesler (tek seferlikler, atış dizileri, konuşma kuyruğu; rotor hızla söner), senaryo oynatımı,
+paneldeki helikopter iniş dizisi, DMX'te takılı flaş. Köprüde `SahneYoneticisi` (`apps/kopru/src/sahne.ts`): senaryo dur
+→ figür temizle → tek durum yayını (`DurumDeposu.sahneyiTemeleDondur`) → `sahne/sifirla` (nesil++) → hemen kayıt → tek
+günlük satırı; oynatıcıda `sahneTemizligi.ts` (adım başına try/catch). Bağlanan istemciye önce `sahne/senkron` (nesil;
+kaçırılan sıfırlamada yerel temizlik), sonra `figur temizle`, sonra aktif figürler. Canlı önizleme en çok 5 sn'de bir
+ve yalnız panel bağlıyken (`BaglantiDurumu.panel.sayi`). Silah sesleri tek atışlık kesimler (`silah_tek_1..8.ogg`,
+`araclar/silah-tek-atis.mjs`); lisans CC BY 3.0 (Vincent Sevedge), atıf gerekir.
 
 ## Mevcut durum (26 Ekim 2026)
 

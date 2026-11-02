@@ -85,6 +85,9 @@ export class ArtNetGonderici {
   private sonKanallar: Uint8Array = new Uint8Array(DMX_KANAL_SAYISI);
   private sonGonderim = 0;
   private strobeZamanlayici: NodeJS.Timeout | null = null;
+  /** Süren patlama flaşının bitiş zamanlayıcısı ve flaştan önceki (dönülecek) kanallar; flaş yokken null. */
+  private flasZamanlayici: NodeJS.Timeout | null = null;
+  private flasOncesi: Uint8Array | null = null;
 
   constructor(private readonly ayarlar: ArtNetAyarlari) {}
 
@@ -112,6 +115,8 @@ export class ArtNetGonderici {
 
   kapat() {
     if (this.strobeZamanlayici) clearInterval(this.strobeZamanlayici);
+    if (this.flasZamanlayici) clearTimeout(this.flasZamanlayici);
+    this.flasZamanlayici = null;
     this.soket?.close();
     this.soket = null;
   }
@@ -127,23 +132,39 @@ export class ArtNetGonderici {
     return paket;
   }
 
+  /** Ortam ışığını gönderir. Flaş sürerken flaş kesilmez: yeni değer flaş bitince dönülecek değer olur. */
   isigiUygula(isik: OrtamIsigi) {
-    this.gonder(isiktanDmxKanallari(isik));
+    const kanallar = isiktanDmxKanallari(isik);
+    if (this.flasOncesi) this.flasOncesi = kanallar;
+    else this.gonder(kanallar);
   }
 
   /**
-   * Patlama flaşı: kısa süreli tam parlaklık + beyaz, sonra önceki değere dönüş.
+   * Patlama flaşı: kısa süreli tam parlaklık + beyaz, sonra flaştan önceki değere dönüş.
    * Şartname §6: ışık, sahnedeki patlama gibi olaylarla birlikte değişir.
+   * Üst üste binen flaşlar tek zamanlayıcı kullanır: dönülecek değer yalnız flaş yokken alınır, yeni flaş süreyi uzatır.
+   * (Eskiden ikinci flaş birincinin beyazını "önceki" diye saklıyordu; tuşa basılı tutunca ya da yakın patlamalarda oda
+   * ışığı tam beyazda kalıyordu.)
    */
   patlamaFlasi(siddet = 1, sureMs = 250) {
-    const onceki = Uint8Array.from(this.sonKanallar);
-    const flas = Uint8Array.from(onceki);
+    if (!this.flasOncesi) this.flasOncesi = Uint8Array.from(this.sonKanallar);
+    const flas = Uint8Array.from(this.flasOncesi);
     flas[0] = 255;
     flas[1] = 255;
     flas[2] = Math.round(200 + 55 * siddet);
     flas[3] = Math.round(120 * (1 - siddet) + 60);
     this.gonder(flas);
-    setTimeout(() => this.gonder(onceki), sureMs);
+    if (this.flasZamanlayici) clearTimeout(this.flasZamanlayici);
+    this.flasZamanlayici = setTimeout(() => this.flasiIptal(), sureMs);
+  }
+
+  /** Süren flaşı keser ve flaştan önceki ışığı geri yazar (flaş bitişi, sahne sıfırlaması); flaş yoksa bir şey yapmaz. */
+  flasiIptal() {
+    if (this.flasZamanlayici) clearTimeout(this.flasZamanlayici);
+    this.flasZamanlayici = null;
+    const onceki = this.flasOncesi;
+    this.flasOncesi = null;
+    if (onceki) this.gonder(onceki);
   }
 
   sonDurum(): Uint8Array {

@@ -565,11 +565,23 @@ export class CatismaSistemi {
     if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
   }
 
+  /**
+   * Bölge değişimi / sahne sıfırlaması: uçuştaki izler havuza döner; uçuştaki top mermileri (yoksa süresi bitince uzak
+   * patlama üretirdi) ve salvo, dost, top, izli sayaçları baştan. Ayarlar (aktif, şiddet, yön) durumdan gelir, dokunulmaz.
+   */
   temizle() {
     for (let i = 0; i < this.izler.length; i++) this.havuz.push(this.izler[i]);
     for (let i = 0; i < this.eklenecek.length; i++) this.havuz.push(this.eklenecek[i]);
     this.izler.length = 0;
     this.eklenecek.length = 0;
     this.mesh.count = 0;
+    this.mermiler.length = 0;
+    this.dusmanSalvoKalan = 0;
+    this.dusmanSalvoSayac = 0;
+    this.dusmanAtisSayac = 0;
+    this.uzakPatlamaSayac = 20;
+    this.dostSayaclar.clear();
+    this.topSayaclar.clear();
+    this.izliBirikim = 0;
   }
 }

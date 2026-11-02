@@ -18,7 +18,9 @@ aynı köprüye bağlanabilir.
 
 Tuşlar: **H** hata ayıklama katmanı · **K** kalibrasyon ızgarası (azimut/yükseklik çizgileri, göz hizası ufuk,
 duvar açıları; aşağıda) · **F** tam ekran · **M** sessiz · **T** hoparlör testi · **1 / 2 / 3** patlama / toz /
-izli mermi testi.
+izli mermi testi (basılı tutma tekrar etmez) · **⇧0** sahneyi temele döndür: köprüye `POST /api/sahne/sifirla
+{kaynak:"oynatici"}` gider, bütün oynatıcılar ve paneller sıfırlanır; köprüye ulaşılamazsa yalnız bu oynatıcı yerel
+temizlenir (duvara yazı basılmaz, konsola not). `e.code` kullanılır: Türkçe Q klavyede ⇧0 "=" yazsa da çalışır.
 
 Sorgu parametreleri: `?oda=` ölçülmüş oda — U duvar ya da 3 projektörlü düz duvar (`?oda=duz,...`), metre;
 aşağıda "Duvar geometrisi ve kalibrasyon" —, `?fov=90` ölçü yokken duvar başına yatay açı (U duvar 90; düz tek
@@ -369,13 +371,28 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
 - Bağlanınca `{tip:"merhaba", rol:"oynatici"}` gönderir; köprü `baglanti.oynatici` sayacını artırır.
 - `durum` mesajı → tüm sahne parametreleri; `efekt` mesajı → anlık efekt (`EfektIstegi` + zaman);
   `figur` mesajı → figür komutu + aktif figür listesi.
-- Oynatıcı komut göndermez (durumsuz; yeniden bağlanınca son durumu alır). Tek istisna **önizleme**: ~2 sn'de
-  bir iki tuvali 384 px JPEG'e indirip `{tip:"onizleme", veri}` yollar; köprü `onizleme` mesajını yalnızca
-  panellere iletir, panelin canlı sahne kartı pusulanın üstünde gösterir (15 sn'den eskiyse gizler).
-- `sahne` mesajı (`islem: "sifirla"`, `POST /api/sahne/sifirla`): krater, duman, parçacık ve 2B klipler temizlenir;
-  köprü aynı anda figürleri, çatışmayı, izli mermiyi ve helikopteri kapatır (yeni eğitim grubu).
-- Köprü son durumu `veri/son-durum.json`'a yazar (1 sn gecikmeli) ve açılışta geri yükler (12 saatten eskiyse
-  yok sayar); oynatıcı yeniden bağlanınca bu durumu ve figürleri alır.
+- Oynatıcı komut göndermez (durumsuz; yeniden bağlanınca son durumu alır). İstisnalar: **önizleme** — iki tuvali
+  384 px JPEG'e indirip `{tip:"onizleme", veri}` yollar, en çok 5 sn'de bir ve yalnız en az bir panel bağlıyken
+  (köprü `baglanti` mesajında `panel.sayi` bildirir; toDataURL ana iş parçacığını ~0,1–0,2 sn bekletir); köprü
+  yalnızca panellere iletir, canlı sahne kartı pusulanın üstünde gösterir (15 sn'den eskiyse gizler). Sıfırlamadan
+  sonra ve yeni panel bağlanınca bir sonraki kare hemen gider. **Günlük** (`gunluk`) ve **⇧0** sıfırlama isteği.
+- **Sahne sıfırlaması** (`POST /api/sahne/sifirla {kaynak?}`, köprüde `SahneYoneticisi`): köprü sırayla senaryoyu
+  durdurur (await yok; bekleyen adım dönünce uygulanmaz), `figur temizle` yayınlar, çatışma/izli mermi/helikopteri
+  kapatan TEK `durum` yayınını yollar (UE çağrıları sonra, beklenmeden, 3 sn zaman aşımı; DMX flaşı kesilip temel ışık
+  gider), en son `{tip:"sahne", islem:"sifirla", nesil, kaynak, ozet, zaman}`. Oynatıcı bu mesajda yerel artıkları
+  sabit sırayla temizler (`sahneTemizligi.ts`, adım başına try/catch, hatalar tek satırda köprü günlüğüne): bekleyen
+  figür/efekt kuyrukları → 3B (`Sahne3B.temeleDondur`: figürler ve yüklenmekte olanlar, krater/moloz/duman,
+  parçacıklar, uçuştaki iz ve tank mermisi, patlama ışığı, arazi kraterleri) → 2B klipler → 2B efektler (flaş,
+  sarsıntı) → 2B izli mermi → sesler (`efektleriSustur`: tek seferlikler 30 ms'de söner, atış dizileri ve tampon
+  bekleyenler iptal, konuşma kuyruğu silinir, rotor hızla söner) → önizleme. Çatışma/izli/helikopterin açık-kapalı
+  oluşu durumdan gelir, temizlik ona dokunmaz. Ortam sesi, sütre, ortam ve bölge kalır. Eski oynatıcı yalnız
+  `tip`/`islem`'e bakar, çalışmaya devam eder.
+- Bağlanan istemciye sırayla: `durum`, `senaryo`, `baglanti`, `ornek`, `{tip:"sahne", islem:"senkron", nesil}`,
+  `figur temizle` (aktif listeyle), aktif figürler (`oynat`). Oynatıcının bildiği nesil farklıysa (kopukken sıfırlama
+  kaçırıldı) yerel temizlik yapar; ilk bağlantıda yalnız kaydeder. Nesil son durumla diske yazılır: köprü yeniden
+  açılınca bağlı oynatıcılar boşuna temizlenmez.
+- Köprü son durumu `veri/son-durum.json`'a yazar (1 sn gecikmeli; sıfırlamada hemen) ve açılışta geri yükler (12
+  saatten eskiyse yok sayar); oynatıcı yeniden bağlanınca bu durumu ve figürleri alır.
 
 ## Sınırlamalar (prototip)
 

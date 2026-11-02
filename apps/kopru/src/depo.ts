@@ -10,6 +10,8 @@ export interface SonDurum {
   zaman: number;
   durum: Omit<SimulasyonDurumu, "sonEfektler">;
   figurler: Array<FigurKomutu & { id: string }>;
+  /** Sahne sıfırlama nesli (SahneYoneticisi): köprü yeniden açılınca sürer, bağlı oynatıcılar boşuna temizlenmez. */
+  nesil?: number;
 }
 
 function dosyaOku<T>(yol: string, varsayilan: T): T {
@@ -60,7 +62,7 @@ export class VeriDeposu {
     const d = dosyaOku<SonDurum | null>(this.sonDurumDosyasi, null);
     if (!d || typeof d.zaman !== "number" || !d.durum) return null;
     if (Date.now() - d.zaman > enCokYasMs) return null;
-    return { zaman: d.zaman, durum: d.durum, figurler: Array.isArray(d.figurler) ? d.figurler : [] };
+    return { zaman: d.zaman, durum: d.durum, figurler: Array.isArray(d.figurler) ? d.figurler : [], ...(typeof d.nesil === "number" ? { nesil: d.nesil } : {}) };
   }
 
   onAyarlar(): OnAyar[] {
