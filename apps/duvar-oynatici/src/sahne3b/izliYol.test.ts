@@ -3,6 +3,8 @@ import {
   AraziUfku,
   KAYNAK_UFUK_PAYI,
   KAYNAK_YERDEN_EN_COK,
+  SIRT_EN_YAKIN,
+  SIRT_KAYNAK_YUKSEKLIGI,
   VARSAYILAN_PIKSEL_ACISI,
   enYakinParametre,
   izKalinligi,
@@ -10,6 +12,7 @@ import {
   izliKaynakYuksekligi,
   izliYolu,
   kaynakYukseltmesi,
+  sirtaTasi,
   yakinGecis,
   type IzliYol,
 } from "./izliYol";
@@ -170,6 +173,60 @@ describe("izliKaynakYuksekligi (uzak kaynağın sınırlı yükseltmesi)", () =>
     const cukur = () => Z - 20;
     const y: IzliYol = { sx: 0, sy: Z + 2, sz: -200, hx: 0, hy: Z, hz: -10 };
     expect(izliKaynakYuksekligi(y, cukur, 0)).toBeCloseTo(Z - 20 + KAYNAK_YERDEN_EN_COK, 9);
+  });
+});
+
+describe("sirtaTasi (doğru kapalıysa kaynak sırtın tepesine)", () => {
+  const Z = -1.7;
+  /** Orta duvar yönünde 135 m'de 16 m'lik sırt. */
+  const sirt = (_x: number, z: number) => Z + 16 * Math.exp(-((-z - 135) ** 2) / (2 * 25 * 25));
+
+  it("doğru açıksa dokunmaz", () => {
+    const y: IzliYol = { sx: 0, sy: Z + 2, sz: -220, hx: 0, hy: Z, hz: -10 };
+    expect(sirtaTasi(y, () => Z)).toBe(false);
+    expect(y).toEqual({ sx: 0, sy: Z + 2, sz: -220, hx: 0, hy: Z, hz: -10 });
+  });
+
+  it("sırt arkasındaki kaynak: hedeften en yüksek görünen noktaya (sırtın tepesi), zeminin 1,5 m üstüne; yeni doğru açık", () => {
+    const y: IzliYol = { sx: 0, sy: sirt(0, -230) + 2, sz: -230, hx: 0, hy: Z, hz: -10 };
+    expect(sirtaTasi(y, sirt)).toBe(true);
+    expect(-y.sz).toBeGreaterThanOrEqual(SIRT_EN_YAKIN);
+    expect(Math.abs(-y.sz - 135)).toBeLessThan(15); // tepe ~135 m (hedeften bakınca biraz öte)
+    expect(y.sy).toBeCloseTo(sirt(y.sx, y.sz) + SIRT_KAYNAK_YUKSEKLIGI, 9);
+    expect(y.hz).toBe(-10); // hedef ucu değişmez
+    expect(kaynakYukseltmesi(y, sirt)).toBe(0);
+  });
+
+  it("yalnız 80 m'den yakın tümsek kapatıyorsa taşımaz (kaynak yakına çekilmez)", () => {
+    const tumsek = (_x: number, z: number) => Z + 6 * Math.exp(-((-z - 40) ** 2) / (2 * 6 * 6));
+    const y: IzliYol = { sx: 0, sy: Z + 1, sz: -200, hx: 0, hy: Z, hz: -5 };
+    expect(kaynakYukseltmesi(y, tumsek)).toBeGreaterThan(0); // doğru kapalı, ama engel 40 m'de
+    expect(sirtaTasi(y, tumsek)).toBe(false);
+    expect(y.sz).toBe(-200);
+  });
+
+  it("hem yakın tümsek hem uzak sırt: sırta taşınır (yakın tümseği çağıranın sınırlı yükseltmesi aşar)", () => {
+    const ikisi = (x: number, z: number) => sirt(x, z) + 4 * Math.exp(-((-z - 40) ** 2) / (2 * 6 * 6));
+    const y: IzliYol = { sx: 0, sy: Z + 2, sz: -230, hx: 0, hy: Z, hz: -10 };
+    expect(sirtaTasi(y, ikisi)).toBe(true);
+    expect(Math.abs(-y.sz - 135)).toBeLessThan(15);
+    expect(y.sy).toBeCloseTo(ikisi(y.sx, y.sz) + SIRT_KAYNAK_YUKSEKLIGI, 9);
+  });
+
+  it("vadi kenarı (düz ova + çukur vadi): eşit açıdaki adaylardan uzak olan, yani kenarın kendisi", () => {
+    const vadi = (x: number, z: number) => Z - 14 * Math.min(1, Math.max(0, (Math.hypot(x, z) - 130) / 20));
+    const y: IzliYol = { sx: 0, sy: Z - 14 + 12, sz: -220, hx: 0, hy: Z, hz: -10 };
+    expect(sirtaTasi(y, vadi)).toBe(true);
+    expect(-y.sz).toBeGreaterThan(125);
+    expect(-y.sz).toBeLessThanOrEqual(130);
+    expect(y.sy).toBeCloseTo(Z + SIRT_KAYNAK_YUKSEKLIGI, 9);
+  });
+
+  it("kaynak 80 m'den yakınsa aday yok: dokunmaz", () => {
+    const y: IzliYol = { sx: 0, sy: Z + 1, sz: -70, hx: 0, hy: Z, hz: -5 };
+    const once = { ...y };
+    expect(sirtaTasi(y, sirt)).toBe(false);
+    expect(y).toEqual(once);
   });
 });
 

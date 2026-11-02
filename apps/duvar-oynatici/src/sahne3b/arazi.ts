@@ -12,10 +12,19 @@
  * Dokular: Poly Haven CC0, 2K JPG (icerik/arazi/dokular, `araclar/arazi-indir.mjs` ile indirilir); düşük
  * kalitede yüklenirken 1K'ya küçültülür. Modeller: Poly Haven CC0 fotogrametri kaya/çimen/çalı/fidan
  * (icerik/arazi/modeller, 1K glTF; `araclar/arazi-sadelestir.mjs` ile *_lod.glb).
+ *
+ * Performans (Iris Xe, 3 duvar + gölge her kare): bitkiler model başına malzemeye göre tek geometride birleşir
+ * (çimen modelinin 17 alt mesh'i tek çizim), örnekler 8 azimut sektörüne bölünür (BitkiHucresi; duvar başına 3
+ * hücre çizilir, bkz. bitkiSektorleri.ts), saydam iki yüzlü yapraklar tek geçişte çizilir, ot/taş 50 m'de, çalı
+ * 80 m'de biter. Krater yalnız kendi ızgara penceresinin normallerini hesaplar ve o aralığı yükler (araziIzgara.ts).
+ * Bölge değişiminde arazi malzemesi (derlenmiş splat gölgelendiricisi), çimen malzemesi ve ortak dokular korunur.
  */
 import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise.js";
+import { deinterleaveGeometry, mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { konumlariYaz, kraterPenceresi, kraterUygula, pencereAraligi, pencereNormalleri, pencereyiYenile, type IzgaraDuzeni, type IzgaraPenceresi } from "./araziIzgara";
+import { kabukPiramitte, kamaKabugu, kesikPay, sektorlereBol, type OrnekKuresi } from "./bitkiSektorleri";
 import { ZEMIN_Y } from "./uzay";
 
 export type AraziModu = "kapali" | "hibrit" | "tam";
@@ -116,6 +125,22 @@ const UZAK_BOLUM = 160;
 const SPLAT_BOYUT = 1024;
 /** Çakıl lekeleri bu çözünürlükte hesaplanır, splat tuvaline büyütülür (1M yerine 65k gürültü örneği). */
 const SPLAT_HESAP = 256;
+/** Yakın ızgara düzeni (araziIzgara.ts yardımcıları için). */
+const IZGARA: IzgaraDuzeni = { n: YAKIN_BOYUT / YAKIN_ADIM + 1, adim: YAKIN_ADIM, yarim: YAKIN_BOYUT / 2 };
+/**
+ * Bitki hücreleri: 8 azimut sektörü, 22,5° kaydırılmış (ölçüsüz U odada duvar kenarları ±45°/±135° bir sektörün
+ * ortasına düşer: duvar başına 3 hücre). Halka bölmesi yok: gölge kutusu (±45 m) her sektöre değiyor, kazanç küçük.
+ */
+const SEKTOR_SAYISI = 8;
+const SEKTOR_KAYMASI = 22.5;
+/**
+ * Sınıf başına en uzak yerleşim (m; profil yarıçapından küçükse uygulanır, yakındaki yoğunluk aynı kalır): fotogrametri
+ * ot ve taşlar 50 m'den ötede duvarda 2–4 piksel (sis bandında görünmez), çalı/dal/kütük 80 m. Kayalar profil
+ * yarıçapına kadar kalır (sis bandının boş görünmemesi için; çimen demetleri de 83 m'ye kadar sürer).
+ */
+const OT_EN_UZAK = 50;
+const TAS_EN_UZAK = 50;
+const CALI_EN_UZAK = 80;
 
 const noise = new ImprovedNoise();
 function fbm(x: number, z: number, tohum: number, oktav = 4): number {
@@ -164,11 +189,15 @@ const MODELLER: Record<string, string> = {
   cam_koku: "pine_roots.gltf",
 };
 
+/** Bitki sınıfı: kraterde ot/çalı/taş silinir (savruldu), kaya yeni zemine iner. */
+type BitkiSinifi = "kaya" | "tas" | "cali" | "ot";
+
 interface BitkiTanimi {
   klasor: string;
   /** Temel adet (profil çarpanı `carpan` alanıyla ve kalite kaya çarpanıyla çarpılır). */
   adet: number;
   carpan: "kaya" | "cali" | "cimen";
+  sinif: BitkiSinifi;
   olcek: [number, number];
   /** Eğimli yerleri tercih (0 düz, 1 yamaç). */
   egimTercihi: number;
@@ -177,11 +206,13 @@ interface BitkiTanimi {
   golge: boolean;
   /** Dere yatağına (h < -1,2) konmaz. */
   dereYok?: boolean;
+  /** En uzak yerleşim (m); verilmezse profil yarıçapı. Bkz. OT_EN_UZAK. */
+  enUzak?: number;
 }
-const kaya = (klasor: string, adet: number, olcek: [number, number], egim: number, gomme: number): BitkiTanimi => ({ klasor, adet, carpan: "kaya", olcek, egimTercihi: egim, gomme, golge: true, dereYok: true });
-const tas = (klasor: string, adet: number): BitkiTanimi => ({ klasor, adet, carpan: "kaya", olcek: [0.8, 1.6], egimTercihi: 0.1, gomme: 0.05, golge: false });
-const bitki = (klasor: string, adet: number, olcek: [number, number], gomme = 0.04, golge = true): BitkiTanimi => ({ klasor, adet, carpan: "cali", olcek, egimTercihi: 0, gomme, golge });
-const ot = (klasor: string, adet: number): BitkiTanimi => ({ klasor, adet, carpan: "cimen", olcek: [0.8, 1.5], egimTercihi: 0, gomme: 0.02, golge: false });
+const kaya = (klasor: string, adet: number, olcek: [number, number], egim: number, gomme: number): BitkiTanimi => ({ klasor, adet, carpan: "kaya", sinif: "kaya", olcek, egimTercihi: egim, gomme, golge: true, dereYok: true });
+const tas = (klasor: string, adet: number): BitkiTanimi => ({ klasor, adet, carpan: "kaya", sinif: "tas", olcek: [0.8, 1.6], egimTercihi: 0.1, gomme: 0.05, golge: false, enUzak: TAS_EN_UZAK });
+const bitki = (klasor: string, adet: number, olcek: [number, number], gomme = 0.04, golge = true): BitkiTanimi => ({ klasor, adet, carpan: "cali", sinif: "cali", olcek, egimTercihi: 0, gomme, golge, enUzak: CALI_EN_UZAK });
+const ot = (klasor: string, adet: number): BitkiTanimi => ({ klasor, adet, carpan: "cimen", sinif: "ot", olcek: [0.8, 1.5], egimTercihi: 0, gomme: 0.02, golge: false, enUzak: OT_EN_UZAK });
 
 const BITKI_SETLERI: Record<BitkiSeti, BitkiTanimi[]> = {
   bozkir: [
@@ -229,6 +260,48 @@ const BITKI_SETLERI: Record<BitkiSeti, BitkiTanimi[]> = {
   kent: [tas("tas_kume", 6), tas("taslar", 10), bitki("cali", 5, [0.6, 1.2], 0.05), bitki("kuru_dal", 4, [0.8, 1.2], 0.03, false), ot("cimen_1", 20), ot("cimen_2", 15)],
 };
 
+const _hm = new THREE.Matrix4();
+const _hk = new THREE.Sphere();
+/** Örnek matrisinin 3×3 dönüşüm öğeleri (sütun düzeni): sıfırlanınca örnek görünmez, konumu (12–14) kalır. */
+const DONUSUM_OGELERI = [0, 1, 2, 4, 5, 6, 8, 9, 10] as const;
+
+/**
+ * Bitki hücresi: bir türün bir malzemesinin bir azimut sektöründeki örnekleri (bkz. bitkiSektorleri.ts). three her
+ * duvar kamerasında ve gölge kamerasında `intersectsFrustum` ile ayıklar; sınır, örneklerin halka dilimini saran
+ * dışbükey kabuk (küre izleyiciyi neredeyse içine aldığı için ayıklamazdı). Kabuk kurulamazsa sınır küresi (three'nin
+ * varsayılanı). Bitki grubu sahne başlangıcında ve dönüşümsüz: örnek matrisleri dünya koordinatıdır.
+ */
+class BitkiHucresi extends THREE.InstancedMesh {
+  private kabuk: Float64Array | null = null;
+
+  constructor(
+    geometri: THREE.BufferGeometry,
+    malzeme: THREE.Material | THREE.Material[],
+    adet: number,
+    readonly sinif: BitkiSinifi,
+  ) {
+    super(geometri, malzeme, adet);
+  }
+
+  /** Küre (saydam sıralama, yedek ayıklama) ve kabuk: örnekler yazıldıktan ya da değiştikten sonra çağrılır. */
+  sinirlariHesapla() {
+    this.computeBoundingSphere();
+    const g = this.geometry.boundingSphere!;
+    const kureler: OrnekKuresi[] = [];
+    for (let i = 0; i < this.count; i++) {
+      this.getMatrixAt(i, _hm);
+      _hk.copy(g).applyMatrix4(_hm);
+      kureler.push({ x: _hk.center.x, y: _hk.center.y, z: _hk.center.z, r: _hk.radius });
+    }
+    this.kabuk = kamaKabugu(kureler);
+  }
+
+  override intersectsFrustum(frustum: THREE.Frustum | THREE.FrustumArray): boolean {
+    if (this.kabuk && "planes" in frustum) return kabukPiramitte(frustum.planes, this.kabuk);
+    return super.intersectsFrustum(frustum);
+  }
+}
+
 export class AraziKatmani {
   readonly grup = new THREE.Group();
   mod: AraziModu = "kapali";
@@ -241,15 +314,33 @@ export class AraziKatmani {
   private malzeme: THREE.MeshStandardMaterial | null = null;
   private uniformlar: Record<string, THREE.IUniform> = {};
   private splatTuval: HTMLCanvasElement | null = null;
+  /** Splat tuvalinin kraterlerden önceki kopyası (yanık boyası temizliği). */
+  private splatTemiz: HTMLCanvasElement | null = null;
   private splatDoku: THREE.CanvasTexture | null = null;
   private cimen: THREE.InstancedMesh | null = null;
   private cimenKonumlar: Float32Array | null = null;
   private cimenOlcekler: Float32Array | null = null;
+  /** Çimen demeti malzemesi bölgeler arası korunur (gölgelendirici yeniden derlenmez); renk dokusu kurulukla değişir. */
+  private cimenMalzemesi: THREE.MeshStandardMaterial | null = null;
+  private cimenRenkKurulugu = -1;
+  /** Çimen rüzgâr zamanı (demet gölgelendiricisinin uniform'u; malzeme korunduğu için ayrı). */
+  private readonly cimenZaman: THREE.IUniform<number> = { value: 0 };
   private bitkiGrubu = new THREE.Group();
+  /** Birleşik model geometrileri (hücreler öznitelikleri paylaşır); sok bırakır. */
+  private readonly bitkiGeometrileri: THREE.BufferGeometry[] = [];
+  /** Yakın arazinin tamamı bir sonraki çizimde yüklenecek: kraterin kısmi aralığı eklenmez (tamamı gider). */
+  private yakinTamYuklemeBekliyor = false;
   private readonly yukleyici = new GLTFLoader();
   private readonly modelOnbellek = new Map<string, Promise<GLTF>>();
   private readonly dokuYukleyici = new THREE.TextureLoader();
   private dokular = new Map<string, THREE.Texture>();
+  /** Bu kurulumda istenen dokular: kalanlar kurulum sonunda bırakılır (ortak dokular bölgeler arası korunur). */
+  private readonly kullanilanDokular = new Set<string>();
+  /**
+   * Kraterin değiştirdiği bitki örneklerinin kraterden önceki matrisi (mesh → örnek → 16 sayı): kraterleriTemizle
+   * geri koyar. Koridor değişiminde yedek de aynı yükseklik farkını alır.
+   */
+  private readonly kraterYedekleri = new Map<THREE.InstancedMesh, Map<number, Float32Array>>();
   private zaman = 0;
   private kar = 0;
   private kok = "";
@@ -369,31 +460,38 @@ export class AraziKatmani {
     const eski = this.yukseklikler.slice();
     const h = this.yukseklikler;
     for (let iz = 0; iz < n; iz++) for (let ix = 0; ix < n; ix++) h[iz * n + ix] = this.analitik(ix * YAKIN_ADIM - yarim, iz * YAKIN_ADIM - yarim);
-    for (const k of this.kraterler) this.kraterYuksekligi(k.x, k.z, k.r, k.s);
+    for (const k of this.kraterler) kraterUygula(h, IZGARA, k.x, k.z, k.r, k.s);
     const pos = this.yakin.geometry.attributes.position as THREE.BufferAttribute;
     for (let i = 0; i < pos.count; i++) pos.setY(i, h[i]);
-    pos.needsUpdate = true;
     this.yakin.geometry.computeVertexNormals();
-    // Çimen ve bitkiler: yükseklik farkı kadar kayar; koridor çekirdeğindeki kaya/çalı gizlenir (çimen kalır)
+    this.yakinTamYukle();
+    // Çimen ve bitkiler: yükseklik farkı kadar kayar; koridor çekirdeğindeki kaya/çalı gizlenir (çimen kalır).
+    // Krater yedeği (kraterden önceki matris) de aynı farkı alır: temizlikte yeni zemine döner. Fark kraterden
+    // bağımsızdır (kraterler iki ızgarada da aynı uygulanır).
     const fark = (x: number, z: number) => this.izgaraYuksekligi(h, x, z) - this.izgaraYuksekligi(eski, x, z);
     const m = new THREE.Matrix4();
     const p = new THREE.Vector3();
     const q = new THREE.Quaternion();
     const s = new THREE.Vector3();
+    const kaydir = (dizi: Float32Array, ofset: number, cimenMi: boolean) => {
+      m.fromArray(dizi, ofset);
+      m.decompose(p, q, s);
+      if (s.x === 0) return;
+      p.y += fark(p.x, p.z);
+      if (!cimenMi && this.koridorda(p.x, p.z, 0.6)) s.set(0, 0, 0);
+      m.compose(p, q, s);
+      m.toArray(dizi, ofset);
+    };
     for (const c of this.bitkiGrubu.children) {
       const inst = c as THREE.InstancedMesh;
       if (!inst.isInstancedMesh) continue;
       const cimenMi = inst === this.cimen;
-      for (let i = 0; i < inst.count; i++) {
-        inst.getMatrixAt(i, m);
-        m.decompose(p, q, s);
-        if (s.x === 0) continue;
-        p.y += fark(p.x, p.z);
-        if (!cimenMi && this.koridorda(p.x, p.z, 0.6)) s.set(0, 0, 0);
-        m.compose(p, q, s);
-        inst.setMatrixAt(i, m);
-      }
+      const yedek = this.kraterYedekleri.get(inst);
+      if (yedek) for (const y of yedek.values()) kaydir(y, 0, cimenMi);
+      const dizi = inst.instanceMatrix.array as Float32Array;
+      for (let i = 0; i < inst.count; i++) kaydir(dizi, i * 16, cimenMi);
       inst.instanceMatrix.needsUpdate = true;
+      if (inst instanceof BitkiHucresi) inst.sinirlariHesapla();
     }
     return true;
   }
@@ -434,10 +532,11 @@ export class AraziKatmani {
   // ------------------------------------------------------------------ kurulum
   /**
    * Araziyi kurar. `temizNoktalar`: kaya/çalı konmayacak yerler. Dokular ve modeller asenkron yüklenir;
-   * arazi ilk kare düz renkle görünür, dokular gelince geçer.
+   * arazi ilk kare düz renkle görünür, dokular gelince geçer. Önceki kurulumun arazi/çimen malzemesi ve yeni bölgede de
+   * kullanılan dokuları korunur (yeniden indirme ve gölgelendirici derlemesi yok).
    */
   kur(mod: AraziModu, profil: AraziProfili, kalite: AraziKalitesi, kok: string, kar: number) {
-    this.sok();
+    this.sok(mod !== "kapali");
     this.mod = mod;
     if (mod === "kapali") {
       this.durum = "kapalı";
@@ -449,6 +548,7 @@ export class AraziKatmani {
     this.kar = kar;
     const nesil = ++this.nesil;
     this.durum = "kuruluyor";
+    this.kullanilanDokular.clear();
 
     // Yakın ızgara
     const n = this.n;
@@ -470,7 +570,7 @@ export class AraziKatmani {
       pos.setY(i, this.yukseklik2(h, x, z));
     }
     g.computeVertexNormals();
-    this.malzeme = this.malzemeOlustur();
+    this.malzeme = this.malzemeHazirla();
     const yakin = new THREE.Mesh(g, this.malzeme);
     yakin.position.y = ZEMIN_Y;
     yakin.receiveShadow = true;
@@ -478,6 +578,11 @@ export class AraziKatmani {
     // Hibrit kipte malzeme saydam (kenar sis geçişi): saydam listede en önce çizilsin ki derinliği yazılsın ve
     // duman/iz gibi derinlik yazmayan parçacıklar tepe arkasında doğru örtülsün
     yakin.renderOrder = -5;
+    // three öznitelikleri çizim listesi kurulurken yükler, onBeforeRender ondan sonra: bekleyen tam yükleme gitti
+    yakin.onBeforeRender = () => {
+      this.yakinTamYuklemeBekliyor = false;
+    };
+    this.yakinTamYuklemeBekliyor = true;
     this.yakin = yakin;
     this.grup.add(yakin);
 
@@ -503,6 +608,7 @@ export class AraziKatmani {
 
     this.splatOlustur();
     this.dokulariYukle();
+    this.kullanilmayanDokulariBirak();
     this.cimenOlustur();
     void this.bitkileriYukle(nesil);
     this.durum = `${mod} · ${profil.ad}`;
@@ -515,10 +621,16 @@ export class AraziKatmani {
     return h[Math.min(this.n - 1, Math.max(0, iz)) * this.n + Math.min(this.n - 1, Math.max(0, ix))];
   }
 
-  /** Araziyi kaldırır ve GPU kaynaklarını serbest bırakır (dokular dâhil; bölge değişince yeniden yüklenir). */
-  sok() {
+  /**
+   * Araziyi kaldırır ve GPU kaynaklarını serbest bırakır. `yenidenKurulacak` (kur bölge/kip değişiminde çağırır):
+   * arazi ve çimen malzemesi (derlenmiş gölgelendiriciler) ile dokular korunur, kurulum sonunda yalnız yeni bölgede
+   * kullanılmayanlar bırakılır. Aksi halde (kapalı kip) hepsi bırakılır.
+   */
+  sok(yenidenKurulacak = false) {
     this.nesil++;
     for (const c of [...this.grup.children]) if (c !== this.bitkiGrubu) this.grup.remove(c);
+    // Hücre geometrileri birleşik model geometrisinin özniteliklerini paylaşır: hepsi birlikte bırakılır (paylaşılan
+    // GPU tamponu ilk dispose'da silinir, sonrakiler etkisiz; bırakılan hücre bir daha çizilmez)
     for (const c of [...this.bitkiGrubu.children]) {
       this.bitkiGrubu.remove(c);
       const m = c as THREE.InstancedMesh;
@@ -527,39 +639,59 @@ export class AraziKatmani {
         m.dispose();
       }
     }
+    for (const g of this.bitkiGeometrileri) g.dispose();
+    this.bitkiGeometrileri.length = 0;
     this.yakin?.geometry.dispose();
     this.uzak?.geometry.dispose();
-    if (this.cimen) {
-      const mal = this.cimen.material as THREE.MeshStandardMaterial;
-      mal.map?.dispose();
-      mal.alphaMap?.dispose();
-      mal.dispose();
-    }
-    this.malzeme?.dispose();
     this.splatDoku?.dispose();
-    for (const d of this.dokular.values()) d.dispose();
-    this.dokular.clear();
+    if (!yenidenKurulacak) {
+      const mal = this.cimenMalzemesi;
+      if (mal) {
+        mal.map?.dispose();
+        mal.alphaMap?.dispose();
+        mal.dispose();
+      }
+      this.cimenMalzemesi = null;
+      this.cimenRenkKurulugu = -1;
+      this.malzeme?.dispose();
+      this.malzeme = null;
+      this.uniformlar = {};
+      for (const d of this.dokular.values()) d.dispose();
+      this.dokular.clear();
+    }
+    this.kraterYedekleri.clear();
     this.yakin = null;
     this.uzak = null;
     this.cimen = null;
     this.cimenKonumlar = null;
     this.cimenOlcekler = null;
-    this.malzeme = null;
     this.splatTuval = null;
+    this.splatTemiz = null;
     this.splatDoku = null;
     this.yukseklikler = null;
     this.kraterler = [];
-    this.uniformlar = {};
     this.mod = "kapali";
     this.durum = "kapalı";
+  }
+
+  /** Bu kurulumda istenmeyen dokuları bırakır (önceki bölgeye özgü olanlar); ortaklar korunur. */
+  private kullanilmayanDokulariBirak() {
+    for (const [ad, d] of this.dokular) {
+      if (this.kullanilanDokular.has(ad)) continue;
+      d.dispose();
+      this.dokular.delete(ad);
+    }
   }
 
   // ------------------------------------------------------------------ doku / malzeme
   /**
    * Doku (icerik/arazi/dokular/<ad>.jpg). Shader dünya xz ile örneklediği için `repeat` kullanılmaz. Dosya
    * yoksa `yedek` denenir, o da yoksa uyarı; doku boş kalır (düz renk). Düşük kalitede 1K'ya küçültülür.
+   * Önbellekte kalır (bölge değişiminde ortak dokular yeniden indirilmez); yükleme sürerken doku önbellekten
+   * çıkarıldıysa (bırakıldı) gelen resim atılır.
    */
   private doku(ad: string, srgb: boolean, yedek?: string): THREE.Texture {
+    this.kullanilanDokular.add(ad);
     let t = this.dokular.get(ad);
     if (t) return t;
     const doku = new THREE.Texture();
@@ -568,15 +700,11 @@ export class AraziKatmani {
     doku.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
     doku.anisotropy = this.kalite.anizotropi;
     this.dokular.set(ad, doku);
-    const nesil = this.nesil;
     const yukle = (dosya: string, sonDeneme: boolean) =>
       this.dokuYukleyici.load(
         `${this.kok}arazi/dokular/${dosya}.jpg`,
         (y) => {
-          if (nesil !== this.nesil) {
-            y.dispose();
-            return;
-          }
+          if (this.dokular.get(ad) !== doku) return;
           doku.image = this.kucult(y.image as HTMLImageElement);
           doku.needsUpdate = true;
         },
@@ -626,21 +754,41 @@ export class AraziKatmani {
     this.uniformlar.toprakNOlcek.value = 1 / d.toprakOlcek;
   }
 
-  private malzemeOlustur(): THREE.MeshStandardMaterial {
-    const bos = new THREE.Texture();
+  /**
+   * Arazi malzemesi: ilk kurulumda oluşturulur, sonra korunur (splat gölgelendiricisi bir kez derlenir; bölge
+   * değişiminde ~205 k üçgenlik arazinin programı yeniden derlenmiyordu ama her seferinde yeniden kuruluyordu).
+   * Profil ve kip değerleri her kurulumda uniform'lara yazılır; saydamlık (hibrit) değişirse program bir kez değişir.
+   */
+  private malzemeHazirla(): THREE.MeshStandardMaterial {
+    const m = this.malzeme ?? this.malzemeOlustur();
     const hibrit = this.mod === "hibrit";
-    const m = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, metalness: 0, transparent: hibrit });
+    if (m.transparent !== hibrit) {
+      m.transparent = hibrit;
+      m.needsUpdate = true;
+    }
     // Normal yolu açmak için bir normal haritası atanır (gerçek örnekleme shader'da karışımla yapılır)
     m.normalMap = this.doku(this.profil.dokular.toprak + "_normal", false, "bozkir_normal"); // shader'da dünya xz ile örneklenir
-    m.normalScale.set(0.9, 0.9);
     const p = this.profil;
+    const u = this.uniformlar;
+    u.kar.value = this.kar;
+    u.kuruluk.value = p.kuruluk;
+    u.golgeLekesi.value = p.golgeLekesi ?? 0;
+    u.sisBaslangic.value = hibrit ? p.yaricap * 0.76 : 1e6;
+    u.sisBitis.value = hibrit ? p.yaricap : 1e6;
+    return m;
+  }
+
+  private malzemeOlustur(): THREE.MeshStandardMaterial {
+    const bos = new THREE.Texture();
+    const m = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, metalness: 0 });
+    m.normalScale.set(0.9, 0.9);
     const u: Record<string, THREE.IUniform> = {
       tSplat: { value: bos },
-      kar: { value: this.kar },
-      kuruluk: { value: p.kuruluk },
-      golgeLekesi: { value: p.golgeLekesi ?? 0 },
-      sisBaslangic: { value: hibrit ? p.yaricap * 0.76 : 1e6 },
-      sisBitis: { value: hibrit ? p.yaricap : 1e6 },
+      kar: { value: 0 },
+      kuruluk: { value: 0 },
+      golgeLekesi: { value: 0 },
+      sisBaslangic: { value: 1e6 },
+      sisBitis: { value: 1e6 },
       yarimBoyut: { value: YAKIN_BOYUT / 2 },
     };
     for (const ad of ["tToprak", "tCimen", "tKaya", "tKayaN", "tCakil", "tYol", "tYanik", "tKar", "tKarN", "tUzak"]) {
@@ -804,6 +952,12 @@ void araziAgirliklari(vec3 geoNormal) {
       ctx.globalAlpha = 1;
     }
     this.splatTuval = c;
+    // Kraterlerden önceki hâli (kraterleriTemizle geri çizer)
+    const temiz = document.createElement("canvas");
+    temiz.width = SPLAT_BOYUT;
+    temiz.height = SPLAT_BOYUT;
+    temiz.getContext("2d")!.drawImage(c, 0, 0);
+    this.splatTemiz = temiz;
     this.splatDoku = new THREE.CanvasTexture(c);
     this.splatDoku.colorSpace = THREE.NoColorSpace;
     this.splatDoku.flipY = false;
@@ -811,47 +965,96 @@ void araziAgirliklari(vec3 geoNormal) {
   }
 
   // ------------------------------------------------------------------ krater
-  /** Krater çukurunu (kenarı hafif kabarık) yükseklik dizisine ekler; değişen ızgara penceresini döner. */
-  private kraterYuksekligi(kx: number, kz: number, r: number, siddet: number): [number, number, number, number] | null {
-    if (!this.yukseklikler) return null;
-    const n = this.n;
-    const h = this.yukseklikler;
-    const yarim = YAKIN_BOYUT / 2;
-    const derinlik = 0.32 * r * (0.5 + siddet * 0.5);
-    const ix0 = Math.max(0, Math.floor((kx - r * 1.5 + yarim) / YAKIN_ADIM));
-    const ix1 = Math.min(n - 1, Math.ceil((kx + r * 1.5 + yarim) / YAKIN_ADIM));
-    const iz0 = Math.max(0, Math.floor((kz - r * 1.5 + yarim) / YAKIN_ADIM));
-    const iz1 = Math.min(n - 1, Math.ceil((kz + r * 1.5 + yarim) / YAKIN_ADIM));
-    if (ix1 < ix0 || iz1 < iz0) return null;
-    for (let iz = iz0; iz <= iz1; iz++) {
-      for (let ix = ix0; ix <= ix1; ix++) {
-        const x = ix * YAKIN_ADIM - yarim;
-        const z = iz * YAKIN_ADIM - yarim;
-        const d = Math.hypot(x - kx, z - kz) / r;
-        let dh = 0;
-        if (d < 1) dh = -derinlik * Math.pow(1 - d * d, 2);
-        dh += Math.exp(-Math.pow((d - 1.06) / 0.16, 2)) * derinlik * 0.28;
-        if (Math.abs(dh) >= 1e-3) h[iz * n + ix] += dh;
-      }
+  /** Yakın arazinin konum ve normallerinin tamamı bir sonraki çizimde yüklenir (bekleyen kısmi aralıklar düşer). */
+  private yakinTamYukle() {
+    const g = this.yakin?.geometry;
+    if (!g) return;
+    for (const ad of ["position", "normal"]) {
+      const a = g.attributes[ad] as THREE.BufferAttribute;
+      a.clearUpdateRanges();
+      a.needsUpdate = true;
     }
-    return [ix0, ix1, iz0, iz1];
+    this.yakinTamYuklemeBekliyor = true;
   }
 
-  /** Araziyi çukurlaştırır (kenar hafif yükselir), yanık doku boyar, çimeni temizler. `konum` dünya koordinatı. */
+  /**
+   * Pencerelerin yüksekliklerini konuma yazar, normalleri yalnız pencerelerde (bir köşe geniş) yeniden hesaplar ve
+   * yalnız o aralıkları yükler. Tam yükleme bekliyorsa (aynı karede koridor değişimi) aralık eklenmez: tamamı gider.
+   */
+  private pencereleriGuncelle(pencereler: readonly IzgaraPenceresi[]) {
+    const g = this.yakin?.geometry;
+    if (!g || !this.yukseklikler || pencereler.length === 0) return;
+    const pos = g.attributes.position as THREE.BufferAttribute;
+    const nor = g.attributes.normal as THREE.BufferAttribute;
+    const konum = pos.array as Float32Array;
+    // Önce bütün yükseklikler, sonra normaller (üst üste binen pencerelerde de doğru)
+    for (const p of pencereler) konumlariYaz(konum, this.yukseklikler, this.n, p);
+    for (const p of pencereler) {
+      const v = pencereNormalleri(konum, nor.array as Float32Array, this.n, p);
+      if (this.yakinTamYuklemeBekliyor) continue;
+      const a = pencereAraligi(p, this.n, 3);
+      pos.addUpdateRange(a.start, a.count);
+      const b = pencereAraligi(v, this.n, 3);
+      nor.addUpdateRange(b.start, b.count);
+    }
+    pos.needsUpdate = true;
+    nor.needsUpdate = true;
+  }
+
+  /** Örneğin kraterden önceki matrisini (ilk değişiminde) yedekler. */
+  private yedekle(mesh: THREE.InstancedMesh, i: number) {
+    let y = this.kraterYedekleri.get(mesh);
+    if (!y) {
+      y = new Map();
+      this.kraterYedekleri.set(mesh, y);
+    }
+    if (!y.has(i)) y.set(i, (mesh.instanceMatrix.array as Float32Array).slice(i * 16, i * 16 + 16));
+  }
+
+  /** Krater merkezinin 1,25 r içindeki görünür bitki örnekleri ve oradaki (kraterden önceki) zemin yüksekliği. */
+  private kraterBitkileri(kx: number, kz: number, r: number): Array<{ hucre: BitkiHucresi; i: number; zemin: number }> {
+    const sonuc: Array<{ hucre: BitkiHucresi; i: number; zemin: number }> = [];
+    for (const c of this.bitkiGrubu.children) {
+      if (!(c instanceof BitkiHucresi)) continue;
+      const d = c.instanceMatrix.array as Float32Array;
+      for (let i = 0; i < c.count; i++) {
+        const o = i * 16;
+        if (d[o] === 0 && d[o + 1] === 0 && d[o + 2] === 0) continue; // gizli (koridor ya da önceki krater)
+        if (Math.hypot(d[o + 12] - kx, d[o + 14] - kz) >= r * 1.25) continue;
+        sonuc.push({ hucre: c, i, zemin: this.yukseklik(d[o + 12], d[o + 14]) });
+      }
+    }
+    return sonuc;
+  }
+
+  /**
+   * Araziyi çukurlaştırır (kenar hafif yükselir), yanık doku boyar; çukurdaki çimen, ot, çalı ve taşlar silinir
+   * (savruldu), kayalar yeni zemine iner (havada kalmaz). Değişen örneklerin önceki matrisi yedeklenir
+   * (kraterleriTemizle). Normaller yalnız krater penceresinde hesaplanır, yalnız o aralık yüklenir (eskiden tam
+   * computeVertexNormals + 2,5 MB yükleme: patlama başına 34–76 ms). `konum` dünya koordinatı.
+   */
   krater(konum: THREE.Vector3, yaricap: number, siddet: number) {
     if (!this.aktif || !this.yakin || !this.yukseklikler) return;
-    const n = this.n;
-    const h = this.yukseklikler;
     const r = Math.max(1.2, yaricap);
     this.kraterler.push({ x: konum.x, z: konum.z, r, s: siddet });
-    const pencere = this.kraterYuksekligi(konum.x, konum.z, r, siddet);
+    const etkilenen = this.kraterBitkileri(konum.x, konum.z, r);
+    const pencere = kraterUygula(this.yukseklikler, IZGARA, konum.x, konum.z, r, siddet);
     if (!pencere) return;
-    const [ix0, ix1, iz0, iz1] = pencere;
-    const pos = this.yakin.geometry.attributes.position as THREE.BufferAttribute;
-    // ızgara (ix, iz) ↔ köşe indeksi iz·n + ix (PlaneGeometry satır = z)
-    for (let iz = iz0; iz <= iz1; iz++) for (let ix = ix0; ix <= ix1; ix++) pos.setY(iz * n + ix, h[iz * n + ix]);
-    pos.needsUpdate = true;
-    this.yakin.geometry.computeVertexNormals();
+    this.pencereleriGuncelle([pencere]);
+    // Bitkiler: ot/çalı/taş silinir (konumu korunur: hücre kabuğu dar kalsın), kaya yeni zemine iner
+    const degisen = new Set<BitkiHucresi>();
+    for (const e of etkilenen) {
+      this.yedekle(e.hucre, e.i);
+      const d = e.hucre.instanceMatrix.array as Float32Array;
+      const o = e.i * 16;
+      if (e.hucre.sinif === "kaya") d[o + 13] += this.yukseklik(d[o + 12], d[o + 14]) - e.zemin;
+      else for (const k of DONUSUM_OGELERI) d[o + k] = 0;
+      degisen.add(e.hucre);
+    }
+    for (const h of degisen) {
+      h.instanceMatrix.needsUpdate = true;
+      h.sinirlariHesapla();
+    }
     // Yanık boyası (G)
     if (this.splatTuval && this.splatDoku) {
       const ctx = this.splatTuval.getContext("2d")!;
@@ -871,7 +1074,7 @@ void araziAgirliklari(vec3 geoNormal) {
       ctx.globalCompositeOperation = "source-over";
       this.splatDoku.needsUpdate = true;
     }
-    // Çimen temizle
+    // Çimen temizle (demetler; önceki matris yedekte)
     if (this.cimen && this.cimenKonumlar && this.cimenOlcekler) {
       const m = new THREE.Matrix4();
       let degisti = false;
@@ -879,6 +1082,7 @@ void araziAgirliklari(vec3 geoNormal) {
         const cx = this.cimenKonumlar[i * 3];
         const cz = this.cimenKonumlar[i * 3 + 2];
         if (Math.hypot(cx - konum.x, cz - konum.z) < r * 1.25 && this.cimenOlcekler[i] > 0) {
+          this.yedekle(this.cimen, i);
           this.cimenOlcekler[i] = 0;
           m.makeScale(0, 0, 0);
           this.cimen.setMatrixAt(i, m);
@@ -889,22 +1093,67 @@ void araziAgirliklari(vec3 geoNormal) {
     }
   }
 
+  /**
+   * Bütün kraterleri geri alır (sahneyi sıfırla): etkilenen ızgara pencereleri analitik yüksekliğe döner (görüş
+   * koridorları analitiğin içinde: taban birebir aynı), normaller yalnız pencerelerde hesaplanıp o aralıklar yüklenir;
+   * splat tuvalinde krater kutularının yalnız G kanalı (yanık) silinir (R yol, B çakıl korunur; tuval başta G = 0);
+   * silinen çimen, ot, çalı, taş geri gelir, inen kayalar yerine döner. Dokular ve modeller yeniden yüklenmez
+   * (birkaç ms). Bir şey değiştiyse true döner (çağıran figür ve sütreyi yeni zemine oturtur).
+   */
+  kraterleriTemizle(): boolean {
+    if (this.kraterler.length === 0 && this.kraterYedekleri.size === 0) return false;
+    const kraterler = this.kraterler;
+    this.kraterler = [];
+    if (this.yukseklikler && this.yakin) {
+      const pencereler: IzgaraPenceresi[] = [];
+      for (const k of kraterler) {
+        const p = kraterPenceresi(k.x, k.z, k.r, IZGARA);
+        if (!p) continue;
+        pencereyiYenile(this.yukseklikler, IZGARA, p, (x, z) => this.analitik(x, z));
+        pencereler.push(p);
+      }
+      this.pencereleriGuncelle(pencereler);
+    }
+    if (this.splatTuval && this.splatTemiz && this.splatDoku && kraterler.length) {
+      // Tuvalde kurulumdan sonra yalnız yanık (G) boyanır: kurulumdaki kopyası geri çizilir (getImageData her çağrıda
+      // ~40 ms GPU okuması bekliyordu)
+      const ctx = this.splatTuval.getContext("2d")!;
+      ctx.globalCompositeOperation = "copy";
+      ctx.drawImage(this.splatTemiz, 0, 0);
+      ctx.globalCompositeOperation = "source-over";
+      this.splatDoku.needsUpdate = true;
+    }
+    for (const [mesh, yedek] of this.kraterYedekleri) {
+      const d = mesh.instanceMatrix.array as Float32Array;
+      for (const [i, m] of yedek) {
+        d.set(m, i * 16);
+        if (mesh === this.cimen && this.cimenOlcekler) this.cimenOlcekler[i] = Math.hypot(m[0], m[1], m[2]);
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh instanceof BitkiHucresi) mesh.sinirlariHesapla();
+    }
+    this.kraterYedekleri.clear();
+    return true;
+  }
+
   // ------------------------------------------------------------------ çimen
-  private cimenOlustur() {
-    if (this.profil.cimen <= 0) return;
-    const sayi = Math.round(this.kalite.cimenSayisi * this.profil.cimen);
-    // Demet: çapraz iki kart (0,42 × 0,42 m); dokusu prosedürel sap alfa haritası
-    const kart = new THREE.PlaneGeometry(0.42, 0.42, 1, 2);
-    kart.translate(0, 0.21, 0);
-    const kart2 = kart.clone().rotateY(Math.PI / 2);
-    const geo = birlestir([kart, kart2]);
-    kart.dispose();
-    kart2.dispose();
-    const alfa = cimenAlfaDokusu();
-    const renkDoku = cimenRenkDokusu(this.profil.kuruluk);
-    const mal = new THREE.MeshStandardMaterial({ map: renkDoku, alphaMap: alfa, alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0 });
+  /**
+   * Çimen demeti malzemesi: bir kez oluşturulur, bölgeler arası korunur (gölgelendirici yeniden derlenmez); renk
+   * dokusu yalnız kuruluk değişince yenilenir. Sap alfa haritası aynı kalır.
+   */
+  private cimenMalzemesiHazirla(): THREE.MeshStandardMaterial {
+    const mevcut = this.cimenMalzemesi;
+    if (mevcut) {
+      if (this.cimenRenkKurulugu !== this.profil.kuruluk) {
+        mevcut.map?.dispose();
+        mevcut.map = cimenRenkDokusu(this.profil.kuruluk);
+        this.cimenRenkKurulugu = this.profil.kuruluk;
+      }
+      return mevcut;
+    }
+    const mal = new THREE.MeshStandardMaterial({ map: cimenRenkDokusu(this.profil.kuruluk), alphaMap: cimenAlfaDokusu(), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0 });
     mal.onBeforeCompile = (shader) => {
-      shader.uniforms.zaman = this.uniformlar.cimenZaman ?? (this.uniformlar.cimenZaman = { value: 0 });
+      shader.uniforms.zaman = this.cimenZaman;
       shader.vertexShader = shader.vertexShader
         .replace("#include <common>", "#include <common>\nuniform float zaman;")
         .replace(
@@ -922,7 +1171,22 @@ void araziAgirliklari(vec3 geoNormal) {
         );
     };
     mal.customProgramCacheKey = () => "arazi-cimen-v1";
-    const mesh = new THREE.InstancedMesh(geo, mal, sayi);
+    this.cimenMalzemesi = mal;
+    this.cimenRenkKurulugu = this.profil.kuruluk;
+    return mal;
+  }
+
+  private cimenOlustur() {
+    if (this.profil.cimen <= 0) return;
+    const sayi = Math.round(this.kalite.cimenSayisi * this.profil.cimen);
+    // Demet: çapraz iki kart (0,42 × 0,42 m); dokusu prosedürel sap alfa haritası
+    const kart = new THREE.PlaneGeometry(0.42, 0.42, 1, 2);
+    kart.translate(0, 0.21, 0);
+    const kart2 = kart.clone().rotateY(Math.PI / 2);
+    const geo = birlestir([kart, kart2]);
+    kart.dispose();
+    kart2.dispose();
+    const mesh = new THREE.InstancedMesh(geo, this.cimenMalzemesiHazirla(), sayi);
     const renk = new THREE.Color();
     for (let i = 0; i < sayi; i++) {
       const t = 0.88 + Math.random() * 0.24;
@@ -996,13 +1260,43 @@ void araziAgirliklari(vec3 geoNormal) {
     return p;
   }
 
+  /**
+   * Modelin alt mesh'leri (dünya dönüşümü uygulanmış) malzemeye göre tek geometride birleşir: çimen modelinin 17,
+   * çalının 9 alt mesh'i 1–2 çizim olur (sektörlere bölmeden önce çizim sayısını düşürür). Öznitelikleri uyuşmayan
+   * parçalar ayrı kalır.
+   */
+  private modelParcalari(meshler: THREE.Mesh[]): Array<{ geometri: THREE.BufferGeometry; malzeme: THREE.Material | THREE.Material[] }> {
+    const gruplar = new Map<THREE.Material | THREE.Material[], THREE.BufferGeometry[]>();
+    for (const kaynak of meshler) {
+      kaynak.updateWorldMatrix(true, false);
+      // LOD dosyaları (gltf-transform) iç içe (interleaved) köşe tamponu kullanır: birleştirme için ayrılır
+      const geo = kaynak.geometry.clone();
+      deinterleaveGeometry(geo);
+      geo.applyMatrix4(kaynak.matrixWorld);
+      let liste = gruplar.get(kaynak.material);
+      if (!liste) gruplar.set(kaynak.material, (liste = []));
+      liste.push(geo);
+    }
+    const sonuc: Array<{ geometri: THREE.BufferGeometry; malzeme: THREE.Material | THREE.Material[] }> = [];
+    for (const [malzeme, geolar] of gruplar) {
+      const birlesik = geolar.length > 1 && !Array.isArray(malzeme) && birlesebilir(geolar) ? mergeGeometries(geolar) : null;
+      if (birlesik) {
+        for (const g of geolar) g.dispose();
+        sonuc.push({ geometri: birlesik, malzeme });
+      } else for (const g of geolar) sonuc.push({ geometri: g, malzeme });
+    }
+    return sonuc;
+  }
+
   private async bitkileriYukle(nesil: number) {
     const liste = BITKI_SETLERI[this.profil.bitkiler] ?? BITKI_SETLERI.bozkir;
     // Yerleşim yarıçapı: görünür yarıçapın %93'ü (en çok 148 m); kenar sisine çok yakın kaya yarım görünmez
     const enUzak = Math.max(14, Math.min(148, this.profil.yaricap * 0.93));
     let eksik = 0;
     for (const b of liste) {
-      const adet = Math.round(b.adet * this.profil[b.carpan] * this.kalite.kayaCarpani);
+      // Sınıfın en uzak mesafesi: dağılım kesilir, yakındaki yoğunluk aynı kalır (u ∈ [0, uSinir], adet × uSinir)
+      const uSinir = kesikPay(8, enUzak, Math.min(enUzak, b.enUzak ?? enUzak), 1.35);
+      const adet = Math.round(b.adet * this.profil[b.carpan] * this.kalite.kayaCarpani * uSinir);
       if (adet <= 0) continue;
       let gltf: GLTF;
       try {
@@ -1022,11 +1316,11 @@ void araziAgirliklari(vec3 geoNormal) {
         if (mm.isMesh) meshler.push(mm);
       });
       // Konumlar: eğim tercihine göre; temiz noktalardan, yoldan ve izleyici çevresinden uzak
-      const yerler: THREE.Matrix4[] = [];
+      const yerler: Array<{ x: number; z: number; m: THREE.Matrix4 }> = [];
       let deneme = 0;
       while (yerler.length < adet && deneme < adet * 40) {
         deneme++;
-        const r = 8 + Math.pow(Math.random(), 1.35) * (enUzak - 8);
+        const r = 8 + Math.pow(Math.random() * uSinir, 1.35) * (enUzak - 8);
         const a = Math.random() * Math.PI * 2;
         const x = Math.cos(a) * r;
         const z = Math.sin(a) * r;
@@ -1043,23 +1337,31 @@ void araziAgirliklari(vec3 geoNormal) {
           new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.random() * Math.PI * 2, 0)),
           new THREE.Vector3(olcek, olcek, olcek),
         );
-        yerler.push(m);
+        yerler.push({ x, z, m });
       }
       if (yerler.length === 0) continue;
-      const bitkiMi = b.carpan !== "kaya";
-      for (const kaynak of meshler) {
-        kaynak.updateWorldMatrix(true, false);
-        const geo = kaynak.geometry.clone().applyMatrix4(kaynak.matrixWorld);
-        const mal = kaynak.material as THREE.MeshStandardMaterial;
-        // Yaprak/sap kartları iki yüzlü görünsün (fotogrametri modellerinde tek yüz)
-        if (mal && "side" in mal && bitkiMi && (mal.alphaTest > 0 || mal.transparent || b.klasor.startsWith("cimen"))) mal.side = THREE.DoubleSide;
-        const inst = new THREE.InstancedMesh(geo, mal, yerler.length);
-        yerler.forEach((m, i) => inst.setMatrixAt(i, m));
-        inst.instanceMatrix.needsUpdate = true;
-        inst.castShadow = b.golge;
-        inst.receiveShadow = true;
-        inst.frustumCulled = false;
-        this.bitkiGrubu.add(inst);
+      const bitkiMi = b.sinif === "cali" || b.sinif === "ot";
+      // Azimut sektörleri: her hücre ayrı mesh, three duvar ve gölge kamerası başına ayıklar
+      const hucreler = sektorlereBol(yerler, SEKTOR_SAYISI, SEKTOR_KAYMASI).filter((h) => h.length > 0);
+      for (const { geometri, malzeme } of this.modelParcalari(meshler)) {
+        for (const mal of Array.isArray(malzeme) ? malzeme : [malzeme]) {
+          // Yaprak/sap kartları iki yüzlü görünsün (fotogrametri modellerinde tek yüz)
+          const std = mal as THREE.MeshStandardMaterial;
+          if (bitkiMi && (std.alphaTest > 0 || std.transparent || b.klasor.startsWith("cimen"))) std.side = THREE.DoubleSide;
+          // Saydam + iki yüzlü: three arka ve ön yüzü iki ayrı çizimle çizerdi (ot ve çalı yaprağında kare başına
+          // ~1 M üçgen); tek geçişte çizilir. Yapraklar derinlik yazmaz, sıralama farkı bu ölçekte görünmüyor.
+          if (std.transparent && std.side === THREE.DoubleSide) std.forceSinglePass = true;
+        }
+        this.bitkiGeometrileri.push(geometri);
+        for (const hucre of hucreler) {
+          const inst = new BitkiHucresi(paylasimliGeometri(geometri), malzeme, hucre.length, b.sinif);
+          hucre.forEach((y, i) => inst.setMatrixAt(i, y.m));
+          inst.instanceMatrix.needsUpdate = true;
+          inst.castShadow = b.golge;
+          inst.receiveShadow = true;
+          inst.sinirlariHesapla();
+          this.bitkiGrubu.add(inst);
+        }
       }
     }
     if (eksik > 0 && nesil === this.nesil) this.uyari?.(`Arazi modelleri eksik: ${eksik} tür yüklenemedi (icerik/arazi/modeller; araclar/arazi-indir.mjs)`);
@@ -1068,7 +1370,7 @@ void araziAgirliklari(vec3 geoNormal) {
   // ------------------------------------------------------------------ kare
   guncelle(dt: number) {
     this.zaman += dt;
-    if (this.uniformlar.cimenZaman) this.uniformlar.cimenZaman.value = this.zaman;
+    this.cimenZaman.value = this.zaman;
   }
 
   /** Mevsim: kar örtüsü 0–1 (kış 1, sonbahar 0.15). */
@@ -1077,6 +1379,36 @@ void araziAgirliklari(vec3 geoNormal) {
     if (this.uniformlar.kar) this.uniformlar.kar.value = kar;
     if (this.cimen) this.cimen.visible = kar < 0.8;
   }
+}
+
+/** mergeGeometries ile birleşebilir mi: hepsi indeksli ya da hiçbiri, aynı öznitelikler (boyut, tür, normalize), biçim hedefi yok. */
+function birlesebilir(geolar: readonly THREE.BufferGeometry[]): boolean {
+  const ilk = geolar[0];
+  const adlar = Object.keys(ilk.attributes).sort().join(",");
+  for (const g of geolar) {
+    if ((g.index === null) !== (ilk.index === null)) return false;
+    if (Object.keys(g.attributes).sort().join(",") !== adlar || Object.keys(g.morphAttributes).length > 0) return false;
+    for (const ad of Object.keys(g.attributes)) {
+      const a = g.attributes[ad];
+      const b = ilk.attributes[ad];
+      if (!(a instanceof THREE.BufferAttribute) || !(b instanceof THREE.BufferAttribute)) return false;
+      if (a.itemSize !== b.itemSize || a.normalized !== b.normalized || a.array.constructor !== b.array.constructor) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Aynı öznitelikleri (dolayısıyla aynı GPU tamponlarını) paylaşan yeni geometri nesnesi: her hücre kendi VAO'sunu
+ * kullanır (çizim başına öznitelik yeniden bağlanmaz), köşe verisi bir kez yüklenir. Hepsi birlikte bırakılmalı (sok).
+ */
+function paylasimliGeometri(kaynak: THREE.BufferGeometry): THREE.BufferGeometry {
+  const g = new THREE.BufferGeometry();
+  g.setIndex(kaynak.index);
+  for (const ad of Object.keys(kaynak.attributes)) g.setAttribute(ad, kaynak.attributes[ad]);
+  if (!kaynak.boundingSphere) kaynak.computeBoundingSphere();
+  g.boundingSphere = kaynak.boundingSphere!.clone();
+  return g;
 }
 
 /** Birden çok BufferGeometry'yi (aynı özniteliklerle) tek geometriye birleştirir. */

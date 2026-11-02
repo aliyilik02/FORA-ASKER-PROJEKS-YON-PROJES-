@@ -69,6 +69,29 @@ describe("uzak izli mermi kalınlığı (piksel açısı duvar kameralarından)"
     expect(enBuyuk).toBeCloseTo((yer[1].izdusum.sag - yer[1].izdusum.sol) / yer[1].genislik, 12);
   });
 
+  it("iz tamponu: yalnız etkin aralık yüklenir (dinamik), iz yokken hiç yükleme yok", () => {
+    const sistem = new CatismaSistemi(PARCACIKLAR, { carpma: () => undefined, atis: () => undefined });
+    const mesh = sistem.grup.children[0] as THREE.InstancedMesh;
+    const im = mesh.instanceMatrix;
+    const ic = mesh.instanceColor!;
+    expect(im.usage).toBe(THREE.DynamicDrawUsage);
+    expect(ic.usage).toBe(THREE.DynamicDrawUsage);
+    // İz yok: sürüm değişmez (yükleme yok)
+    const v0 = im.version;
+    const r0 = ic.version;
+    for (let i = 0; i < 5; i++) sistem.guncelle(1 / 60);
+    expect(im.version).toBe(v0);
+    expect(ic.version).toBe(r0);
+    // İzli akış: her karede yalnız [0, n) aralığı (önceki karelerin aralıkları birikmez)
+    sistem.izliAyarla({ aktif: true, azimut: 0, yon: 0, siklik: 60 });
+    for (let i = 0; i < 20; i++) sistem.guncelle(1 / 60);
+    expect(mesh.count).toBeGreaterThan(5);
+    expect(mesh.count).toBeLessThan(320);
+    expect(im.version).toBeGreaterThan(v0);
+    expect(im.updateRanges).toEqual([{ start: 0, count: mesh.count * 16 }]);
+    expect(ic.updateRanges).toEqual([{ start: 0, count: mesh.count * 3 }]);
+  });
+
   it("ölçüsüz yerleşimde (üç duvar aynı, kare piksel) değer önceki tek duvarlı formülle aynı", () => {
     const yer = duvarYerlesimleri(5760, 1080);
     const { oranlar, kameralar } = kalinlikOranlari(yer);

@@ -86,7 +86,8 @@ parametrik yer tutucu. Üstüne: Oda 2 ön planları, **figür klipleri** (`klip
 `figur`), sis, helikopter, hava, **efekt plakaları** (`klipler`, kategori `efekt`; adı
 `patlama_*`, `toz_*`, `uzak_patlama_*` olanlar panel efektlerine otomatik bağlanır), izli mermi,
 flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test, T hoparlör testi. Sorgu: `?oda=`, `?fov=`, `?panorama=`,
-`?yaw=`, `?hud=1`, `?doldur=1`, `?kalite=dusuk|orta|yuksek` (dizüstü: dusuk; yerel kayıtta kalır), `?ses=`, `?hoparlor=`
+`?yaw=`, `?hud=1`, `?doldur=1`, `?kalite=dusuk|orta|yuksek` (yerel kayıtta kalır; ikisi de yoksa otomatik: Intel entegre
+→ orta, diğer → yuksek, `src/kaliteSecimi.ts`), `?ses=`, `?hoparlor=`
 (Ses, aşağıda). Ayrıntı: `docs/duvar-oynatici.md`.
 
 Ses (`ses.ts` + saf hesap `sesYerlesimi.ts`): her ses sahne azimutuyla çalınır; stereoda eski StereoPanner yolu (pan =
@@ -150,8 +151,8 @@ değişince seçer (sabit 12° yok); yeni resim panorama yüklenirken helikopter
 kalkış iniş noktasının kendi yanından arkaya, "yok"ta 1,5 sn sönme; uzak kaynak yerden ≤ 12 m ve arazi ufkunun
 ≤ 1,5° üstü (`AraziUfku`; çatışmada da), kapalı doğruda mermi yamaca çarpar; izli akışta yakın zemin payı %20,
 çarpma/"çat" sesi ≤ 1,5/sn; hedef yüksekliği döndürmeden sonra. Kırsal/dağlık hibritte önde ve sol önde
-~115–205 m'deki sırt yüzünden orta duvarın izli mermilerinin çoğu sırtın arkasına çarpıyor (ölçüm
-`docs/duvar-oynatici.md` bilinen sınırlar). Tarayıcıda gözle doğrulanmadı.
+~115–205 m'deki sırt yüzünden orta duvarın izli mermilerinin çoğu sırtın arkasına çarpıyordu; stab/fps'te kaynak
+sırtın tepesine taşınıyor (`izliYol.sirtaTasi`, aşağıda Performans). Tarayıcıda gözle doğrulanmadı.
 
 **Figür duruşları (23 Ekim):** `FigurKomutu.poz` (ayakta / comelmis / yarali) ve `islem: "poz"`;
 yaralı = SWAT "HitRecieve" → "Death" (son karede kalır) + prosedürel nefes ve kol kaldırma (yardım
@@ -167,7 +168,16 @@ gelen figürler kuyruğa alınır (yeniden açılışta kaybolmaz). Tarayıcıda
 **Performans (23 Ekim):** gölge haritası karede bir kez (`shadowMap.autoUpdate=false`, `ciz()` başında
 `needsUpdate`), iskeletli mesh'ler tek Skeleton paylaşır (`iskeletleriPaylastir`), krater dumanı 3/sn + toplam
 320 topak sınırı. Iris Xe, 1277×239: boş sahne 60 fps; 4 figür + çatışma + 16 krater ≈ 38 fps (önce 30).
-HUD'da `çizim/duvar` sayısı var. **Ölçüm tuzağı:** Claude-in-Chrome sekmesi/penceresi arka planda kalınca
+HUD'da `çizim/duvar` sayısı var. **2 Kasım (stab/fps):** asıl yük 3B bitkilerdi (tek InstancedMesh, ayıklama yok: her
+duvar + gölge 360°'yi çiziyordu). Şimdi model alt mesh'leri malzemeye göre birleşir, örnekler 8 azimut sektörüne bölünür
+(`BitkiHucresi`, sınır kabuk `bitkiSektorleri.ts`), saydam iki yüzlü yapraklar tek geçiş, ot/taş 50 m, çalı 80 m,
+`kaya_buyuk` LOD 9 k üçgen; krater yalnız penceresinin normallerini hesaplar (`araziIzgara.ts`, 1–5 ms), yeni
+`AraziKatmani.kraterleriTemizle()` sıfırlamada çukuru/yanığı/silinen bitkiyi geri alır; bölge değişiminde arazi
+malzemesi ve ortak dokular korunur; çatışma izi/parçacık yalnız canlı aralığı yükler. Iris Xe 1920×360 kırsal hibrit:
+yuksek 19 → 54 fps, orta 25 → 58, dusuk 40 → 60; 4 asker + çatışma orta 18 → 55–60 (makine ısınınca orta 52–60,
+yuksek ~48; ölçerken başka sekme/başsız tarayıcı ve ağır CPU işi olmamalı). Kalite otomatik: Intel → orta.
+İzli mermi/çatışma kaynağı sırt arkasında kalırsa sırtın tepesine taşınır (`izliYol.sirtaTasi`; kırsal orta duvarda
+60 m'ye ulaşan iz %25 → %96). **Ölçüm tuzağı:** Claude-in-Chrome sekmesi/penceresi arka planda kalınca
 Chrome kareyi kısar (10–16 fps görünür); gerçek fps için normal Chrome penceresinde HUD'a bak (PowerShell
 `CopyFromScreen` ile ekran yakalama işe yarar). Üst çubuktaki "Oynatıcı ×N" sayısı 1'den büyükse birden çok
 oynatıcı sekmesi aynı GPU'yu paylaşıyor demektir; fazlasını kapat.
@@ -198,8 +208,8 @@ mesajı), önizleme fps/kalite bilgisi taşır; HUD varsayılan kapalı; panelde
    müdahale animasyonu (turnike) için yeşil perde çekimi (docs §2.5). Yaralı taşıma (iki kişi) yok.
 3. VFX plakaları (gerçek çekim, alfa). Helikopter inişi (uçuş modeli, pas geçme, zemine göre rotor tozu, konumlu
    rotor sesi) ve 3B izli mermi yazılımda, inceleme bulguları düzeltildi (2 Kasım); duvarda gözle/kulakla ayar bekliyor.
-   Karar bekleyen: kırsal/dağlık hibritte sırtın arkasındaki uzak kaynak (12 m sınırıyla kırsal orta duvarda izli
-   merminin ~%17'si izleyiciye ulaşıyor): kaynağı sırt hattına almak ya da sınırı bölgeye göre gevşetmek.
+   Sırt arkasındaki uzak kaynak (karar verildi, stab/fps): kaynak sırtın tepesine (≥ 80 m, zeminin 1,5 m üstü) taşınır;
+   kırsal orta duvarda izleyicinin 60 m yakınına ulaşan iz %25 → %96. Namlu parıltıları sırtta: duvarda gözle bakılmalı.
 4. Çok kanallı ses (4 kanal / 5.1 / 7.1) ve ölçülmüş duvar geometrisi (`?oda=`) yazılımda hazır; kalan saha ayarı:
    gerçek hoparlör açıları (`?hoparlor=`), T testi + kulak testi (LFE seviyesi), U duvar ölçüleri → `?oda=` (panel
    Sistem › Duvar geometrisi, sahada K ızgarasıyla doğrula). Türkçe bağırma/yaralı inleme kaydı.

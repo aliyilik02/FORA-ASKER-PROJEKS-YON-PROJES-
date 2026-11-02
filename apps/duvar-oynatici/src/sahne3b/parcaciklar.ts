@@ -70,6 +70,8 @@ export class ParcacikGrubu {
   private readonly alfa: THREE.InstancedBufferAttribute;
   private readonly aci: THREE.InstancedBufferAttribute;
   private readonly renk: THREE.InstancedBufferAttribute;
+  /** Örnek başına öznitelikler (canlı aralık yüklemesi için). */
+  private readonly oznitelikler: THREE.InstancedBufferAttribute[];
   readonly parcaciklar: Parcacik[] = [];
   /** Ölen parçacık nesneleri; `al()` yeniden kullanır (en çok `kapasite` kadar tutulur). */
   private readonly havuz: Parcacik[] = [];
@@ -92,6 +94,7 @@ export class ParcacikGrubu {
     g.setAttribute("alfa", this.alfa);
     g.setAttribute("aci", this.aci);
     g.setAttribute("renk", this.renk);
+    this.oznitelikler = [this.konum, this.boyut, this.alfa, this.aci, this.renk];
     g.instanceCount = 0;
     this.geometri = g;
     const m = new THREE.ShaderMaterial({
@@ -202,11 +205,14 @@ export class ParcacikGrubu {
       r[i * 3 + 2] = p.renk[2] * isik;
     }
     this.geometri.instanceCount = n;
-    this.konum.needsUpdate = true;
-    this.boyut.needsUpdate = true;
-    this.alfa.needsUpdate = true;
-    this.aci.needsUpdate = true;
-    this.renk.needsUpdate = true;
+    // Yalnız canlı aralık yüklenir; parçacık yokken hiç yükleme yok (sayı 0: çizim de yok). Önceden her karede beş
+    // tamponun tamamı yükleniyordu (ANGLE/D3D11'de dinamik tampon güncellemesi pahalı).
+    if (n === 0) return;
+    for (const a of this.oznitelikler) {
+      a.clearUpdateRanges();
+      a.addUpdateRange(0, n * a.itemSize);
+      a.needsUpdate = true;
+    }
   }
 
   temizle() {

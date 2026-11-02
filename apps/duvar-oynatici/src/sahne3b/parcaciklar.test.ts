@@ -38,6 +38,30 @@ describe("ParcacikGrubu havuzu", () => {
   });
 });
 
+describe("ParcacikGrubu tampon yüklemesi", () => {
+  it("parçacık yokken yükleme yok; varken yalnız canlı aralık (kapasitenin tamamı değil)", () => {
+    const g = new ParcacikGrubu(new THREE.Texture(), 50, "normal", true);
+    const oz = g.mesh.geometry.attributes as Record<string, THREE.InstancedBufferAttribute>;
+    const adlar = ["konum", "boyut", "alfa", "aci", "renk"];
+    const surum = () => adlar.map((a) => oz[a].version);
+    const once = surum();
+    g.guncelle(DT);
+    expect(surum()).toEqual(once);
+    for (let i = 0; i < 3; i++) {
+      const p = g.al();
+      p.t = 0;
+      p.sure = 5;
+      g.ekle(p);
+    }
+    g.guncelle(DT);
+    g.guncelle(DT); // aralıklar birikmez
+    for (const a of adlar) {
+      expect(oz[a].version).toBeGreaterThan(once[adlar.indexOf(a)]);
+      expect(oz[a].updateRanges).toEqual([{ start: 0, count: 3 * oz[a].itemSize }]);
+    }
+  });
+});
+
 describe("rotorTozu", () => {
   it("tam şiddette bile canlı parçacık sayısı sınırlı (kapasitenin çok altında)", () => {
     for (const tur of Object.keys(ROTOR_TOZU_PROFILLERI) as RotorTozuTuru[]) {
