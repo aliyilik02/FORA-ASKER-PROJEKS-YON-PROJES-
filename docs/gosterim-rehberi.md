@@ -24,6 +24,28 @@ Oda 2 güvenli alanı ve ayarlar aynen kalır. Düğmedeki sayı sahnedeki etkin
 **⇧0** aynı işi yapar. Canlı sahne kartının üstünde duvarın önizlemesi (en çok 5 sn'de bir) ve fps/kalite bilgisi
 görünür; kontrol odasından duvarı görmeden çalışılabilir.
 
+## Önerilen – Tek tuş: "Gösterim – Güncel Durum (5 dk)"
+
+Bugünkü hâliyle demo (2 Kasım). Yalnız yerleşim planı doğrulanmış panoramaları kullanır; dizüstünde (Iris Xe,
+otomatik "orta" kalite) baştan sona medyan 60 fps ölçüldü. Panel **Senaryo** → "Gösterim – Güncel Durum (5 dk)" → **Oynat**.
+Başlamadan ve bittikten sonra üst çubuktaki **Sıfırla** (ya da Esc, Esc).
+
+| Zaman | Duvarda ne olur | Anlatım notu |
+|---|---|---|
+| 0:00 | Kırsal açık arazi, yaz 10:30 | 360° panorama + üstünde 3B dünya (arazi, bitki, gölge) |
+| 0:05–0:15 | Üç asker mevzide (biri diz çökmüş), tank, koşan asker | Askerler hazır mevzi noktalarına kendiliğinden yerleşir; eğitmen yer seçmez |
+| 0:22–0:38 | Düşman ateşi, izli mermiler, askerler karşılık verir; iki patlama, **kalıcı krater** | Çatışma yönü/şiddeti panelden; hasar bölge değişene kadar kalır |
+| 0:42–0:54 | **Asker vurulur**, yardım çağırır; sıhhiyeci başına diz çöker | Oda 1 eğitimi: ateş altında bakım |
+| 1:20 | Akşam 19:30 – yumuşak geçiş (alacakaranlık çekimi) | Sahne değişirken görüntü donmaz, eski sahne yenisi hazır olana dek akar |
+| 1:37–2:10 | **Gece** (karartılmış gerçek gece çekimi, ay ışığı): yandan geçen izli mermiler, uzak ve yakın patlama | 3B ışık gece panoramasına eşlenir; izli mermi gece belirgin |
+| 2:16 | Kış sabahı | Aynı sahne, farklı mevsim |
+| 2:37–2:55 | **Ormanlık bölge**: asker ağaçların arasında, yürüyen asker, patlama | 5 bölge; bölge geçişi de kesintisiz |
+| 3:10–3:24 | **Oda 2**: üs bölgesi güvenli alanı (HESCO, kum torbası), yaralı + sıhhiyeci, uzak silah sesleri | Oda 2 eğitimi: taktik güvenli alan |
+| 3:30–4:45 | Helikopter sol duvardan yaklaşır, açık piste iner (rotor tozu, ses), bekler, arkaya doğru kalkar | Tahliye; helikopter iniş noktası panoramanın planından |
+| 4:51 | Oda 1, kırsal – bitiş | |
+
+Bilinen: gece bölümü projeksiyonda karanlık görünür (bilerek gerçekçi); karanlık salonda daha iyi okunur.
+
 ## Seçenek A – Tek tuş: "Gösterim – Tam Tur (5 dk)"
 
 Panel **Senaryo** sekmesi → "Gösterim – Tam Tur (5 dk)" → **Oynat**. Akış:

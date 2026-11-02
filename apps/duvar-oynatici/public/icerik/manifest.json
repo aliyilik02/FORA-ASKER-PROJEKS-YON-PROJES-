@@ -12,72 +12,19 @@
       "_not": "Skybox AI, 2912x1440 onizleme; 8K/12K surumu gelince ayni adla degistirin. yawKaydirma: panoramanin hangi azimutu orta duvarin ortasina gelsin (derece). yukseklikKaydirma: ufku kaydir (-1..1). mevsim/zaman verilmezse o bolgenin tum durumlarinda kullanilir.",
       "noktalar": [
         {
-          "ad": "tarla sol uzak",
-          "azimut": -60,
-          "mesafe": 22,
+          "ad": "sol tarla",
+          "azimut": -125,
+          "mesafe": 11,
           "tur": [
-            "patlama",
-            "figur",
             "asker"
           ]
         },
         {
-          "ad": "tarla sol",
-          "azimut": -35,
-          "mesafe": 17,
+          "ad": "tank · sol tarla",
+          "azimut": -114,
+          "mesafe": 30,
           "tur": [
-            "patlama",
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "koy onu",
-          "azimut": -12,
-          "mesafe": 26,
-          "tur": [
-            "patlama",
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "yol",
-          "azimut": 3,
-          "mesafe": 20,
-          "tur": [
-            "figur",
-            "toz",
-            "asker"
-          ]
-        },
-        {
-          "ad": "yol uzak",
-          "azimut": 5,
-          "mesafe": 34,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "sag bozkir",
-          "azimut": 95,
-          "mesafe": 16,
-          "tur": [
-            "patlama",
-            "figur",
-            "toz",
-            "asker"
-          ]
-        },
-        {
-          "ad": "sag bozkir uzak",
-          "azimut": 120,
-          "mesafe": 24,
-          "tur": [
-            "patlama",
-            "figur",
-            "asker"
+            "tank"
           ]
         },
         {
@@ -85,57 +32,185 @@
           "azimut": -110,
           "mesafe": 18,
           "tur": [
-            "patlama",
-            "figur",
-            "asker"
+            "patlama"
           ]
         },
         {
-          "ad": "inis alani",
-          "azimut": -80,
-          "mesafe": 42,
+          "ad": "sol tarla orta",
+          "azimut": -104,
+          "mesafe": 12,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "inis alani sol",
+          "azimut": -90,
+          "mesafe": 38,
           "tur": [
             "helikopter"
           ]
         },
         {
-          "ad": "tank · yol uzak",
-          "azimut": 5,
-          "mesafe": 38,
+          "ad": "tarla yuruyus",
+          "azimut": -83,
+          "mesafe": 14,
           "tur": [
-            "tank"
+            "figur"
           ]
         },
         {
-          "ad": "tank · koy onu",
-          "azimut": -12,
+          "ad": "tank · koy yonu",
+          "azimut": -70,
           "mesafe": 30,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · sag bozkir uzak",
-          "azimut": 120,
-          "mesafe": 28,
+          "ad": "koy yonu",
+          "azimut": -62,
+          "mesafe": 11,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "tarla sol uzak",
+          "azimut": -60,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "tarla sol on",
+          "azimut": -40,
+          "mesafe": 11,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "tarla sol",
+          "azimut": -35,
+          "mesafe": 13,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "inis alani",
+          "azimut": -33,
+          "mesafe": 22,
+          "tur": [
+            "helikopter"
+          ]
+        },
+        {
+          "ad": "cali arasi",
+          "azimut": -15,
+          "mesafe": 11,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "koy onu",
+          "azimut": -8,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "yol toz",
+          "azimut": 1,
+          "mesafe": 15,
+          "tur": [
+            "toz"
+          ]
+        },
+        {
+          "ad": "yol kenari",
+          "azimut": 5,
+          "mesafe": 11,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "tank · sag bozkir",
+          "azimut": 95,
+          "mesafe": 24,
           "tur": [
             "tank"
+          ]
+        },
+        {
+          "ad": "sag bozkir",
+          "azimut": 98,
+          "mesafe": 17,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "bozkir sol",
+          "azimut": 103,
+          "mesafe": 11,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "bozkir toz",
+          "azimut": 112,
+          "mesafe": 15,
+          "tur": [
+            "toz"
+          ]
+        },
+        {
+          "ad": "sirt onu",
+          "azimut": 113,
+          "mesafe": 14,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "bozkir cali",
+          "azimut": 123,
+          "mesafe": 11,
+          "tur": [
+            "asker",
+            "figur"
           ]
         }
       ],
       "yasak": [
         {
-          "ad": "kavak kumesi",
-          "baslangic": 7,
-          "bitis": 68
+          "ad": "on cali",
+          "baslangic": -29,
+          "bitis": -16
         },
         {
-          "ad": "on cali",
-          "baslangic": -26,
-          "bitis": -18
+          "ad": "kavak kumesi ve buyuk cali",
+          "baslangic": 18,
+          "bitis": 89
         }
       ],
-      "_plan_not": "noktalar/yasak azimutlari PANORAMA koordinatindadir (yawKaydirma uygulanmadan; equirect x -> (x/genislik-0.5)*360). Oynatici yaw farkini kendisi uygular."
+      "_plan_not": "noktalar/yasak azimutlari PANORAMA koordinatindadir (yawKaydirma uygulanmadan; equirect x -> (x/genislik-0.5)*360). Oynatici yaw farkini kendisi uygular.",
+      "gunes": {
+        "azimut": 150,
+        "yukseklik": 45,
+        "guc": 0.8,
+        "aciklama": "Güneş diski görünmüyor; yön gölgelerden çıkarıldı. Ön plandaki kayaların (55° ve 100–110°) sağ yüzü aydınlık, sol yüzü karanlık. Kaya ve bozkır çalısı gölgeleri sola ve izleyiciye doğru (yaklaşık −20…−40°) düşüyor, kavak dibindeki gölge bandı da sola-ileri uzanıyor. Gök ufkun üstünde 130–165° arasında en açık ve en az doygun. Güneş bu yüzden sağ arkada, görünmeyen arka 90°'de (≈150°). Yükseklik belirsiz: kısa kaya gölgeleri ile çalı kuyrukları 30–50° arası gösteriyor, 45° orta değer. Gölgeler keskin, ışık güçlü (0,8). Otomatik tahmin (130°, 25°) yönde yakın ama alçak."
+      }
     },
     {
       "bolge": "daglik",
