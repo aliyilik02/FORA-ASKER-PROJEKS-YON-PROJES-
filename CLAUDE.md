@@ -140,9 +140,18 @@ Bone/klip adları: GLTFLoader noktayı siler; kısa klip adı `klipBul` ile eşl
 **Helikopter ve izli mermi (27 Ekim):** helikopter hareketi saf uçuş modelinde (`sahne3b/helikopterUcusu.ts`,
 testli: kavisli yaklaşma, virajda yatış, flare, kızakta sekme, 5 m askıdan burun aşağı kalkış, 80 m ileriye bakan
 arazi kaçınması); rotor tozu zemine göre (`rotorTozu.ts`: kış kar, kırsal/dağlık toprak, ormanlık koyu toprak +
-yaprak, üs/meskûn beton; `Helikopter3B.tozTuru` `araziAyarla`dan). İzli mermi "yön"ü artık iz doğrultusu: 0 izleyiciye
-doğru, ±90 önünden yandan geçer (`catisma.ts` `izliAtis`, yardımcılar `izliYol.ts`); uzak iz ≥ 1,5 px kalın, başın
-6 m yakınından geçende "çat". Tarayıcıda gözle doğrulanmadı.
+yaprak, üs/meskûn beton; `Helikopter3B.tozTuru` `araziAyarla`dan). İzli mermi "yön"ü artık iz doğrultusu: 0 seçilen
+duvarın uzağından izleyiciye doğru, ±90 komşu duvar yönünden gelip seçilen duvarın önünden yandan geçer (kaynak da
+kayar; kullanıcı kararı) (`catisma.ts` `izliAtis`, yardımcılar `izliYol.ts`); uzak iz ≥ 1,5 px kalın, başın 6 m
+yakınından geçende "çat". **2 Kasım inceleme düzeltmeleri:** havadayken iniş noktası değişirse geçerli yaklaşmada
+değilse pas geçme (35 m, yeni eksende 85–150 m'den yeniden yaklaşma), sahne noktayı yalnız plan/yaw/panel yönü
+değişince seçer (sabit 12° yok); yeni resim panorama yüklenirken helikopter 3B'de uçmayı sürdürür (main.ts
+`helikopter3B`, `panoramaYukleniyor`; önceden 2B siluete geçip baştan başlıyordu); belirirken yatış sarsıntısı yok;
+kalkış iniş noktasının kendi yanından arkaya, "yok"ta 1,5 sn sönme; uzak kaynak yerden ≤ 12 m ve arazi ufkunun
+≤ 1,5° üstü (`AraziUfku`; çatışmada da), kapalı doğruda mermi yamaca çarpar; izli akışta yakın zemin payı %20,
+çarpma/"çat" sesi ≤ 1,5/sn; hedef yüksekliği döndürmeden sonra. Kırsal/dağlık hibritte önde ve sol önde
+~115–205 m'deki sırt yüzünden orta duvarın izli mermilerinin çoğu sırtın arkasına çarpıyor (ölçüm
+`docs/duvar-oynatici.md` bilinen sınırlar). Tarayıcıda gözle doğrulanmadı.
 
 **Figür duruşları (23 Ekim):** `FigurKomutu.poz` (ayakta / comelmis / yarali) ve `islem: "poz"`;
 yaralı = SWAT "HitRecieve" → "Death" (son karede kalır) + prosedürel nefes ve kol kaldırma (yardım
@@ -187,8 +196,10 @@ mesajı), önizleme fps/kalite bilgisi taşır; HUD varsayılan kapalı; panelde
 2. HESCO artık prosedürel (`sutre.ts` `tip: "hesco"`, canvas doku: tel kafes + jeotekstil + kum; üs bölgesi
    diziliminde iki hat). Sıhhiyeci "Interact" klibiyle idare ediyor; gerçek
    müdahale animasyonu (turnike) için yeşil perde çekimi (docs §2.5). Yaralı taşıma (iki kişi) yok.
-3. VFX plakaları (gerçek çekim, alfa). Helikopter inişi (uçuş modeli, zemine göre rotor tozu, konumlu rotor sesi) ve
-   3B izli mermi yazılımda; duvarda gözle/kulakla ayar ve helikopter/izli mermi inceleme bulgularının düzeltilmesi bekliyor.
+3. VFX plakaları (gerçek çekim, alfa). Helikopter inişi (uçuş modeli, pas geçme, zemine göre rotor tozu, konumlu
+   rotor sesi) ve 3B izli mermi yazılımda, inceleme bulguları düzeltildi (2 Kasım); duvarda gözle/kulakla ayar bekliyor.
+   Karar bekleyen: kırsal/dağlık hibritte sırtın arkasındaki uzak kaynak (12 m sınırıyla kırsal orta duvarda izli
+   merminin ~%17'si izleyiciye ulaşıyor): kaynağı sırt hattına almak ya da sınırı bölgeye göre gevşetmek.
 4. Çok kanallı ses (4 kanal / 5.1 / 7.1) ve ölçülmüş duvar geometrisi (`?oda=`) yazılımda hazır; kalan saha ayarı:
    gerçek hoparlör açıları (`?hoparlor=`), T testi + kulak testi (LFE seviyesi), U duvar ölçüleri → `?oda=` (panel
    Sistem › Duvar geometrisi, sahada K ızgarasıyla doğrula). Türkçe bağırma/yaralı inleme kaydı.

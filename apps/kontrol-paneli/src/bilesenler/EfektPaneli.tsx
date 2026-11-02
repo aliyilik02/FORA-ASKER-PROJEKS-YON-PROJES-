@@ -14,7 +14,10 @@ const ODA1_EFEKTLERI: Array<{ tur: EfektTuru; aciklama: string; sinif?: string }
   { tur: "cagirma", aciklama: "Sıhhiye! Sedye getirin!" },
 ];
 
-/** İzli mermi yönü: 0 izleyiciye doğru; + sağdan sola (←), − soldan sağa (→); ±90'a yakın önünden yandan geçer. */
+/**
+ * İzli mermi yönü: 0 seçilen duvarın uzağından izleyiciye doğru; ±90'a yakın komşu duvar yönünden gelip seçilen duvarın
+ * önünden yandan geçer; + sağdan sola (←), − soldan sağa (→).
+ */
 function izliYonMetni(v: number): string {
   const d = Math.round(v);
   if (Math.abs(d) <= 5) return `${d}° · izleyiciye`;
@@ -92,9 +95,10 @@ export function EfektPaneli({ durum, calistir }: { durum: SimulasyonDurumu; cali
             <Kaydirici etiket="Sıklık" deger={m.siklik} min={0.5} max={20} adim={0.5} birim=" /sn" onChange={(siklik) => mermiGuncelle({ siklik })} />
           </div>
           <p className="aciklama">
-            Mermiler seçilen duvarın uzağından gelir. Yön 0°: izleyiciye doğru (yakına çarpar, seker, bazısı başın üstünden
-            geçer). ±90°: izleyicinin 10–60 m önünden yandan geçip gider; + sağdan sola, − soldan sağa. Başın yakınından geçen
-            mermi "çat" diye ses verir.
+            Yön 0°: mermiler seçilen duvarın uzağından izleyiciye doğru gelir (bir kısmı yakına çarpar, seker, başın üstünden
+            geçer). ±90°: mermiler komşu duvar yönünden gelip seçilen duvarın 10–60 m önünden yandan geçer; + sağdan sola,
+            − soldan sağa (yan duvarda bir yönde komşu duvar yok: sağ duvarda +, sol duvarda − mermiler arkadan gelir).
+            Başın yakınından geçen mermi "çat" diye ses verir.
           </p>
         </div>
       </Bolum>

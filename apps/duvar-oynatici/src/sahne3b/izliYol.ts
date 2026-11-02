@@ -22,8 +22,9 @@ const RAD = Math.PI / 180;
  * döndürülür (yükseklikler korunur, `y` yerinde değişir). P, doğru üzerinde izleyiciye yatay `eksenMesafe`
  * uzaklıktaki ilk noktadır (kaynak tarafından); doğru o kadar yaklaşmıyorsa P = hedef.
  *
- *  - yon 0: değişmez (mermi izleyiciye/yakına gelir).
- *  - yon ±90: doğru izleyicinin `eksenMesafe` önünden yana dik geçer; kaynak yana kayar (uzak kalır).
+ *  - yon 0: değişmez (mermiler seçilen duvarın uzağından izleyiciye doğru gelir).
+ *  - yon ±90: kaynak komşu duvarın yönüne kayar (uzak kalır), doğru izleyicinin `eksenMesafe` önünden yana dik
+ *    geçer: mermiler komşu duvar yönünden gelip seçilen duvarın önünden yandan geçer (yandan ateş böyle görünür).
  *  - yon > 0 doğrultuyu saat yönünde çevirir: mermi duvarda sağdan sola akar; yon < 0 soldan sağa.
  */
 export function izliYolu(y: IzliYol, yon: number, eksenMesafe: number): IzliYol {
@@ -82,6 +83,69 @@ export function kaynakYukseltmesi(y: IzliYol, zemin: (x: number, z: number) => n
     if (gerek > yukselt) yukselt = gerek;
   }
   return Math.min(enCok, yukselt);
+}
+
+/** Kaynak yükseltmesinin sınırları: yerel zeminden en çok bu kadar (m) ve izleyiciden bakınca o yöndeki arazi ufkunun en çok bu kadar üstü (derece). */
+export const KAYNAK_YERDEN_EN_COK = 12;
+export const KAYNAK_UFUK_PAYI = 1.5;
+
+/**
+ * Uzak mermi kaynağının yüksekliği (y, m). `y.sy` taban yükseklik (zeminin 0,8–4 m üstü), hedef ucu hazır verilir.
+ * Doğru araziyi aşsın diye kaynak yükselir (kaynakYukseltmesi), ama en çok yerel zeminden 12 m'ye ve izleyiciden
+ * bakınca o yöndeki arazi ufkunun 1,5° üstüne kadar: dağlıkta mermiler gökten (50–80 m'den, uçaktan atılır gibi)
+ * gelmez, sırtın hemen üstünden doğar. Sınır yetmezse doğru kapalı kalır: mermi yine atılır, araziye engellendiği
+ * yerde (yamaçta) çarpar. Kaynak yerel zeminden 12 m'yi hiç aşmaz (derin çukurda taban da iner). Düz zeminde taban
+ * aynen döner. `ufukTanjanti`: o yöndeki arazi ufkunun yükselme tanjantı (AraziUfku).
+ */
+export function izliKaynakYuksekligi(y: IzliYol, zemin: (x: number, z: number) => number, ufukTanjanti: number): number {
+  const yer = zemin(y.sx, y.sz);
+  const ust = yer + KAYNAK_YERDEN_EN_COK;
+  const gerek = kaynakYukseltmesi(y, zemin);
+  if (gerek <= 0) return Math.min(y.sy, ust);
+  const tavan = Math.min(ust, Math.hypot(y.sx, y.sz) * Math.tan(Math.atan(ufukTanjanti) + KAYNAK_UFUK_PAYI * RAD));
+  return Math.min(y.sy + Math.min(gerek, Math.max(0, tavan - y.sy)), ust);
+}
+
+/** Arazi ufku: azimut kovası (derece), örnek uzaklıkları (m) ve önbellek ömrü (sn). */
+const UFUK_KOVA = 2;
+const UFUK_KOVA_SAYISI = 360 / UFUK_KOVA;
+const UFUK_EN_YAKIN = 20;
+const UFUK_EN_UZAK = 320;
+const UFUK_ADIM = 10;
+
+/**
+ * İzleyicinin gözünden (başlangıç noktası, y = 0) arazi ufku: her 2°'lik azimut kovası için zeminin en büyük yükselme
+ * açısının tanjantı (20–320 m, 10 m arayla örneklenir; uzak mermi kaynakları 150–300 m'de). Kova başına önbellekte,
+ * `omur` saniye geçerli (`ilerlet` saati sürer): arazi değişince (bölge, görüş koridoru, krater) kendiliğinden tazelenir.
+ * Kare başına nesne üretilmez.
+ */
+export class AraziUfku {
+  private readonly tanjantlar = new Float64Array(UFUK_KOVA_SAYISI);
+  private readonly zamanlar = new Float64Array(UFUK_KOVA_SAYISI).fill(-Infinity);
+  private saat = 0;
+
+  constructor(private readonly omur = 2) {}
+
+  ilerlet(dt: number) {
+    this.saat += dt;
+  }
+
+  /** `azimut` (sahne, derece) yönünde ufkun yükselme tanjantı (açı = atan). Düz zeminde hafif eksi (−1,7 / 320 m). */
+  tanjant(azimut: number, zemin: (x: number, z: number) => number): number {
+    const k = (((Math.floor((azimut + 180) / UFUK_KOVA) % UFUK_KOVA_SAYISI) + UFUK_KOVA_SAYISI) % UFUK_KOVA_SAYISI);
+    if (this.saat - this.zamanlar[k] < this.omur) return this.tanjantlar[k];
+    const a = ((k + 0.5) * UFUK_KOVA - 180) * RAD;
+    const yx = Math.sin(a);
+    const yz = -Math.cos(a);
+    let enCok = -Infinity;
+    for (let d = UFUK_EN_YAKIN; d <= UFUK_EN_UZAK; d += UFUK_ADIM) {
+      const t = zemin(yx * d, yz * d) / d;
+      if (t > enCok) enCok = t;
+    }
+    this.tanjantlar[k] = enCok;
+    this.zamanlar[k] = this.saat;
+    return enCok;
+  }
 }
 
 /**

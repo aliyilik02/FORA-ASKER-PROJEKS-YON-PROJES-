@@ -165,12 +165,29 @@ katmanda:
   yaklaştıkça sönen kavisli rotayla gelir (virajda 3–5° yatış), sabit yavaşlayıp ~17 sn'de iniş kapısında
   (~60 m kala, ~24 m, ~11 m/sn); "iniyor" gelmezse noktanın ~17 m önünde 22 m'de askıda bekler. "İniyor": son
   ~25 m'de burun yukarı (5–10°) "flare", noktanın üstünde 2,5 m askı, askıda burun kalkış tarafına döner (yerde
-  yandan görünür), dikey iniş, kızakta küçük sekme (~10 cm); "iniyor"dan ~8–16 sn sonra yerde. Yerde 25 sn sonra
-  rotor yavaşlar. "Kalkıyor": rotor devir alır, ~5 m askıya dikey yükselir, burun aşağı (~12°) hızlanıp tırmanırken
-  iniş noktasının bulunduğu yana viraj alır ve izleyicinin yanından arkaya uzaklaşır: ~12–15 sn'de U duvarın
-  görüş alanından (±135°) çıkar, senaryodaki "yok" sıçrama göstermez. Arazide (hibrit/tam kip) uçarken 80 m
-  ilerisine bakar, önündeki en yüksek zeminden en az 8 m (inişte 6 m) yukarıda kalır: dağlık profildeki 40 m'lik
-  sırta dibine gelmeden yükselir, aştıktan sonra iniş noktasına alçalır.
+  yandan görünür), dikey iniş, kızakta küçük sekme (~10 cm); "iniyor"dan ~8–16 sn sonra yerde. Noktayı geçerse
+  yavaşça geri döner; dikey iniş yalnız noktanın üstünde (±4 m) başlar. Yerde 25 sn sonra rotor yavaşlar.
+  "Kalkıyor": rotor devir alır, ~5 m askıya dikey yükselir, burun aşağı (~12°) hızlanıp tırmanırken iniş noktasının
+  kendi yanında arkaya viraj alır (son burun yönü yan · 165°: sağdaki noktadan sağ arkaya, soldakinden sol arkaya) ve
+  karşı yan duvarı kesmeden izleyicinin ~30–40 m yanından görünmez arka bölgeye (U duvarın ±135° dışı) geçer: yan
+  noktalarda (−117°, 100°, −80°) ~7–12 sn'de, öndeki noktalarda (0°/50 m, 12°/38 m) ~13–16 sn'de görüş dışında
+  (yerde rotor yavaşladıysa devir alması 1–2 sn ekler; arkadaki 150° zaten görünmez bölgede; manifestteki 17 noktanın
+  hiçbirinde karşı duvara girmez). "Yok" geldiğinde hâlâ görünüyorsa birden kaybolmaz: o anki hızıyla
+  süzülürken 1,5 sn'de söner (opak malzemelerde `alphaHash`, sönmenin yarısında gölge kalkar; rotor sesi de söner).
+  **Havadayken iniş noktası değişirse** (uçuş sırasında saat/mevsim değişip panorama ve planı değişti ya da paneldeki
+  yön değişti): helikopter yeni noktaya geçerli bir yaklaşmadaysa (noktayı geçmemiş, yanal sapması küçük, noktaya
+  doğru uçuyor; noktaya yakınken birkaç derecelik kayma da) rota buradan kurulur, askıdaysa yakındaki (≤ 40 m) yeni
+  noktaya alçakta ≤ 5 m/sn yanal hızla yer değiştirir; değilse **pas geçer**: 35 m'ye tırmanır, yeni eksende
+  85–150 m dışarıdaki giriş noktasına gider, orada askıda burnunu noktaya çevirip yeniden yaklaşır (noktadan uzakta
+  alçalmaz, yeni noktaya iner; yavaşken burun önce döner, yan yan kaymaz; değişimden ~30–60 sn, çoğunlukla 35–50 sn
+  sonra yerde). Belirdiği karede (aynı durum mesajında panorama da değişti) değişirse yeni eksende baştan belirir. Yeni
+  resim panorama yüklenirken sahne kısa süre hazır değildir; helikopter bu arada da 3B'de uçar (`panoramaYukleniyor`,
+  main.ts `helikopter3B`): 2B siluete geçip yüklenince baştan başlamaz, rotor sesi kesilmez. Uçuş yüksekliği iniş
+  noktası zeminine göre olduğundan nokta ya da arazi (görüş koridoru, bölge) değişince havadaki helikopterin dünya
+  yüksekliği korunur. Sahne iniş noktasını yalnız plan, `yawKaydirma` ya da panelin yönü değişince yeniden seçer
+  (panelin yönüne en yakın plan noktası, yoksa o yön + 38 m); her durum mesajında sabit 12°'ye dönmez. Arazide
+  (hibrit/tam kip) uçarken 80 m ilerisine bakar, önündeki en yüksek zeminden en az 8 m (inişte 6 m) yukarıda kalır:
+  dağlık profildeki 40 m'lik sırta dibine gelmeden yükselir, aştıktan sonra iniş noktasına alçalır.
   **Rotor tozu** (`parcaciklar.rotorTozu`, profiller `rotorTozu.ts`, testli): diskin altından (yarıçap modelden,
   ~5–6,5 m) zemine yapışık 8–15 m/sn radyal akış, yavaşladıkça kıvrılıp 1–2 rotor çapında yükselen halka; halkanın
   üstü diske geri emilir; hızlı kırıntı (taş, topak, yaprak). Şiddet kızaklar ~20 m'nin altına inince üstel artar,
@@ -183,12 +200,21 @@ katmanda:
   mesafeyle büyür (1080p duvarda en az ~1,5 px; piksel açısı çizilen duvar kameralarının izdüşümünden ölçülür,
   ölçülmüş odada duvarların ve yatay/dikeyin en büyüğü: duvar uzaklığı ve piksel en/boyu farklı olabilir), uzunluk da
   biraz uzar. Panelin **izli mermi** akışı: kaynak seçilen duvarın ortası yönünde (±10°) 150–300 m'de, yerden
-  0,8–4 m; **yön** iz doğrultusunu döndürür: 0° izleyiciye doğru (yakına çarpar, seker, bir kısmı başın üstünden
-  geçer), ±90° izleyicinin 10–60 m önünden yandan geçip görüş dışına uçar (+ sağdan sola, − soldan sağa; yan
-  duvarlarda da duvara göre), ara açılar çapraz. Kaynak sırt/tepe arkasında kalırsa mermi araziyi aşacak kadar
-  yukarıdan gelir (`kaynakYukseltmesi`; düz zeminde etkisiz, çatışma ateşine de uygulanır). Başın ~6 m yakınından
-  geçen düşman mermisi bir kez ses hızı üstü "çat" (çarpma sesi geri çağrısı, en yakın geçiş noktasının yönünden;
-  yere çarpacak mermi çatlamaz).
+  0,8–4 m; **yön** iz doğrultusunu döndürür: 0° mermiler seçilen duvarın uzağından izleyiciye doğru gelir (hedef
+  payları: figür varsa %50 figür yakını; yakın zemin 3–24 m %20, çarpar ve seker; %15 başın üstünden/yanından
+  arkaya; kalanı 28–60 m önde kısa düşer), ±90° mermiler komşu duvar yönünden gelip seçilen duvarın 10–60 m
+  önünden yandan geçer ve görüş dışına uçar (+ sağdan sola, − soldan sağa; yan duvarlarda da duvara göre). Doğru
+  izleyicinin önündeki bir eksen noktası etrafında döndüğünden kaynak da yana, ±90°'de komşu duvarın yönüne kayar
+  (yandan ateş böyle görünür; yan duvarda bir yönde komşu duvar yoktur: sağ duvarda +, sol duvarda − yönde kaynak
+  izleyicinin arkasında, ~165°'de kalır, mermiler arkadan gelir); ara açılar çapraz. Hedef yüksekliği döndürülmüş
+  noktanın zemininden (ofsetler korunur). Kaynak sırt/tepe arkasında kalırsa sınırlı yükselir
+  (`izliKaynakYuksekligi`: yerel zeminden en çok 12 m ve izleyiciden bakınca o yöndeki arazi ufkunun en çok 1,5°
+  üstü; ufuk `AraziUfku`: 2°'lik yön kovası başına 20–320 m zemin örneği, 2 sn önbellek, kare başına nesne yok).
+  Doğru yine kapalıysa mermi yine atılır ve engellendiği yerde yamaca çarpar: gökten (50–80 m'den) gelmez (sonucu
+  bkz. bilinen sınırlar: kırsal/dağlık sırt). Aynı sınır çatışma ateşinde de (`dusmanAtis`).
+  Başın ~6 m yakınından geçen düşman mermisi bir kez ses hızı üstü "çat" (çarpma sesi geri çağrısı, en yakın geçiş
+  noktasının yönünden; yere çarpacak mermi çatlamaz). İzli akışın çarpma ve "çat" sesleri jeton kovasıyla saniyede
+  en çok ~1,5 (toz, kıvılcım, sekme her çarpmada; çatışma ateşi sınırsız).
 - **Yerleşim planı** (`yerlesim.ts`, testli): panorama kaydında `noktalar` (azimut, mesafe, tür:
   patlama/figur/helikopter/toz) ve `yasak` açı aralıkları (ağaç kümesi, bina). Panelden gelen yön en
   yakın uygun noktaya yapışır (patlama 55°, figür 35° tolerans); nokta yoksa yön yasak aralığın
@@ -274,9 +300,11 @@ Sahada U odada 4 hoparlör (ön sol/sağ, arka sol/sağ) + subwoofer beklenir, b
   iki bağımsız gürültü kanalından üretilir (sol ve sağ grup ilintisiz; tek gürültü her hoparlörde aynı olur, odanın
   ortasında hayalet kaynak gibi duyulurdu); stereoda eski tek kanallı gürültü.
 - **Çatışma ve izli mermi sesleri** (`sahne3b/catisma.ts`): atış atıcının / mermi kaynağının, çarpma çarpma
-  noktasının, ses hızı üstü "çat" en yakın geçiş noktasının azimutundan. Geri çağrılar (`CatismaSesleri`) markalı
-  `AzimutDerece` (sahne azimutu, derece) alır: değer `sesAzimutu(konum)` ya da `azimutDerece(derece)` ile üretilir, düz
-  sayı ya da `Math.sin(...)` gibi pan değeri derleme hatası verir (çalışma anı denetimi `catismaSesleri.test.ts`).
+  noktasının, ses hızı üstü "çat" en yakın geçiş noktasının azimutundan. Panelin izli mermi akışında çarpma ve "çat"
+  saniyede en çok ~1,5 (jeton kovası; yoğun akışta ses bastırmasın, görüntü aynı). Geri çağrılar (`CatismaSesleri`)
+  markalı `AzimutDerece` (sahne azimutu, derece) alır: değer `sesAzimutu(konum)` ya da `azimutDerece(derece)` ile
+  üretilir, düz sayı ya da `Math.sin(...)` gibi pan değeri derleme hatası verir (çalışma anı denetimi
+  `catismaSesleri.test.ts`).
 - **Helikopter:** 3B uçuş modelinin konumundan (`Helikopter3B.sesKonumu`: sahne azimutu, izleyiciden yatay mesafe,
   yerel zeminden irtifa), kalıcı bir düğüm zinciriyle (kare başına düğüm üretmeden, en çok 20 Hz güncelleme): 40 m'ye
   kadar tam seviye, ötesinde 1/r (taban %12), uzakta alçak geçiren (boğuk), yaklaşırken / uzaklaşırken ±%5 Doppler.
@@ -360,7 +388,17 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   Rifle animasyonları (ücretsiz Adobe hesabı, Blender → GLB) ya da yeşil perde çekimi önerilir.
 - Helikopter modeli düşük poligonlu (OGA CC-BY); uçuş modeli ve rotor tozu birim testli, tarayıcıda gözle
   doğrulanmadı (27 Ekim: yaklaşma kavisi, flare, kalkış virajı, toz renkleri ve izli mermi kalınlığı duvarda
-  bakılmalı).
+  bakılmalı; 2 Kasım: pas geçme, yan/arka noktalardan kalkış çıkışı, "yok"ta sönme, panorama yüklenirken uçuşun
+  sürmesi).
+- Kırsal ve dağlık hibritte önde ve sol önde ~115–205 m'de sırt var (`ARAZI_PROFILLERI.sirt`: kırsal 18 m, dağlık
+  40 m; dağlıkta izleyicinin 20–40 m çevresinde 9–13 m'lik tepeler de). Bu yönlerde uzak izli mermi ve çatışma
+  kaynakları sırtın arkasında kalır; kaynak en çok yerden 12 m yükseldiğinden (bilerek gökyüzüne kaldırılmıyor)
+  mermilerin çoğu sırtın arka yamacına çarpar ve duvarda seyrek görünür. Ölçüm (2 Kasım, arazi analitik yüksekliği,
+  koridorsuz): izleyicinin 60 m yakınına ulaşan izli mermi kırsalda orta duvar yön 0 %17, sol %48, sağ %82; dağlıkta
+  orta %8, sol %50, sağ %62; çatışma ateşi kırsal 0° %23, −60° %7, dağlık 0° %12, −60° %0 (sınırsız yükseltmeyle
+  kırsal orta %88; dal öncesi kodda kaynak düz zemin yüksekliğindeydi, kırsal orta %4). Ormanlık ve üs bölgesinde
+  %85–97. Duvarda bakılmalı; gerekirse kaynak engelleyen sırtın üstüne (sırt hattına) alınabilir ya da sınır bölgeye
+  göre gevşetilebilir.
 - Performans (23 Ekim, Iris Xe, 1277×239): boş sahne 60 fps; 4 figür + çatışma + 16 krater ≈ 38 fps (kalite yüksek).
   Darboğazlar figür iskeletleri ve krater dumanıydı (düzeltildi). 5760×1080 için hedef makine (RTX 4060+)
   gerekir; dizüstünde `?kalite=dusuk`. Parçacık üst sınırı 2100×kalite çarpanı.

@@ -81,6 +81,78 @@ describe("Helikopter3B rotor sesi konumu (uçuş modelinden)", () => {
     expect(yerde.irtifa).toBeLessThan(0.05);
   });
 
+  it("havadayken iniş noktası değişince dünya yüksekliği sıçramaz (eğimli arazi; yükseklik iniş noktası zeminine göre), yeni noktaya iner", () => {
+    zeminFonksiyonu((x) => 0.06 * x);
+    const heli = kur();
+    heli.inisNoktasi(-80, 42);
+    heli.durumAyarla("yaklasiyor");
+    for (let i = 0; i < 10 * 60; i++) heli.guncelle(1 / 60);
+    const once = heli.grup.position.clone();
+    // İki nokta arasında zemin farkı ~4 m (0,06 · 68 m)
+    heli.inisNoktasi(40, 42);
+    heli.guncelle(1 / 60);
+    expect(Math.abs(heli.grup.position.y - once.y)).toBeLessThan(0.5);
+    let enBuyukSicrama = 0;
+    let y = heli.grup.position.y;
+    heli.durumAyarla("iniyor");
+    for (let i = 0; i < 70 * 60 && !(heli.sesKonumu!.irtifa < 0.01 && i > 60); i++) {
+      heli.guncelle(1 / 60);
+      enBuyukSicrama = Math.max(enBuyukSicrama, Math.abs(heli.grup.position.y - y));
+      y = heli.grup.position.y;
+    }
+    expect(enBuyukSicrama).toBeLessThan(0.2);
+    const k = heli.sesKonumu!;
+    expect(Math.abs(k.azimut - 40)).toBeLessThan(4);
+    expect(Math.abs(k.mesafe - 42)).toBeLessThan(3);
+  });
+
+  it("arazi değişince (görüş koridoru iniş alanını düzledi, bölge değişti) havadaki helikopter sıçramaz; yerdeyse yeni zemine oturur", () => {
+    // İniş noktasının çevresi 5 m yüksek tümsek; sonra koridor gibi düzlenir (iniş noktası zemini 5 m iner)
+    const tumsek = (x: number, z: number) => 5 * Math.exp(-((x - 7.9) ** 2 + (z + 37.2) ** 2) / (2 * 15 * 15));
+    zeminFonksiyonu(tumsek);
+    const heli = kur();
+    heli.inisNoktasi(12, 38);
+    heli.durumAyarla("yaklasiyor");
+    for (let i = 0; i < 12 * 60; i++) heli.guncelle(1 / 60);
+    const y0 = heli.grup.position.y;
+    zeminFonksiyonu((x, z) => tumsek(x, z) * Math.min(1, Math.hypot(x - 7.9, z + 37.2) / 40));
+    heli.guncelle(1 / 60);
+    expect(Math.abs(heli.grup.position.y - y0)).toBeLessThan(0.5);
+    // Yerde: arazi yeniden kurulunca yeni zemine (eski yükseklikte havada kalmaz)
+    heli.durumAyarla("yerde");
+    for (let i = 0; i < 40 * 60 && heli.sesKonumu!.irtifa > 0.01; i++) heli.guncelle(1 / 60);
+    for (let i = 0; i < 60; i++) heli.guncelle(1 / 60);
+    const yerdeY = heli.grup.position.y;
+    zeminFonksiyonu(() => 2);
+    heli.guncelle(1 / 60);
+    const p = heli.grup.position;
+    // Zemin 2 m yükseldi: helikopter de (kızak teması anındaki birkaç santimlik yerel fark kalır)
+    expect(p.y - yerdeY).toBeGreaterThan(1.8);
+    expect(Math.abs(p.y - zeminY(p.x, p.z))).toBeLessThan(0.15);
+  });
+
+  it("'yok' gelince görünüyorsa 1,5 sn'de söner: grup görünür kalır, malzeme opaklığı azalır, ses konumu hemen null", () => {
+    const heli = kur();
+    const mal = new THREE.MeshStandardMaterial();
+    (heli as unknown as { malzemeler: Array<{ mal: THREE.Material; opaklik: number }> }).malzemeler.push({ mal, opaklik: 1 });
+    heli.durumAyarla("yerde");
+    heli.guncelle(1 / 60);
+    heli.durumAyarla("yok");
+    expect(heli.sesKonumu).toBeNull();
+    expect(heli.grup.visible).toBe(true);
+    for (let i = 0; i < 45; i++) heli.guncelle(1 / 60);
+    expect(heli.grup.visible).toBe(true);
+    expect(mal.opacity).toBeGreaterThan(0.4);
+    expect(mal.opacity).toBeLessThan(0.6);
+    for (let i = 0; i < 50; i++) heli.guncelle(1 / 60);
+    expect(heli.grup.visible).toBe(false);
+    // Yeniden belirince tam opak
+    heli.durumAyarla("yerde");
+    heli.guncelle(1 / 60);
+    expect(heli.grup.visible).toBe(true);
+    expect(mal.opacity).toBe(1);
+  });
+
   it("kalkıp görüş sınırını (1500 m) aşınca son konumda kalır (null değil: null konumsuz eski sesi tam seviyede açardı)", () => {
     const heli = kur();
     heli.inisNoktasi(12, 38);

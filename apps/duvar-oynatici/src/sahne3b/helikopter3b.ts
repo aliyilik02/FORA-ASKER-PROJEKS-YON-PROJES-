@@ -2,8 +2,9 @@
  * Oda 2 helikopter (3B): yaklaşma → iniş → yerde → kalkış. Model manifestten gelir
  * (klipler → tip "model", ad "helikopter"); rotor düğümleri adından bulunup döndürülür.
  * Hareket `helikopterUcusu.ts` uçuş modelinden (kavisli yaklaşma, virajda yatış, iniş öncesi burun yukarı
- * "flare", kızakta sekme, 5 m askıdan burun aşağı kalkış); yere yakınken zemin malzemesine göre rotor tozu
- * (kar / kuru toprak / orman / beton, `rotorTozu.ts`) savrulur.
+ * "flare", kızakta sekme, 5 m askıdan burun aşağı kalkış, havada iniş noktası değişince pas geçme); yere yakınken
+ * zemin malzemesine göre rotor tozu (kar / kuru toprak / orman / beton, `rotorTozu.ts`) savrulur. "Yok" geldiğinde
+ * görünüyorsa 1,5 sn'de söner (malzemelerde alphaHash: opaklık 1'de görünüm aynı, sönerken gölgelendirici derlenmez).
  */
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -41,6 +42,10 @@ export class Helikopter3B {
   private inisZemini = 0;
   private tozProfili: RotorTozuProfili = ROTOR_TOZU_PROFILLERI.toprak;
   private readonly tozMerkezi = new THREE.Vector3();
+  /** Sönme için modelin malzemeleri (özgün opaklıklarıyla) ve gölge veren mesh'leri; uygulanmış son sönme değeri. */
+  private readonly malzemeler: Array<{ mal: THREE.Material; opaklik: number }> = [];
+  private readonly golgeVerenler: THREE.Mesh[] = [];
+  private uygulananSolma = 1;
 
   constructor(private readonly parcaciklar: ParcacikSistemi) {
     this.grup.visible = false;
@@ -48,9 +53,17 @@ export class Helikopter3B {
     this.ucus.zeminFarki = (x, z) => zeminY(x, z) - this.inisZemini;
   }
 
+  /**
+   * İniş noktası (sahne azimutu, m); aynı nokta yok sayılır. Uçuş modeline hemen geçer: yerdeyse yeni noktada, belirdiği
+   * karede yeni eksende baştan; havadaysa geçerli yaklaşmada rota buradan kurulur, değilse pas geçer. Uçuş yüksekliği
+   * iniş noktası zeminine göre olduğundan havadayken dünya yüksekliği korunur (helikopter sıçramaz; inisZeminiGuncelle).
+   */
   inisNoktasi(azimut: number, mesafe: number) {
+    if (azimut === this.inisAzimut && mesafe === this.inisMesafe) return;
     this.inisAzimut = azimut;
     this.inisMesafe = mesafe;
+    this.inisZeminiGuncelle();
+    this.ucus.inisNoktasi(azimut, mesafe);
   }
   get inisAzimutu() {
     return this.inisAzimut;
@@ -114,6 +127,17 @@ export class Helikopter3B {
               };
               mesh.material = Array.isArray(mesh.material) ? mesh.material.map(boyaUygula) : boyaUygula(mesh.material);
             }
+            // Sönme: opak malzemede alphaHash (sıralamasız, opaklık 1'de aynı görünüm; yükte açılır, sönerken derleme
+            // yok); saydam (cam) malzeme zaten karışımlı, yalnız opaklığı azalır. Dokulu opak malzeme sönmez (dokunun
+            // alfa kanalı glTF OPAQUE'ta yok sayılır; alphaHash onu noktalı gösterirdi), sönme bitince model gizlenir.
+            this.golgeVerenler.push(mesh);
+            for (const mal of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+              if (this.malzemeler.some((k) => k.mal === mal)) continue;
+              const dokulu = Boolean((mal as THREE.MeshStandardMaterial).map || (mal as THREE.MeshStandardMaterial).alphaMap);
+              if (!mal.transparent && dokulu) continue;
+              if (!mal.transparent) mal.alphaHash = true;
+              this.malzemeler.push({ mal, opaklik: mal.opacity });
+            }
           }
           if (rotorAdlari) {
             const i = rotorAdlari.indexOf(o.name);
@@ -150,21 +174,21 @@ export class Helikopter3B {
     if (d === this.durum) return;
     this.durum = d;
     this.faz = 0;
-    // İniş noktası önce: yaklaşma/iniş başlangıcı yeni noktaya göre kurulsun
+    // Yaklaşma/iniş başlangıcı iniş noktasının güncel zeminine göre kurulsun (nokta inisNoktasi'nda geçti)
     this.inisZeminiGuncelle();
-    this.ucus.inisNoktasi(this.inisAzimut, this.inisMesafe);
     this.ucus.durumAyarla(d);
-    this.grup.visible = d !== "yok" && this.model !== null && this.ucus.gorunur;
+    // "Yok"ta görünüyorsa uçuş modeli sönerken görünür tutar
+    this.grup.visible = this.model !== null && this.ucus.gorunur;
   }
 
   guncelle(dt: number) {
-    if (this.durum === "yok" || !this.model) {
+    const u = this.ucus;
+    if (!this.model || (this.durum === "yok" && !u.gorunur)) {
       this.tozSiddeti = 0;
+      this.grup.visible = false;
       return;
     }
-    const u = this.ucus;
     this.inisZeminiGuncelle();
-    u.inisNoktasi(this.inisAzimut, this.inisMesafe);
     u.guncelle(dt);
     this.faz += dt;
     // Eski alanlar güncel kalır: irtifa yerel zeminden, mesafe izleyiciden yatay (ses konumu da kullanabilir)
@@ -177,6 +201,7 @@ export class Helikopter3B {
     this.govde.position.y = this.govdeYuksekligi + u.govdeOfseti;
     // YXZ: önce burun yönü (dünya y), sonra yunuslama (yerel x), sonra yatış (yerel z, burun ekseni)
     this.govde.rotation.set(u.yunuslama, -radyan(u.yonelim), u.yatis, "YXZ");
+    this.solmaUygula(u.solma);
     const rotorHiz = u.rotorHizi;
     this.karistirici?.update(dt * (rotorHiz / 40) * 2);
     for (const r of this.rotorlar) {
@@ -190,8 +215,29 @@ export class Helikopter3B {
     }
   }
 
+  /**
+   * Sönme (uçuş modelinin `solma`sı, 0–1): malzeme opaklığı özgün değerle çarpılır (alphaHash ile seyrelir); yarısında
+   * gölge kalkar (gölge geçişi alphaHash kullanmaz). Yalnız değer değişince çalışır.
+   */
+  private solmaUygula(s: number) {
+    if (s === this.uygulananSolma) return;
+    const golgeVardi = this.uygulananSolma >= 0.5;
+    this.uygulananSolma = s;
+    for (const k of this.malzemeler) k.mal.opacity = k.opaklik * s;
+    const golge = s >= 0.5;
+    if (golge !== golgeVardi) for (const mesh of this.golgeVerenler) mesh.castShadow = golge;
+  }
+
+  /**
+   * İniş noktasının zemin yüksekliği (uçuş yüksekliğinin dayanağı). Değişince (yeni nokta; panorama değişip görüş
+   * koridoru iniş alanını düzledi, bölge değişip arazi yeniden kuruldu) havadaki helikopterin dünya yüksekliği korunur:
+   * sıçramaz. Yerdeyse yeni zemine oturur.
+   */
   private inisZeminiGuncelle() {
     const a = radyan(this.inisAzimut);
-    this.inisZemini = zeminY(Math.sin(a) * this.inisMesafe, -Math.cos(a) * this.inisMesafe);
+    const yeni = zeminY(Math.sin(a) * this.inisMesafe, -Math.cos(a) * this.inisMesafe);
+    const u = this.ucus;
+    if (u.gorunur && !u.yerde) u.yukseklik += this.inisZemini - yeni;
+    this.inisZemini = yeni;
   }
 }

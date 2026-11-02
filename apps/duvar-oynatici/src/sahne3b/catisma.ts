@@ -5,16 +5,19 @@
  *    yere çarpınca toz ve kıvılcım, bazıları seker; vızıltı/çarpma sesi sahne azimutuyla (stereo / çok kanal ses motorda).
  *  - Dost ateşi: sahnedeki silahlı figürler düşman yönüne karşılık verir: namlu alevi + giden iz + atış sesi.
  *  - Klasik "izli mermi" ayarı (duvar + yön + sıklık) da burada sürekli akış olarak çizilir: kaynak seçilen
- *    duvarın ortası yönünde uzakta, "yön" iz doğrultusunu döndürür (0 izleyiciye doğru, ±90 önünden yandan geçer).
- *  - Uzak kaynak sırt/tepe arkasında kalırsa kaynak, mermi araziyi aşacak kadar yükselir (arazide kaybolmaz).
- *  - Başın ~6 m yakınından geçen düşman mermisi bir kez ses hızı üstü "çat" sesi verir.
+ *    duvarın ortası yönünde uzakta, "yön" iz doğrultusunu döndürür (0: seçilen duvarın uzağından izleyiciye doğru;
+ *    ±90: kaynak komşu duvarın yönüne kayar, mermiler seçilen duvarın önünden yandan geçer).
+ *  - Uzak kaynak sırt/tepe arkasında kalırsa kaynak sınırlı yükselir (yerden ≤ 12 m, o yöndeki arazi ufkunun ≤ 1,5°
+ *    üstü; düşman ateşinde de): mermi gökten gelmez; doğru yine kapalıysa mermi yamaca çarpar.
+ *  - Başın ~6 m yakınından geçen düşman mermisi bir kez ses hızı üstü "çat" sesi verir. İzli akışın çarpma/"çat"
+ *    sesleri saniyede en çok ~1,5 (görüntü aynı).
  * İzler tek bir instanced kutu mesh'idir (katkı karışımı, parlak; baş beyazımsı, kuyruk sönük); yön hız
  * vektöründen gelir, uzaktaki iz piksel altına inmesin diye kalınlığı mesafeyle büyür.
  */
 import * as THREE from "three";
-import { VARSAYILAN_PIKSEL_ACISI, izKalinligi, izUzunlukCarpani, izliYolu, kaynakYukseltmesi, yakinGecis, type IzliYol } from "./izliYol";
+import { AraziUfku, VARSAYILAN_PIKSEL_ACISI, izKalinligi, izUzunlukCarpani, izliKaynakYuksekligi, izliYolu, yakinGecis, type IzliYol } from "./izliYol";
 import type { ParcacikSistemi } from "./parcaciklar";
-import { ZEMIN_Y, azimutYon, konumAzimutu, radyan, zeminY } from "./uzay";
+import { ZEMIN_Y, azimutYon, derece, konumAzimutu, radyan, zeminY } from "./uzay";
 
 interface Iz {
   p: THREE.Vector3;
@@ -25,6 +28,8 @@ interface Iz {
   sekti: boolean;
   /** Ses hızı üstü "çat" sesi bu iz için çaldı mı (izleyicinin yakınından geçiş). */
   catladi: boolean;
+  /** Klasik izli mermi akışından (ya da onun sekmesi): çarpma/"çat" sesi hız sınırına tabi. */
+  izli: boolean;
 }
 
 /**
@@ -67,9 +72,12 @@ export interface CatismaAyari {
 
 export interface IzliAyari {
   aktif: boolean;
-  /** Kaynak yönü: seçilen duvarın ortası (sahne azimutu, derece). */
+  /** Seçilen duvarın ortası (sahne azimutu, derece): yön 0'da kaynak bu yönde; yön büyüdükçe komşu duvara kayar. */
   azimut: number;
-  /** İz doğrultusu (derece, −90..90): 0 izleyiciye doğru, ±90 önünden yandan geçer (+ sağdan sola). */
+  /**
+   * İz doğrultusu (derece, −90..90): 0 mermiler seçilen duvarın uzağından izleyiciye doğru gelir; ±90 mermiler komşu
+   * duvar yönünden gelip seçilen duvarın önünden yandan geçer (+ sağdan sola, − soldan sağa).
+   */
   yon: number;
   siklik: number;
 }
@@ -79,6 +87,16 @@ const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const CATLAMA_MESAFESI = 6;
 /** İzlerin hafif düşüşü (m/sn²): guncelle'deki sekmemiş iz yer çekimi (0,15 g) ile aynı; izli akış nişanda karşılar. */
 const IZ_DUSUSU = 9.8 * 0.15;
+/**
+ * İzli akışın hedef payları: figür yakını %50 (figür varsa), yakın zemin (3–24 m) %20, üstten/yandan geçip arkaya
+ * %15, kalanı 28–60 m önde kısa düşer. Yakın zemin önceden %35–85'ti: varsayılan sıklıkta (3/sn) saniyede ~2,7
+ * çarpma/"çat" sesi çıkıyordu.
+ */
+const IZLI_YAKIN_PAYI = 0.2;
+const IZLI_UST_PAYI = 0.15;
+/** İzli akışın çarpma/"çat" sesleri jeton kovasıyla sınırlı: saniyede en çok IZLI_SES_HIZI, birikim en çok IZLI_SES_KOVASI. */
+const IZLI_SES_HIZI = 1.5;
+const IZLI_SES_KOVASI = 2;
 /** İz köşe renkleri z boyunca (örnek rengiyle çarpılır): baş sıcak ve beyazımsı, kuyruk sönük kızıl. */
 const IZ_BAS = [1.1, 1.4, 2.0];
 const IZ_KUYRUK = [0.3, 0.18, 0.1];
@@ -86,6 +104,8 @@ const _yon = new THREE.Vector3();
 const _yakin = new THREE.Vector3();
 const _kaynak = new THREE.Vector3();
 const _hiz = new THREE.Vector3();
+const _sekmeKonum = new THREE.Vector3();
+const _sekmeHiz = new THREE.Vector3();
 const _gorunum = new THREE.Vector4();
 const KAPASITE = 320;
 const DUSMAN_RENK = new THREE.Color(1.0, 0.5, 0.18);
@@ -106,6 +126,10 @@ export class CatismaSistemi {
   private havuz: Iz[] = [];
   private eklenecek: Iz[] = [];
   private readonly yol: IzliYol = { sx: 0, sy: 0, sz: 0, hx: 0, hy: 0, hz: 0 };
+  /** Arazi ufku (yön kovası başına önbellek): uzak kaynak yükseltmesinin açı sınırı. */
+  private readonly ufuk = new AraziUfku();
+  /** İzli akış ses jetonları (çarpma/"çat"; bkz. IZLI_SES_HIZI). */
+  private izliSesJetonu = IZLI_SES_KOVASI;
   /** Bir pikselin açısı (radyan); son karede çizilen duvarların en büyüğü. Uzak izin kalınlığı buna göre. */
   private pikselAcisi = VARSAYILAN_PIKSEL_ACISI;
   /** Bu karede çizilen duvarlardan ölçülen en büyük piksel açısı (0: henüz ölçülmedi); guncelle devralır. */
@@ -173,8 +197,8 @@ export class CatismaSistemi {
     this.izli = a;
   }
 
-  private izEkle(p: THREE.Vector3, v: THREE.Vector3, dost: boolean, sekti = false) {
-    const iz = this.havuz.pop() ?? { p: new THREE.Vector3(), v: new THREE.Vector3(), kalan: 0, renk: DUSMAN_RENK, dost: false, sekti: false, catladi: false };
+  private izEkle(p: THREE.Vector3, v: THREE.Vector3, dost: boolean, sekti = false, izli = false) {
+    const iz = this.havuz.pop() ?? { p: new THREE.Vector3(), v: new THREE.Vector3(), kalan: 0, renk: DUSMAN_RENK, dost: false, sekti: false, catladi: false, izli: false };
     iz.p.copy(p);
     iz.v.copy(v);
     iz.kalan = 3;
@@ -182,7 +206,16 @@ export class CatismaSistemi {
     iz.dost = dost;
     iz.sekti = sekti;
     iz.catladi = false;
+    iz.izli = izli;
     this.eklenecek.push(iz);
+  }
+
+  /** İzli akışın bir çarpma/"çat" sesi çalabilir mi (jeton varsa harcar). Düşman/dost ateşi sınırsız. */
+  private sesCalabilir(iz: Iz): boolean {
+    if (!iz.izli) return true;
+    if (this.izliSesJetonu < 1) return false;
+    this.izliSesJetonu -= 1;
+    return true;
   }
 
   /** Bekleyen yeni izleri listeye alır; kapasite doluysa en eski iz havuza döner. */
@@ -199,7 +232,7 @@ export class CatismaSistemi {
     const kaynakYon = azimutYon(kaynakAzimut + rnd(-10, 10));
     const kaynak = kaynakYon.clone().multiplyScalar(rnd(150, 260));
     kaynak.y = Math.max(ZEMIN_Y, zeminY(kaynak.x, kaynak.z)) + rnd(0.8, 4);
-    // Hedef: dost figürlerin yakını ya da izleyici önündeki zemin; %35'i üstten/yan geçer
+    // Hedef: dost figürlerin yakını (%50, figür varsa), izleyici önündeki zemin; %15'i üstten/yandan geçer
     const dostlar = this.dostlar();
     let hedef: THREE.Vector3;
     const r = Math.random();
@@ -221,7 +254,7 @@ export class CatismaSistemi {
       hedef = new THREE.Vector3(yon.x * mesafe, 0, yon.z * mesafe);
       hedef.y = zeminY(hedef.x, hedef.z) + rnd(1.5, 6);
     }
-    kaynak.y += this.araziAsimi(kaynak, hedef);
+    kaynak.y = this.kaynakYuksekligi(kaynak, hedef);
     const v = hedef.clone().sub(kaynak).normalize().multiplyScalar(rnd(140, 190));
     this.izEkle(kaynak, v, false);
     // Düşman hattında namlu parıltısı (uzak, kısa) ve uzak atış sesi
@@ -229,8 +262,11 @@ export class CatismaSistemi {
     if (Math.random() < 0.35) this.sesler.atis(sesAzimutu(kaynak), true);
   }
 
-  /** Kaynak → hedef doğrusu araziyi aşsın diye kaynağın yükseltilmesi (m; düz zeminde 0). */
-  private araziAsimi(kaynak: THREE.Vector3, hedef: THREE.Vector3): number {
+  /**
+   * Kaynak → hedef doğrusu araziyi aşsın diye kaynağın sınırlı yükseltilmiş yüksekliği (izliKaynakYuksekligi: yerden
+   * ≤ 12 m, o yöndeki arazi ufkunun ≤ 1,5° üstü; düz zeminde değişmez).
+   */
+  private kaynakYuksekligi(kaynak: THREE.Vector3, hedef: THREE.Vector3): number {
     const y = this.yol;
     y.sx = kaynak.x;
     y.sy = kaynak.y;
@@ -238,15 +274,17 @@ export class CatismaSistemi {
     y.hx = hedef.x;
     y.hy = hedef.y;
     y.hz = hedef.z;
-    return kaynakYukseltmesi(y, zeminY);
+    return izliKaynakYuksekligi(y, zeminY, this.ufuk.tanjant(konumAzimutu(kaynak), zeminY));
   }
 
   /**
    * Klasik izli mermi akışından bir atış. Kaynak: seçilen duvarın ortası yönünde (±10°) 150–300 m'de, yerden birkaç
-   * metre yukarıda. Hedef dağılımı dusmanAtis ile aynı (yakına çarpar, seker, bir kısmı üstten geçer). `yon` ≠ 0 ise
-   * bu doğru izleyicinin 10–60 m önündeki bir eksen noktası etrafında döndürülür (izliYolu): ±90'da mermiler önden
-   * yana geçip görüş dışına uçar (+ sağdan sola, − soldan sağa); hedef yükseltilir ki yere dalmasın (çarpmadıkça).
-   * Kaynak yüksekliği döndürülmüş konumun zemininden; arada sırt/tepe varsa mermi onu aşacak kadar yukarıdan gelir.
+   * metre yukarıda. Hedef payları: figür yakını %50 (figür varsa), yakın zemin %20 (yakına çarpar, seker), üstten/
+   * yandan geçip arkaya %15, kalanı 28–60 m önde kısa düşer. `yon` ≠ 0 ise doğru izleyicinin 10–60 m önündeki bir
+   * eksen noktası etrafında döndürülür (izliYolu): kaynak yana (±90'da komşu duvarın yönüne) kayar, mermiler seçilen
+   * duvarın önünden yandan geçip görüş dışına uçar (+ sağdan sola, − soldan sağa); hedef yükseltilir ki yere dalmasın
+   * (çarpmadıkça). Hedef yüksekliği döndürülmüş noktanın zemininden (ofsetler korunur), kaynağınki döndürülmüş kaynağın
+   * zemininden; arada sırt/tepe varsa kaynak sınırlı yükselir, doğru yine kapalıysa mermi yamaca çarpar.
    */
   private izliAtis(kaynakAzimut: number, yon: number) {
     const y = this.yol;
@@ -255,26 +293,33 @@ export class CatismaSistemi {
     const r = rnd(150, 300);
     y.sx = Math.sin(a) * r;
     y.sz = -Math.cos(a) * r;
+    // Hedefin yatay konumu ve zeminden yüksekliği (zemin döndürmeden sonra eklenir)
     const dostlar = this.dostlar();
-    const secim = Math.random();
-    if (dostlar.length && secim < 0.5) {
-      const d = dostlar[Math.floor(Math.random() * dostlar.length)];
-      y.hx = d.x + rnd(-3, 3);
-      y.hz = d.z + rnd(-3, 3);
-      y.hy = zeminY(y.hx, y.hz) + (Math.random() < 0.6 ? 0 : rnd(0.3, 1.6));
-    } else {
-      // Yakın zemin ya da (%15) izleyicinin yanından/üstünden geçip arkaya
-      const arka = secim >= 0.85;
+    let secim = Math.random();
+    if (dostlar.length) {
+      if (secim < 0.5) {
+        const d = dostlar[Math.floor(Math.random() * dostlar.length)];
+        y.hx = d.x + rnd(-3, 3);
+        y.hz = d.z + rnd(-3, 3);
+        y.hy = Math.random() < 0.6 ? 0 : rnd(0.3, 1.6);
+        secim = -1;
+      } else secim -= 0.5;
+    }
+    if (secim >= 0) {
+      // Yakın zemin, izleyicinin yanından/üstünden geçip arkaya ya da kısa düşen
+      const arka = secim >= IZLI_YAKIN_PAYI && secim < IZLI_YAKIN_PAYI + IZLI_UST_PAYI;
+      const kisa = secim >= IZLI_YAKIN_PAYI + IZLI_UST_PAYI;
       const ha = radyan(kaynakAz + (arka ? 180 + rnd(-35, 35) : rnd(-20, 20)));
-      const m = arka ? rnd(8, 30) : rnd(3, 24);
+      const m = arka ? rnd(8, 30) : kisa ? rnd(28, 60) : rnd(3, 24);
       y.hx = Math.sin(ha) * m;
       y.hz = -Math.cos(ha) * m;
-      y.hy = zeminY(y.hx, y.hz) + (arka ? rnd(1.5, 6) : 0);
+      y.hy = arka ? rnd(1.5, 6) : 0;
     }
     y.hy += (Math.min(90, Math.abs(yon)) / 90) * rnd(1.2, 4.5);
     if (yon !== 0) izliYolu(y, yon, 10 + 25 * (Math.random() + Math.random()));
+    y.hy += zeminY(y.hx, y.hz);
     y.sy = Math.max(ZEMIN_Y, zeminY(y.sx, y.sz)) + rnd(0.8, 4);
-    y.sy += kaynakYukseltmesi(y, zeminY);
+    y.sy = izliKaynakYuksekligi(y, zeminY, this.ufuk.tanjant(derece(Math.atan2(y.sx, -y.sz)), zeminY));
     _kaynak.set(y.sx, y.sy, y.sz);
     const hiz = rnd(140, 190);
     _hiz.set(y.hx - y.sx, y.hy - y.sy, y.hz - y.sz);
@@ -283,7 +328,7 @@ export class CatismaSistemi {
     // İzlerin hafif düşüşü önceden karşılanır: mermi hedefine varır (yakına çarpar, başın yanından geçer),
     // 40–60 m önde yere gömülmez
     _hiz.y += 0.5 * IZ_DUSUSU * (mesafe / hiz);
-    this.izEkle(_kaynak, _hiz, false);
+    this.izEkle(_kaynak, _hiz, false, false, true);
     // Kaynakta namlu parıltısı (uzak, kısa) ve uzak atış sesi
     if (Math.random() < 0.6) this.parcaciklar.parlama(_kaynak, rnd(1.5, 2.5));
     if (Math.random() < 0.35) this.sesler.atis(sesAzimutu(_kaynak), true);
@@ -291,7 +336,8 @@ export class CatismaSistemi {
 
   /**
    * İz bu karede (p0 → p) izleyicinin başının ~6 m yakınından geçtiyse ses hızı üstü "çat" (iz başına bir kez),
-   * geçiş noktasının yönünden. Yere çarpacak mermi çatlamaz, çarpma sesi yeter (yakinGecis).
+   * geçiş noktasının yönünden. Yere çarpacak mermi çatlamaz, çarpma sesi yeter (yakinGecis). İzli akışta jeton
+   * yoksa sessiz geçer (sonra da çatlamaz).
    */
   private catlamaDenetle(iz: Iz, x0: number, y0: number, z0: number) {
     const dx = iz.p.x - x0;
@@ -300,7 +346,7 @@ export class CatismaSistemi {
     const t = yakinGecis(x0, y0, z0, dx, dy, dz, CATLAMA_MESAFESI);
     if (t < 0) return;
     iz.catladi = true;
-    this.sesler.carpma(sesAzimutu(_yakin.set(x0 + dx * t, y0 + dy * t, z0 + dz * t)));
+    if (this.sesCalabilir(iz)) this.sesler.carpma(sesAzimutu(_yakin.set(x0 + dx * t, y0 + dy * t, z0 + dz * t)));
   }
 
   private dostAtis(konum: THREE.Vector3) {
@@ -377,19 +423,22 @@ export class CatismaSistemi {
         const a = rnd(0, 6.28);
         this.parcaciklar.kivilcim.ekle({ x: p.x, y: zeminY(p.x, p.z) + 0.05, z: p.z, vx: Math.cos(a) * rnd(1, 4), vy: rnd(2, 6), vz: Math.sin(a) * rnd(1, 4), boyut: rnd(0.04, 0.09), buyume: 0, alfa: 1, aci: 0, donus: 0, t: 0, sure: rnd(0.25, 0.6), renk: [1, 0.8, 0.5], yercekimi: 9.8, surtunme: 0.3 });
       }
-      this.sesler.carpma(sesAzimutu(p));
+      // Ses: izli akışta saniyede en çok ~1,5 (toz, kıvılcım ve sekme her çarpmada)
+      if (this.sesCalabilir(iz)) this.sesler.carpma(sesAzimutu(p));
       if (!iz.sekti && Math.random() < 0.3) {
-        const v = iz.v.clone();
+        const v = _sekmeHiz.copy(iz.v);
         v.y = Math.abs(v.y) * rnd(0.4, 1.2) + rnd(10, 40);
         v.x += rnd(-40, 40);
         v.z += rnd(-40, 40);
         v.setLength(iz.v.length() * rnd(0.4, 0.7));
-        this.izEkle(new THREE.Vector3(p.x, zeminY(p.x, p.z) + 0.05, p.z), v, false, true);
+        this.izEkle(_sekmeKonum.set(p.x, zeminY(p.x, p.z) + 0.05, p.z), v, false, true, iz.izli);
       }
     }
   }
 
   guncelle(dt: number) {
+    this.ufuk.ilerlet(dt);
+    this.izliSesJetonu = Math.min(IZLI_SES_KOVASI, this.izliSesJetonu + dt * IZLI_SES_HIZI);
     // --- Düşman ateşi: çatışma salvoları ---
     if (this.ayar.aktif && this.ayar.siddet > 0.02) {
       const s = this.ayar.siddet;
@@ -476,7 +525,9 @@ export class CatismaSistemi {
       iz.p.x += iz.v.x * dt;
       iz.p.z += iz.v.z * dt;
       const zemin = zeminY(iz.p.x, iz.p.z);
-      if (yeniY <= zemin + 0.03 && iz.v.y < 0) {
+      // Zemine iniş ya da (düşman/izli mermi) önündeki yokuşa dalış: çarpma. Sekme yerden yükselirken, dost ateşi
+      // (hedefi düz zemin yüksekliğinde) tepeden geçerken çarpmaz.
+      if (yeniY <= zemin + 0.03 && (iz.v.y < 0 || (!iz.sekti && !iz.dost))) {
         iz.p.y = zemin + 0.03;
         this.carpma(iz);
         this.havuz.push(iz);

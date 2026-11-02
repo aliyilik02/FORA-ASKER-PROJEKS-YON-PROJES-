@@ -98,6 +98,8 @@ export class Sahne3B {
   private readonly hasar: HasarKatmani;
   private readonly figurler = new FigurKatmani();
   private readonly heli: Helikopter3B;
+  /** Panelin helikopter iniş yönü (sahne azimutu): helikopterAyarla'dan; gelmeden önce panelin varsayılanı 12°. */
+  private heliYonu = 12;
   private readonly catisma: CatismaSistemi;
   private readonly sutre = new SutreKatmani();
   private catismaSesleri: CatismaSesleri = { carpma: () => undefined, atis: () => undefined };
@@ -111,6 +113,8 @@ export class Sahne3B {
   private gunesIsareti: THREE.Mesh | null = null;
   hazir = false;
   hata = "";
+  /** Resim panorama yükleniyor (yenisi seçildi, dokusu henüz gelmedi; yükleme biter ya da düşerse false). */
+  private yukleniyor = false;
 
   /** Kalite kademesi (`?kalite=`): gölge haritası, kenar yumuşatma ve parçacık kapasitesi. */
   readonly kalite: Kalite;
@@ -245,6 +249,13 @@ export class Sahne3B {
   get helikopterHazir() {
     return this.heli.hazir;
   }
+  /**
+   * Yeni resim panorama yükleniyor (saat/mevsim değişti): sahne kısa süre `hazir` değil ama 3B helikopter uçmayı sürdürür
+   * (main.ts 2B siluete geçirmez; yüklenince helikopter baştan başlamaz, yeni noktaya göre pas geçer ya da rotasını kurar).
+   */
+  get panoramaYukleniyor() {
+    return this.yukleniyor;
+  }
   get helikopterTozu() {
     return this.heli.tozSiddeti;
   }
@@ -284,9 +295,8 @@ export class Sahne3B {
     const yawDegisti = this.kaynak && (this.kaynak.yawKaydirma !== kaynak.yawKaydirma || this.kaynak.yukseklikKaydirma !== kaynak.yukseklikKaydirma);
     const gunesDegisti = JSON.stringify(this.kaynak?.gunes ?? null) !== JSON.stringify(kaynak.gunes ?? null);
     this.kaynak = kaynak;
-    // Varsayılan iniş: panelin varsayılan yönüne (sahne +12°) en yakın iniş noktası (sahne koordinatına çevrilir)
-    const inis = this.noktaSec(12, "helikopter", 38, 180);
-    this.heli.inisNoktasi(inis.azimut, inis.mesafe);
+    // İniş noktası yeni planla (panelin yönüne en yakın; plan ya da yaw değişmediyse aynı nokta, uçuş etkilenmez)
+    this.heliInisiniSec();
     if (kaynak.url === this.yuklenen) {
       if (yawDegisti) this.yonelimUygula();
       if (gunesDegisti && this.arkaPlan) {
@@ -299,6 +309,7 @@ export class Sahne3B {
     this.kapat();
     this.kaynak = kaynak;
     this.yuklenen = kaynak.url;
+    this.yukleniyor = true;
     new THREE.TextureLoader().load(
       kaynak.url,
       (doku) => {
@@ -321,10 +332,13 @@ export class Sahne3B {
         this.isikGuncelle();
         this.hazir = true;
         this.hata = "";
+        this.yukleniyor = false;
       },
       undefined,
       () => {
-        if (this.yuklenen === kaynak.url) this.hata = `panorama yüklenemedi: ${kaynak.url}`;
+        if (this.yuklenen !== kaynak.url) return;
+        this.hata = `panorama yüklenemedi: ${kaynak.url}`;
+        this.yukleniyor = false;
       },
     );
   }
@@ -394,6 +408,7 @@ export class Sahne3B {
     this.gunesTahmini = null;
     this.gunesElle = false;
     this.hazir = false;
+    this.yukleniyor = false;
   }
 
   /** Bölge değişti: hasar ve parçacıklar sıfırlanır (figürler panelden yönetilir). */
@@ -676,15 +691,22 @@ export class Sahne3B {
     this.heli.yukle(url, boy, rotor, renk);
   }
   /**
-   * `yon`: panelden iniş yönü (sahne azimutu, derece). Planda iniş noktası varsa yöne en yakın olana iner
-   * (helikopter açık alana inmeli; ağaçlık/binalı yöne serbest iniş yapılmaz); plan yoksa yön + 38 m.
+   * `yon`: panelden iniş yönü (sahne azimutu, derece; verilmezse son gelen yön kalır). Planda iniş noktası varsa yöne
+   * en yakın olana iner (helikopter açık alana inmeli; ağaçlık/binalı yöne serbest iniş yapılmaz); plan yoksa yön + 38 m.
    */
   helikopterAyarla(d: HelikopterDurumu, yon?: number) {
-    if (yon !== undefined) {
-      const secim = this.noktaSec(yon, "helikopter", 38, 180);
-      this.heli.inisNoktasi(secim.azimut, secim.mesafe);
-    }
+    if (yon !== undefined) this.heliYonu = yon;
+    this.heliInisiniSec();
     this.heli.durumAyarla(d);
+  }
+  /**
+   * İniş noktası: panelin yönüne (heliYonu) en yakın plan iniş noktası, plan yoksa o yön + 38 m (sahne koordinatı).
+   * Sabit bir varsayılana dönmez: sonuç yalnız plan (panorama), yawKaydirma ya da panelin yönü değişince değişir;
+   * Helikopter3B aynı noktayı yok sayar. Havadayken değişirse uçuş modeli rotasını kurar ya da pas geçer.
+   */
+  private heliInisiniSec() {
+    const secim = this.noktaSec(this.heliYonu, "helikopter", 38, 180);
+    this.heli.inisNoktasi(secim.azimut, secim.mesafe);
   }
   get helikopterAzimutu() {
     return this.heli.inisAzimutu;
@@ -704,8 +726,9 @@ export class Sahne3B {
   }
   /**
    * Klasik izli mermi ayarı 3B'de: kaynak seçilen duvarın ortası yönünde (duvar yaw'ı; ±10° dağılım, 150–300 m),
-   * `yon` iz doğrultusunu döndürür: 0 izleyiciye doğru gelir, ±90 izleyicinin 10–60 m önünden yandan geçer
-   * (+ sağdan sola, − soldan sağa). Bkz. CatismaSistemi.izliAtis.
+   * `yon` iz doğrultusunu döndürür: 0 mermiler seçilen duvarın uzağından izleyiciye doğru gelir; ±90 mermiler komşu
+   * duvar yönünden gelip seçilen duvarın 10–60 m önünden yandan geçer (+ sağdan sola, − soldan sağa). Bkz.
+   * CatismaSistemi.izliAtis.
    */
   izliMermiAyarla(a: IzliMermiAyarlari, duvarYawlari: number[]) {
     const yaw = duvarYawlari[a.cikisNoktasi] ?? 0;

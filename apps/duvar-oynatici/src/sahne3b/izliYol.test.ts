@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { VARSAYILAN_PIKSEL_ACISI, enYakinParametre, izKalinligi, izUzunlukCarpani, izliYolu, kaynakYukseltmesi, yakinGecis, type IzliYol } from "./izliYol";
+import {
+  AraziUfku,
+  KAYNAK_UFUK_PAYI,
+  KAYNAK_YERDEN_EN_COK,
+  VARSAYILAN_PIKSEL_ACISI,
+  enYakinParametre,
+  izKalinligi,
+  izUzunlukCarpani,
+  izliKaynakYuksekligi,
+  izliYolu,
+  kaynakYukseltmesi,
+  yakinGecis,
+  type IzliYol,
+} from "./izliYol";
 
 /** Yatay doğrunun (kaynak → hedef) başlangıca en yakın uzaklığı. */
 function yatayYaklasim(y: IzliYol): number {
@@ -88,6 +101,75 @@ describe("kaynakYukseltmesi", () => {
     const dag = () => Z + 500;
     expect(kaynakYukseltmesi({ sx: 0, sy: Z + 2, sz: -200, hx: 0, hy: Z, hz: -10 }, dag)).toBe(80);
     expect(kaynakYukseltmesi({ sx: 0, sy: Z + 2, sz: -200, hx: 0, hy: Z, hz: -10 }, dag, 0.6, 30)).toBe(30);
+  });
+});
+
+describe("AraziUfku (izleyicinin gözünden arazi ufku, yön kovası başına önbellek)", () => {
+  const Z = -1.7;
+  const derece = (tan: number) => (Math.atan(tan) * 180) / Math.PI;
+  /** 120 m'de 20 m'lik halka sırt. */
+  const sirt = (x: number, z: number) => Z + 20 * Math.exp(-((Math.hypot(x, z) - 120) ** 2) / (2 * 15 * 15));
+
+  it("düz zeminde en uzak örnekten (320 m) hafif eksi; sırtta en yüksek yükselme açısı", () => {
+    expect(new AraziUfku().tanjant(0, () => Z)).toBeCloseTo(Z / 320, 9);
+    // Sırt tepesi 120 m'de 18,3 m göz üstünde: ~8,7°
+    expect(derece(new AraziUfku().tanjant(30, sirt))).toBeCloseTo((Math.atan2(18.3, 120) * 180) / Math.PI, 0);
+  });
+
+  it("aynı kovada önbellekten; ömür dolunca yeniden örnekler (arazi değişince tazelenir); kovalar ayrı", () => {
+    const u = new AraziUfku(2);
+    let zemin: (x: number, z: number) => number = () => Z;
+    let cagri = 0;
+    const sayan = (x: number, z: number) => {
+      cagri++;
+      return zemin(x, z);
+    };
+    const duz = u.tanjant(10, sayan);
+    const ilk = cagri;
+    expect(ilk).toBeGreaterThan(20);
+    zemin = sirt;
+    expect(u.tanjant(10.5, sayan)).toBe(duz); // aynı 2°'lik kova, ömür dolmadı
+    expect(cagri).toBe(ilk);
+    expect(u.tanjant(-170, sayan)).toBeGreaterThan(0.1); // başka kova: yeni arazi
+    u.ilerlet(2.1);
+    expect(u.tanjant(10, sayan)).toBeGreaterThan(0.1);
+  });
+});
+
+describe("izliKaynakYuksekligi (uzak kaynağın sınırlı yükseltmesi)", () => {
+  const Z = -1.7;
+  const RAD = Math.PI / 180;
+  it("düz zeminde taban aynen (arazi kapalıyken davranış değişmez)", () => {
+    for (const sy of [Z + 0.8, Z + 2.5, Z + 4]) {
+      const y: IzliYol = { sx: 120, sy, sz: -180, hx: 3, hy: Z, hz: -8 };
+      expect(izliKaynakYuksekligi(y, () => Z, Z / 320)).toBe(sy);
+    }
+  });
+
+  it("sırt arkasında kaynak gerektiği kadar yükselir ama yerden ≤ 12 m ve ufkun ≤ 1,5° üstünde (gökten gelmez)", () => {
+    // 100 m'de 30 m'lik sırt, kaynak 220 m'de (yerel zemin düz): araziyi aşmak için ~70 m gerekirdi
+    const sirt = (_x: number, z: number) => Z + 30 * Math.exp(-((-z - 100) ** 2) / (2 * 20 * 20));
+    const y: IzliYol = { sx: 0, sy: Z + 2, sz: -220, hx: 0, hy: Z, hz: -10 };
+    expect(kaynakYukseltmesi(y, sirt)).toBeGreaterThan(40);
+    const ufuk = new AraziUfku().tanjant(0, sirt);
+    const sy = izliKaynakYuksekligi(y, sirt, ufuk);
+    expect(sy - sirt(0, -220)).toBeLessThanOrEqual(KAYNAK_YERDEN_EN_COK + 1e-9);
+    expect(sy).toBeGreaterThan(Z + 2); // yine de yükseldi
+    expect((Math.atan2(sy, 220) - Math.atan(ufuk)) / RAD).toBeLessThanOrEqual(KAYNAK_UFUK_PAYI + 1e-9);
+    // Açı sınırı bağlayıcıysa (ufuk 0° verilir, yerden sınır 12 m daha gevşek): göz hizasının tam 1,5° üstü
+    expect(Math.atan2(izliKaynakYuksekligi(y, sirt, 0), 220) / RAD).toBeCloseTo(KAYNAK_UFUK_PAYI, 6);
+    // Az yükseltme yetiyorsa o kadar (sınıra kadar çıkmaz)
+    const tumsek = (_x: number, z: number) => Z + 3 * Math.exp(-((-z - 150) ** 2) / (2 * 10 * 10));
+    const y2: IzliYol = { sx: 0, sy: Z + 1, sz: -220, hx: 0, hy: Z, hz: -10 };
+    const gerek = kaynakYukseltmesi(y2, tumsek);
+    expect(gerek).toBeGreaterThan(0);
+    expect(izliKaynakYuksekligi(y2, tumsek, new AraziUfku().tanjant(0, tumsek))).toBeCloseTo(Z + 1 + gerek, 9);
+  });
+
+  it("derin çukurdaki kaynak yerel zeminden 12 m'yi aşmaz (taban düzlem yüksekliğinde verilse de)", () => {
+    const cukur = () => Z - 20;
+    const y: IzliYol = { sx: 0, sy: Z + 2, sz: -200, hx: 0, hy: Z, hz: -10 };
+    expect(izliKaynakYuksekligi(y, cukur, 0)).toBeCloseTo(Z - 20 + KAYNAK_YERDEN_EN_COK, 9);
   });
 });
 

@@ -277,6 +277,15 @@ function ortamSesAnahtari(d: SimulasyonDurumu): string {
   return d.bolge;
 }
 
+/**
+ * Helikopter 3B sahnede mi uçar: model hazır ve 3B sahne açık ya da yeni resim panorama yükleniyor (uçuş sırasında
+ * saat/mevsim değişti). Yüklenirken 2B siluete geçmez: 3B uçuş sürer, yüklenince baştan başlamaz (yeni iniş noktasına
+ * pas geçer ya da rotasını kurar); rotor sesi de kesilmez.
+ */
+function helikopter3B() {
+  return sahne3b.helikopterHazir && (sahne3b.hazir || sahne3b.panoramaYukleniyor);
+}
+
 function durumUygula(d: SimulasyonDurumu) {
   if (d.bolge !== durum.bolge) sahne3b.sahneyiSifirla(); // kraterler ve duman bölgeyle birlikte gider
   durum = d;
@@ -289,12 +298,13 @@ function durumUygula(d: SimulasyonDurumu) {
   sahne3b.catismaAyarla(catisma, yonAzimut(catisma.yon));
   const heliDurumu = d.oda === "oda2" ? d.oda2.helikopter : "yok";
   const heliYon = yonAzimut(d.oda2.helikopterYonu ?? 12);
-  // 3B model varsa helikopter 3B sahnede uçar; yoksa 2B siluet
-  if (sahne3b.helikopterHazir && sahne3b.hazir) {
+  // 3B model varsa helikopter 3B sahnede uçar (panorama yüklenirken de); yoksa 2B siluet
+  if (helikopter3B()) {
     sahne3b.helikopterAyarla(heliDurumu, heliYon);
     heli.durumAyarla("yok");
   } else {
-    sahne3b.helikopterAyarla("yok");
+    // Yön 3B sahnede de saklanır: panorama değişince iniş noktası panelin yönüne göre seçilir
+    sahne3b.helikopterAyarla("yok", heliYon);
     heli.azimutAyarla(heliYon);
     heli.durumAyarla(heliDurumu);
   }
@@ -541,7 +551,7 @@ function kare(simdi: number) {
   klipler.guncelle(dt);
   sahne3b.guncelle(dt);
   // 3B helikopterde rotor sesi modelin konumundan gelir (yön, mesafe, Doppler); 2B siluette yönsüz (eski davranış)
-  if (sahne3b.helikopterHazir && sahne3b.hazir) ses.helikopter(durum.oda === "oda2" ? durum.oda2.helikopter : "yok", sahne3b.helikopterTozu, sahne3b.helikopterSesKonumu);
+  if (helikopter3B()) ses.helikopter(durum.oda === "oda2" ? durum.oda2.helikopter : "yok", sahne3b.helikopterTozu, sahne3b.helikopterSesKonumu);
   else ses.helikopter(heli.mevcutDurum, heli.tozSiddeti);
 
   // Çiz
