@@ -197,6 +197,27 @@ Yeşil perde kabaca keying (ince iş Resolve/AE'de; hızlı deneme için):
 ffmpeg -i asker.mp4 -vf "chromakey=0x00b140:0.18:0.08,despill=type=green,crop=1000:1440:460:0" -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 6M -auto-alt-ref 0 asker_test.webm
 ```
 
+### 6.1 Panorama JPEG'lerini sıkıştırma (`araclar/panorama-sikistir.py`, 2 Kasım 2026)
+
+Poly Haven 8K JPG'lerinin çoğu kalite 100 ve 4:4:4 (21–64 MB). Oynatıcı panoramayı her sahne geçişinde indirip çözer;
+bu dosyalarda çözme 2–3 kat uzun sürer. Araç manifestteki `panorama[].dosya` foto panoramalarını (adında `_foto_`)
+**JPEG kalite 90, 4:2:0, baseline** olarak aynı adla yeniden kodlar; özgünü önce `icerik/_yedek_ozgun/<bölge>/` altına
+taşır (geri almak: oradan kopyala), kalitesi zaten ≤ 92 olan 4:2:0 dosyayı atlar (gece derecelendirmesi çıktıları,
+`kaynakDosya` hiç dokunulmaz), ICC/EXIF'i korur, önce/sonra boyut ve çözme süresini yazar.
+
+```
+python araclar/panorama-sikistir.py --kuru                       # yalnız rapor
+python araclar/panorama-sikistir.py                              # depo içeriği
+python araclar/panorama-sikistir.py --icerik D:/icerik           # sahada ICERIK_KLASORU
+python araclar/panorama-sikistir.py --hepsi --kalite 88 --sec ormanlik
+```
+
+2 Kasım çalıştırması (kullanıcı makinesi, 16 dosya): toplam 726,9 MB → 171,5 MB; Pillow çözme süresi dosya başına
+0,58–1,9 sn → 0,31–0,87 sn (ör. orman yaz gündüz 63,6 MB / 1,28 sn → 17,4 MB / 0,87 sn). Oynatıcının analizi (güneş
+tahmini, ufuk rengi, gece parlaklığı) özgünle karşılaştırıldı: belirgin güneşlerde ≤ 0,5°, yalnız yaygın/bulutlu ya da
+tepeye yakın güneşte (güç 0,37–0,62) 2,5–8,5° azimut farkı. Yeni panorama eklerken de aynı ayar önerilir (q90 4:2:0,
+baseline); 1080p duvarda 90° ≈ 2048 px olduğundan 8K equirect 1:1'dir, fark projeksiyonda görünmez.
+
 ## 7. Kabul stratejisi
 
 - Faz 1 ortasında idareye **örnek set** (1 bölge, 4 varyant, 2 efekt) gösterilir; "gerçek" algısı

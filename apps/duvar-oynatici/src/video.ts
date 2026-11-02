@@ -51,15 +51,50 @@ export interface Manifest {
   sesler?: SesManifesti;
 }
 
-/** Panorama eşleşmesi: bölge zorunlu; mevsim/zaman verilmişse eşleşmeli; en özel kayıt kazanır. */
-export function panoramaSec(manifest: Manifest, bolge: Bolge, mevsim: Mevsim, zaman: ZamanDilimi): PanoramaKaydiManifest | null {
+/** Bölgenin bir panorama adayı ve istenen birleşime uzaklığı. */
+export interface PanoramaAdayi {
+  kayit: PanoramaKaydiManifest;
+  /** Tam eşleşme değil: mevsim ya da zaman farklı (oynatıcı köprü günlüğüne yazar). */
+  yedek: boolean;
+  /** Zaman dilimi farklı: kayıt kendi zamanını taşımaz, sahne onu saate göre karartır (gündüz/alacakaranlık resmi gece). */
+  zamanFarkli: boolean;
+  /** Mevsim grubu (yaz/kış) farklı. */
+  mevsimFarkli: boolean;
+}
+
+/** İstenen zaman dilimine yakınlık (0 aynı): gece için alacakaranlık, sonra gündüz; gündüz için alacakaranlık, sonra gece. */
+const ZAMAN_UZAKLIGI: Record<ZamanDilimi, Record<ZamanDilimi, number>> = {
+  gunduz: { gunduz: 0, alacakaranlik: 1, gece: 2 },
+  alacakaranlik: { alacakaranlik: 0, gunduz: 1, gece: 2 },
+  gece: { gece: 0, alacakaranlik: 1, gunduz: 2 },
+};
+
+/**
+ * Bölgenin panoramaları, istenen mevsim/zamana yakınlık sırasıyla. Önce tam eşleşmeler (en özel kayıt önde: mevsimi ve
+ * zamanı yazılı olan, eski kural), sonra aynı zaman dilimi başka mevsim (kış gecesine yaz gecesi), sonra aynı mevsimde
+ * en yakın zaman (gecede önce alacakaranlık, sonra gündüz), en son kalanlar. Manifestte eksik birleşimler (ör. dağlık
+ * kış gece, üs gece) böylece yer tutucuya düşmez; liste yükleme hatasında sıradaki aday için de kullanılır.
+ */
+export function panoramaAdaylari(manifest: Manifest, bolge: Bolge, mevsim: Mevsim, zaman: ZamanDilimi): PanoramaAdayi[] {
   const m: "yaz" | "kis" = mevsim === "kis" ? "kis" : "yaz";
-  const adaylar = (manifest.panorama ?? []).filter(
-    (p) => !p._ornek && p.bolge === bolge && (p.mevsim === undefined || p.mevsim === mevsim || p.mevsim === m) && (p.zaman === undefined || p.zaman === zaman),
-  );
-  if (adaylar.length === 0) return null;
   const puan = (p: PanoramaKaydiManifest) => (p.mevsim ? 2 : 0) + (p.zaman ? 1 : 0);
-  return adaylar.sort((a, b) => puan(b) - puan(a))[0];
+  return (manifest.panorama ?? [])
+    .filter((p) => !p._ornek && p.bolge === bolge)
+    .map((p) => {
+      const z = p.zaman === undefined ? 0 : ZAMAN_UZAKLIGI[zaman][p.zaman] ?? 3;
+      const mv = p.mevsim === undefined || p.mevsim === mevsim || p.mevsim === m ? 0 : 1;
+      return { p, z, mv, puan: puan(p) };
+    })
+    .sort((a, b) => a.z - b.z || a.mv - b.mv || b.puan - a.puan)
+    .map(({ p, z, mv }) => ({ kayit: p, yedek: z > 0 || mv > 0, zamanFarkli: z > 0, mevsimFarkli: mv > 0 }));
+}
+
+/**
+ * Panorama eşleşmesi: bölge zorunlu; tam eşleşme (mevsim/zaman verilmişse eşleşmeli, en özel kayıt kazanır), yoksa
+ * bölgenin en yakın panoraması (`panoramaAdaylari`). Yalnız bölgede hiç panorama yoksa null.
+ */
+export function panoramaSec(manifest: Manifest, bolge: Bolge, mevsim: Mevsim, zaman: ZamanDilimi): PanoramaKaydiManifest | null {
+  return panoramaAdaylari(manifest, bolge, mevsim, zaman)[0]?.kayit ?? null;
 }
 
 interface Katman {

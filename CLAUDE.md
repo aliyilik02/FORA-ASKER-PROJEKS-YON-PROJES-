@@ -88,7 +88,16 @@ parametrik yer tutucu. Üstüne: Oda 2 ön planları, **figür klipleri** (`klip
 flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test (basılı tutma tekrar etmez), T hoparlör testi,
 ⇧0 sahneyi sıfırla (köprüye istek; köprü yoksa yalnız o oynatıcı). Sorgu: `?oda=`, `?fov=`, `?panorama=`,
 `?yaw=`, `?hud=1`, `?doldur=1`, `?kalite=dusuk|orta|yuksek` (dizüstü: dusuk; yerel kayıtta kalır), `?ses=`, `?hoparlor=`
-(Ses, aşağıda). Ayrıntı: `docs/duvar-oynatici.md`.
+(Ses, aşağıda), `?gecis=600` (sahne geçişinde solma, ms; 0 anlık). Ayrıntı: `docs/duvar-oynatici.md`.
+
+Sahne geçişi (2 Kasım, `sahne3b/panoramaGecisi.ts`, `gecis.ts`): eski sahne yenisi hazır olana dek canlı çizilir; panorama
+işçide çözülür (`panoramaIscisi.ts`), GPU'ya şeritlerle yüklenir, derinliksiz küp (dusuk 1024 / orta 1536 / yuksek 2048) +
+1024'lük kopyadan PMREM (hedefler `dispose()`; eski yolda 8K geçişi başına 384 MiB sızıyordu). Bölge sıfırlaması, arazi,
+kar, ışık ve helikopter iniş noktası takasa ertelenir; takasta eski kare `#tuvalGecis` örtüsüne kopyalanır, 0,6 sn'de solar.
+Yer tutucu yalnız hiç panorama yokken (beklerken siyah). Eksik bölge/mevsim/zaman en yakın panoramaya düşer
+(`video.ts panoramaAdaylari`, köprü günlüğüne yazılır). Foto panoramalar q90 4:2:0'a sıkıştırıldı
+(`araclar/panorama-sikistir.py`, özgünler `icerik/_yedek_ozgun/`). Kalan takılma takas karesinde arazi işi
+(`koridorlariAyarla` 0,3–0,8 sn, örtü altında).
 
 Ses (`ses.ts` + saf hesap `sesYerlesimi.ts`): her ses sahne azimutuyla çalınır; stereoda eski StereoPanner yolu (pan =
 sin azimut), 4 kanal / 5.1 / 7.1'de ChannelMerger (iki komşu hoparlöre sabit güçlü kaydırma, ön/arka ayrılır, uzak

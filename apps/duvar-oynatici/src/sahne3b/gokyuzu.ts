@@ -2,6 +2,10 @@
  * Prosedürel gökyüzü ("tam 3B" arazi kipi): three.js Sky (Preetham) + saatten güneş; ortam ışığı (IBL)
  * gökyüzünden PMREM ile üretilir ve saat değişince yenilenir. Gece: güneş ufkun altında, gök koyu lacivert;
  * yıldız yok (ileride). Panorama kipinde kullanılmaz.
+ *
+ * PMREM hedefinin kendisi saklanır ve yenisi gelince `dispose()` edilir: yalnız `.texture.dispose()` render hedefinin GPU
+ * belleğini bırakmıyordu (saat/bulut her değiştiğinde ~6 MiB sızıyordu). Üreteç sahneyle ortaktır (256'lık küp: panorama
+ * ortamıyla aynı boy, malzeme programları kipler arasında yeniden derlenmez).
  */
 import * as THREE from "three";
 import { Sky } from "three/examples/jsm/objects/Sky.js";
@@ -11,7 +15,7 @@ import { azimutYon, radyan } from "./uzay";
 export class Gokyuzu {
   readonly sky = new Sky();
   private pmrem: THREE.PMREMGenerator | null = null;
-  private ortam: THREE.Texture | null = null;
+  private ortamHedefi: THREE.WebGLRenderTarget | null = null;
   private sonSaat = -1;
   private sonBulut = -1;
   /** Güneş yönü (birim) ve ufka göre yüksekliği (derece), ışık sistemi için. */
@@ -28,8 +32,9 @@ export class Gokyuzu {
     u.mieDirectionalG.value = 0.8;
   }
 
-  baglan(renderer: THREE.WebGLRenderer) {
-    this.pmrem = new THREE.PMREMGenerator(renderer);
+  /** `pmrem`: sahnenin ortak üreteci (verilmezse yenisi kurulur). */
+  baglan(renderer: THREE.WebGLRenderer, pmrem?: THREE.PMREMGenerator | null) {
+    this.pmrem = pmrem ?? new THREE.PMREMGenerator(renderer);
   }
 
   /** Saat (0–24) ve bulut (0–1) → güneş konumu, atmosfer; gerekiyorsa ortam dokusu yenilenir. */
@@ -51,9 +56,10 @@ export class Gokyuzu {
       this.sonBulut = bulut;
       const gecici = new THREE.Scene();
       gecici.add(this.sky);
-      this.ortam?.dispose();
-      this.ortam = this.pmrem.fromScene(gecici, 0.04).texture;
-      sahne.environment = this.ortam;
+      const hedef = this.pmrem.fromScene(gecici, 0.04);
+      this.ortamHedefi?.dispose();
+      this.ortamHedefi = hedef;
+      sahne.environment = hedef.texture;
       sahne.background = null;
       sahne.add(this.sky); // fromScene sky'ı geçici sahneye aldı; geri ekle
       return true;
@@ -72,10 +78,12 @@ export class Gokyuzu {
     return c;
   }
 
+  /** Gökyüzünü kaldırır, ortam hedefini bırakır (çağıran sahnenin ortamını panoramaya geri bağlar). */
   sok(sahne: THREE.Scene) {
     sahne.remove(this.sky);
-    this.ortam?.dispose();
-    this.ortam = null;
+    if (this.ortamHedefi && sahne.environment === this.ortamHedefi.texture) sahne.environment = null;
+    this.ortamHedefi?.dispose();
+    this.ortamHedefi = null;
     this.sonSaat = -1;
   }
 }

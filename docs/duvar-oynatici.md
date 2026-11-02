@@ -157,9 +157,9 @@ katmanda:
   (prone atış). **Sıhhiyeci** (`asker_sihhiyeci`: Interact klibi + diz çökme, silahsız) figür komutundaki
   `yaninda=<id>` ile hedef figürün 0,9 m izleyici tarafına, 0,6 m yana ve ona dönük yerleşir; yerleşim planı
   atlanır, çatışmada düşmana dönmez. Panel: "Sıhhiyeci gönder" son yaralıyı hedefler.
-- **Bekleyen figürler** (`main.ts`): 3B sahne hazır olmadan (panorama yükleniyor) gelen model figür
-  komutları kuyruğa alınır, sahne hazır olunca uygulanır — oynatıcı yeniden açılınca köprünün yolladığı
-  aktif figürler kaybolmaz.
+- **Bekleyen figürler** (`main.ts`): 3B sahne hazır olmadan (ilk panorama yükleniyor) ya da bölge geçişinin takası
+  beklenirken gelen model figür komutları kuyruğa alınır, sahne hazır olunca (yeni bölgenin planıyla) uygulanır —
+  oynatıcı yeniden açılınca köprünün yolladığı aktif figürler kaybolmaz.
 - **Helikopter** (`helikopter3b.ts`): `klipler.helikopter` modeli; yaklaşma → iniş → yerde → kalkış
   (iniş noktası azimut 12°, 38 m; `inisNoktasi(azimut, mesafe)`), modelin kendi animasyonu + `rotor` düğümleri
   döner. Model yoksa 2B siluet. Hareket saf uçuş modelinden (`helikopterUcusu.ts`, testli; gövde pivotu ağırlık
@@ -183,8 +183,9 @@ katmanda:
   85–150 m dışarıdaki giriş noktasına gider, orada askıda burnunu noktaya çevirip yeniden yaklaşır (noktadan uzakta
   alçalmaz, yeni noktaya iner; yavaşken burun önce döner, yan yan kaymaz; değişimden ~30–60 sn, çoğunlukla 35–50 sn
   sonra yerde). Belirdiği karede (aynı durum mesajında panorama da değişti) değişirse yeni eksende baştan belirir. Yeni
-  resim panorama yüklenirken sahne kısa süre hazır değildir; helikopter bu arada da 3B'de uçar (`panoramaYukleniyor`,
-  main.ts `helikopter3B`): 2B siluete geçip yüklenince baştan başlamaz, rotor sesi kesilmez. Uçuş yüksekliği iniş
+  resim panorama hazırlanırken eski sahne çizilmeye devam eder (bkz. "Sahne geçişi"); helikopter 3B'de uçmayı sürdürür
+  (`panoramaYukleniyor`, main.ts `helikopter3B`), iniş noktası takasta yeni plandan seçilir (havadaysa pas geçer ya da
+  rotasını kurar), rotor sesi kesilmez. Uçuş yüksekliği iniş
   noktası zeminine göre olduğundan nokta ya da arazi (görüş koridoru, bölge) değişince havadaki helikopterin dünya
   yüksekliği korunur. Sahne iniş noktasını yalnız plan, `yawKaydirma` ya da panelin yönü değişince yeniden seçer
   (panelin yönüne en yakın plan noktası, yoksa o yön + 38 m); her durum mesajında sabit 12°'ye dönmez. Arazide
@@ -228,6 +229,63 @@ katmanda:
   çevresinde ek eğim (ufuk k·H/2 kayar).
 - HUD'da "3B:" satırı (güneş tahmini, figür/krater/parçacık sayısı). Konsoldan `window.duvar.sahne3b`.
 
+### Sahne geçişi (panorama değişimi, 2 Kasım 2026)
+
+Eskiden `panoramaAyarla` yeni dosyayı yüklemeden önce eski panoramayı kapatıyordu: birkaç saniye parametrik yer tutucu
+("ilk demo") görünüyor, 8K JPEG ana iş parçacığında çözülüyor (1,3–1,9 sn), 8K'dan PMREM ve derinlikli 4096 küp kuruluyor,
+güneş/ufuk ölçümü 8K resmi üç kez daha tuvale çiziyordu (en uzun kare 1,8–4,6 sn). Şimdi (`sahne3b/panoramaGecisi.ts` durum
+makinesi, `panoramaCozucu.ts` + `panoramaIscisi.ts` işçi, `panoramaDokulari.ts` GPU adımları, `gecis.ts` örtü):
+
+- **Eski sahne yenisi hazır olana dek canlı** çizilir (`hazir` açık kalır). Bölge sıfırlaması (krater, duman), arazi
+  kurulumu, kar, ışık (saat/bulut/yağış) ve helikopter iniş noktası **takasa ertelenir**; bölge geçişi beklerken gelen
+  patlama/toz ve model figürler kuyruğa alınır, takastan sonra yeni bölgenin planıyla uygulanır (`bolgeGecisiBekliyor`).
+- **Hazırlık** (ekrandakine dokunmaz, karede en çok bir GPU adımı): işçide fetch → Blob → `createImageBitmap`
+  (`imageOrientation: "flipY"`, sRGB; çözme ana iş parçacığı dışında), 1024×512 kopya (PMREM girdisi), 256×128 analiz
+  (güneş, ufuk rengi, gece parlaklığı; eski tuval yoluyla 24 panoramada karşılaştırıldı, güneş ≤ 0,8°), tam görüntü en çok
+  4×küp yüzü genişliğine küçülür. Ana iş parçacığında equirect `texStorage2D` + 8 MiB şeritler (GPU'da en çok 2 şerit
+  bekler, fenceSync), kalıcı dönüştürücüyle **derinliksiz küp** (yüz dusuk 1024 / orta 1536 / yuksek 2048, kaynak
+  yüksekliğini aşmaz; equirect hemen silinir), **PMREM 1024'lük kopyadan** (256 küp; tek üreteç, tam kipte gökyüzüyle
+  ortak), takastan önce yeni ortam ve sisle `compileAsync` (programlar paralel derlenmeye başlar).
+- **Takas** tek karede: `ciz()`den hemen sonra 3B karesi `#tuvalGecis` örtüsüne kopyalanır (3B'nin üstü, 2B katmanın
+  altı), `takasYap` yeni panoramayı, araziyi ve ışığı uygular, eskinin küp ve PMREM **hedefleri** `dispose()` edilir. Sonra
+  `compileAsync` bitene dek 3B çizilmez (örtü eski kareyi tutar), bölge değiştiyse arazi dokuları gelene dek (en çok
+  1,2 sn) beklenir ve örtü **0,6 sn'de compositor'da solar** (Web Animations; `?gecis=ms`, 0 = anlık kesme).
+- Ardışık isteklerde yenisi eskisini geçersiz kılar (nesil numarası: işçi durdurulur, geç gelen bitmapler kapatılır, GPU
+  kaynakları bırakılır); A→B→A'da geçiş olmaz; aynı dosyada yalnız yaw/plan/güneş/zaman değişirse yeniden yükleme yok.
+- **Yer tutucu** (gokyuzuCiz/araziCiz) yalnız hiç panorama gösterilmemişken ve gösterilecek panorama yokken; ilk açılışta
+  manifest/ilk panorama beklenirken ekran siyah, ilk sahne siyahtan solar.
+- **Eksik birleşim** (Kasım 2026'da 7: kırsal kış gece, dağlık kış alacakaranlık/gece, meskûn kış gündüz, ormanlık kış
+  gece, üs yaz/kış gece): `video.ts panoramaAdaylari` bölgenin en yakın panoramasını seçer (önce aynı zaman başka mevsim,
+  sonra aynı mevsimde en yakın zaman; gecede alacakaranlık, sonra gündüz). Zamanı farklı yedekte `zaman` boş kalır, sahne
+  onu saate göre karartır. Seçim köprü günlüğüne birleşim başına bir kez yazılır ("Panorama eksik: Dağlık · kis · gece →
+  daglik/pano_yaz_gece_foto_8k_gece.jpg (yaz gece)"); dosya yüklenemezse sıradaki aday, hiçbiri olmazsa ekrandaki kalır.
+- HUD son satırı `geçiş: yükleniyor <dosya> 0,4 sn` / `son geçiş 2,3 sn` ve örtü opaklığı; önizlemede örtü de görünür.
+  2 sn'yi aşan geçiş köprü günlüğüne adım süreleriyle yazılır. Konsol: `window.duvar.sahne3b.sonGecis`,
+  `window.duvar.gecis`, `window.duvar.arkaPlan()`.
+
+Bellek (panorama başına GPU): eski yol 8K'da ~1,6 GiB (küp 384 + derinlik 384, PMREM 2 × 384, equirect 128 MiB) ve her
+geçişte +384 MiB sızıntı (yalnız `.texture.dispose()`; aynı kalıp `gokyuzu.ts`'te de vardı, ikisi de düzeltildi). Şimdi küp
+96 / 54 / 24 MiB (yuksek / orta / dusuk) + PMREM 6 MiB; geçiş anında ek olarak equirect 128 / 72 / 32 MiB (küpten hemen
+sonra silinir). Her durum mesajında yeni `THREE.Fog` yerine tek sis nesnesi güncellenir.
+
+Ölçüm (2 Kasım, başsız Chrome, Iris Xe, 1920×360; durum isteğinden solmanın başlamasına; önizlemenin toDataURL'ı ölçümde
+kapalı, o FPS işinin konusu; q90'a sıkıştırılmış panoramalar):
+
+| | eski yol | yeni, dusuk | yeni, yuksek |
+|---|---|---|---|
+| istekten görünmeye | 2,4–5,7 sn, arada yer tutucu | 1,9–3,3 sn | 3,4–3,8 sn |
+| hazırlık sırasında en uzun kare | 1,8–4,6 sn | ≤ 0,12 sn | ≤ 0,18 sn |
+| takas karesi (örtünün altında) | — | 0,33–0,7 sn | 0,33–0,48 sn |
+| bellek | +384 MiB / geçiş | 10 geçişte doku 51, geometri 63, program 18 sabit; GPU süreci ~660 MB sabit | 4 geçişte doku 53, geometri 64, program 21 sabit |
+
+Takas karesinin çoğu arazi işidir: aynı bölgede yeni planın görüş koridorları (`arazi.koridorlariAyarla` yerinde, ızgara +
+normaller, 0,3–0,8 sn) ya da bölge değişiminde `arazi.kur` (~0,33 sn). Örtünün altında kalır ama ana iş parçacığını tutar;
+arazi.ts'e dokunulmadı (hazırlık sırasında hesaplanıp takasta uygulanabilir ya da Worker'a alınabilir). Bölge değişiminden
+sonra bitki modellerinin ve dokularının ilk yüklemesi solmadan sonra 0,4–0,7 sn'lik kareler bırakabiliyor (arazi.ts).
+İlk patlama artık program derlemiyor (patlama/krater/moloz malzemelerinin gizli ön derleme kopyaları): en uzun kare
+0,23 sn (eskiden 1,28 sn). Yön doğrulaması: yeni küp ile eski otomatik küp aynı kameradan çizilip karşılaştırıldı, ortalama
+piksel farkı 1,05/255 (5° kayma 12,5; 180° 37; ters çevrik 55).
+
 Katmanlar (arkadan öne):
 
 0. **360° panorama** (manifest `panorama`, en öncelikli): equirectangular resim veya video,
@@ -238,7 +296,8 @@ Katmanlar (arkadan öne):
    gündüz için Skybox AI panoraması (varsayılan) kayıtlıdır; dosyalar depoya girmez.
 1. **Video döngüsü** (manifestte klip varsa) – 5760×1080, 3 duvar yan yana; çapraz geçişli.
 2. Yoksa **parametrik sahne** (yalnızca geliştirme/yer tutucu): gökyüzü (saat → renk, güneş/ay/yıldız, bulut örtüsü), arazi
-   (bölge ön ayarı: tepe profili, zemin, nesneler; mevsim paleti; rüzgârla salınan ot).
+   (bölge ön ayarı: tepe profili, zemin, nesneler; mevsim paleti; rüzgârla salınan ot). Yalnız hiç panorama
+   gösterilmemişken ve gösterilecek panorama yokken çizilir; içerik beklenirken ekran siyahtır (bkz. "Sahne geçişi").
 3. **Oda 2 ön planı**: operasyonel bölge (kum torbası hattı), kaya/sütre, çukur, meskûn mahal içi
    (pencere ve kapıdan dışarısı görünür).
 4. **Figür klipleri** (`src/klipler.ts`, manifest `klipler`, kategori `figur`/`diger`/`hava`):
@@ -328,9 +387,11 @@ oynatıcıyı yenilemek yeter (köprü, `ICERIK_KLASORU` ortam değişkeni veril
 `public/icerik`, en son derleme kopyası `dist/icerik` klasörünü kullanır; sahada içerik ayrı diskte
 tutulabilir). Manifest:
 `apps/duvar-oynatici/public/icerik/manifest.json` (bkz. `icerik/OKU.md`). `dongu` listesine
-`{bolge, mevsim, zaman, dosya}` satırı eklenince oynatıcı o durum için videoyu kullanır; eksik
-kombinasyonlar yer tutucuya düşer, yani içerik parça parça gelebilir. `sesler` altındaki listeler
-dolunca sentez yerine kayıtlar çalar.
+`{bolge, mevsim, zaman, dosya}` satırı eklenince oynatıcı o durum için videoyu kullanır. Panoramada eksik birleşim
+bölgenin en yakın panoramasına düşer (önce aynı zaman, sonra aynı mevsim; köprü günlüğüne yazılır), yer tutucu yalnız
+bölgede hiç panorama yokken; yani içerik parça parça gelebilir. Yeni panorama JPEG'i q90 4:2:0 baseline olmalı
+(`araclar/panorama-sikistir.py`, bkz. `docs/fotogercekci-icerik-hatti.md` §6.1). `sesler` altındaki listeler dolunca
+sentez yerine kayıtlar çalar.
 
 Klip üretim kuralı (U duvar): 3 kamera, her biri 90° yatay görüş, yaw -90/0/+90, aynı konum ve
 yükseklik (1,6–1,7 m); 3 × 1920×1080 kareler yan yana birleştirilir (5760×1080); 60–90 sn, ilk ve

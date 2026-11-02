@@ -9,6 +9,11 @@
  * Görüntü, duvar başına bir perspektif kamerayla aynı tuvale (viewport/scissor) çizilir; kameralar duvarın
  * gerçek düzlemine göre (genelleştirilmiş perspektif, `duvarKamerasi.ts`) kurulduğundan köşelerde perspektif
  * kırılmaz. Bu tuval 2B tuvalin altındadır; 2B katman (klipler, sis, yağış, HUD) üstüne gelir.
+ *
+ * Panorama geçişi (`panoramaGecisi.ts`): yeni panorama ekrandakine dokunmadan hazırlanır (işçide çözme, şeritli
+ * yükleme, derinliksiz küp, 1024'lük PMREM); eski sahne o sürede canlı çizilir. Bölge sıfırlaması, arazi, kar, ışık ve
+ * helikopter iniş noktası takasa ertelenir. Takas tek karede (main.ts örtüyü yakaladıktan hemen sonra `takasYap`); ardından
+ * gölgelendiriciler `compileAsync` ile paralel derlenirken çizim beklenir, örtü solar.
  */
 import * as THREE from "three";
 import { gunesKonumu, ufukSatiri, type Yerlesim } from "../projeksiyon";
@@ -17,7 +22,7 @@ import { CatismaSistemi, type CatismaSesleri } from "./catisma";
 import { atesDokusu, dumanDokusu, kivilcimDokusu, kraterDokusu } from "./dokular";
 import { DuvarKamerasi, sisUzakligiAyarla, uzaklikSisiGerekir } from "./duvarKamerasi";
 import { FigurKatmani, type FigurPozu, type FigurSecenekleri, type ModelTanimi } from "./figurler3b";
-import { gunesTahmin, panoramadanSahneAzimutu, type GunesTahmini } from "./gunes";
+import { panoramadanSahneAzimutu, type GunesTahmini } from "./gunes";
 import { HasarKatmani } from "./hasar";
 import { Helikopter3B } from "./helikopter3b";
 import { rotorTozuTuru } from "./rotorTozu";
@@ -25,6 +30,11 @@ import { ParcacikSistemi } from "./parcaciklar";
 import { SutreKatmani, type SutreEsyasi } from "./sutre";
 import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, type AraziModu } from "./arazi";
 import { Gokyuzu } from "./gokyuzu";
+import type { PanoramaAnalizi } from "./panoramaAnalizi";
+import type { CozumSecenekleri, CozulmusPanorama } from "./panoramaCozucu";
+import { EquirectYukleyici, KupDonusturucu, pmremUret } from "./panoramaDokulari";
+import { ADIM_ADLARI, PanoramaGecisi, kupYuzuSec, solmaBaslayabilir, yuklemeGenisligi } from "./panoramaGecisi";
+import { cozmeBaslat, type CozmeIsi } from "./panoramaIsi";
 import { ZEMIN_Y, azimutYon, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu, zeminY } from "./uzay";
 import { aciNormalize, birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 
@@ -63,6 +73,60 @@ function elleGunes(g: { azimut: number; yukseklik: number; guc?: number }): Gune
   return { azimut: g.azimut, yukseklik: Math.max(0, Math.min(89, g.yukseklik)), guc: Math.max(0, Math.min(1, g.guc ?? 0.9)), yukseklikGuvenilir: true };
 }
 
+/** Aynı dosyada takas gerektiren alanlar (yaw, ufuk, zaman, güneş, plan). */
+function kaynakImzasi(k: PanoramaKaynagi): string {
+  return JSON.stringify([k.yawKaydirma ?? 0, k.yukseklikKaydirma ?? 0, k.zaman ?? null, k.gunes ?? null, k.plan ?? null]);
+}
+function dosyaAdi(url: string): string {
+  return url.split("/").slice(-2).join("/");
+}
+/** Zemin kar örtüsü (arazi): kışın tam, sonbaharda serpinti. */
+function karDegeri(mevsim: string): number {
+  return mevsim === "kis" ? 1 : mevsim === "sonbahar" ? 0.12 : 0;
+}
+
+/** Bir panoramanın hazırlık ve ekran kaynakları (nesil başına; ekrandan kalkınca ya da iptalde bırakılır). */
+interface PanoramaVerisi {
+  no: number;
+  isi: CozmeIsi | null;
+  cozum: CozulmusPanorama | null;
+  yukleyici: EquirectYukleyici | null;
+  /** Arka plan küpü (derinliksiz) ve ortam ışığı (PMREM hedefi; dokusu değil hedefin kendisi bırakılır). */
+  kup: THREE.WebGLCubeRenderTarget | null;
+  pmrem: THREE.WebGLRenderTarget | null;
+  analiz: PanoramaAnalizi | null;
+  /** performance.now: istek ve adım bitişleri (ölçüm). */
+  zaman: { istek: number; cozum?: number; yukleme?: number; kup?: number; pmrem?: number; takas?: number; ilkKare?: number };
+  isciSureleri: CozulmusPanorama["sureler"] | null;
+  seritSayisi: number;
+  boyut: [number, number];
+  kupYuzu: number;
+  birakildi: boolean;
+}
+
+interface AraziIstegi {
+  mod: AraziModu;
+  bolge: string;
+  mevsim: string;
+  kok: string;
+}
+
+/** Son tamamlanan geçişin ölçümü (ms, istekten itibaren); HUD ve ölçüm betikleri (`window.duvar.sahne3b.sonGecis`). */
+export interface GecisOlcumu {
+  dosya: string;
+  cozum: number;
+  yukleme: number;
+  kup: number;
+  pmrem: number;
+  takas: number;
+  ilkKare: number;
+  solma: number;
+  isci: CozulmusPanorama["sureler"] | null;
+  serit: number;
+  boyut: [number, number];
+  kupYuzu: number;
+}
+
 /**
  * Three.js equirect örneklemesinde (equirectUv: u = atan(z, x)/2π + 0.5) u=0.5, +x yönüne
  * (azimut +90°) düşer; bizim sözleşmede u=0.5 orta duvardır (azimut 0). backgroundRotation(θ)
@@ -84,11 +148,43 @@ export class Sahne3B {
   private readonly dolgu = new THREE.HemisphereLight(0xcfd8e6, 0x6b5a45, 0.15);
   private readonly flas = new THREE.PointLight(0xffd9a0, 0, 80, 2);
   private flasGuc = 0;
+  /** Tek PMREM üreteci (panorama ve tam kipte gökyüzü): gölgelendiricileri bir kez derlenir, ping-pong hedefi paylaşılır. */
   private pmrem: THREE.PMREMGenerator | null = null;
-  private ortamDokusu: THREE.Texture | null = null;
-  private arkaPlan: THREE.Texture | null = null;
-  private yuklenen = "";
+  /** Ekrandaki panoramanın kaynağı; takasa kadar eskisi kalır (noktaSec, patlama yeri, ufukY görüntüyle tutarlı olsun). */
   private kaynak: PanoramaKaynagi | null = null;
+  private _gecis: PanoramaGecisi<PanoramaKaynagi, PanoramaVerisi> | undefined;
+  private readonly kupDonusturucu = new KupDonusturucu();
+  /** Çözme işi başlatıcı (varsayılan işçi; testte sahte). */
+  cozucu: ((url: string, secenek: CozumSecenekleri) => CozmeIsi) | undefined;
+  /** Equirect yüklemesinde GPU'da aynı anda bitmemiş en çok şerit (ölçüm için konsoldan ayarlanabilir). */
+  seritUcusta = 2;
+  /** Takasa ertelenenler: arazi isteği (bölge/kip/mevsim), bölge sıfırlaması, ışık. */
+  private bekleyenArazi: AraziIstegi | null = null;
+  private bekleyenSifirla = false;
+  private isikBekliyor = false;
+  /** Takastan sonra gölgelendiriciler paralel derlenirken çizim beklenir (örtü önceki kareyi gösterir); en çok 4 sn. */
+  private derlemeBekleniyor = false;
+  private derlemeNo = 0;
+  private derlemeSiniri = 0;
+  private takasZamani = 0;
+  private takastanSonraCizim = 0;
+  /** Son takasta arazi yeniden kuruldu: dokuları gelene dek (en çok 1,2 sn) solma beklenir. */
+  private araziBekleniyor = false;
+  private dokuHazirCizim = 0;
+  private uygulananKar = -1;
+  /** Bu karede 3B gerçekten çizildi (örtü ancak taze kareden yakalanır). */
+  buKareCizildi = false;
+  /** İlk patlamada derleme takılmasın: krater/moloz malzemelerinin gizli kopyaları (programları canlı tutar). */
+  private onDerleme: THREE.Group | null = null;
+  private onDerlemeKare = 0;
+  /** Son tamamlanan geçiş (ölçüm). */
+  sonGecis: GecisOlcumu | null = null;
+  private olculen: { veri: PanoramaVerisi; dosya: string } | null = null;
+  /** Tek sis nesnesi: her ışık güncellemesinde yenisi atanınca tüm sisli malzemelerde program yeniden değerlendiriliyordu. */
+  private readonly sis = new THREE.Fog(0xc7ccd1, 100, 1000);
+  /** Takas öncesi ön derleme için ışıksız sınama sahnesi (yeni ortam + hedef sis; ışıklar sahneden toplanır). */
+  private probSahne: THREE.Scene | null = null;
+  private readonly ufukRengiGecici = new THREE.Color();
   private gunesTahmini: GunesTahmini | null = null;
   /** true: güneş manifestten (elle), false: panoramadan otomatik tahmin. */
   private gunesElle = false;
@@ -111,10 +207,9 @@ export class Sahne3B {
   private araziBolge = "";
   private sonBulut = 0.2;
   private gunesIsareti: THREE.Mesh | null = null;
+  /** Ekranda bir panorama var (ilk takastan sonra; geçişler sırasında da açık kalır). */
   hazir = false;
   hata = "";
-  /** Resim panorama yükleniyor (yenisi seçildi, dokusu henüz gelmedi; yükleme biter ya da düşerse false). */
-  private yukleniyor = false;
 
   /** Kalite kademesi (`?kalite=`): gölge haritası, kenar yumuşatma ve parçacık kapasitesi. */
   readonly kalite: Kalite;
@@ -181,7 +276,7 @@ export class Sahne3B {
     zemin.renderOrder = 1;
     this.sahne.add(zemin);
     this.golgeZemini = zemin;
-    this.gokyuzu.baglan(r);
+    this.gokyuzu.baglan(r, this.pmrem);
 
     this.sahne.add(this.arazi.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
 
@@ -250,11 +345,39 @@ export class Sahne3B {
     return this.heli.hazir;
   }
   /**
-   * Yeni resim panorama yükleniyor (saat/mevsim değişti): sahne kısa süre `hazir` değil ama 3B helikopter uçmayı sürdürür
-   * (main.ts 2B siluete geçirmez; yüklenince helikopter baştan başlamaz, yeni noktaya göre pas geçer ya da rotasını kurar).
+   * Yeni resim panorama hazırlanıyor (saat/mevsim/bölge değişti). Eski sahne bu sürede çizilmeye devam eder (`hazir` açık
+   * kalır); ilk açılışta da 3B helikopter uçmayı sürdürür (main.ts 2B siluete geçirmez). İniş noktası takasta yeni plandan
+   * seçilir: helikopter havadaysa yeni noktaya göre pas geçer ya da rotasını kurar, baştan başlamaz.
    */
   get panoramaYukleniyor() {
-    return this.yukleniyor;
+    return this.gecis.yukleniyor;
+  }
+  /** Geçiş durum makinesi (testte kurucusuz oluşturulan nesnede de ilk kullanımda kurulur). */
+  private get gecis(): PanoramaGecisi<PanoramaKaynagi, PanoramaVerisi> {
+    return (this._gecis ??= new PanoramaGecisi<PanoramaKaynagi, PanoramaVerisi>({
+      baslat: (k, no) => this.hazirlikBaslat(k, no),
+      birak: (v) => this.verilerBirak(v),
+      imza: kaynakImzasi,
+    }));
+  }
+  /** Takas bu karede yapılabilir (main.ts: örtüyü yakala, sonra `takasYap`). */
+  get takasHazir(): boolean {
+    return this.renderer !== null && this.gecis.takasHazir;
+  }
+  /** Hiç panorama gösterilmedi, ilki hazırlanıyor: ekran siyah (yer tutucu çizilmez). */
+  get ilkPanoramaBekleniyor(): boolean {
+    return this.gecis.ilkBekleniyor;
+  }
+  /** Bölge değişti, yeni bölgenin sahnesi takasta kurulacak: yeni figür ve patlamalar main.ts'te takasa dek bekler. */
+  get bolgeGecisiBekliyor(): boolean {
+    return this.bekleyenSifirla;
+  }
+  /** HUD ve önizleme için geçiş durumu. */
+  get gecisBilgisi(): string {
+    const h = this._gecis?.hazirlik;
+    if (h) return `geçiş: ${ADIM_ADLARI[h.adim]} ${dosyaAdi(h.kaynak.url)} ${((performance.now() - h.veri.zaman.istek) / 1000).toFixed(1)} sn`;
+    const s = this.sonGecis;
+    return s ? `son geçiş ${(s.solma / 1000).toFixed(1)} sn (${dosyaAdi(s.dosya)})` : "geçiş yok";
   }
   get helikopterTozu() {
     return this.heli.tozSiddeti;
@@ -285,155 +408,312 @@ export class Sahne3B {
     this.kameralar.forEach((kam, i) => kam.duvaraAyarla(this.yerlesimler[i].izdusum, k));
   }
 
-  /** Panorama resmi (equirect) → arka plan + ortam ışığı + güneş tahmini. null → katman kapanır. */
-  panoramaAyarla(kaynak: PanoramaKaynagi | null) {
+  /**
+   * Panorama isteği (equirect resim). Ekrandaki panorama yenisi tamamen hazır olana dek kalır: hazırlık arka planda yürür
+   * (`hazirlikAdimi`), takası main.ts örtüyü yakaladıktan sonra `takasYap` ile yapar. `yedekler`: dosya yüklenemezse
+   * sırayla denenecek en yakın panoramalar (video.ts panoramaAdaylari). null: bu bölgede panorama yok → ekrandaki kalır
+   * (hiç gösterilmediyse main.ts yer tutucu çizer).
+   */
+  panoramaAyarla(kaynak: PanoramaKaynagi | null, yedekler: PanoramaKaynagi[] = []) {
     if (!this.renderer) return;
-    if (!kaynak) {
-      this.kapat();
-      return;
-    }
-    const yawDegisti = this.kaynak && (this.kaynak.yawKaydirma !== kaynak.yawKaydirma || this.kaynak.yukseklikKaydirma !== kaynak.yukseklikKaydirma);
-    const gunesDegisti = JSON.stringify(this.kaynak?.gunes ?? null) !== JSON.stringify(kaynak.gunes ?? null);
-    this.kaynak = kaynak;
-    // İniş noktası yeni planla (panelin yönüne en yakın; plan ya da yaw değişmediyse aynı nokta, uçuş etkilenmez)
-    this.heliInisiniSec();
-    if (kaynak.url === this.yuklenen) {
-      if (yawDegisti) this.yonelimUygula();
-      if (gunesDegisti && this.arkaPlan) {
-        this.gunesElle = Boolean(kaynak.gunes);
-        this.gunesTahmini = kaynak.gunes ? elleGunes(kaynak.gunes) : this.gunesiTahminEt(this.arkaPlan.image as HTMLImageElement);
-        this.isikGuncelle();
-      }
-      return;
-    }
-    this.kapat();
-    this.kaynak = kaynak;
-    this.yuklenen = kaynak.url;
-    this.yukleniyor = true;
-    new THREE.TextureLoader().load(
-      kaynak.url,
-      (doku) => {
-        if (this.yuklenen !== kaynak.url || !this.renderer || !this.pmrem) {
-          doku.dispose();
+    if (this.gecis.iste(kaynak, yedekler) === "hatali" && kaynak && !this.gecis.etkin) this.hata = `panorama yüklenemedi: ${kaynak.url}`;
+  }
+
+  /** 3B katmanı kapat (video panorama 2B yolda): takasta panorama kalkar, örtü 2B görüntüye solar. */
+  panoramaKapat() {
+    if (this.renderer) this.gecis.kapat();
+  }
+
+  /** Yeni hazırlık: dosya işçide çözülür (indirme, çözme, küçültme, analiz); GPU adımları sonra karelere yayılır. */
+  private hazirlikBaslat(k: PanoramaKaynagi, no: number): PanoramaVerisi {
+    const v: PanoramaVerisi = { no, isi: null, cozum: null, yukleyici: null, kup: null, pmrem: null, analiz: null, zaman: { istek: performance.now() }, isciSureleri: null, seritSayisi: 0, boyut: [0, 0], kupYuzu: 0, birakildi: false };
+    const isi = (this.cozucu ?? cozmeBaslat)(k.url, { enGenis: yuklemeGenisligi(this.kalite) });
+    v.isi = isi;
+    isi.sonuc.then(
+      (s) => {
+        const h = this.gecis.hazirlik;
+        if (v.birakildi || !h || h.no !== no) {
+          s.tam.close();
+          s.kucuk.close();
           return;
         }
-        doku.mapping = THREE.EquirectangularReflectionMapping;
-        doku.colorSpace = THREE.SRGBColorSpace;
-        doku.minFilter = THREE.LinearFilter;
-        doku.generateMipmaps = false;
-        this.arkaPlan = doku;
-        this.sahne.background = doku;
-        this.ortamDokusu = this.pmrem.fromEquirectangular(doku).texture;
-        this.sahne.environment = this.ortamDokusu;
-        // Elle doğrulanmış güneş (manifest) varsa o; yoksa panoramanın en parlak diskinden tahmin
-        this.gunesElle = Boolean(kaynak.gunes);
-        this.gunesTahmini = kaynak.gunes ? elleGunes(kaynak.gunes) : this.gunesiTahminEt(doku.image as HTMLImageElement);
-        this.yonelimUygula();
-        this.isikGuncelle();
-        this.hazir = true;
-        this.hata = "";
-        this.yukleniyor = false;
+        v.cozum = s;
+        v.analiz = s.analiz;
+        v.isciSureleri = s.sureler;
+        v.boyut = [s.tam.width, s.tam.height];
+        v.zaman.cozum = performance.now();
+        h.adim = "yukle";
       },
-      undefined,
-      () => {
-        if (this.yuklenen !== kaynak.url) return;
-        this.hata = `panorama yüklenemedi: ${kaynak.url}`;
-        this.yukleniyor = false;
+      (hata: unknown) => {
+        if (v.birakildi || !this.gecis.gecerli(no)) return;
+        const sonraki = this.gecis.dustu(no);
+        const neden = hata instanceof Error ? hata.message : String(hata);
+        this.hata = `panorama yüklenemedi: ${k.url} (${neden})`;
+        this.uyari?.(`Panorama yüklenemedi: ${dosyaAdi(k.url)} (${neden})${sonraki ? ` → yedek: ${dosyaAdi(sonraki.url)}` : this.gecis.etkin ? "; ekrandaki panorama kalıyor" : ""}`);
       },
     );
+    return v;
   }
 
-  private ufukRenkOnbellek: { url: string; renk: THREE.Color } | null = null;
-  /** Panoramanın ufuk bandının ortalama rengi (sis için); kaynak başına bir kez hesaplanır. */
-  private ufukRengi(): THREE.Color {
-    if (this.ufukRenkOnbellek && this.ufukRenkOnbellek.url === this.yuklenen) return this.ufukRenkOnbellek.renk.clone();
-    const renk = new THREE.Color(0.78, 0.8, 0.82);
-    const img = this.arkaPlan?.image as HTMLImageElement | undefined;
-    if (img) {
-      try {
-        const c = document.createElement("canvas");
-        c.width = 128;
-        c.height = 64;
-        const ctx = c.getContext("2d", { willReadFrequently: true })!;
-        ctx.drawImage(img, 0, 0, 128, 64);
-        const d = ctx.getImageData(0, 30, 128, 6).data; // ufkun hemen altı (v ≈ 0,47–0,56)
-        let r = 0;
-        let g = 0;
-        let b = 0;
-        let n = 0;
-        for (let i = 0; i < d.length; i += 4) {
-          r += d[i];
-          g += d[i + 1];
-          b += d[i + 2];
-          n++;
-        }
-        renk.setRGB(r / n / 255, g / n / 255, b / n / 255).convertSRGBToLinear();
-      } catch {
-        /* tainted canvas: varsayılan */
+  /**
+   * Hazırlığın GPU adımları, karede en çok bir adım (guncelle'den): equirect şeritleri (önceki şerit GPU'da bitmeden
+   * yenisi gönderilmez) → derinliksiz küp (yüz kaliteye göre) → 1024'lük kopyadan PMREM → hazır. Ekrandaki sahneye
+   * dokunulmaz; kaynaklar hazırlık nesnesinde tutulur, iptalde bırakılır.
+   */
+  private hazirlikAdimi() {
+    const h = this._gecis?.hazirlik;
+    const r = this.renderer;
+    if (!h || !r || !this.pmrem) return;
+    const v = h.veri;
+    if (h.adim === "yukle") {
+      if (!v.yukleyici) {
+        if (!v.cozum) return;
+        v.yukleyici = new EquirectYukleyici(r, v.cozum.tam, this.seritUcusta);
+        return;
       }
+      if (!v.yukleyici.adim()) return;
+      v.seritSayisi = v.yukleyici.seritSayisi;
+      v.zaman.yukleme = performance.now();
+      h.adim = "kup";
+    } else if (h.adim === "kup" && v.yukleyici) {
+      v.kupYuzu = kupYuzuSec(this.kalite, v.yukleyici.yukseklik);
+      v.kup = this.kupDonusturucu.donustur(r, v.yukleyici.doku, v.kupYuzu);
+      v.yukleyici.birak();
+      v.yukleyici = null;
+      v.zaman.kup = performance.now();
+      h.adim = "pmrem";
+    } else if (h.adim === "pmrem" && v.cozum) {
+      v.pmrem = pmremUret(this.pmrem, v.cozum.kucuk);
+      v.cozum.kucuk.close();
+      v.cozum = null;
+      v.zaman.pmrem = performance.now();
+      h.adim = "derle";
+      this.onDerle(h.no, v);
     }
-    this.ufukRenkOnbellek = { url: this.yuklenen, renk: renk.clone() };
-    return renk;
   }
 
-  private parlaklikOnbellek: { url: string; zemin: number; gok: number } | null = null;
+  /**
+   * Takastan önce: sahnedeki malzemeler yeni ortam (PMREM) ve hedef sis durumuyla bir sınama sahnesi üzerinden
+   * `compileAsync`e verilir; değişen program çeşitleri (ilk panorama, sisli ↔ sissiz bölge) eski sahne çizilirken paralel
+   * derlenmeye başlar (KHR_parallel_shader_compile). Eski sahne bu arada çizildiğinden three'nin "hazır" denetimi erken
+   * dönebilir; asıl bekleme takastan sonraki `derlemeyiBaslat`ta (çizim tutulurken). En çok 2 sn beklenir.
+   */
+  private onDerle(no: number, v: PanoramaVerisi) {
+    const r = this.renderer;
+    const kamera = this.kameralar[Math.floor(this.kameralar.length / 2)];
+    const ilerle = () => {
+      const h = this._gecis?.hazirlik;
+      if (h && h.no === no && h.adim === "derle") h.adim = "hazir";
+    };
+    if (!r || !kamera || typeof r.compileAsync !== "function" || !v.pmrem) {
+      ilerle();
+      return;
+    }
+    const prob = (this.probSahne ??= new THREE.Scene());
+    const hedefMod = this.bekleyenArazi?.mod ?? this.arazi.mod;
+    prob.environment = hedefMod === "tam" ? this.sahne.environment : v.pmrem.texture;
+    prob.fog = hedefMod === "hibrit" || hedefMod === "tam" ? this.sis : null;
+    const sinir = setTimeout(ilerle, 2000);
+    r.compileAsync(this.sahne, kamera, prob).then(
+      () => {
+        clearTimeout(sinir);
+        ilerle();
+      },
+      () => {
+        clearTimeout(sinir);
+        ilerle();
+      },
+    );
+    prob.environment = null;
+  }
+
+  /** Hazırlık iptal edildi ya da panorama ekrandan kalktı: işçi durur, bitmapler kapanır, GPU hedefleri bırakılır. */
+  private verilerBirak(v: PanoramaVerisi) {
+    if (v.birakildi) return;
+    v.birakildi = true;
+    v.isi?.iptal();
+    if (v.cozum) {
+      v.cozum.tam.close();
+      v.cozum.kucuk.close();
+      v.cozum = null;
+    }
+    v.yukleyici?.birak();
+    v.yukleyici = null;
+    v.kup?.dispose();
+    v.kup = null;
+    // PMREM'in kendi hedefi: yalnız `.texture.dispose()` GPU belleğini bırakmıyordu (8K'da her geçişte +384 MiB)
+    v.pmrem?.dispose();
+    v.pmrem = null;
+  }
+
+  /**
+   * Takas (main.ts, örtü yakalandıktan hemen sonra, aynı karede): yeni panorama (ya da aynı dosyanın yeni alanları)
+   * ekrana gelir; ertelenen bölge sıfırlaması, arazi, kar, yön, helikopter iniş noktası ve ışık uygulanır; eskinin GPU
+   * kaynakları bırakılır. Sonra gölgelendiriciler paralel derlenir (`ciz` o sürede çizmez, örtü eski kareyi gösterir).
+   */
+  takasYap(simdi = performance.now()) {
+    const t = this.gecis.takas();
+    if (t.yeni) {
+      const v = t.yeni.veri;
+      v.zaman.takas = performance.now();
+      this.kaynak = t.yeni.kaynak;
+      this.gunesElle = Boolean(this.kaynak.gunes);
+      this.gunesTahmini = this.kaynak.gunes ? elleGunes(this.kaynak.gunes) : (v.analiz?.gunes ?? null);
+      this.hata = "";
+      this.olculen = { veri: v, dosya: t.yeni.kaynak.url };
+    } else if (t.meta) {
+      this.kaynak = t.meta;
+      this.gunesElle = Boolean(t.meta.gunes);
+      this.gunesTahmini = t.meta.gunes ? elleGunes(t.meta.gunes) : (this.gecis.etkin?.veri.analiz?.gunes ?? null);
+    } else if (t.kapandi) {
+      this.kaynak = null;
+      this.gunesTahmini = null;
+      this.gunesElle = false;
+    }
+    this.arkaPlaniUygula();
+    if (this.bekleyenSifirla) {
+      this.bekleyenSifirla = false;
+      this.sahneyiSifirla();
+    }
+    const arazi = this.bekleyenArazi;
+    this.bekleyenArazi = null;
+    let araziKuruldu = false;
+    if (arazi) araziKuruldu = this.araziUygula(arazi, this.kaynak);
+    else if ((t.yeni || t.meta) && this.arazi.koridorlariAyarla(this.planKoridorlari())) {
+      // Aynı bölgede yeni plan: görüş koridorları yerinde güncellendi, nesneler yeni zemine
+      this.figurler.zemineOturt();
+      this.sutre.zemineOturt();
+    }
+    this.yonelimUygula();
+    // İniş noktası yeni plandan, panelin son yönüyle (havadaki helikopter pas geçer ya da rotasını kurar)
+    this.heliInisiniSec();
+    this.isikBekliyor = false;
+    this.isikGuncelle();
+    this.hazir = this.gecis.etkin !== null;
+    if (t.eski) this.verilerBirak(t.eski.veri);
+    this.takasZamani = simdi;
+    this.takastanSonraCizim = 0;
+    this.araziBekleniyor = araziKuruldu && this.arazi.aktif;
+    this.dokuHazirCizim = 0;
+    if (this.hazir) {
+      this.onDerlemeKur();
+      this.derlemeyiBaslat();
+    }
+  }
+
+  /** Arka plan küpü ve ortam ışığı ekrandaki panoramadan (tam kipte gök ve IBL gokyuzu.ts'ten, isikGuncelle). */
+  private arkaPlaniUygula() {
+    if (this.arazi.mod === "tam") return;
+    const v = this.gecis.etkin?.veri;
+    this.sahne.background = v?.kup?.texture ?? null;
+    this.sahne.environment = v?.pmrem?.texture ?? null;
+  }
+
+  /**
+   * Gölgelendiricileri paralel derler (KHR_parallel_shader_compile; yeni arazi malzemeleri, sis/ortam değişimi, ilk
+   * takasta her şey). Bitene dek `ciz` çizmez: çizim yarım derlenmiş programda ana iş parçacığını bekletirdi. En çok 4 sn.
+   */
+  private derlemeyiBaslat() {
+    const r = this.renderer;
+    const kamera = this.kameralar[Math.floor(this.kameralar.length / 2)];
+    if (!r || !kamera || typeof r.compileAsync !== "function") return;
+    const no = ++this.derlemeNo;
+    this.derlemeBekleniyor = true;
+    this.derlemeSiniri = performance.now() + 4000;
+    const bitti = () => {
+      if (this.derlemeNo === no) this.derlemeBekleniyor = false;
+    };
+    r.compileAsync(this.sahne, kamera).then(bitti, bitti);
+  }
+
+  /**
+   * İlk takastan sonra bir kez: patlamada ilk kez görünen malzemelerin (moloz: örneklenmiş standart, gölge düşürür;
+   * krater çıkartması: dokulu saydam standart) gizli kopyaları sahneye eklenir. Takastaki `compileAsync` bunları da
+   * derler (her sis/ortam durumu için) ve kopyalar yaşadıkça programlar silinmez (three, son malzeme gidince programı
+   * siler). Moloz ilk iki çizimde izleyicinin altında görünür kalır: gölge geçişinin derinlik programı da derlensin
+   * (duvar kameraları dik aşağıyı görmez; gölgesi zeminin altına düşer). İlk patlama bu sayede takılmaz (eskiden 1,28 sn).
+   */
+  private onDerlemeKur() {
+    if (this.onDerleme) return;
+    const g = new THREE.Group();
+    g.name = "onDerleme";
+    g.position.set(0, ZEMIN_Y - 3, 0);
+    const moloz = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshStandardMaterial({ color: 0x6e5a42, roughness: 1, metalness: 0 }), 1);
+    moloz.setMatrixAt(0, new THREE.Matrix4().makeScale(0.05, 0.05, 0.05));
+    moloz.castShadow = true;
+    moloz.receiveShadow = true;
+    const beyaz = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+    beyaz.colorSpace = THREE.SRGBColorSpace;
+    beyaz.needsUpdate = true;
+    const krater = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshStandardMaterial({ map: beyaz, transparent: true, roughness: 1, metalness: 0, depthWrite: false }));
+    krater.receiveShadow = true;
+    krater.visible = false;
+    g.add(moloz, krater);
+    this.sahne.add(g);
+    this.onDerleme = g;
+    this.onDerlemeKare = 2;
+  }
+
+  /**
+   * Örtü solmaya başlayabilir mi (main.ts her karede): yeni sahne çizildi, derleme bitti, bölge değiştiyse arazi dokuları
+   * geldi (en çok 1,2 sn). 3B katman kapandıysa (video panorama) hemen.
+   */
+  solmaHazir(simdi: number): boolean {
+    if (!this.hazir) return true;
+    return solmaBaslayabilir(this.takastanSonraCizim, this.derlemeBekleniyor, this.araziBekleniyor, this.dokuHazirCizim > 0, simdi - this.takasZamani);
+  }
+
+  /** Solma başladı (main.ts): geçiş ölçümü kaydedilir; 2 sn'yi aşan geçiş köprü günlüğüne adım süreleriyle yazılır. */
+  solmaBasladi(_simdi: number) {
+    this.araziBekleniyor = false;
+    const o = this.olculen;
+    this.olculen = null;
+    if (!o) return;
+    // Adım zamanları performance.now() ile (rAF zaman damgası karenin başı, karışırsa süreler eksiye düşer)
+    const simdi = performance.now();
+    const z = o.veri.zaman;
+    const ms = (t: number | undefined) => Math.round((t ?? simdi) - z.istek);
+    this.sonGecis = {
+      dosya: o.dosya,
+      cozum: ms(z.cozum),
+      yukleme: ms(z.yukleme),
+      kup: ms(z.kup),
+      pmrem: ms(z.pmrem),
+      takas: ms(z.takas),
+      ilkKare: ms(z.ilkKare),
+      solma: ms(simdi),
+      isci: o.veri.isciSureleri,
+      serit: o.veri.seritSayisi,
+      boyut: o.veri.boyut,
+      kupYuzu: o.veri.kupYuzu,
+    };
+    const s = this.sonGecis;
+    if (s.solma > 2000) {
+      const i = s.isci;
+      const sn = (v: number) => (v / 1000).toFixed(1);
+      this.uyari?.(
+        `Panorama geçişi ${sn(s.solma)} sn (${dosyaAdi(s.dosya)}): işçi ${sn(s.cozum)}${i ? ` (indirme ${sn(i.indirme)}, çözme ${sn(i.cozme)}, küçültme ${sn(i.kucultme)}, analiz ${sn(i.analiz)})` : ""} · yükleme ${sn(s.yukleme - s.cozum)} (${s.serit} şerit) · küp ${sn(s.kup - s.yukleme)} · ışık ${sn(s.pmrem - s.kup)} · takas beklemesi ${sn(s.takas - s.pmrem)} · derleme + ilk kare ${sn(s.ilkKare - s.takas)} · doku beklemesi ${sn(s.solma - s.ilkKare)}`,
+      );
+    }
+  }
+
+  /** Ekrandaki panoramanın analizi (işçide bir kez: ufuk rengi, parlaklık, güneş). */
+  private get analiz(): PanoramaAnalizi | null {
+    return this._gecis?.etkin?.veri.analiz ?? null;
+  }
+
+  /** Panoramanın ufuk bandının ortalama rengi (doğrusal; hibrit kipte arazi kenarının sisi). Analiz yoksa açık gri. */
+  private ufukRengi(): THREE.Color {
+    const u = this.analiz?.ufuk;
+    return u ? this.ufukRengiGecici.setRGB(u[0], u[1], u[2]).convertSRGBToLinear() : this.ufukRengiGecici.setRGB(0.78, 0.8, 0.82).convertSRGBToLinear();
+  }
+
   /**
    * Panoramanın doğrusal parlaklığı: zemin bandı (ufkun 8–35° altı) ve gök (ufkun 10–60° üstü) ortalaması.
-   * Gece panoramasında 3B ışık bu ölçüye eşlenir (bkz. isikGuncelle); kaynak başına bir kez hesaplanır.
+   * Gece panoramasında 3B ışık bu ölçüye eşlenir (bkz. isikGuncelle); analiz yoksa null (sabit gece sınırları).
    */
   private panoramaParlakligi(): { zemin: number; gok: number } | null {
-    if (this.parlaklikOnbellek && this.parlaklikOnbellek.url === this.yuklenen) return this.parlaklikOnbellek;
-    const img = this.arkaPlan?.image as HTMLImageElement | undefined;
-    if (!img) return null;
-    try {
-      const c = document.createElement("canvas");
-      c.width = 128;
-      c.height = 64;
-      const ctx = c.getContext("2d", { willReadFrequently: true })!;
-      ctx.drawImage(img, 0, 0, 128, 64);
-      const d = ctx.getImageData(0, 0, 128, 64).data;
-      const dogrusal = (v: number) => {
-        const s = v / 255;
-        return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-      };
-      let zemin = 0;
-      let nz = 0;
-      let gok = 0;
-      let ng = 0;
-      for (let y = 0; y < 64; y++) {
-        const yukseklik = 90 - ((y + 0.5) / 64) * 180;
-        const zemindeMi = yukseklik <= -8 && yukseklik >= -35;
-        if (!zemindeMi && !(yukseklik >= 10 && yukseklik <= 60)) continue;
-        for (let x = 0; x < 128; x++) {
-          const i = (y * 128 + x) * 4;
-          const l = 0.2126 * dogrusal(d[i]) + 0.7152 * dogrusal(d[i + 1]) + 0.0722 * dogrusal(d[i + 2]);
-          if (zemindeMi) {
-            zemin += l;
-            nz++;
-          } else {
-            gok += l;
-            ng++;
-          }
-        }
-      }
-      this.parlaklikOnbellek = { url: this.yuklenen, zemin: zemin / Math.max(1, nz), gok: gok / Math.max(1, ng) };
-      return this.parlaklikOnbellek;
-    } catch {
-      return null; // tainted canvas: sabit gece sınırları kullanılır
-    }
-  }
-
-  private gunesiTahminEt(img: HTMLImageElement): GunesTahmini | null {
-    try {
-      const c = document.createElement("canvas");
-      c.width = 256;
-      c.height = 128;
-      const ctx = c.getContext("2d", { willReadFrequently: true })!;
-      ctx.drawImage(img, 0, 0, 256, 128);
-      return gunesTahmin(ctx.getImageData(0, 0, 256, 128).data, 256, 128);
-    } catch {
-      return null;
-    }
+    return this.analiz?.parlaklik ?? null;
   }
 
   private yonelimUygula() {
@@ -441,21 +721,6 @@ export class Sahne3B {
     this.sahne.backgroundRotation.set(0, yaw, 0);
     this.sahne.environmentRotation.set(0, yaw, 0);
     this.kameralariYonlendir();
-  }
-
-  kapat() {
-    this.sahne.background = null;
-    this.sahne.environment = null;
-    this.arkaPlan?.dispose();
-    this.ortamDokusu?.dispose();
-    this.arkaPlan = null;
-    this.ortamDokusu = null;
-    this.yuklenen = "";
-    this.kaynak = null;
-    this.gunesTahmini = null;
-    this.gunesElle = false;
-    this.hazir = false;
-    this.yukleniyor = false;
   }
 
   /**
@@ -498,7 +763,24 @@ export class Sahne3B {
     // Güneşli panoramada yağmur/kar: sahneyi kıs, güneşi yumuşat (yağışlı panorama yoksa inandırıcılık için)
     this.yagisKararma = ortam.yagis === "siddetli_yagmur" ? 0.62 : ortam.yagis === "hafif_yagmur" ? 0.8 : ortam.yagis === "kar" ? 0.85 : 1;
     this.yagisKararma *= 1 - ortam.bulut * 0.18;
+    // Yeni panorama hazırlanırken (ya da takas beklerken) ekrandaki görüntü değişmesin: gündüz panoraması gece saatinde
+    // önce kararıp sonra geçmesin. Değerler saklanır; takasta ya da hazırlık iptal olunca uygulanır (guncelle).
+    if (this.gecis.etkin && this.gecis.bekliyor) {
+      this.isikBekliyor = true;
+      return;
+    }
     this.isikGuncelle();
+  }
+
+  /**
+   * Bölge değişti (main.ts, durum mesajında): eski bölgenin hasarı ve parçacıkları takasta silinir (ekranda eski bölge
+   * dururken kraterler kaybolmasın). Ekranda henüz panorama yoksa hemen.
+   */
+  bolgeDegisti() {
+    if (this.gecis.etkin) {
+      this.bekleyenSifirla = true;
+      this.gecis.yanEtkiIste();
+    } else this.sahneyiSifirla();
   }
 
   /** Oda 2 sütre dizilimi (güvenli alan tipi); null → kaldır. */
@@ -510,18 +792,43 @@ export class Sahne3B {
    * 3B arazi kipi. "kapali": yalnızca panorama + gölge düzlemi (eski yol). "hibrit": yakın arazi 3B, uzak
    * panorama. "tam": uzak halka + prosedürel gökyüzü, panorama yalnız yerleşim planı için yüklenir.
    * Bölge değişince arazi yeniden kurulur (profil bölgeye göre).
+   *
+   * Ekranda panorama varken kurulum (ya da kar) değişikliği takasa ertelenir: eski görüntü yeni bölgenin arazisiyle
+   * bozulmasın, ~0,4 sn'lik kurulum örtünün arkasında kalsın. Hazırlık sürerken aynı bölge isteği de saklanır (yeni
+   * planın görüş koridorları takasta). Ekranda henüz bir şey yoksa (ilk açılış) hemen, hazırlanan panoramanın planıyla.
    */
   araziAyarla(mod: AraziModu, bolge: string, mevsim: string, kok: string) {
+    if (!this.renderer) {
+      this.heli.tozTuru = rotorTozuTuru(bolge, mevsim);
+      return;
+    }
+    const istek: AraziIstegi = { mod, bolge, mevsim, kok };
+    const g = this.gecis;
+    if (g.etkin) {
+      const degisir = this.araziBolge !== `${mod}|${bolge}` || this.uygulananKar !== karDegeri(mevsim);
+      if (degisir || g.bekliyor) {
+        this.bekleyenArazi = istek;
+        if (degisir) g.yanEtkiIste();
+        return;
+      }
+    }
+    this.araziUygula(istek, g.hazirlik?.kaynak ?? this.kaynak);
+  }
+
+  /** Arazi isteğini uygular (`planKaynagi`: görüş koridorlarının planı). Arazi yeniden kurulduysa true. */
+  private araziUygula(i: AraziIstegi, planKaynagi: PanoramaKaynagi | null): boolean {
+    const { mod, bolge, mevsim, kok } = i;
     // Rotor tozu zemin malzemesine göre: kışın kar, ormanda koyu toprak + yaprak, üs/meskûn mahalde beton tozu
     this.heli.tozTuru = rotorTozuTuru(bolge, mevsim);
-    if (!this.renderer) return;
-    const kar = mevsim === "kis" ? 1 : mevsim === "sonbahar" ? 0.12 : 0;
+    const kar = karDegeri(mevsim);
     const anahtar = `${mod}|${bolge}`;
+    let kuruldu = false;
     if (this.araziBolge !== anahtar) {
       this.araziBolge = anahtar;
+      kuruldu = true;
       const profil = ARAZI_PROFILLERI[bolge] ?? ARAZI_PROFILLERI.kirsal_acik_arazi;
       // Görüş koridorları kurulumda hesaplanır (yerinde güncelleme gereksiz: arazi zaten yeniden kuruluyor)
-      this.arazi.koridorlariAyarla(this.planKoridorlari(), false);
+      this.arazi.koridorlariAyarla(this.planKoridorlari(planKaynagi), false);
       this.arazi.uyari = (m) => this.uyari?.(m);
       this.arazi.kur(mod, profil, ARAZI_KALITE[this.kalite], kok, kar);
       zeminFonksiyonu(this.arazi.aktif ? (x, z) => this.arazi.yukseklik(x, z) : null);
@@ -533,21 +840,23 @@ export class Sahne3B {
       if (mod !== "tam") {
         this.gokyuzu.sok(this.sahne);
         this.sahne.fog = null;
-        if (this.arkaPlan) this.sahne.background = this.arkaPlan;
+        this.arkaPlaniUygula();
       }
       this.isikGuncelle();
-    } else if (this.arazi.koridorlariAyarla(this.planKoridorlari())) {
+    } else if (this.arazi.koridorlariAyarla(this.planKoridorlari(planKaynagi))) {
       // Aynı bölgede panorama değişti (saat/mevsim → başka plan): koridorlar yerinde güncellendi, nesneler zemine
       this.figurler.zemineOturt();
       this.sutre.zemineOturt();
     }
     this.arazi.karAyarla(kar);
+    this.uygulananKar = kar;
+    return kuruldu;
   }
 
   /** Yerleşim planı noktaları (sahne koordinatı) + düz alan yarıçapı: iniş alanı 9 m, tank 5 m, diğerleri 3,5 m. */
-  private planKoridorlari(): Array<{ x: number; z: number; yaricap: number }> {
-    const k = this.kaynak?.yawKaydirma ?? 0;
-    return (this.kaynak?.plan?.noktalar ?? []).map((n) => {
+  private planKoridorlari(kaynak: PanoramaKaynagi | null = this.kaynak): Array<{ x: number; z: number; yaricap: number }> {
+    const k = kaynak?.yawKaydirma ?? 0;
+    return (kaynak?.plan?.noktalar ?? []).map((n) => {
       const p = azimutYon(panoramadanSahneAzimutu(n.azimut, k)).multiplyScalar(n.mesafe);
       return { x: p.x, z: p.z, yaricap: n.tur?.includes("helikopter") ? 9 : n.tur?.includes("tank") ? 5 : 3.5 };
     });
@@ -576,8 +885,10 @@ export class Sahne3B {
       // Tam 3B: gökyüzü saatten, panorama yalnız plan için; sis ufuk rengine
       this.gokyuzu.guncelle(this.saat, this.sonBulut, this.sahne);
       this.sahne.background = null;
-      const ufuk = this.gokyuzu.ufukRengi(this.sonBulut);
-      this.sahne.fog = new THREE.Fog(ufuk, 180, 1400 - this.sonBulut * 700);
+      this.sis.color.copy(this.gokyuzu.ufukRengi(this.sonBulut));
+      this.sis.near = 180;
+      this.sis.far = 1400 - this.sonBulut * 700;
+      this.sahne.fog = this.sis;
       const g = gunesKonumu(this.saat);
       azimut = g.azimut;
       yukseklik = Math.max(-10, g.yukseklik);
@@ -597,11 +908,14 @@ export class Sahne3B {
       this.catisma.isik = gun;
       return;
     }
-    if (this.arazi.mod === "hibrit" && this.arkaPlan) {
-      // Hibrit: arazi kenarı (profil yarıçapı) panoramanın ufuk rengine karışsın; kaya/çalı da aynı sise girer
-      const ufuk = this.ufukRengi();
+    if (this.arazi.mod === "hibrit" && this.gecis.etkin) {
+      // Hibrit: arazi kenarı (profil yarıçapı) panoramanın ufuk rengine karışsın; kaya/çalı da aynı sise girer.
+      // Tek sis nesnesi güncellenir (yenisi her çağrıda tüm sisli malzemelerde program değerlendirmesi tetikliyordu).
       const r = this.arazi.yaricap;
-      this.sahne.fog = new THREE.Fog(ufuk.multiplyScalar(faktor), r * 0.55, r * 1.45);
+      this.sis.color.copy(this.ufukRengi()).multiplyScalar(faktor);
+      this.sis.near = r * 0.55;
+      this.sis.far = r * 1.45;
+      this.sahne.fog = this.sis;
     }
     if (this.gunesTahmini && this.gunesTahmini.guc > 0.05) {
       azimut = panoramadanSahneAzimutu(this.gunesTahmini.azimut, this.kaynak?.yawKaydirma ?? 0);
@@ -824,6 +1138,13 @@ export class Sahne3B {
 
   guncelle(dt: number) {
     if (!this.renderer) return;
+    // Panorama hazırlığı: karede en çok bir GPU adımı (şerit, küp, PMREM)
+    if (this._gecis?.hazirlik) this.hazirlikAdimi();
+    // Ertelenen ışık: hazırlık iptal olduysa ya da düştüyse (takas olmadan bitti) şimdi uygulanır
+    if (this.isikBekliyor && !this.gecis.bekliyor) {
+      this.isikBekliyor = false;
+      this.isikGuncelle();
+    }
     this.catisma.guncelle(dt);
     this.parcaciklar.guncelle(dt);
     this.hasar.guncelle(dt);
@@ -836,10 +1157,21 @@ export class Sahne3B {
     } else this.flas.intensity = 0;
   }
 
-  /** Üç duvarı kendi tuvaline çizer. Arka plan hazır değilse false döner (çağıran eski yola düşer). */
+  /**
+   * Üç duvarı kendi tuvaline çizer. Ekranda panorama yoksa false (ilk açılış: siyah; panorama hiç yoksa yer tutucu).
+   * Takastan sonra gölgelendiriciler derlenirken çizmez ama true döner: geçiş örtüsü önceki kareyi gösterir
+   * (`buKareCizildi` false kalır, örtü bu kareden yakalanmaz).
+   */
   ciz(): boolean {
     const r = this.renderer;
+    this.buKareCizildi = false;
     if (!r || !this.hazir || this.kameralar.length === 0) return false;
+    if (this.derlemeBekleniyor) {
+      if (performance.now() < this.derlemeSiniri) return true;
+      this.derlemeBekleniyor = false;
+    }
+    // Bölge değiştiyse arazi dokularının ilk yüklemesi (ana iş parçacığında çözme) bu çizimde, örtünün arkasında olur
+    const dokuHazir = this.araziBekleniyor && this.araziDokulariHazir();
     r.setScissorTest(true);
     r.shadowMap.needsUpdate = true; // ilk duvar çiziminde gölge geçişi, diğer ikisi aynı haritayı kullanır
     this.yerlesimler.forEach((y, i) => {
@@ -848,6 +1180,24 @@ export class Sahne3B {
       r.render(this.sahne, this.kameralar[i]);
     });
     r.setScissorTest(false);
+    this.buKareCizildi = true;
+    if (this.takastanSonraCizim === 0 && this.olculen) this.olculen.veri.zaman.ilkKare = performance.now();
+    this.takastanSonraCizim++;
+    if (dokuHazir) this.dokuHazirCizim++;
+    // Ön derleme molozu iki çizim görünür kalır (gölge geçişinin derinlik programı), sonra gizlenir (derleme için kalır)
+    if (this.onDerlemeKare > 0 && --this.onDerlemeKare === 0 && this.onDerleme) for (const c of this.onDerleme.children) c.visible = false;
+    return true;
+  }
+
+  /**
+   * Arazi dokuları yüklendi mi (bölge değişiminde solma bunu bekler; en çok 1,2 sn). arazi.ts'e dokunmadan: varsa
+   * `dokularHazir` (önerilen genel alan), yoksa doku haritasında görüntüsü gelmemiş doku kalmadı mı.
+   */
+  private araziDokulariHazir(): boolean {
+    const a = this.arazi as unknown as { dokularHazir?: boolean; dokular?: Map<string, THREE.Texture> };
+    if (typeof a.dokularHazir === "boolean") return a.dokularHazir;
+    if (!this.arazi.aktif || !(a.dokular instanceof Map)) return true;
+    for (const d of a.dokular.values()) if (!d.image) return false;
     return true;
   }
 }
