@@ -8,7 +8,7 @@ import { api } from "../api";
 import { useArayuz } from "../arayuz";
 import { BOLGE_ETIKETLERI, EFEKT_ETIKETLERI, HELIKOPTER_ETIKETLERI, MEVSIM_ETIKETLERI, YAGIS_ETIKETLERI, type EfektTuru, type FigurKomutu, type SenaryoDurumu, type SimulasyonDurumu } from "../tipler";
 import { vurulabilirAskerler, yoneEnYakin } from "../figurYardimcilari";
-import { Ikon, OnayliDugme, Rozet, saatBicimi, sureBicimi, yonMetni } from "./ortak";
+import { Ikon, Rozet, saatBicimi, sureBicimi, yonMetni } from "./ortak";
 import { Pusula } from "./Pusula";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
@@ -33,6 +33,7 @@ export function CanliSahne({
   senaryo,
   calistir,
   onizleme = null,
+  sonSifirlamaZamani,
 }: {
   durum: SimulasyonDurumu;
   figurler: Array<FigurKomutu & { id: string }>;
@@ -40,6 +41,8 @@ export function CanliSahne({
   calistir: Calistir;
   /** Oynatıcıdan gelen küçük duvar görüntüsü (yoksa kart pusulayla yetinir). */
   onizleme?: { veri: string; zaman: number; bilgi?: string } | null;
+  /** Son sahne sıfırlamasının köprü saati: önizleme bundan eskiyse soluk ve "temizleniyor…". */
+  sonSifirlamaZamani?: number;
 }) {
   const { seciliYon, setSeciliYon, bildir } = useArayuz();
   const [simdi, setSimdi] = useState(Date.now());
@@ -67,6 +70,8 @@ export function CanliSahne({
     });
   };
 
+  // Sıfırlamadan önce yakalanmış önizleme: oynatıcı temiz kareyi yollayana dek soluk
+  const temizleniyor = Boolean(onizleme && sonSifirlamaZamani !== undefined && onizleme.zaman < sonSifirlamaZamani);
   const o = durum.ortam;
   const havaMetni = [o.yagis !== "yok" ? YAGIS_ETIKETLERI[o.yagis] : null, o.sis > 0.15 ? `sis %${Math.round(o.sis * 100)}` : null, o.bulut > 0.5 ? `bulut %${Math.round(o.bulut * 100)}` : null]
     .filter(Boolean)
@@ -98,18 +103,14 @@ export function CanliSahne({
               senaryo {sureBicimi(senaryo.konumMs)} / {sureBicimi(senaryo.toplamMs)}
             </Rozet>
           )}
-          <OnayliDugme sinif="kucuk ikincil" onay="Sahne temizlensin mi?" onClick={() => void calistir(() => api.sahneSifirla()).then((r) => r && bildir({ tur: "basari", baslik: "Sahne sıfırlandı", metin: "Figürler, çatışma, izli mermi, helikopter, krater ve duman temizlendi" }))}>
-            Sahneyi sıfırla
-          </OnayliDugme>
         </div>
       </header>
 
       {onizleme && simdi - onizleme.zaman < 15000 && (
-        <figure className="onizleme" title="Duvardaki görüntü (oynatıcıdan ~2 sn'de bir)">
+        <figure className={`onizleme ${temizleniyor ? "temizleniyor" : ""}`} title="Duvardaki görüntü (oynatıcıdan en çok 5 sn'de bir; sıfırlamadan hemen sonra yenilenir)">
           <img src={onizleme.veri} alt="Duvar önizlemesi" />
           <figcaption>
-            {onizleme.bilgi ? `${onizleme.bilgi} · ` : "duvar · "}
-            {Math.max(0, Math.round((simdi - onizleme.zaman) / 1000))} sn önce
+            {temizleniyor ? "temizleniyor…" : `${onizleme.bilgi ? `${onizleme.bilgi} · ` : "duvar · "}${Math.max(0, Math.round((simdi - onizleme.zaman) / 1000))} sn önce`}
           </figcaption>
         </figure>
       )}
@@ -159,7 +160,10 @@ export function CanliSahne({
           </button>
         )}
       </div>
-      <p className="ipucu">Yönü pusuladan seç, efekti tek dokunuşla tetikle. Klavye: 1–5 efekt, 6 asker vuruldu, ←/→ yön, Boşluk senaryo oynat/duraklat.</p>
+      <p className="ipucu">
+        Yönü pusuladan seç, efekti tek dokunuşla tetikle. Klavye: 1–5 efekt, 6 asker vuruldu, ←/→ yön, Boşluk senaryo oynat/duraklat. Sahneyi temizlemek: üst
+        çubukta <strong>Sıfırla</strong> (iki dokunuş) ya da Esc, Esc; ortam ve bölge kalır.
+      </p>
     </section>
   );
 }

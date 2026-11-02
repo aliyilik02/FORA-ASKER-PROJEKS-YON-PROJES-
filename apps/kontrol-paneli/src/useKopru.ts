@@ -1,12 +1,31 @@
 /** Köprü sunucusuyla WebSocket bağlantısı; durum, senaryo ve günlük akışını tutar. */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
-import type { BaglantiDurumu, FigurKomutu, OrnekDurumu, SenaryoDurumu, SimulasyonDurumu, SunucuMesaji, UnrealIstekKaydi } from "./tipler";
+import { heliDizisiIptal } from "./heliDizisi";
+import type { BaglantiDurumu, FigurKomutu, OrnekDurumu, SenaryoDurumu, SifirlamaKaynagi, SifirlamaOzeti, SifirlamaYaniti, SimulasyonDurumu, SunucuMesaji, UnrealIstekKaydi } from "./tipler";
 
 export interface GunlukSatiri {
   seviye: "bilgi" | "uyari" | "hata";
   mesaj: string;
   zaman: number;
+}
+
+/** Son sahne sıfırlaması (köprünün `sahne/sifirla` mesajı ya da bu panelin API yanıtı; aynı nesil iki kez gelebilir). */
+export interface SonSifirlama {
+  nesil: number;
+  kaynak: SifirlamaKaynagi;
+  ozet: SifirlamaOzeti;
+  /** Köprü saati (ms): önizleme bundan eskiyse "temizleniyor…". */
+  zaman: number;
+}
+
+/**
+ * Son sıfırlama nesli (modül düzeyi): birkaç API çağrısı süren panel işlemi (ör. "Cephe kur") başında okur, adımlar
+ * arasında değiştiyse durur; sıfırlamadan sonra yarım kalan işlem sahneyi yeniden doldurmaz.
+ */
+let bilinenSifirlamaNesli = 0;
+export function sifirlamaNesli(): number {
+  return bilinenSifirlamaNesli;
 }
 
 export function useKopru() {
@@ -18,6 +37,7 @@ export function useKopru() {
   const [ornek, setOrnek] = useState<OrnekDurumu | null>(null);
   const [figurler, setFigurler] = useState<Array<FigurKomutu & { id: string }>>([]);
   const [onizleme, setOnizleme] = useState<{ veri: string; zaman: number; bilgi?: string } | null>(null);
+  const [sonSifirlama, setSonSifirlama] = useState<SonSifirlama | null>(null);
   const [soketAcik, setSoketAcik] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const yenidenDeneme = useRef<number | null>(null);
@@ -71,6 +91,15 @@ export function useKopru() {
           case "onizleme":
             setOnizleme({ veri: mesaj.veri, zaman: mesaj.zaman, bilgi: mesaj.bilgi });
             break;
+          case "sahne":
+            // Sıfırlama (hangi panelden ya da oynatıcıdan olursa olsun): her panel tek bildirim, helikopter dizisi iptal.
+            // "senkron" oynatıcılar içindir (kaçırılan sıfırlama); panelde yok sayılır.
+            if (mesaj.islem === "sifirla") {
+              bilinenSifirlamaNesli = mesaj.nesil;
+              heliDizisiIptal();
+              setSonSifirlama({ nesil: mesaj.nesil, kaynak: mesaj.kaynak, ozet: mesaj.ozet, zaman: mesaj.zaman });
+            }
+            break;
         }
       };
       ws.onclose = () => {
@@ -99,5 +128,18 @@ export function useKopru() {
     }
   }, []);
 
-  return { durum, senaryo, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, soketAcik, hata, calistir };
+  /**
+   * Bu panelin sıfırlama isteğinin yanıtı: durum, senaryo ve figür listesi WS mesajını beklemeden hemen yazılır
+   * (rozetler, pusula halkaları ve sayaç anında temizlenir). Aynı nesil WS'den de gelir; bildirim nesil başına bir kez.
+   */
+  const sifirlamaUygula = useCallback((y: SifirlamaYaniti) => {
+    bilinenSifirlamaNesli = Math.max(bilinenSifirlamaNesli, y.nesil);
+    heliDizisiIptal();
+    setDurum(y.durum);
+    setSenaryo(y.senaryo);
+    setFigurler([]);
+    setSonSifirlama((eski) => (eski && eski.nesil >= y.nesil ? eski : { nesil: y.nesil, kaynak: y.kaynak, ozet: y.ozet, zaman: y.zaman }));
+  }, []);
+
+  return { durum, senaryo, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, sonSifirlama, soketAcik, hata, calistir, sifirlamaUygula };
 }

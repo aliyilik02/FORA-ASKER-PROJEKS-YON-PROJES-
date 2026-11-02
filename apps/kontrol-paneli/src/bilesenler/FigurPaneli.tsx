@@ -3,6 +3,7 @@ import { api } from "../api";
 import { useArayuz, yonAzimut } from "../arayuz";
 import { vurulabilirAskerler, yoneEnYakin } from "../figurYardimcilari";
 import { FIGUR_POZ_ETIKETLERI, type FigurKomutu, type FigurPozu, type KlipOzeti } from "../tipler";
+import { sifirlamaNesli } from "../useKopru";
 import { Anahtar, Bolum, Ikon, Kaydirici, OnayliDugme, yonMetni } from "./ortak";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
@@ -101,7 +102,13 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
         [0, -9],
         [22, -7],
       ];
-      for (let i = 0; i < yerler.length; i++) await cagir(secim[i % secim.length], yerler[i][0], yerler[i][1]);
+      // Adımlar arasında sahne sıfırlandıysa yarıda bırakılır (sıfırlamadan sonra asker gelmesin)
+      const nesil = sifirlamaNesli();
+      for (let i = 0; i < yerler.length; i++) {
+        if (sifirlamaNesli() !== nesil) return false;
+        await cagir(secim[i % secim.length], yerler[i][0], yerler[i][1]);
+      }
+      if (sifirlamaNesli() !== nesil) return false;
       await api.catisma({ yon: seciliYon });
       return true;
     }).then((r) => r && bildir({ tur: "basari", baslik: "Cephe kuruldu", metin: `${yonMetni(seciliYon)} · 3 asker mevzide, düşman yönü ayarlandı` }));

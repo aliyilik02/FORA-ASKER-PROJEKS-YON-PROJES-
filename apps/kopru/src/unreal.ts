@@ -46,6 +46,11 @@ export interface UnrealIstek {
   govde: unknown;
 }
 
+/** Remote Control çağrısının zaman aşımı (ms): donan / erişilemeyen UE'de istek (ve onu bekleyen işlem) sonsuza dek beklemesin. */
+export const UE_ZAMAN_ASIMI_MS = 8000;
+/** Sahne sıfırlamasının UE çağrıları beklenmeden arka planda gider; kısa zaman aşımıyla birikmez. */
+export const UE_SIFIRLAMA_ZAMAN_ASIMI_MS = 3000;
+
 export class UnrealIstemci {
   private _bagli = false;
   private _sonHata: string | undefined;
@@ -111,7 +116,7 @@ export class UnrealIstemci {
     }
   }
 
-  private async fonksiyonCagir(ad: string, parametreler: Record<string, unknown>): Promise<void> {
+  private async fonksiyonCagir(ad: string, parametreler: Record<string, unknown>, zamanAsimiMs = UE_ZAMAN_ASIMI_MS): Promise<void> {
     const yol = `/remote/preset/${encodeURIComponent(this.ayarlar.preset)}/function/${ad}`;
     const govde = { Parameters: parametreler, GenerateTransaction: false };
     this.gonderilen.push({ yol, govde });
@@ -124,11 +129,14 @@ export class UnrealIstemci {
       this.kaydet(kayit);
       return;
     }
+    const ctrl = new AbortController();
+    const zamanlayici = setTimeout(() => ctrl.abort(), zamanAsimiMs);
     try {
       const yanit = await this.fetchFn(`${this.ayarlar.adres}${yol}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(govde),
+        signal: ctrl.signal,
       });
       if (!yanit.ok) {
         this._sonHata = `${ad}: HTTP ${yanit.status}`;
@@ -140,10 +148,12 @@ export class UnrealIstemci {
       }
     } catch (hata) {
       this._bagli = false;
-      this._sonHata = hata instanceof Error ? hata.message : String(hata);
+      this._sonHata = ctrl.signal.aborted ? `${ad}: zaman aşımı (${zamanAsimiMs} ms)` : hata instanceof Error ? hata.message : String(hata);
       this.gunluk.hata(`UE'ye ulaşılamadı: ${this._sonHata}`);
       kayit.basarili = false;
       kayit.hata = this._sonHata;
+    } finally {
+      clearTimeout(zamanlayici);
     }
     this.kaydet(kayit);
   }
@@ -177,31 +187,44 @@ export class UnrealIstemci {
     });
   }
 
-  izliMermiAyarla(ayar: IzliMermiAyarlari) {
-    return this.fonksiyonCagir(UE_ISIMLERI.fonksiyonlar.izliMermiAyarla, {
-      Aktif: ayar.aktif,
-      CikisNoktasi: ayar.cikisNoktasi,
-      Yon: ayar.yon,
-      Siklik: ayar.siklik,
-    });
+  /** `zamanAsimiMs`: verilmezse UE_ZAMAN_ASIMI_MS (sahne sıfırlaması kısa süre verir). */
+  izliMermiAyarla(ayar: IzliMermiAyarlari, zamanAsimiMs?: number) {
+    return this.fonksiyonCagir(
+      UE_ISIMLERI.fonksiyonlar.izliMermiAyarla,
+      {
+        Aktif: ayar.aktif,
+        CikisNoktasi: ayar.cikisNoktasi,
+        Yon: ayar.yon,
+        Siklik: ayar.siklik,
+      },
+      zamanAsimiMs,
+    );
   }
 
-  oda2Ayarla(ayar: Oda2Ayarlari) {
-    return this.fonksiyonCagir(UE_ISIMLERI.fonksiyonlar.oda2Ayarla, {
-      GuvenliAlan: ayar.guvenliAlan,
-      Helikopter: ayar.helikopter,
-      HelikopterYonu: ayar.helikopterYonu,
-      UzakSesMesafesi: ayar.uzakSesMesafesi,
-      UzakSesYonu: ayar.uzakSesYonu,
-    });
+  oda2Ayarla(ayar: Oda2Ayarlari, zamanAsimiMs?: number) {
+    return this.fonksiyonCagir(
+      UE_ISIMLERI.fonksiyonlar.oda2Ayarla,
+      {
+        GuvenliAlan: ayar.guvenliAlan,
+        Helikopter: ayar.helikopter,
+        HelikopterYonu: ayar.helikopterYonu,
+        UzakSesMesafesi: ayar.uzakSesMesafesi,
+        UzakSesYonu: ayar.uzakSesYonu,
+      },
+      zamanAsimiMs,
+    );
   }
 
-  catismaAyarla(ayar: CatismaAyarlari) {
-    return this.fonksiyonCagir(UE_ISIMLERI.fonksiyonlar.catismaAyarla, {
-      Aktif: ayar.aktif,
-      Siddet: ayar.siddet,
-      Yon: ayar.yon,
-      DostAtes: ayar.dostAtes,
-    });
+  catismaAyarla(ayar: CatismaAyarlari, zamanAsimiMs?: number) {
+    return this.fonksiyonCagir(
+      UE_ISIMLERI.fonksiyonlar.catismaAyarla,
+      {
+        Aktif: ayar.aktif,
+        Siddet: ayar.siddet,
+        Yon: ayar.yon,
+        DostAtes: ayar.dostAtes,
+      },
+      zamanAsimiMs,
+    );
   }
 }

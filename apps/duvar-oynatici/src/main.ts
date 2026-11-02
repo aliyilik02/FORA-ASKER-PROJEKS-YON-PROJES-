@@ -13,7 +13,8 @@
  *   ?ses=5.1     ses düzeni stereo|dortlu|5.1|7.1|otomatik (varsayılan otomatik: cihazın kanal sayısı; yerel kayıtta kalır)
  *   ?hoparlor=-45,45,-135,135   kanal sırasıyla hoparlör azimutları, LFE için "lfe" (sahadaki gerçek açılar)
  * Tuşlar: H hud · K kalibrasyon ızgarası · F tam ekran · M sessiz · 1 patlama · 2 toz · 3 izli mermi aç/kapa ·
- *   T hoparlör testi (her kanalda sırayla gürültü, kanal adı ekranda)
+ *   T hoparlör testi (her kanalda sırayla gürültü, kanal adı ekranda) · ⇧0 sahneyi temele döndür (köprüye istek; köprü
+ *   yoksa yalnız bu oynatıcı). Efekt tuşlarında basılı tutma (tuş tekrarı) yok sayılır.
  */
 import * as THREE from "three";
 import { KopruBaglantisi, type BaglantiDurumu } from "./baglanti";
@@ -30,6 +31,7 @@ import { oda2OnPlanCiz } from "./sahne/oda2";
 import { PanoramaKatmani } from "./panorama";
 import { type Kalite, Sahne3B } from "./sahne3b/sahne3b";
 import type { AraziModu } from "./sahne3b/arazi";
+import { adimlariCalistir, hataOzeti, temelDurum } from "./sahneTemizligi";
 import { SesMotoru } from "./ses";
 import { sesAyariniCoz } from "./sesYerlesimi";
 import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type EfektIstegi, type FigurKomutu, type SimulasyonDurumu, varsayilanDurum } from "./tipler";
@@ -384,15 +386,86 @@ function imleciGoster() {
 window.addEventListener("mousemove", imleciGoster);
 imleciGoster();
 
+/**
+ * Sahne sıfırlaması, oynatıcı tarafı (köprünün `sahne/sifirla` mesajı, kaçırılan sıfırlama, köprü yokken ⇧0): yerel
+ * artıklar sabit sırayla temizlenir (sahneTemizligi.ts; her adım ayrı try/catch, hatalar tek satırda köprü günlüğüne).
+ * Çatışma, izli mermi ve helikopterin açık/kapalı oluşu köprünün (bu mesajdan önce gelen) durum yayınından gelir.
+ * Rotor yalnız durumda helikopter yoksa hızla söner (kaçırılan sıfırlamada helikopter hâlâ inmiş olabilir).
+ */
+function sahneyiTemizle(neden: string) {
+  const heliYok = durum.oda !== "oda2" || durum.oda2.helikopter === "yok";
+  const hatalar = adimlariCalistir({
+    kuyruklar: () => {
+      bekleyenFigurler.clear();
+      bekleyenEfektler.length = 0;
+    },
+    sahne3b: () => sahne3b.temeleDondur(),
+    klipler: () => klipler.temizle(),
+    efektler: () => efektler.temizle(),
+    izli: () => izli.temizle(),
+    sesler: () => ses.efektleriSustur(heliYok),
+    // Temiz görüntü bir sonraki karede panele gitsin (5 sn beklemeden)
+    onizleme: () => {
+      sonOnizleme = 0;
+    },
+  });
+  if (hatalar.length) {
+    console.error("Sıfırlama hataları", hatalar);
+    kopru.gonder({ tip: "gunluk", seviye: "hata", mesaj: `Sıfırlama (${neden}): ${hataOzeti(hatalar)}` });
+  }
+}
+/** Bilinen son sıfırlama nesli (köprüden; null: henüz bilinmiyor, ilk senkron yalnız kaydeder). */
+let sahneNesli: number | null = null;
+/** Köprü yokken yerel sıfırlama yapıldı: köprü dönünce günlüğe tek satır. */
+let yerelSifirlamaYapildi = false;
+
+/** ⇧0: köprüden sahne sıfırlaması ister (bütün oynatıcılar ve paneller); köprüye ulaşılamazsa yalnız bu oynatıcı. */
+function sifirlamaIste() {
+  if (kopru.durum !== "bagli") {
+    yerelSifirla();
+    return;
+  }
+  const iptal = new AbortController();
+  const zamanlayici = window.setTimeout(() => iptal.abort(), 2500);
+  fetch("/api/sahne/sifirla", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kaynak: "oynatici" }), signal: iptal.signal })
+    .then((r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      // Temizlik köprünün `sahne/sifirla` yayınıyla gelir (bütün oynatıcılarda aynı anda)
+    })
+    .catch(() => yerelSifirla())
+    .finally(() => window.clearTimeout(zamanlayici));
+}
+/** Köprü yokken: yerel temizlik + çatışma/izli/helikopter yalnız bu oynatıcıda kapanır; duvara yazı basılmaz. */
+function yerelSifirla() {
+  if (durumGeldi) durumUygula(temelDurum(durum));
+  sahneyiTemizle("köprü yok, yalnız bu oynatıcı");
+  yerelSifirlamaYapildi = true;
+  console.warn("Köprüye ulaşılamadı: sahne yalnız bu oynatıcıda temizlendi (köprü dönünce onun durumu geçerli)");
+}
+
 const kopru = new KopruBaglantisi(
   (m) => {
     if (m.tip === "durum") durumUygula(m.durum);
     else if (m.tip === "efekt") efektUygula(m.efekt);
     else if (m.tip === "figur") figurKomutu(m.komut);
-    else if (m.tip === "sahne" && m.islem === "sifirla") {
-      sahne3b.sahneyiSifirla();
-      klipler.temizle();
-      bekleyenEfektler.length = 0;
+    else if (m.tip === "baglanti") {
+      // Canlı önizleme yalnız panel bağlıyken (eski köprüde alan yok → açık); yeni bağlanan panel 5 sn beklemesin
+      const istenir = (m.baglanti.panel?.sayi ?? 1) > 0;
+      if (istenir && !onizlemeIstenir) sonOnizleme = 0;
+      onizlemeIstenir = istenir;
+    } else if (m.tip === "sahne") {
+      if (m.islem === "sifirla") {
+        sahneyiTemizle("sıfırlama");
+        if (typeof m.nesil === "number") sahneNesli = m.nesil;
+      } else if (m.islem === "senkron") {
+        // Bağlanınca: kopukken sıfırlama kaçırıldıysa (nesil farklı) yerel artıklar da gitsin; figürler arkasından gelir
+        if (sahneNesli !== null && sahneNesli !== m.nesil) sahneyiTemizle("kaçırılan sıfırlama");
+        sahneNesli = m.nesil;
+        if (yerelSifirlamaYapildi) {
+          yerelSifirlamaYapildi = false;
+          kopru.gonder({ tip: "gunluk", seviye: "uyari", mesaj: "Köprü yokken bu oynatıcıda ⇧0 ile yerel sıfırlama yapıldı; köprünün durumu uygulandı" });
+        }
+      }
     }
   },
   (d) => {
@@ -417,6 +490,12 @@ function tamEkran() {
 }
 
 addEventListener("keydown", (e) => {
+  // ⇧0: sahneyi temele döndür. e.code: Türkçe Q'da ⇧0 "=" yazar, fiziksel tuş aynı. Basılı tutmak tekrar istemez.
+  if (e.code === "Digit0" && e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    if (!e.repeat) sifirlamaIste();
+    void sesiAc();
+    return;
+  }
   switch (e.key.toLowerCase()) {
     case "h":
       hud = !hud;
@@ -430,14 +509,15 @@ addEventListener("keydown", (e) => {
     case "m":
       ses.sessizlik(!ses.sessiz);
       break;
+    // Efekt tuşları: basılı tutunca (tuş tekrarı, saniyede ~30) efekt yağmuru olmasın
     case "1":
-      efektUygula({ tur: "patlama", siddet: 1, yon: 20 });
+      if (!e.repeat) efektUygula({ tur: "patlama", siddet: 1, yon: 20 });
       break;
     case "2":
-      efektUygula({ tur: "toz_duman", siddet: 0.8, yon: -30 });
+      if (!e.repeat) efektUygula({ tur: "toz_duman", siddet: 0.8, yon: -30 });
       break;
     case "3":
-      izli.ayarla({ ...durum.izliMermi, aktif: !izli.aktif });
+      if (!e.repeat) izli.ayarla({ ...durum.izliMermi, aktif: !izli.aktif });
       break;
     case "t":
       // Hoparlör testi: her kanalda sırayla gürültü, çalan kanalın adı ekranda; test sürerken T durdurur
@@ -495,14 +575,19 @@ ses.uyariDinle((mesaj) => {
 });
 
 /**
- * Panel için küçük önizleme: iki tuval (3B + 2B) 384×(oran) JPEG'e indirgenir, ~2 sn'de bir köprüye
- * gönderilir (köprü yalnızca panellere iletir). Kontrol odasında duvarı görmeyen eğitmen "duvarda şu an ne var"
- * sorusunu canlı sahne kartından yanıtlar.
+ * Panel için küçük önizleme: iki tuval (3B + 2B) 384×(oran) JPEG'e indirgenir, en çok ONIZLEME_ARALIGI_MS'de bir ve
+ * yalnız en az bir panel bağlıyken (köprü `baglanti.panel.sayi` ile bildirir) köprüye gönderilir (köprü yalnızca
+ * panellere iletir). Kontrol odasında duvarı görmeyen eğitmen "duvarda şu an ne var" sorusunu canlı sahne kartından
+ * yanıtlar. toDataURL ana iş parçacığını GPU'yu beklemeye zorlar (Iris Xe, yüksek kalite: 160–200 ms takılma); bu
+ * yüzden seyrek ve izleyen yokken hiç. Sahne sıfırlaması ve yeni bağlanan panel bir sonraki kareyi hemen ister.
  */
+const ONIZLEME_ARALIGI_MS = 5000;
 const onizlemeTuval = document.createElement("canvas");
 let sonOnizleme = 0;
+/** En az bir panel bağlı mı (köprünün `baglanti` mesajından; bilinene kadar gönderilmez). */
+let onizlemeIstenir = false;
 function onizlemeGonder(simdi: number) {
-  if (kopru.durum !== "bagli" || simdi - sonOnizleme < 2000 || W === 0 || H === 0) return;
+  if (kopru.durum !== "bagli" || !onizlemeIstenir || simdi - sonOnizleme < ONIZLEME_ARALIGI_MS || W === 0 || H === 0) return;
   sonOnizleme = simdi;
   try {
     const g = 384;

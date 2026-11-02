@@ -15,9 +15,13 @@ Bu rehber eğitmen/sunucu içindir; teknik ayrıntı `docs/duvar-oynatici.md`'de
 5. Ses: oynatıcı penceresine bir kez tıkla (tarayıcı sesi kullanıcı etkileşimi ister); **M** sessiz/açık.
 6. Oynatıcı HUD kapalı açılır (**H** açar/kapar; fps ve tanı bilgisi). Kalibrasyon ızgarası **K** kapalı olsun.
 
-Sunum öncesi ve gruplar arasında: canlı sahne kartındaki **Sahneyi sıfırla** (iki dokunuş) figürleri, çatışmayı,
-izli mermiyi, helikopteri, kraterleri ve dumanı temizler. Kartın üstünde duvarın canlı önizlemesi ve altında
-fps/kalite bilgisi görünür; kontrol odasından duvarı görmeden çalışılabilir.
+Sunum öncesi, denemeler arasında ve gruplar arasında: panel **üst çubuğundaki Sıfırla** (lambaların solunda, her
+ekran genişliğinde görünür; iki dokunuş: ilk dokunuş "Temizlensin mi?" der, 3 sn içinde ikinci dokunuş) ya da klavyede
+**Esc, Esc** sahneyi temele döndürür: bütün figürler, patlama/duman/krater, uçuşan mermiler, çatışma, izli mermi,
+helikopter (iniş dizisi dahil), sesler ve oynayan senaryo (00:00'a döner) temizlenir; bölge, mevsim/saat/hava, ışık,
+Oda 2 güvenli alanı ve ayarlar aynen kalır. Düğmedeki sayı sahnedeki etkin öğe sayısıdır. Oynatıcı bilgisayarında
+**⇧0** aynı işi yapar. Canlı sahne kartının üstünde duvarın önizlemesi (en çok 5 sn'de bir) ve fps/kalite bilgisi
+görünür; kontrol odasından duvarı görmeden çalışılabilir.
 
 ## Seçenek A – Tek tuş: "Gösterim – Tam Tur (5 dk)"
 

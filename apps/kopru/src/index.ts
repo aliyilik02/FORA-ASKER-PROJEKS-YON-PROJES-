@@ -23,6 +23,7 @@ import { FigurYoneticisi } from "./figur.js";
 import { Gunluk } from "./gunluk.js";
 import { OrnekBaslatici, ornekKomutuOlustur } from "./ornek.js";
 import { ORNEK_SENARYOLAR } from "./ornekSenaryolar.js";
+import { SahneYoneticisi } from "./sahne.js";
 import { SenaryoMotoru } from "./senaryo.js";
 import type { IstemciMesaji, SunucuMesaji } from "./tipler.js";
 import { UnrealIstemci } from "./unreal.js";
@@ -44,10 +45,14 @@ const senaryo = new SenaryoMotoru(depo, gunluk);
 const veri = new VeriDeposu(ayarlar.veriKlasoru, ORNEK_SENARYOLAR);
 const ornek = new OrnekBaslatici(ornekKomutuOlustur(ayarlar.ornek), gunluk);
 
-/** Bağlı istemciler ve rolleri (panel / oynatıcı). */
+/**
+ * Bağlı istemcilerin rolleri ("merhaba" ile gelir). Rolünü henüz bildirmeyen istemci panel gibi yayın alır ama hiçbir
+ * sayıya girmez: bağlanırken giden ilk `baglanti` mesajında yeni oynatıcı kendini panel saymasın.
+ */
 const istemciRolleri = new Map<WebSocket, "panel" | "oynatici">();
 const oynaticiGunlukZamani = new Map<WebSocket, number>();
 const oynaticiSayisi = () => [...istemciRolleri.values()].filter((r) => r === "oynatici").length;
+const panelSayisi = () => [...istemciRolleri.values()].filter((r) => r === "panel").length;
 
 // Derlenmiş oynatıcı ve panel varsa aynı porttan sun.
 const oynaticiKlasoru = fileURLToPath(new URL("../../duvar-oynatici/dist/", import.meta.url));
@@ -61,29 +66,41 @@ const icerikAdaylari = [
 const figur = new FigurYoneticisi(gunluk, icerikAdaylari);
 senaryo.figurBagla(figur);
 
-// Son durum: köprü kapanıp açılınca sahne (bölge, ortam, oda, figürler) kaldığı yerden devam eder (12 saatten
-// eskiyse yok sayılır). Durum/figür değişiminde 1 sn gecikmeyle diske yazılır.
+// Son durum: köprü kapanıp açılınca sahne (bölge, ortam, oda, figürler, sıfırlama nesli) kaldığı yerden devam eder
+// (12 saatten eskiyse yok sayılır). Durum/figür değişiminde 1 sn gecikmeyle, sahne sıfırlamasında hemen diske yazılır.
 const sonDurum = veri.sonDurumOku();
 if (sonDurum) {
   figur.yukle(sonDurum.figurler);
   void depo.durumuYukle(sonDurum.durum).then(() => gunluk.bilgi(`Son durum geri yüklendi (${new Date(sonDurum.zaman).toLocaleTimeString("tr-TR")}, ${sonDurum.figurler.length} figür)`));
 }
+// Sahne sıfırlaması (temel sahne): senaryo dur → figür temizle → tek durum yayını → `sahne/sifirla` → hemen kayıt
+const sahne = new SahneYoneticisi({ depo, senaryo, figur, gunluk, yayinla: (m) => herkeseGonder(m), kaydet: () => sonDurumuKaydet(true) }, sonDurum?.nesil);
 let sonDurumZamanlayici: NodeJS.Timeout | null = null;
-function sonDurumuKaydet() {
+/** `hemen`: bekleyen gecikmeli yazımı iptal edip şimdi yazar (sahne sıfırlaması). */
+function sonDurumuKaydet(hemen = false) {
+  if (hemen) {
+    if (sonDurumZamanlayici) clearTimeout(sonDurumZamanlayici);
+    sonDurumZamanlayici = null;
+    sonDurumuYaz();
+    return;
+  }
   if (sonDurumZamanlayici) return;
   sonDurumZamanlayici = setTimeout(() => {
     sonDurumZamanlayici = null;
-    const { sonEfektler: _e, ...durum } = depo.al();
-    try {
-      veri.sonDurumYaz({ zaman: Date.now(), durum, figurler: figur.aktifListe() });
-    } catch (hata) {
-      gunluk.uyari(`Son durum yazılamadı: ${hata instanceof Error ? hata.message : String(hata)}`);
-    }
+    sonDurumuYaz();
   }, 1000);
+}
+function sonDurumuYaz() {
+  const { sonEfektler: _e, ...durum } = depo.al();
+  try {
+    veri.sonDurumYaz({ zaman: Date.now(), durum, figurler: figur.aktifListe(), nesil: sahne.nesil });
+  } catch (hata) {
+    gunluk.uyari(`Son durum yazılamadı: ${hata instanceof Error ? hata.message : String(hata)}`);
+  }
 }
 
 const uygulama = express();
-uygulama.use("/api", apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, figur, sahneSifirla: () => herkeseGonder({ tip: "sahne", islem: "sifirla" }) }));
+uygulama.use("/api", apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, panelSayisi, figur, sahne }));
 for (const klasor of icerikAdaylari) {
   uygulama.use("/oynatici/icerik", express.static(klasor));
 }
@@ -114,7 +131,7 @@ function herkeseGonder(mesaj: SunucuMesaji) {
   }
 }
 
-const baglantiYayinla = () => herkeseGonder({ tip: "baglanti", baglanti: baglantiDurumu(unreal, artnet, oynaticiSayisi()) });
+const baglantiYayinla = () => herkeseGonder({ tip: "baglanti", baglanti: baglantiDurumu(unreal, artnet, oynaticiSayisi(), panelSayisi()) });
 
 depo.dinle((durum) => {
   herkeseGonder({ tip: "durum", durum });
@@ -131,13 +148,15 @@ figur.dinle((komut, aktifler) => {
 });
 
 wss.on("connection", (ws: WebSocket) => {
-  istemciRolleri.set(ws, "panel");
   ws.send(JSON.stringify({ tip: "durum", durum: depo.al() } satisfies SunucuMesaji));
   ws.send(JSON.stringify({ tip: "senaryo", senaryo: senaryo.al() } satisfies SunucuMesaji));
-  ws.send(JSON.stringify({ tip: "baglanti", baglanti: baglantiDurumu(unreal, artnet, oynaticiSayisi()) } satisfies SunucuMesaji));
+  ws.send(JSON.stringify({ tip: "baglanti", baglanti: baglantiDurumu(unreal, artnet, oynaticiSayisi(), panelSayisi()) } satisfies SunucuMesaji));
   ws.send(JSON.stringify({ tip: "ornek", ornek: ornek.durum() } satisfies SunucuMesaji));
-  // Yeniden bağlanan oynatıcı sahnedeki figürleri geri alsın (aynı id ile oynat → varsa yerine geçer)
+  // Sıfırlama nesli (figürlerden ÖNCE): kopukken sıfırlama kaçıran oynatıcı yerel artıklarını (krater, duman) temizler
+  ws.send(JSON.stringify({ tip: "sahne", islem: "senkron", nesil: sahne.nesil } satisfies SunucuMesaji));
+  // Yeniden bağlanan oynatıcı: kopukken kaldırılan figürler gitsin, sonra sahnedekiler geri gelsin (aynı id ile oynat)
   const aktifFigurler = figur.aktifListe();
+  ws.send(JSON.stringify({ tip: "figur", komut: { islem: "temizle", id: "*" }, aktifler: aktifFigurler } satisfies SunucuMesaji));
   for (const f of aktifFigurler) {
     ws.send(JSON.stringify({ tip: "figur", komut: { ...f, islem: "oynat" }, aktifler: aktifFigurler } satisfies SunucuMesaji));
   }
@@ -171,8 +190,12 @@ wss.on("connection", (ws: WebSocket) => {
   ws.on("close", () => {
     const rol = istemciRolleri.get(ws);
     istemciRolleri.delete(ws);
+    oynaticiGunlukZamani.delete(ws);
     if (rol === "oynatici") {
       gunluk.uyari(`Duvar Oynatıcı bağlantısı koptu; kalan ${oynaticiSayisi()}`);
+      baglantiYayinla();
+    } else if (rol === "panel") {
+      // Panel sayısı değişti: son panel kapanınca oynatıcılar önizleme yollamayı bırakır
       baglantiYayinla();
     }
   });

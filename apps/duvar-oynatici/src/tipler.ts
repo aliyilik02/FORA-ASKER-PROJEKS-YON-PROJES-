@@ -162,12 +162,17 @@ export interface BaglantiDurumu {
   artnet: { aktif: boolean; hedef: string; evren: number; sonGonderim?: number };
   /** Bağlı Duvar Oynatıcı sayısı (hibrit yol: görüntüyü tarayıcı tabanlı oynatıcı üretir). */
   oynatici: { bagli: boolean; sayi: number };
+  /**
+   * Bağlı kontrol paneli sayısı ("merhaba" ile rol: panel diyenler). Oynatıcı canlı önizlemeyi yalnız panel bağlıyken
+   * yollar (toDataURL ana iş parçacığını ~0,2 sn bekletir; izleyen yokken boşuna takılmasın).
+   */
+  panel: { sayi: number };
 }
 
 /** İstemci → sunucu WebSocket mesajları. */
 export type IstemciMesaji =
   | { tip: "merhaba"; rol: "panel" | "oynatici"; ad?: string }
-  /** Oynatıcıdan küçük JPEG önizleme (data URL, ~2 sn'de bir); köprü yalnızca panellere iletir. */
+  /** Oynatıcıdan küçük JPEG önizleme (data URL, en çok 5 sn'de bir, yalnız panel bağlıyken); köprü yalnızca panellere iletir. */
   | { tip: "onizleme"; veri: string; bilgi?: string }
   /** Oynatıcıdan uyarı/hata (model yüklenemedi, WebGL yok...); köprü günlüğüne "Oynatıcı:" önekiyle düşer. */
   | { tip: "gunluk"; seviye: "uyari" | "hata"; mesaj: string };
@@ -230,6 +235,49 @@ export interface KlipOzeti {
   dongu: boolean;
 }
 
+/**
+ * Sahne sıfırlaması ("temel sahne", köprüde `SahneYoneticisi`): oda, bölge, ortam, ışık, Oda 2 güvenli alanı ve sütre,
+ * ayar değerleri ve yüklü senaryo (durmuş, 00:00) kalır; figürler, efektler, krater/duman, sesler, çatışma, izli
+ * mermi, helikopter ve senaryo oynatımı temizlenir. İsteyen: panel düğmesi, panel kısayolu (Esc, Esc), oynatıcı (⇧0).
+ */
+export type SifirlamaKaynagi = "panel" | "kisayol" | "oynatici";
+export const SIFIRLAMA_KAYNAK_ETIKETLERI: Record<SifirlamaKaynagi, string> = {
+  panel: "panelden",
+  kisayol: "panel kısayoluyla (Esc, Esc)",
+  oynatici: "oynatıcıdan (⇧0)",
+};
+
+/** Sıfırlamada kapananlar (bildirim ve günlük satırı): figür sayısı, durdurulan senaryonun adı, önceden açık olanlar. */
+export interface SifirlamaOzeti {
+  figur: number;
+  /** Oynayan ya da duraklatılmış senaryo durdu (adı); duruyorduysa null. */
+  senaryo: string | null;
+  catisma: boolean;
+  izliMermi: boolean;
+  helikopter: boolean;
+}
+
+/** `POST /api/sahne/sifirla` yanıtı: panel WebSocket mesajını beklemeden durumu ve senaryoyu hemen yazar. */
+export interface SifirlamaYaniti {
+  tamam: boolean;
+  nesil: number;
+  kaynak: SifirlamaKaynagi;
+  ozet: SifirlamaOzeti;
+  /** Köprü saati (ms): panel önizlemesi bundan eskiyse "temizleniyor…" gösterir. */
+  zaman: number;
+  durum: SimulasyonDurumu;
+  senaryo: SenaryoDurumu;
+}
+
+/** Özetin okunur metni: "3 figür, çatışma, izli mermi kaldırıldı; senaryo "X" durdu" (hiçbiri yoksa "sahne zaten temizdi"). */
+export function sifirlamaOzetiMetni(o: SifirlamaOzeti): string {
+  const kalkanlar = [o.figur > 0 ? `${o.figur} figür` : "", o.catisma ? "çatışma" : "", o.izliMermi ? "izli mermi" : "", o.helikopter ? "helikopter" : ""].filter((k) => k !== "");
+  const parcalar: string[] = [];
+  if (kalkanlar.length) parcalar.push(`${kalkanlar.join(", ")} kaldırıldı`);
+  if (o.senaryo) parcalar.push(`senaryo "${o.senaryo}" durdu`);
+  return parcalar.length ? parcalar.join("; ") : "sahne zaten temizdi";
+}
+
 /** Sunucu → istemci WebSocket mesajları. */
 export type SunucuMesaji =
   | { tip: "durum"; durum: SimulasyonDurumu }
@@ -244,8 +292,18 @@ export type SunucuMesaji =
   | { tip: "figur"; komut: FigurKomutu & { id: string }; aktifler: Array<FigurKomutu & { id: string }> }
   /** Duvar görüntüsünün küçük önizlemesi (panelin canlı sahne kartı). */
   | { tip: "onizleme"; veri: string; zaman: number; bilgi?: string }
-  /** Sahne sıfırlama: oynatıcı kraterleri, dumanı, 2B klipleri temizler (yeni eğitim grubu). */
-  | { tip: "sahne"; islem: "sifirla" };
+  /**
+   * Sahne sıfırlaması: köprü önce senaryoyu durdurur, figürleri temizler ve çatışma/izli mermi/helikopteri kapatan TEK
+   * durum yayınını yollar, en son bu mesajı. Oynatıcı yerel artıkları (krater, duman, parçacık, 2B efekt, uçuştaki iz
+   * ve top mermisi, yüklenmekte olan figür, sesler) temizler; paneller tek bildirim gösterir. `nesil` her sıfırlamada
+   * artar (köprü son durumla diske yazar).
+   */
+  | { tip: "sahne"; islem: "sifirla"; nesil: number; kaynak: SifirlamaKaynagi; ozet: SifirlamaOzeti; zaman: number }
+  /**
+   * Bağlanan istemciye son sıfırlama nesli (figürlerden ÖNCE gider): oynatıcının bildiği nesil farklıysa kopukken
+   * sıfırlama kaçırılmıştır, yerel temizlik yapar. İlk bağlantıda (nesil bilinmiyor) yalnız kaydedilir.
+   */
+  | { tip: "sahne"; islem: "senkron"; nesil: number };
 
 export const BOLGE_ETIKETLERI: Record<Bolge, string> = {
   meskun_mahal: "Meskûn Mahal",

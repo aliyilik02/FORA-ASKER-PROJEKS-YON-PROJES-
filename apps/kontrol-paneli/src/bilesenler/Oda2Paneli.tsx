@@ -1,43 +1,34 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useArayuz } from "../arayuz";
-import { EFEKT_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type HelikopterDurumu, type SimulasyonDurumu } from "../tipler";
+import { HELI_DIZISI, heliDizisiBaslat, heliDizisiIptal, useHeliDizisi } from "../heliDizisi";
+import { EFEKT_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type SimulasyonDurumu } from "../tipler";
 import { Bolum, Ikon, Kaydirici, SecenekGrubu, yonMetni } from "./ortak";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
-
-const DIZI: Array<{ durum: HelikopterDurumu; sn: number }> = [
-  { durum: "yaklasiyor", sn: 0 },
-  { durum: "iniyor", sn: 20 },
-  { durum: "yerde", sn: 35 },
-];
 
 export function Oda2Paneli({ durum, calistir }: { durum: SimulasyonDurumu; calistir: Calistir }) {
   const { seciliYon, bildir } = useArayuz();
   const o = durum.oda2;
   const guncelle = (k: Partial<typeof o>) => void calistir(() => api.oda2(k));
-  const [diziBaslangic, setDiziBaslangic] = useState<number | null>(null);
+  // Dizi modül düzeyinde (heliDizisi.ts): sekme değişince sürer, sahne sıfırlaması iptal eder
+  const diziBaslangic = useHeliDizisi();
   const [gecen, setGecen] = useState(0);
-  const zamanlayicilar = useRef<number[]>([]);
 
   useEffect(() => {
     if (diziBaslangic === null) return;
-    const t = window.setInterval(() => setGecen((Date.now() - diziBaslangic) / 1000), 200);
+    const guncelleGecen = () => setGecen((Date.now() - diziBaslangic) / 1000);
+    guncelleGecen();
+    const t = window.setInterval(guncelleGecen, 200);
     return () => window.clearInterval(t);
   }, [diziBaslangic]);
 
   const diziBaslat = () => {
-    zamanlayicilar.current.forEach((t) => window.clearTimeout(t));
-    zamanlayicilar.current = DIZI.map((a) => window.setTimeout(() => void api.oda2({ helikopter: a.durum }), a.sn * 1000));
-    zamanlayicilar.current.push(window.setTimeout(() => setDiziBaslangic(null), 40000));
-    setDiziBaslangic(Date.now());
-    setGecen(0);
+    heliDizisiBaslat((helikopter) => void api.oda2({ helikopter }).catch(() => undefined));
     bildir({ tur: "bilgi", baslik: "Helikopter iniş dizisi başladı", metin: "Yaklaşma 20 sn → iniş 15 sn → yerde" });
   };
   const diziIptal = () => {
-    zamanlayicilar.current.forEach((t) => window.clearTimeout(t));
-    zamanlayicilar.current = [];
-    setDiziBaslangic(null);
+    heliDizisiIptal();
   };
 
   return (
@@ -63,7 +54,7 @@ export function Oda2Paneli({ durum, calistir }: { durum: SimulasyonDurumu; calis
                 <span style={{ width: `${Math.min(100, (gecen / 35) * 100)}%` }} />
               </div>
               <div className="heli-asamalar">
-                {DIZI.map((a) => (
+                {HELI_DIZISI.map((a) => (
                   <span key={a.durum} className={gecen >= a.sn ? "tamam" : ""}>
                     {HELIKOPTER_ETIKETLERI[a.durum]}
                   </span>

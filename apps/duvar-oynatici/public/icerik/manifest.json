@@ -4297,8 +4297,14 @@
       "uzak_patlama_4.ogg"
     ],
     "gurultu": [
-      "silah_mosin.ogg",
-      "silah_sks.ogg"
+      "silah_tek_1.ogg",
+      "silah_tek_2.ogg",
+      "silah_tek_3.ogg",
+      "silah_tek_4.ogg",
+      "silah_tek_5.ogg",
+      "silah_tek_6.ogg",
+      "silah_tek_7.ogg",
+      "silah_tek_8.ogg"
     ],
     "bagirma": [
       "bagirma_1.ogg",
@@ -4317,7 +4323,7 @@
       "kis": "ortam_kis_ruzgar.ogg",
       "yagmur": "ortam_yagmur.ogg"
     },
-    "_kaynak": "Mixkit Free lisansı (ticari kullanım serbest): patlama, uzak patlama, bağırma (İngilizce yer tutucu; Türkçe kayıt gelecek), helikopter rotoru, ortam döngüleri (bölge adı / gece / kis / yagmur anahtarları). Silah: OpenGameArt Tabasco CC0 (tek atış; seri atış oynatıcıda art arda çalınır)."
+    "_kaynak": "Mixkit Free lisansı (ticari kullanım serbest): patlama, uzak patlama, bağırma (İngilizce yer tutucu; Türkçe kayıt gelecek), helikopter rotoru, ortam döngüleri (bölge adı / gece / kis / yagmur anahtarları). Silah: \"Gunshot Sounds\", © 2009 Vincent Sevedge (OpenGameArt: Tabasco, https://opengameart.org/content/gunshot-sounds), CC BY 3.0 — ATIF GEREKİR (gösterim/belgelerde: \"Silah sesleri: Vincent Sevedge, CC BY 3.0, değiştirildi\"). silah_tek_1–4 Mosin-Nagant, 5–8 SKS: özgün çok atışlı silah_mosin.ogg / silah_sks.ogg'dan tek atışlara kesildi, sonu sönümlendi (araclar/silah-tek-atis.mjs); çatışmada her atış bir kesim çalar, gürültü efekti 6–10'unu art arda. Lisans metni sesler/LISANS_tabasco_silah_CC-BY-3.0.txt."
   },
   "sutreler": {
     "_aciklama": "Oda 2 sütre dizilimleri (3B, sahne3b/sutre.ts): guvenliAlan → eşyalar. Konum sahne koordinatında (azimut 0 = orta duvar, mesafe m), boy = hedef yükseklik (m); yonDerece modelin kendi dönüşü. Lisanslar modeller/sutre/LISANS_sutre.txt.",

@@ -17,9 +17,16 @@ import {
   durumuTamamla,
   varsayilanDurum,
 } from "./tipler.js";
-import type { UnrealIstemci } from "./unreal.js";
+import { UE_SIFIRLAMA_ZAMAN_ASIMI_MS, type UnrealIstemci } from "./unreal.js";
 
 type Dinleyici = (durum: SimulasyonDurumu) => void;
+
+/** Sahne sıfırlamasında kapananlar: önceden açık mıydı (özet ve günlük için). */
+export interface TemeleDonenler {
+  catisma: boolean;
+  izliMermi: boolean;
+  helikopter: boolean;
+}
 type EfektDinleyici = (efekt: EfektIstegi & { zaman: number }) => void;
 
 const sinirla = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
@@ -179,6 +186,32 @@ export class DurumDeposu {
     if (this.durum.sonEfektler.length > 50) this.durum.sonEfektler.pop();
     for (const d of this.efektDinleyiciler) d(olay);
     this.yayinla();
+  }
+
+  /**
+   * Sahne sıfırlaması (bkz. sahne.ts): çatışma, izli mermi ve helikopter tek seferde kapanır, son efektler silinir;
+   * TEK durum yayını. Ayar değerleri (şiddet, yön, dost ateşi, çıkış noktası, sıklık, iniş yönü, uzak ses) korunur,
+   * yalnız "aktif" bayrakları kapanır: eğitmen yeniden açınca aynı ayarla gelir. DMX'te süren patlama flaşı kesilir,
+   * temel ışık yeniden gönderilir. UE çağrıları yayından SONRA, beklenmeden ve kısa zaman aşımıyla gider: erişilemeyen
+   * UE sıfırlamayı geciktirmez (eskiden her alan önce UE'yi bekleyip ayrı yayın yapıyordu, arada çatışma sürüyordu).
+   */
+  sahneyiTemeleDondur(): TemeleDonenler {
+    const d = this.durum;
+    const catisma = d.catisma ?? varsayilanDurum().catisma;
+    const onceki: TemeleDonenler = { catisma: catisma.aktif, izliMermi: d.izliMermi.aktif, helikopter: d.oda2.helikopter !== "yok" };
+    d.catisma = { ...catisma, aktif: false };
+    d.izliMermi = { ...d.izliMermi, aktif: false };
+    d.oda2 = { ...d.oda2, helikopter: "yok" };
+    d.sonEfektler = [];
+    this.yayinla();
+    this.artnet.flasiIptal();
+    this.artnet.isigiUygula(d.isik);
+    void Promise.allSettled([
+      this.unreal.catismaAyarla(d.catisma, UE_SIFIRLAMA_ZAMAN_ASIMI_MS),
+      this.unreal.izliMermiAyarla(d.izliMermi, UE_SIFIRLAMA_ZAMAN_ASIMI_MS),
+      this.unreal.oda2Ayarla(d.oda2, UE_SIFIRLAMA_ZAMAN_ASIMI_MS),
+    ]);
+    return onceki;
   }
 
   /** Ön ayar yüklerken tüm durumu tek seferde uygular. */

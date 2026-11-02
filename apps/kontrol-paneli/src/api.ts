@@ -15,6 +15,8 @@ import type {
   OrtamIsigi,
   Senaryo,
   SenaryoDurumu,
+  SifirlamaKaynagi,
+  SifirlamaYaniti,
   SimulasyonDurumu,
   UnrealIstekKaydi,
 } from "./tipler";
@@ -35,7 +37,8 @@ export const api = {
   baglanti: () => istek<BaglantiDurumu>("/baglanti", "GET"),
   gunluk: () => istek<Array<{ seviye: "bilgi" | "uyari" | "hata"; mesaj: string; zaman: number }>>("/gunluk", "GET"),
   yenidenSenkron: () => istek<{ tamam: boolean }>("/yeniden-senkron", "POST"),
-  sahneSifirla: () => istek<{ tamam: boolean; durum: SimulasyonDurumu }>("/sahne/sifirla", "POST"),
+  /** Temel sahne: figürler, efektler, çatışma, izli mermi, helikopter, senaryo oynatımı; ortam ve bölge kalır. */
+  sahneSifirla: (kaynak: SifirlamaKaynagi = "panel") => istek<SifirlamaYaniti>("/sahne/sifirla", "POST", { kaynak }),
   unrealSonIstekler: () => istek<UnrealIstekKaydi[]>("/unreal/son-istekler", "GET"),
   ornekDurum: () => istek<OrnekDurumu>("/ornek/durum", "GET"),
   ornekBaslat: () => istek<OrnekDurumu>("/ornek/baslat", "POST"),

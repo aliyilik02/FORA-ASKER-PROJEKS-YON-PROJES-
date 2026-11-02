@@ -253,6 +253,16 @@ export const Ikon = {
       <path d="M16 10a6 6 0 1 1-2-4.5M16 3v4h-4" />
     </I>
   ),
+  /** Süpürge: sahneyi temele döndür (Senkron'un yenile ikonundan ayrı). */
+  temizle: () => (
+    <I>
+      <g transform="rotate(35 10 10)">
+        <path d="M10 1.5v7" />
+        <path d="M6.5 8.5h7l1.5 9h-10z" />
+        <path d="M8.5 13v4.5M11.5 13v4.5" />
+      </g>
+    </I>
+  ),
   pencere: () => (
     <I>
       <rect x="3" y="4" width="14" height="12" rx="1.5" />

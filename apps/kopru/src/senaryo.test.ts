@@ -104,6 +104,72 @@ describe("senaryo motoru", () => {
     expect(motor.al().durum).toBe("duruyor");
     expect(motor.al().konumMs).toBe(0);
   });
+
+  it("adım beklenirken dur(): aynı tikteki sonraki adım uygulanmaz, 'tamamlandı' yazılmaz, sonra da adım çıkmaz", async () => {
+    const gunluk = new Gunluk();
+    // Gerçek UE kipinde efekt çağrısı HTTP'dir: adım await'te bekler (sahte: elle çözülür)
+    let bekleyenCoz: (() => void) | null = null;
+    const unreal = new UnrealIstemci({ adres: "http://x", preset: "T", mod: "simulasyon" }, gunluk);
+    (unreal as unknown as { efektTetikle: () => Promise<void> }).efektTetikle = () => new Promise<void>((r) => (bekleyenCoz = r));
+    const artnet = new ArtNetGonderici({ hedef: "127.0.0.1", port: 6454, evren: 0, aktif: false });
+    const depo = new DurumDeposu(unreal, artnet, gunluk);
+    const { z, ilerle } = sahteZamanlayici();
+    const motor = new SenaryoMotoru(depo, gunluk, z, 50);
+    const sahnedekiler = new Set<string>();
+    motor.figurBagla({
+      komut: (k) => {
+        if (k.islem === "oynat") sahnedekiler.add(k.id ?? "?");
+        if (k.islem === "temizle") sahnedekiler.clear();
+        return { ...k, id: k.id ?? "?" };
+      },
+    });
+    motor.yukle({
+      id: "s",
+      ad: "Yarış",
+      oda: "oda1",
+      adimlar: [
+        { id: "a1", gecikmeMs: 0, aciklama: "patlama", islem: { tip: "efekt", efekt: { tur: "patlama", siddet: 1 } } },
+        { id: "a2", gecikmeMs: 0, aciklama: "asker", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_a2", klip: "asker_swat" } } },
+        { id: "a3", gecikmeMs: 500, aciklama: "asker 2", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_a3", klip: "asker_swat" } } },
+      ],
+    });
+    const satirlar: string[] = [];
+    gunluk.dinle((k) => satirlar.push(k.mesaj));
+    const oynatma = motor.oynat();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(bekleyenCoz).not.toBeNull();
+    // Eğitmen sıfırlar: senaryo dur + figür temizle, sonra bekleyen UE çağrısı döner
+    motor.dur();
+    sahnedekiler.clear();
+    bekleyenCoz!();
+    await oynatma;
+    await ilerle(1000);
+    expect([...sahnedekiler]).toEqual([]);
+    expect(motor.al().durum).toBe("duruyor");
+    expect(motor.al().konumMs).toBe(0);
+    expect(satirlar.some((s) => s.startsWith("Senaryo tamamlandı"))).toBe(false);
+    // Yeniden oynatınca baştan
+    bekleyenCoz = null;
+    (unreal as unknown as { efektTetikle: () => Promise<void> }).efektTetikle = () => Promise.resolve();
+    await motor.oynat();
+    expect(motor.al().tamamlanan).toEqual(["a1", "a2"]);
+    expect([...sahnedekiler]).toEqual(["senaryo_a2"]);
+  });
+
+  it("oda değişimini beklerken dur(): oynatma başlamaz, zamanlayıcı kurulmaz", async () => {
+    const { depo, motor, ilerle } = kur();
+    let odaCoz: (() => void) | null = null;
+    (depo as unknown as { odaSec: () => Promise<void> }).odaSec = () => new Promise<void>((r) => (odaCoz = r));
+    motor.yukle(senaryo);
+    const oynatma = motor.oynat();
+    motor.dur();
+    odaCoz!();
+    await oynatma;
+    await ilerle(5000);
+    expect(motor.al().durum).toBe("duruyor");
+    expect(motor.al().tamamlanan).toEqual([]);
+    expect(motor.yukluAd).toBe("Test");
+  });
 });
 
 describe("durum deposu", () => {

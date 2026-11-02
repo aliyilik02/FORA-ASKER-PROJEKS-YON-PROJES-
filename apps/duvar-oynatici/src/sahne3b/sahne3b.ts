@@ -458,13 +458,37 @@ export class Sahne3B {
     this.yukleniyor = false;
   }
 
-  /** Bölge değişti: hasar ve parçacıklar sıfırlanır (figürler panelden yönetilir). */
+  /**
+   * Bölge değişti ya da sahne sıfırlandı: hasar (krater çıkartması, moloz, tüten duman), parçacıklar, uçuştaki izler ve
+   * top mermileri, patlamanın anlık ışığı temizlenir (figürler panelden; sahne sıfırlamasında temeleDondur). Arazi
+   * kraterleri (çukur, yanık izi, silinen çimen) yerinde geri alınır; zemin değiştiyse figür ve sütre ona oturur.
+   */
   sahneyiSifirla() {
     this.hasar.temizle();
     this.parcaciklar.temizle();
     this.catisma.temizle();
-    // Arazi kraterleri: ızgara yeniden kurulur (bölge değişimi de buradan geçer)
-    if (this.arazi.aktif) this.araziBolge = "";
+    this.flasGuc = 0;
+    this.flas.intensity = 0;
+    // BIRLESTIRME: AraziKatmani.kraterleriTemizle(): boolean FPS turunda (arazi.ts) geliyor; birleşince bu dar ara katman
+    // yerine doğrudan `if (this.arazi.kraterleriTemizle()) { this.figurler.zemineOturt(); this.sutre.zemineOturt(); }`
+    // yazılır ve yedek dal (araziBolge = "": ızgara bir sonraki durum mesajında baştan kurulur) kalkar.
+    const kraterleriTemizle = (this.arazi as unknown as { kraterleriTemizle?: () => boolean }).kraterleriTemizle;
+    if (kraterleriTemizle) {
+      if (kraterleriTemizle.call(this.arazi)) {
+        this.figurler.zemineOturt();
+        this.sutre.zemineOturt();
+      }
+    } else if (this.arazi.aktif) this.araziBolge = "";
+  }
+
+  /**
+   * Sahne sıfırlaması (köprünün `sahne/sifirla` mesajı, bkz. main.ts sahneyiTemizle): figürler (yüklenmekte olanlar ve
+   * hedef bekleyen "yanında" figürler dahil) + sahneyiSifirla. Çatışma, izli mermi ve helikopterin açık/kapalı oluşu
+   * köprünün durum yayınından gelir; burada dokunulmaz. Sütre (Oda 2 güvenli alanı) kalır.
+   */
+  temeleDondur() {
+    this.figurler.temizle();
+    this.sahneyiSifirla();
   }
 
   ortamAyarla(ortam: OrtamAyarlari, isik: number) {

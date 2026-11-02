@@ -30,6 +30,12 @@ export class IzliMermiSistemi {
     return this.ayar.aktif;
   }
 
+  /** Sahne sıfırlaması: uçuştaki izler silinir, birikmiş atış payı sıfırlanır (ayar durumdan gelir, dokunulmaz). */
+  temizle() {
+    this.izler.length = 0;
+    this.birikim = 0;
+  }
+
   guncelle(dt: number, yerlesimler: Yerlesim[], ufukY: number, H: number, W: number) {
     for (const iz of this.izler) iz.t += dt;
     this.izler = this.izler.filter((iz) => iz.t < iz.sure);
