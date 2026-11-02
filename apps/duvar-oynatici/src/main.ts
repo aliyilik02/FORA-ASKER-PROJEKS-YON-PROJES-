@@ -12,6 +12,7 @@
  *   ?gunes=1     3B sahnede güneş tahminini küreyle göster (panoramadaki güneşle çakışmalı)
  *   ?ses=5.1     ses düzeni stereo|dortlu|5.1|7.1|otomatik (varsayılan otomatik: cihazın kanal sayısı; yerel kayıtta kalır)
  *   ?hoparlor=-45,45,-135,135   kanal sırasıyla hoparlör azimutları, LFE için "lfe" (sahadaki gerçek açılar)
+ *   ?gecis=600   sahne geçişinde eski karenin solma süresi (ms; 0 = anlık kesme)
  * Tuşlar: H hud · K kalibrasyon ızgarası · F tam ekran · M sessiz · 1 patlama · 2 toz · 3 izli mermi aç/kapa ·
  *   T hoparlör testi (her kanalda sırayla gürültü, kanal adı ekranda)
  */
@@ -20,27 +21,48 @@ import { KopruBaglantisi, type BaglantiDurumu } from "./baglanti";
 import { EfektSistemi } from "./efektler/patlama";
 import { Helikopter } from "./efektler/helikopter";
 import { IzliMermiSistemi } from "./efektler/izliMermi";
+import { GecisKatmani, gecisSuresiCoz } from "./gecis";
 import { hudCiz, kalibrasyonCiz, uyariCiz } from "./hud";
 import { KlipKatmani } from "./klipler";
-import { duvarYerlesimleri, duvarlariOlustur, geometriOzeti, odaDuvarlari, odaGeometrisiCoz, odaGeometrisiYaz, type OdaGeometrisi, ufukSatiri, type Yerlesim, xAzimut, yonAzimut, zamanDilimi } from "./projeksiyon";
+import { duvarYerlesimleri, duvarlariOlustur, geometriOzeti, odaDuvarlari, odaGeometrisiCoz, odaGeometrisiYaz, type OdaGeometrisi, ufukSatiri, type Yerlesim, xAzimut, yonAzimut, zamanDilimi, type ZamanDilimi } from "./projeksiyon";
 import { araziCiz, araziGuncelle, ufukY as bolgeUfukY } from "./sahne/arazi";
 import { gokyuzuCiz, gokyuzuGuncelle, gokyuzuRenkleri } from "./sahne/gokyuzu";
 import { HavaSistemi, kararmaCiz, sisCiz } from "./sahne/hava";
 import { oda2OnPlanCiz } from "./sahne/oda2";
 import { PanoramaKatmani } from "./panorama";
-import { type Kalite, Sahne3B } from "./sahne3b/sahne3b";
+import { type Kalite, type PanoramaKaynagi, Sahne3B } from "./sahne3b/sahne3b";
 import type { AraziModu } from "./sahne3b/arazi";
+import { arkaPlanKarari } from "./sahne3b/panoramaGecisi";
 import { SesMotoru } from "./ses";
 import { sesAyariniCoz } from "./sesYerlesimi";
 import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type EfektIstegi, type FigurKomutu, type SimulasyonDurumu, varsayilanDurum } from "./tipler";
-import { panoramaSec, VideoKatmani } from "./video";
+import { panoramaAdaylari, type PanoramaAdayi, VideoKatmani } from "./video";
 
 const tuval = document.getElementById("tuval") as HTMLCanvasElement;
 const tuval3b = document.getElementById("tuval3b") as HTMLCanvasElement;
+/** Geçiş örtüsü: 3B tuvalin üstünde, 2B tuvalin altında (index.html; eski sayfada yoksa burada kurulur). */
+const tuvalGecis =
+  (document.getElementById("tuvalGecis") as HTMLCanvasElement | null) ??
+  (() => {
+    const c = document.createElement("canvas");
+    c.id = "tuvalGecis";
+    c.style.cssText = "display:block;position:absolute;left:0;top:0;z-index:2;pointer-events:none";
+    tuval3b.after(c);
+    return c;
+  })();
 // 2B tuval saydam: 3B sahne aktifken altındaki tuval görünür
 const ctx = tuval.getContext("2d", { alpha: true })!;
 const uyariKutusu = document.getElementById("uyari")!;
 const params = new URLSearchParams(location.search);
+/** Sahne geçişi: eski 3B kare örtüye kopyalanır, yenisi arkada hazırlanıp çizilince örtü solar (`?gecis=` ms). */
+const gecis = new GecisKatmani(tuvalGecis, gecisSuresiCoz(params.get("gecis")));
+/** Manifest okundu (önce ekran siyah); en az bir kez arka plan (panorama) gösterildi: yer tutucu bir daha çizilmez. */
+let manifestYuklendi = false;
+let panoramaGosterildi = false;
+/** Video panorama (2B yol) hazırlanıyor: 3B katman o oynatılabilir olunca kapanır, o zamana dek eski sahne kalır. */
+let videoPanoramaBekleniyor = false;
+/** Son karenin 2B arka plan kararı (HUD ve ölçüm: yer tutucu bir daha görünmemeli). */
+let sonArkaPlan: ReturnType<typeof arkaPlanKarari> = "siyah";
 const fov = Number(params.get("fov") ?? 90);
 const doldur = params.get("doldur") === "1";
 const ucBoyut = params.get("uc") !== "0";
@@ -128,8 +150,9 @@ sahne3b.figurSesleriAyarla((tur, azimut) => {
   if (tur === "vuruldu") void ses.bagirma(azimut);
   else void ses.cagirma(azimut);
 });
-// Hata ayıklama: tarayıcı konsolundan sahneye erişim (window.duvar.sahne3b, window.duvar.THREE)
-(window as unknown as { duvar: unknown }).duvar = { sahne3b, THREE };
+// Hata ayıklama: tarayıcı konsolundan sahneye erişim (window.duvar.sahne3b, window.duvar.THREE); geçiş ölçümü için
+// örtü (window.duvar.gecis) ve son karenin arka plan kararı (window.duvar.arkaPlan(): "yok" | "siyah" | "yer_tutucu")
+(window as unknown as { duvar: unknown }).duvar = { sahne3b, THREE, gecis, arkaPlan: () => sonArkaPlan };
 /** ?panorama=<url> ile hızlı deneme: manifestten bağımsız, her bölgede bu 360° kaynak gösterilir. */
 const testPanorama = params.get("panorama");
 const testYaw = Number(params.get("yaw") ?? 0);
@@ -138,31 +161,61 @@ function videoMu(dosya: string, tip?: string) {
   return tip === "video" || /\.(mp4|webm|mov)(\?|$)/i.test(dosya);
 }
 
+/** Manifest kaydı → 3B panorama kaynağı. Zamanı farklı yedekte zaman boş kalır: sahne onu saate göre karartır. */
+function panoramaKaynagi(a: PanoramaAdayi): PanoramaKaynagi {
+  const k = a.kayit;
+  return {
+    url: /^(https?:|data:|blob:|\/)/.test(k.dosya) ? k.dosya : video.kok + k.dosya,
+    yawKaydirma: k.yawKaydirma ?? 0,
+    yukseklikKaydirma: k.yukseklikKaydirma ?? 0,
+    zaman: a.zamanFarkli ? undefined : k.zaman,
+    plan: { noktalar: k.noktalar, yasak: k.yasak },
+    gunes: k.gunes,
+  };
+}
+
+/** Eksik birleşim (ör. dağlık · kış · gece) için kullanılan yedek panorama köprü günlüğüne birleşim başına bir kez yazılır. */
+const bildirilenYedekler = new Set<string>();
+function yedekBildir(a: PanoramaAdayi, zaman: ZamanDilimi) {
+  const anahtar = `${durum.bolge}|${durum.ortam.mevsim === "kis" ? "kis" : "yaz"}|${zaman}`;
+  if (bildirilenYedekler.has(anahtar)) return;
+  const k = a.kayit;
+  const mesaj = `Panorama eksik: ${BOLGE_ETIKETLERI[durum.bolge]} · ${durum.ortam.mevsim} · ${zaman} → ${k.dosya} (${k.mevsim ?? "her mevsim"} ${k.zaman ?? "her saat"}${a.zamanFarkli ? ", saate göre karartılıyor" : ""})`;
+  console.info(mesaj);
+  if (kopru.durum !== "bagli") return;
+  bildirilenYedekler.add(anahtar);
+  kopru.gonder({ tip: "gunluk", seviye: "uyari", mesaj });
+}
+
+/**
+ * Bölge + mevsim + zaman → panorama. Tam eşleşme yoksa bölgenin en yakın panoraması (video.ts panoramaAdaylari: önce aynı
+ * zaman, sonra aynı mevsim; gecede gece/alacakaranlık); kalan adaylar yükleme hatasında sırayla denenir. Ekrandaki sahne
+ * yenisi hazır olana dek kalır (sahne3b), yer tutucu yalnız hiç panorama yoksa.
+ */
 function panoramayiGuncelle() {
-  const kayit = testPanorama
-    ? { dosya: testPanorama, tip: undefined, yawKaydirma: testYaw, yukseklikKaydirma: 0, zaman: undefined, noktalar: undefined, yasak: undefined, gunes: undefined }
-    : panoramaSec(video.manifest, durum.bolge, durum.ortam.mevsim, zamanDilimi(durum.ortam.saat));
-  if (!kayit) {
-    panorama.sec(null, video.kok);
+  const zaman = zamanDilimi(durum.ortam.saat);
+  const adaylar: PanoramaAdayi[] = testPanorama
+    ? [{ kayit: { bolge: durum.bolge, dosya: testPanorama, yawKaydirma: testYaw, yukseklikKaydirma: 0 }, yedek: false, zamanFarkli: false, mevsimFarkli: false }]
+    : panoramaAdaylari(video.manifest, durum.bolge, durum.ortam.mevsim, zaman);
+  const secim = adaylar[0];
+  if (!secim) {
+    // Bölgede hiç panorama yok: ekrandaki kalır (hiç gösterilmediyse kare() yer tutucu çizer)
+    videoPanoramaBekleniyor = false;
     sahne3b.panoramaAyarla(null);
     return;
   }
-  if (ucAktifOlabilir && !videoMu(kayit.dosya, kayit.tip)) {
-    // Resim panorama → 3B katman (arka plan + ışık); eski WebGL panorama katmanı kapalı
-    panorama.sec(null, video.kok);
-    const url = /^(https?:|data:|blob:|\/)/.test(kayit.dosya) ? kayit.dosya : video.kok + kayit.dosya;
-    sahne3b.panoramaAyarla({
-      url,
-      yawKaydirma: kayit.yawKaydirma ?? 0,
-      yukseklikKaydirma: kayit.yukseklikKaydirma ?? 0,
-      zaman: kayit.zaman,
-      plan: { noktalar: kayit.noktalar, yasak: kayit.yasak },
-      gunes: kayit.gunes,
-    });
+  if (secim.yedek) yedekBildir(secim, zaman);
+  if (ucAktifOlabilir && !videoMu(secim.kayit.dosya, secim.kayit.tip)) {
+    // Resim panorama → 3B katman (arka plan + ışık); 2B WebGL panorama katmanı 3B ekrana gelince kapanır (kare)
+    videoPanoramaBekleniyor = false;
+    const resimler = adaylar.filter((a) => !videoMu(a.kayit.dosya, a.kayit.tip)).map(panoramaKaynagi);
+    sahne3b.panoramaAyarla(resimler[0], resimler.slice(1));
     return;
   }
-  sahne3b.panoramaAyarla(null);
-  panorama.sec({ dosya: kayit.dosya, tip: kayit.tip, yawKaydirma: kayit.yawKaydirma, yukseklikKaydirma: kayit.yukseklikKaydirma }, video.kok);
+  // Video panorama ya da 3B yok: 2B yol. 3B açıksa eski sahne video oynatılabilir olunca kapanır (kare)
+  const k = secim.kayit;
+  panorama.sec({ dosya: k.dosya, tip: k.tip, yawKaydirma: k.yawKaydirma, yukseklikKaydirma: k.yukseklikKaydirma }, video.kok);
+  videoPanoramaBekleniyor = ucAktifOlabilir;
 }
 
 function boyutlandir() {
@@ -183,8 +236,9 @@ function boyutlandir() {
   tuval.height = H = h;
   const sol = `${Math.floor((vw - w) / 2)}px`;
   const ust = `${Math.floor((vh - h) / 2)}px`;
-  tuval.style.left = tuval3b.style.left = sol;
-  tuval.style.top = tuval3b.style.top = ust;
+  tuval.style.left = tuval3b.style.left = tuvalGecis.style.left = sol;
+  tuval.style.top = tuval3b.style.top = tuvalGecis.style.top = ust;
+  gecis.boyutlandir(W, H);
   yerlesimler = duvarYerlesimleri(W, H, duvarlar);
   hava.boyutlandir(W, H);
   sahne3b.boyutlandir(W, H, yerlesimler);
@@ -200,17 +254,20 @@ function ufuk(): number {
   return bolgeUfukY(durum.bolge, H);
 }
 
-/** 3B sahne hazır değilken (panorama yükleniyor) gelen patlama/toz efektleri: hazır olunca uygulanır (10 sn içinde). */
+/**
+ * 3B sahne hazır değilken (ilk panorama yükleniyor) ya da bölge geçişi takası beklenirken gelen patlama/toz efektleri:
+ * hazır olunca (yeni bölgenin planıyla) uygulanır (10 sn içinde). Eski bölgeye düşen krater takasta silinirdi.
+ */
 const bekleyenEfektler: Array<{ e: EfektIstegi; zaman: number }> = [];
 function bekleyenEfektleriUygula() {
-  if (!sahne3b.hazir || bekleyenEfektler.length === 0) return;
+  if (!sahne3b.hazir || sahne3b.bolgeGecisiBekliyor || bekleyenEfektler.length === 0) return;
   const simdi = performance.now();
   const liste = bekleyenEfektler.splice(0);
   for (const b of liste) if (simdi - b.zaman < 10000) efektUygula(b.e);
 }
 
 function efektUygula(e: EfektIstegi) {
-  if (ucAktifOlabilir && !sahne3b.hazir && (e.tur === "patlama" || e.tur === "toz_duman" || e.tur === "uzak_patlama")) {
+  if (ucAktifOlabilir && (!sahne3b.hazir || sahne3b.bolgeGecisiBekliyor) && (e.tur === "patlama" || e.tur === "toz_duman" || e.tur === "uzak_patlama")) {
     bekleyenEfektler.push({ e, zaman: performance.now() });
     return;
   }
@@ -287,9 +344,15 @@ function helikopter3B() {
 }
 
 function durumUygula(d: SimulasyonDurumu) {
-  if (d.bolge !== durum.bolge) sahne3b.sahneyiSifirla(); // kraterler ve duman bölgeyle birlikte gider
+  const bolgeDegisti = d.bolge !== durum.bolge;
   durum = d;
   durumGeldi = true;
+  // Panorama isteği önce: hazırlık başlar, ekrandaki sahne yenisi hazır olana dek kalır. Bölge sıfırlaması (kraterler,
+  // duman), arazi, kar, ışık ve helikopter iniş noktası takasa ertelenir (sahne3b); eski görüntü bu sürede değişmez.
+  video.secim(d.bolge, d.ortam.mevsim, zamanDilimi(d.ortam.saat));
+  panoramayiGuncelle();
+  if (bolgeDegisti) sahne3b.bolgeDegisti(); // kraterler ve duman bölgeyle birlikte gider (takasta)
+  if (sahne3b.destekli) sahne3b.araziAyarla(araziModuSec(d.bolge), d.bolge, d.ortam.mevsim, video.kok);
   // İzli mermi ve çatışma: 3B sahne açıkken 3B izler, değilse 2B çizgiler
   const uc = sahne3b.hazir;
   izli.ayarla({ ...d.izliMermi, aktif: d.izliMermi.aktif && !uc });
@@ -314,9 +377,6 @@ function durumUygula(d: SimulasyonDurumu) {
   // Oda 2 sütre (3B eşya dizilimi): manifest sutreler[guvenliAlan]
   const sutreTipi = d.oda === "oda2" ? d.oda2.guvenliAlan : null;
   sahne3b.sutreAyarla(sutreTipi, sutreTipi ? video.manifest.sutreler?.[sutreTipi] : undefined, video.kok);
-  video.secim(d.bolge, d.ortam.mevsim, zamanDilimi(d.ortam.saat));
-  panoramayiGuncelle();
-  if (sahne3b.destekli) sahne3b.araziAyarla(araziModuSec(d.bolge), d.bolge, d.ortam.mevsim, video.kok);
 }
 
 function figurKomutu(k: FigurKomutu & { id: string }) {
@@ -340,13 +400,13 @@ function figurKomutu(k: FigurKomutu & { id: string }) {
   }
   if (!k.klip) return;
   const tanim = klipler.tanim(k.klip);
-  if (tanim?.tip === "model" && sahne3b.hazir) {
+  if (tanim?.tip === "model" && sahne3b.hazir && !sahne3b.bolgeGecisiBekliyor) {
     sahne3b.figurOynat(tanim, { id: k.id, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, yansit: k.yansit, dongu: k.dongu, poz: k.poz, yaninda: k.yaninda }, video.kok);
     return;
   }
   if (tanim?.tip === "model") {
-    // 3B sahne henüz hazır değil (panorama yükleniyor / oynatıcı yeni açıldı): köprünün gönderdiği
-    // aktif figürler kaybolmasın, sahne hazır olunca uygulanır
+    // 3B sahne henüz hazır değil (ilk panorama yükleniyor / oynatıcı yeni açıldı) ya da bölge geçişi takas bekliyor:
+    // köprünün gönderdiği aktif figürler kaybolmasın, sahne hazır olunca (yeni bölgenin planıyla) uygulanır
     if (ucAktifOlabilir) bekleyenFigurler.set(k.id, k);
     return;
   }
@@ -366,7 +426,7 @@ function hazirOluncaYenidenUygula() {
 /** 3B sahne hazır olmadan gelen model figürleri (oynatıcı açılışında köprü aktif listeyi yollar). */
 const bekleyenFigurler = new Map<string, FigurKomutu & { id: string }>();
 function bekleyenFigurleriUygula() {
-  if (!sahne3b.hazir || bekleyenFigurler.size === 0) return;
+  if (!sahne3b.hazir || sahne3b.bolgeGecisiBekliyor || bekleyenFigurler.size === 0) return;
   const liste = [...bekleyenFigurler.values()];
   bekleyenFigurler.clear();
   for (const k of liste) figurKomutu(k);
@@ -462,6 +522,7 @@ void video.yukle().then((m) => {
     void ses.ortamDongusu(ortamSesAnahtari(durum));
   }
   klipler.ayarla(m.klipler, video.kok);
+  manifestYuklendi = true;
   // 3B modeller: ön yükleme; "helikopter" adlı model Oda 2 helikopteri olur
   if (ucAktifOlabilir) {
     sahne3b.dokulariYukle(video.kok);
@@ -516,8 +577,15 @@ function onizlemeGonder(simdi: number) {
     c.fillStyle = "#000";
     c.fillRect(0, 0, g, y);
     if (tuval3b.style.visibility !== "hidden") c.drawImage(tuval3b, 0, 0, g, y);
+    // Geçiş örtüsü duvardaki opaklığıyla (3B ile 2B arasında)
+    const ortu = gecis.opaklik;
+    if (ortu > 0.01) {
+      c.globalAlpha = ortu;
+      c.drawImage(tuvalGecis, 0, 0, g, y);
+      c.globalAlpha = 1;
+    }
     c.drawImage(tuval, 0, 0, g, y);
-    const bilgi = `${fps.toFixed(0)} fps · ${W}×${H} · kalite ${sahne3b.kalite} · 3B ${sahne3b.hazir ? "açık" : "kapalı"} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi}`;
+    const bilgi = `${fps.toFixed(0)} fps · ${W}×${H} · kalite ${sahne3b.kalite} · 3B ${sahne3b.hazir ? "açık" : "kapalı"} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi}${sahne3b.panoramaYukleniyor ? ` · ${sahne3b.gecisBilgisi}` : ""}`;
     kopru.gonder({ tip: "onizleme", veri: onizlemeTuval.toDataURL("image/jpeg", 0.55), bilgi });
   } catch {
     /* tuval okunamazsa (tainted) önizleme yok */
@@ -565,22 +633,48 @@ function kare(simdi: number) {
 
   // Arka plan önceliği: 3B sahne (panorama resmi + 3B nesneler, alt tuval) → 360° panorama (WebGL) → düz video döngüsü → parametrik sahne
   const ucCizildi = sahne3b.ciz();
+  // Sahne geçişi: yeni panorama hazır (ya da bölge, kar, yön değişti) → eski kare örtüye kopyalanır (ciz'den hemen sonra,
+  // aynı görevde: çizim tamponu yalnız bu görevde geçerli), takas aynı karede yapılır; örtü yeni sahne çizilince solar.
+  if (sahne3b.takasHazir && !gecis.suruyor) {
+    if (sahne3b.buKareCizildi) gecis.yakala(tuval3b);
+    else if (panoramaGosterildi) gecis.yakala(tuval); // 2B panorama ekrandaydı (önceki karenin 2B tuvali)
+    else gecis.siyahla(); // ilk açılış: ilk sahne siyahtan solar
+    sahne3b.takasYap(simdi);
+  }
+  if (gecis.solmaBekliyor && sahne3b.solmaHazir(simdi)) {
+    gecis.solmaBaslat();
+    sahne3b.solmaBasladi(simdi);
+  }
+  gecis.guncelle(tuval3b.style.transform);
+  if (videoPanoramaBekleniyor && (panorama.aktif || panorama.hata)) {
+    // Video panorama oynatılabilir: 3B katman kapanır (bir sonraki karede örtüyle)
+    videoPanoramaBekleniyor = false;
+    sahne3b.panoramaKapat();
+  }
   if (ucCizildi) {
     tuval3b.style.visibility = "visible";
     ctx.clearRect(-50, -50, W + 100, H + 100);
+    if (panorama.aktif && !videoPanoramaBekleniyor) panorama.sec(null, video.kok); // 3B ekranda: 2B panorama gereksiz
   } else tuval3b.style.visibility = "hidden";
   const arkaPlanVar = ucCizildi || (panorama.aktif && panorama.ciz(ctx, yerlesimler, W, H)) || (video.aktif && video.ciz(ctx, W, H));
+  if (arkaPlanVar) panoramaGosterildi = true;
+  // İlk panorama ya da manifest beklenirken siyah; parametrik yer tutucu yalnız hiç panorama yokken (panoramaGecisi.ts).
+  // Takas karesinde (3B'de panorama var ama bu karede çizilmedi) ve örtü görünürken de siyah: yer tutucu bir kare bile çıkmaz.
+  const bekleniyor = sahne3b.ilkPanoramaBekleniyor || sahne3b.hazir || gecis.suruyor || panorama.yukleniyor;
+  const arkaPlan = arkaPlanKarari(arkaPlanVar, manifestYuklendi, bekleniyor, panoramaGosterildi);
+  sonArkaPlan = arkaPlan;
+  if (arkaPlan === "siyah") ctx.clearRect(-50, -50, W + 100, H + 100);
   for (const y of yerlesimler) {
     ctx.save();
     ctx.beginPath();
     ctx.rect(y.x, 0, y.genislik, H);
     ctx.clip();
-    if (!arkaPlanVar) {
+    if (arkaPlan === "yer_tutucu") {
       gokyuzuCiz(ctx, y, ufukYy, durum.ortam, gok);
       araziCiz(ctx, y, H, durum.bolge, durum.ortam, gok);
     }
     // Oda 2'nin 2B ön planı (kum torbası, kaya) 3B sahneyle uyuşmaz; 3B'de çizilmez (3B sütre modelleri gelecek)
-    if (durum.oda === "oda2" && !ucCizildi) oda2OnPlanCiz(ctx, y, H, durum.oda2.guvenliAlan, gok.isik);
+    if (durum.oda === "oda2" && !ucCizildi && arkaPlan !== "siyah") oda2OnPlanCiz(ctx, y, H, durum.oda2.guvenliAlan, gok.isik);
     ctx.restore();
   }
   // Figürler ve diğer klipler sahnenin içinde: sisin altında kalır
@@ -622,9 +716,10 @@ function kare(simdi: number) {
         `${durum.oda === "oda1" ? "Oda 1" : "Oda 2"} · ${BOLGE_ETIKETLERI[durum.bolge]} · ${durum.ortam.mevsim} · saat ${durum.ortam.saat.toFixed(2)} (${zamanDilimi(durum.ortam.saat)}) · ışık ${gok.isik.toFixed(2)}`,
         `bulut ${durum.ortam.bulut.toFixed(2)} · sis ${durum.ortam.sis.toFixed(2)} · yağış ${durum.ortam.yagis} · rüzgâr ${durum.ortam.ruzgarSiddeti.toFixed(2)} @ ${durum.ortam.ruzgarYonu}°`,
         `izli mermi ${durum.izliMermi.aktif ? `açık (duvar ${durum.izliMermi.cikisNoktasi}, ${durum.izliMermi.yon}°, ${durum.izliMermi.siklik}/sn)` : "kapalı"} · oda2 ${GUVENLI_ALAN_ETIKETLERI[durum.oda2.guvenliAlan]} · helikopter ${HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}`,
-        `içerik: ${ucCizildi ? "3B sahne + panorama" : panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""}${sahne3b.hata ? ` · 3B hatası: ${sahne3b.hata}` : ""} · aktif klip ${klipler.aktifSayisi} · duvar ${duvarAcilari} · H hud · K kalibrasyon · F tam ekran · M sessiz · T hoparlör testi · 1/2/3 test`,
+        `içerik: ${ucCizildi ? "3B sahne + panorama" : panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : arkaPlan === "siyah" ? "bekleniyor (siyah)" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""}${sahne3b.hata ? ` · 3B hatası: ${sahne3b.hata}` : ""} · aktif klip ${klipler.aktifSayisi} · duvar ${duvarAcilari} · H hud · K kalibrasyon · F tam ekran · M sessiz · T hoparlör testi · 1/2/3 test`,
         `geometri: ${duvarOzeti[0]} | ${duvarOzeti[1]}`,
         `3B: ${ucAktifOlabilir ? (sahne3b.hazir ? "açık" : "bekliyor") : ucBoyut ? "desteklenmiyor" : "kapalı (?uc=0)"} · kalite ${sahne3b.kalite} · arazi ${sahne3b.araziDurumu} · ${sahne3b.gunesBilgisi} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi} · parçacık ${sahne3b.parcacikSayisi} · çizim/duvar ${sahne3b.cizimCagrisi} · iz ${sahne3b.izSayisi} · çatışma ${durum.catisma?.aktif ? `%${Math.round(durum.catisma.siddet * 100)} @ ${durum.catisma.yon}°` : "kapalı"} · helikopter ${sahne3b.helikopterHazir ? `model, iniş ${sahne3b.helikopterAzimutu.toFixed(0)}°` : "siluet"}`,
+        `${sahne3b.gecisBilgisi}${gecis.suruyor ? ` · örtü %${Math.round(gecis.opaklik * 100)}` : ""} · solma ${gecis.sureMs} ms (?gecis=)`,
       ],
       H,
     );

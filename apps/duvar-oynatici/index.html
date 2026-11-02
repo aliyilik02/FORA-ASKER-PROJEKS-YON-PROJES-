@@ -15,8 +15,10 @@
         cursor: none;
         font-family: "Segoe UI", system-ui, sans-serif;
       }
-      /* Altta 3B sahne tuvali (panorama + 3B nesneler), üstte saydam 2B tuval (klipler, sis, yağış, HUD). */
+      /* Altta 3B sahne tuvali (panorama + 3B nesneler), üstte saydam 2B tuval (klipler, sis, yağış, HUD). Aradaki geçiş
+         örtüsü sahne değişiminde eski 3B kareyi tutar ve solar (src/gecis.ts). */
       #tuval,
+      #tuvalGecis,
       #tuval3b {
         display: block;
         position: absolute;
@@ -24,7 +26,12 @@
         top: 0;
       }
       #tuval {
+        z-index: 3;
+      }
+      #tuvalGecis {
         z-index: 2;
+        visibility: hidden;
+        pointer-events: none;
       }
       #tuval3b {
         z-index: 1;
@@ -46,6 +53,7 @@
   </head>
   <body>
     <canvas id="tuval3b"></canvas>
+    <canvas id="tuvalGecis" width="1" height="1"></canvas>
     <canvas id="tuval"></canvas>
     <div id="uyari"></div>
     <script type="module" src="/src/main.ts"></script>

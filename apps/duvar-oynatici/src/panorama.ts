@@ -63,8 +63,11 @@ export class PanoramaKatmani {
   private doku: WebGLTexture | null = null;
   private kaynak: HTMLImageElement | HTMLVideoElement | null = null;
   private kaynakVideo = false;
+  /** Ekrandaki dosya; `istenen` hazırlanan (çözülene / oynatılabilir olana dek eskisi ekranda kalır). */
   private yuklenen = "";
+  private istenen = "";
   private kayit: PanoramaKaydi | null = null;
+  private bekleyenKayit: PanoramaKaydi | null = null;
   private konumlar: Record<string, WebGLUniformLocation | null> = {};
   /** Duvar yön katsayıları (A, B, C); her karede doldurulur, yeniden ayrılmaz. */
   private readonly duvarA = new Float32Array(EN_COK_DUVAR * 3);
@@ -123,12 +126,20 @@ export class PanoramaKatmani {
   get kaynakAdi() {
     return this.yuklenen;
   }
+  /** İstenen dosya hazırlanıyor (henüz ekranda değil). */
+  get yukleniyor() {
+    return this.istenen !== "";
+  }
   /** Seçili panoramanın ufuk kaydırması (−1..1); 2B katmanların ufuk satırı için. */
   get yukseklikKaydirma() {
     return this.kayit?.yukseklikKaydirma ?? 0;
   }
 
-  /** Aynı dosya zaten yüklüyse hiçbir şey yapmaz. null → katmanı kapat. */
+  /**
+   * Aynı dosya zaten ekrandaysa yalnız alanları günceller. Yeni dosya hazırlanırken eskisi ekranda kalır: resim
+   * `decode()` ile ana iş parçacığı dışında çözülür, video oynatılabilir olunca geçilir (eskiden önce kapatılıyor, arada
+   * yer tutucu görünüyordu). null → katmanı kapat.
+   */
   sec(kayit: PanoramaKaydi | null, kok: string) {
     if (!this.gl) return;
     if (!kayit) {
@@ -138,11 +149,13 @@ export class PanoramaKatmani {
     const url = /^(https?:|data:|blob:|\/)/.test(kayit.dosya) ? kayit.dosya : kok + kayit.dosya;
     if (url === this.yuklenen) {
       this.kayit = kayit;
+      this.istenen = "";
+      this.bekleyenKayit = null;
       return;
     }
-    this.kapat();
-    this.yuklenen = url;
-    this.kayit = kayit;
+    this.bekleyenKayit = kayit;
+    if (url === this.istenen) return;
+    this.istenen = url;
     const video = kayit.tip === "video" || /\.(mp4|webm|mov)(\?|$)/i.test(url);
     if (video) {
       const v = document.createElement("video");
@@ -152,30 +165,51 @@ export class PanoramaKatmani {
       v.playsInline = true;
       v.crossOrigin = "anonymous";
       v.addEventListener("canplay", () => {
-        if (this.yuklenen !== url) return;
-        this.kaynak = v;
-        this.kaynakVideo = true;
-        this.hazir = true;
+        if (this.istenen !== url) {
+          if (this.kaynak !== v) v.src = "";
+          return;
+        }
+        this.degistir(v, true, url);
         void v.play().catch(() => undefined);
       });
       v.addEventListener("error", () => {
-        if (this.yuklenen === url) this.hata = `panorama videosu yüklenemedi: ${url}`;
+        if (this.istenen !== url) return;
+        this.hata = `panorama videosu yüklenemedi: ${url}`;
+        this.istenen = "";
       });
     } else {
       const img = new Image();
       img.crossOrigin = "anonymous";
-      img.onload = () => {
-        if (this.yuklenen !== url) return;
-        this.kaynak = img;
-        this.kaynakVideo = false;
-        this.dokuyuYukle();
-        this.hazir = true;
-      };
-      img.onerror = () => {
-        if (this.yuklenen === url) this.hata = `panorama resmi yüklenemedi: ${url}`;
-      };
       img.src = url;
+      img.decode().then(
+        () => {
+          if (this.istenen !== url) return;
+          this.degistir(img, false, url);
+          this.dokuyuYukle();
+        },
+        () => {
+          if (this.istenen !== url) return;
+          this.hata = `panorama resmi yüklenemedi: ${url}`;
+          this.istenen = "";
+        },
+      );
     }
+  }
+
+  /** Hazırlanan kaynak ekrana gelir (eski video durdurulur). */
+  private degistir(kaynak: HTMLImageElement | HTMLVideoElement, video: boolean, url: string) {
+    if (this.kaynak instanceof HTMLVideoElement && this.kaynak !== kaynak) {
+      this.kaynak.pause();
+      this.kaynak.src = "";
+    }
+    this.kaynak = kaynak;
+    this.kaynakVideo = video;
+    this.yuklenen = url;
+    this.istenen = "";
+    this.kayit = this.bekleyenKayit;
+    this.bekleyenKayit = null;
+    this.hazir = true;
+    this.hata = "";
   }
 
   kapat() {
@@ -186,7 +220,9 @@ export class PanoramaKatmani {
     this.kaynak = null;
     this.hazir = false;
     this.yuklenen = "";
+    this.istenen = "";
     this.kayit = null;
+    this.bekleyenKayit = null;
   }
 
   private dokuyuYukle() {
