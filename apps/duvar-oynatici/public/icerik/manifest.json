@@ -256,114 +256,144 @@
       "zaman": "alacakaranlik",
       "dosya": "daglik/pano_yaz_alacakaranlik_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": 70,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"toposcope_sunset\" (CC0), tonemapped 8K JPG",
       "_not": "Kayalik tepe gun batimi, uzak vadiler; 24K",
       "noktalar": [
         {
-          "ad": "sirt sol",
-          "azimut": -30,
-          "mesafe": 13,
+          "ad": "kaya kenari",
+          "azimut": -40,
+          "mesafe": 6.5,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "vadi kenari",
+          "azimut": -10,
+          "mesafe": 7,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "omuz kenari",
+          "azimut": 25,
+          "mesafe": 10,
           "tur": [
             "patlama",
             "toz"
           ]
         },
         {
-          "ad": "sirt sag",
-          "azimut": 30,
-          "mesafe": 13,
+          "ad": "sirt sol",
+          "azimut": 57,
+          "mesafe": 9,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "tepe onu",
+          "azimut": 60,
+          "mesafe": 17,
           "tur": [
             "patlama"
           ]
         },
         {
-          "ad": "patika",
-          "azimut": 90,
-          "mesafe": 13,
+          "ad": "sirt acik",
+          "azimut": 76,
+          "mesafe": 9,
           "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "arka",
-          "azimut": -120,
-          "mesafe": 13,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "on",
-          "azimut": -10,
-          "mesafe": 13,
-          "tur": [
-            "figur",
             "asker"
           ]
         },
         {
-          "ad": "sag",
-          "azimut": 40,
-          "mesafe": 14,
+          "ad": "yol sol",
+          "azimut": 99,
+          "mesafe": 9,
           "tur": [
-            "figur",
-            "asker"
+            "asker",
+            "figur"
           ]
         },
         {
-          "ad": "patika on",
-          "azimut": 90,
-          "mesafe": 16,
+          "ad": "yol uzak",
+          "azimut": 104,
+          "mesafe": 20,
           "tur": [
-            "figur",
-            "asker"
+            "patlama",
+            "toz"
           ]
         },
         {
-          "ad": "arka sol",
-          "azimut": -100,
-          "mesafe": 14,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "inis",
-          "azimut": -60,
-          "mesafe": 40,
-          "tur": [
-            "helikopter"
-          ]
-        },
-        {
-          "ad": "tank · patika",
-          "azimut": 90,
-          "mesafe": 28,
-          "tur": [
-            "tank"
-          ]
-        },
-        {
-          "ad": "tank · arka",
-          "azimut": -120,
+          "ad": "tank · yol",
+          "azimut": 100,
           "mesafe": 26,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · sirt sol",
-          "azimut": -30,
-          "mesafe": 24,
+          "ad": "inis yol",
+          "azimut": 100,
+          "mesafe": 38,
           "tur": [
-            "tank"
+            "helikopter"
+          ]
+        },
+        {
+          "ad": "yol sag",
+          "azimut": 116,
+          "mesafe": 16,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "cali onu",
+          "azimut": 118,
+          "mesafe": 9,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "cali dibi sag",
+          "azimut": 137,
+          "mesafe": 7,
+          "tur": [
+            "asker"
           ]
         }
       ],
-      "yasak": []
+      "yasak": [
+        {
+          "ad": "agac sol",
+          "baslangic": -30,
+          "bitis": -14
+        },
+        {
+          "ad": "cali yol solu",
+          "baslangic": 78,
+          "bitis": 89
+        },
+        {
+          "ad": "ucurum ve calilar",
+          "baslangic": 145,
+          "bitis": -45
+        }
+      ],
+      "gunes": {
+        "azimut": 47,
+        "yukseklik": 5,
+        "guc": 0.45,
+        "aciklama": "Güneş az ~47°'de, kayalık sütunlu yarların arasındaki boşluğun arkasında ufkun (2–3,5°) hemen üstünde/altında batıyor: disk görünmüyor, gök orada doymuş parlak, yar kenarlarında altın kenar ışığı, karşı gökte pembe kuşak var; zeminde sert gölge yok. Alacakaranlık kuralı: parıltı azimutu, yükseklik 5°, düşük güç 0,45 (yumuşak gölge). 12–45° yükseklikte gök parlaklığının tepesi az 39–44'te; 47 ile fark önemsiz. Otomatik tahmin (az 47°, 4°, güç 0,97) yön olarak doğru ama güç fazla sert gölge verirdi."
+      }
     },
     {
       "bolge": "daglik",
@@ -383,110 +413,161 @@
         "gokKarartma": 0.5
       },
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": -90,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"clarens_night_01\" (CC0), tonemapped 8K JPG",
       "_not": "Ay isikli dag tepesi, vadide kasaba isiklari; 24K",
       "noktalar": [
         {
-          "ad": "cayir sol",
-          "azimut": -20,
-          "mesafe": 13,
+          "ad": "iz kenari",
+          "azimut": -128,
+          "mesafe": 10,
           "tur": [
-            "patlama",
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "cayir",
+          "azimut": -106,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "depo onu",
+          "azimut": -70,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "iz uzak",
+          "azimut": -120,
+          "mesafe": 18,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "cayir uzak",
+          "azimut": -92,
+          "mesafe": 17,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "depo yani",
+          "azimut": -54,
+          "mesafe": 14,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "toprak yol",
+          "azimut": -86,
+          "mesafe": 11,
+          "tur": [
             "toz"
           ]
         },
         {
-          "ad": "cayir sag",
-          "azimut": 40,
-          "mesafe": 13,
+          "ad": "tank · iz",
+          "azimut": -126,
+          "mesafe": 26,
           "tur": [
-            "patlama"
+            "tank"
           ]
         },
         {
-          "ad": "iz sol",
-          "azimut": -135,
-          "mesafe": 13,
+          "ad": "tank · cayir",
+          "azimut": -96,
+          "mesafe": 26,
           "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "iz sag",
-          "azimut": 150,
-          "mesafe": 13,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "on",
-          "azimut": 0,
-          "mesafe": 14,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "sol",
-          "azimut": -40,
-          "mesafe": 13,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "sag",
-          "azimut": 60,
-          "mesafe": 15,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "arka sol",
-          "azimut": -130,
-          "mesafe": 15,
-          "tur": [
-            "figur",
-            "asker"
+            "tank"
           ]
         },
         {
           "ad": "inis",
-          "azimut": 150,
-          "mesafe": 42,
+          "azimut": -112,
+          "mesafe": 36,
           "tur": [
             "helikopter"
           ]
         },
         {
-          "ad": "tank · cayir sol",
-          "azimut": -20,
-          "mesafe": 26,
+          "ad": "yokus",
+          "azimut": 162,
+          "mesafe": 9,
           "tur": [
-            "tank"
+            "asker",
+            "figur"
           ]
         },
         {
-          "ad": "tank · iz sag",
-          "azimut": 150,
-          "mesafe": 26,
+          "ad": "yamac",
+          "azimut": -152,
+          "mesafe": 9,
           "tur": [
-            "tank"
+            "asker",
+            "figur"
           ]
         },
         {
-          "ad": "tank · cayir sag",
-          "azimut": 40,
-          "mesafe": 24,
+          "ad": "yamac onu",
+          "azimut": -176,
+          "mesafe": 13,
           "tur": [
-            "tank"
+            "patlama"
+          ]
+        },
+        {
+          "ad": "iz yokus",
+          "azimut": 154,
+          "mesafe": 12,
+          "tur": [
+            "toz"
+          ]
+        },
+        {
+          "ad": "cit onu",
+          "azimut": 8,
+          "mesafe": 8,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "ay alti",
+          "azimut": 32,
+          "mesafe": 8,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "evler onu",
+          "azimut": -36,
+          "mesafe": 12.5,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "ev onu",
+          "azimut": -22,
+          "mesafe": 9,
+          "tur": [
+            "asker",
+            "figur"
           ]
         }
       ],
@@ -495,8 +576,19 @@
           "ad": "tabela",
           "baslangic": 74,
           "bitis": 84
+        },
+        {
+          "ad": "kazik",
+          "baslangic": 147,
+          "bitis": 151
         }
-      ]
+      ],
+      "gunes": {
+        "azimut": 35,
+        "yukseklik": 14,
+        "guc": 0.55,
+        "aciklama": "Ay diski açık gökte: dereceli _gece.jpg'de çizilen disk az 35,4° / yük. 14,0° (özgün çekimde ~36° / ~13°), uzun pozlama ay ışığı. Gölgeler az −145° yönüne düşüyor (sağ duvarda çimen tümseklerinin gölgeleri sola-öne). Sarı otomatik tahmin (az 12°, yük. 0°) vadideki kasaba ışıkları, yanlış."
+      }
     },
     {
       "bolge": "daglik",
@@ -1183,134 +1275,186 @@
       "_not": "Ay isikli otlu ova, yildizlar; en temiz kirsal gece adayi, 24K",
       "noktalar": [
         {
-          "ad": "on sol",
-          "azimut": -25,
-          "mesafe": 20,
-          "tur": [
-            "patlama",
-            "toz"
-          ]
-        },
-        {
-          "ad": "on sag",
-          "azimut": 25,
-          "mesafe": 22,
-          "tur": [
-            "patlama",
-            "toz"
-          ]
-        },
-        {
-          "ad": "sol",
-          "azimut": -70,
-          "mesafe": 18,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "sag",
-          "azimut": 70,
-          "mesafe": 20,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "arka sol",
-          "azimut": -120,
-          "mesafe": 22,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "arka sag",
-          "azimut": 120,
-          "mesafe": 24,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "figur on",
-          "azimut": 0,
-          "mesafe": 16,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "figur sol",
+          "ad": "orta mevzi",
           "azimut": -40,
-          "mesafe": 14,
+          "mesafe": 10,
           "tur": [
-            "figur",
             "asker"
           ]
         },
         {
-          "ad": "figur sag",
-          "azimut": 45,
-          "mesafe": 15,
+          "ad": "orta sol mevzi",
+          "azimut": -60,
+          "mesafe": 11,
           "tur": [
-            "figur",
             "asker"
           ]
         },
         {
-          "ad": "figur sag arka",
-          "azimut": 95,
-          "mesafe": 14,
+          "ad": "orta sag mevzi",
+          "azimut": -20,
+          "mesafe": 11,
           "tur": [
-            "figur",
             "asker"
           ]
         },
         {
-          "ad": "figur sol arka",
-          "azimut": -95,
-          "mesafe": 16,
+          "ad": "tarla orta",
+          "azimut": -51,
+          "mesafe": 20,
           "tur": [
-            "figur",
-            "asker"
+            "patlama",
+            "toz"
           ]
         },
         {
-          "ad": "inis",
-          "azimut": 40,
-          "mesafe": 42,
+          "ad": "tarla sag",
+          "azimut": -8,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "inis orta",
+          "azimut": -29,
+          "mesafe": 37,
           "tur": [
             "helikopter"
           ]
         },
         {
-          "ad": "tank · arka sag",
-          "azimut": 120,
-          "mesafe": 28,
+          "ad": "tank · koy isigi onu",
+          "azimut": -70,
+          "mesafe": 32,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · on sag",
-          "azimut": 25,
-          "mesafe": 26,
+          "ad": "kosu sol",
+          "azimut": -80,
+          "mesafe": 14,
           "tur": [
-            "tank"
+            "figur"
           ]
         },
         {
-          "ad": "tank · arka sol",
+          "ad": "kosu sag",
+          "azimut": 0,
+          "mesafe": 14,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol mevzi",
+          "azimut": -144,
+          "mesafe": 11,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "tumsek onu",
           "azimut": -120,
-          "mesafe": 26,
+          "mesafe": 9,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sol ic mevzi",
+          "azimut": -100,
+          "mesafe": 11,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sol tarla uzak",
+          "azimut": -158,
+          "mesafe": 22,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sol tarla",
+          "azimut": -109,
+          "mesafe": 19,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "inis sol",
+          "azimut": -132,
+          "mesafe": 38,
+          "tur": [
+            "helikopter"
+          ]
+        },
+        {
+          "ad": "sag ic mevzi",
+          "azimut": 26,
+          "mesafe": 10,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "cali onu",
+          "azimut": 50,
+          "mesafe": 11,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sag mevzi",
+          "azimut": 74,
+          "mesafe": 11,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sag tarla",
+          "azimut": 16,
+          "mesafe": 21,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "ova sag",
+          "azimut": 62,
+          "mesafe": 20,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "tank · ay alti kayalar",
+          "azimut": 38,
+          "mesafe": 28,
           "tur": [
             "tank"
           ]
         }
       ],
-      "yasak": []
+      "yasak": [],
+      "gunes": {
+        "azimut": 36,
+        "yukseklik": 18,
+        "guc": 0.5,
+        "aciklama": "Işık kaynağı ay ve görünüyor: haleli disk pano +36°'de, ufkun yaklaşık 18° üstünde (özgün dosyada parlaklık tepesi 35,5°/17,2°, derecelendirilmiş dosyada çizilen disk 35,3°/17,8°). Gölgeler de bunu doğruluyor: +37'deki kayanın ay gölgesi kameraya doğru uzanıyor, aya bakan kayalar arkadan aydınlık; karşı yöndeki termit tümseği (-120) ise önden aydınlık. Otomatik tahmin (-131°, 1°) ağaç sırasının ardındaki kasaba/ev ışığını yakalamış, yanlış. Gece için güç 0,5."
+      }
     },
     {
       "bolge": "kirsal_acik_arazi",
@@ -1318,125 +1462,192 @@
       "zaman": "gunduz",
       "dosya": "kirsal_acik_arazi/pano_yaz_gunduz_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": 70,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"rosendal_plains_1\" (CC0), tonemapped 8K JPG",
       "_not": "Alternatif gerçek çekim; AI panorama yerine kullanmak için _ornek satırını silip AI kaydına _ornek ekleyin. Kuru sari ot ovasi, kumulus bulutlu ogle gunesi; Anadolu bozkiri gorunumune en yakin aday",
       "_ornek": true,
       "noktalar": [
         {
-          "ad": "ova sag",
-          "azimut": 60,
-          "mesafe": 20,
+          "ad": "cali kenari",
+          "azimut": -48,
+          "mesafe": 9,
           "tur": [
-            "patlama",
-            "figur",
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "aciklik",
+          "azimut": -6,
+          "mesafe": 8,
+          "tur": [
             "asker"
           ]
         },
         {
-          "ad": "ova sag uzak",
-          "azimut": 100,
-          "mesafe": 18,
+          "ad": "patika",
+          "azimut": 46,
+          "mesafe": 9,
           "tur": [
-            "patlama",
-            "figur",
-            "toz",
             "asker"
           ]
         },
         {
-          "ad": "ova sag arka",
-          "azimut": 130,
-          "mesafe": 22,
+          "ad": "toprak yigini",
+          "azimut": 87,
+          "mesafe": 8,
           "tur": [
-            "patlama",
-            "figur",
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "cayir orta",
+          "azimut": 107,
+          "mesafe": 9,
+          "tur": [
             "asker"
           ]
         },
         {
-          "ad": "calinin otesi",
-          "azimut": -10,
+          "ad": "kozalakli onu",
+          "azimut": 128,
+          "mesafe": 9,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "meyvelik onu",
+          "azimut": 153,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "meyvelik sag",
+          "azimut": 174,
+          "mesafe": 10,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol tarla",
+          "azimut": -56,
+          "mesafe": 15,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "aciklik otesi",
+          "azimut": -3.5,
           "mesafe": 30,
           "tur": [
             "patlama"
           ]
         },
         {
-          "ad": "sol yamac",
-          "azimut": -100,
-          "mesafe": 20,
+          "ad": "ova on",
+          "azimut": 54,
+          "mesafe": 23,
           "tur": [
             "patlama",
-            "figur",
-            "asker"
+            "toz"
           ]
         },
         {
-          "ad": "on sag",
-          "azimut": 45,
-          "mesafe": 14,
-          "tur": [
-            "figur",
-            "toz",
-            "asker"
-          ]
-        },
-        {
-          "ad": "sol on",
-          "azimut": -60,
-          "mesafe": 16,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "inis",
-          "azimut": 100,
-          "mesafe": 45,
-          "tur": [
-            "helikopter"
-          ]
-        },
-        {
-          "ad": "tank · calinin otesi",
-          "azimut": -10,
-          "mesafe": 34,
-          "tur": [
-            "tank"
-          ]
-        },
-        {
-          "ad": "tank · ova sag arka",
-          "azimut": 130,
-          "mesafe": 26,
-          "tur": [
-            "tank"
-          ]
-        },
-        {
-          "ad": "tank · ova sag",
-          "azimut": 60,
+          "ad": "direk onu",
+          "azimut": 81,
           "mesafe": 24,
           "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sogut onu",
+          "azimut": 100,
+          "mesafe": 19,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "meyvelik acik",
+          "azimut": 161,
+          "mesafe": 17,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "tasli cayir",
+          "azimut": -176,
+          "mesafe": 17,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "tank · ova",
+          "azimut": 71,
+          "mesafe": 30,
+          "tur": [
             "tank"
+          ]
+        },
+        {
+          "ad": "tank · sogut arasi",
+          "azimut": 89,
+          "mesafe": 40,
+          "tur": [
+            "tank"
+          ]
+        },
+        {
+          "ad": "inis ova",
+          "azimut": 47,
+          "mesafe": 38,
+          "tur": [
+            "helikopter"
           ]
         }
       ],
       "yasak": [
         {
-          "ad": "yakin yanik cali",
-          "baslangic": -22,
-          "bitis": 34
+          "ad": "cali ve yabani ot",
+          "baslangic": -43,
+          "bitis": -11
         },
         {
-          "ad": "tepe agaclari ve tas duvar",
-          "baslangic": -150,
-          "bitis": -60
+          "ad": "yakin yabani ot",
+          "baslangic": -3,
+          "bitis": 41
+        },
+        {
+          "ad": "devedikeni",
+          "baslangic": 112,
+          "bitis": 125
+        },
+        {
+          "ad": "calilar ve tas yigini",
+          "baslangic": -168,
+          "bitis": -145
         }
-      ]
+      ],
+      "gunes": {
+        "azimut": 36,
+        "yukseklik": 54,
+        "guc": 0.95,
+        "aciklama": "Gunes diski acik gokte net (az 36, yukseklik 54); karsidaki yabani otlar ters isikta koyu, golgeler kameraya dogru dusuyor"
+      }
     },
     {
       "bolge": "meskun_mahal",
@@ -2413,57 +2624,47 @@
       "zaman": "alacakaranlik",
       "dosya": "ormanlik/pano_yaz_alacakaranlik_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 0,
+      "yawKaydirma": 15,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"dark_autumn_forest\" (CC0), tonemapped 8K JPG",
       "_not": "Karanlik orman patikasi, alcak gunes; sonbahar",
       "noktalar": [
         {
-          "ad": "patika",
-          "azimut": -22,
-          "mesafe": 20,
+          "ad": "kutuk yani",
+          "azimut": -93,
+          "mesafe": 10,
           "tur": [
-            "patlama",
-            "toz"
-          ]
-        },
-        {
-          "ad": "patika sag",
-          "azimut": 62,
-          "mesafe": 22,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "patika arka",
-          "azimut": 155,
-          "mesafe": 20,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "on",
-          "azimut": 10,
-          "mesafe": 16,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "patika on",
-          "azimut": -22,
-          "mesafe": 12,
-          "tur": [
-            "figur",
             "asker"
           ]
         },
         {
-          "ad": "patika sag on",
-          "azimut": 62,
-          "mesafe": 13,
+          "ad": "sol agac onu",
+          "azimut": -74,
+          "mesafe": 8,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "cayir kenari",
+          "azimut": -54,
+          "mesafe": 10,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "patika on",
+          "azimut": -21,
+          "mesafe": 10,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "orta acik",
+          "azimut": -1,
+          "mesafe": 10,
           "tur": [
             "figur",
             "asker"
@@ -2471,77 +2672,178 @@
         },
         {
           "ad": "on figur",
-          "azimut": 20,
-          "mesafe": 11,
+          "azimut": 19,
+          "mesafe": 8,
           "tur": [
             "figur",
+            "asker"
+          ]
+        },
+        {
+          "ad": "agav yani",
+          "azimut": 39,
+          "mesafe": 8,
+          "tur": [
+            "figur",
+            "asker"
+          ]
+        },
+        {
+          "ad": "patika sag on",
+          "azimut": 73,
+          "mesafe": 10,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "govde arasi",
+          "azimut": 93,
+          "mesafe": 10,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sag acik",
+          "azimut": 114,
+          "mesafe": 10,
+          "tur": [
             "asker"
           ]
         },
         {
           "ad": "arka sag",
-          "azimut": 130,
-          "mesafe": 14,
+          "azimut": 135,
+          "mesafe": 10,
           "tur": [
-            "figur",
             "asker"
           ]
         },
         {
-          "ad": "inis",
-          "azimut": 0,
-          "mesafe": 45,
+          "ad": "sol aciklik",
+          "azimut": -89,
+          "mesafe": 21,
           "tur": [
-            "helikopter"
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sol cayir",
+          "azimut": -57,
+          "mesafe": 17,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "on aciklik",
+          "azimut": -14,
+          "mesafe": 15,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "agav arkasi",
+          "azimut": 47,
+          "mesafe": 15,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "patika sag",
+          "azimut": 70,
+          "mesafe": 15,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sag sira onu",
+          "azimut": 138,
+          "mesafe": 13,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "tank · sol cayir",
+          "azimut": -57,
+          "mesafe": 24,
+          "tur": [
+            "tank"
           ]
         },
         {
           "ad": "tank · patika sag",
-          "azimut": 62,
-          "mesafe": 26,
+          "azimut": 70,
+          "mesafe": 23,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · patika",
-          "azimut": -22,
+          "ad": "inis",
+          "azimut": -9,
           "mesafe": 24,
           "tur": [
-            "tank"
-          ]
-        },
-        {
-          "ad": "tank · patika arka",
-          "azimut": 155,
-          "mesafe": 24,
-          "tur": [
-            "tank"
+            "helikopter"
           ]
         }
       ],
       "yasak": [
         {
-          "ad": "govde",
-          "baslangic": -118,
-          "bitis": -96
+          "ad": "egri govde",
+          "baslangic": -149,
+          "bitis": -141
+        },
+        {
+          "ad": "yakin kutuk",
+          "baslangic": -115,
+          "bitis": -94
+        },
+        {
+          "ad": "yakin fidan",
+          "baslangic": -72,
+          "bitis": -64
         },
         {
           "ad": "buyuk govde",
           "baslangic": -48,
-          "bitis": -24
+          "bitis": -28
         },
         {
           "ad": "govde sag",
-          "baslangic": 76,
-          "bitis": 92
+          "baslangic": 78,
+          "bitis": 90
         },
         {
           "ad": "govde sag 2",
-          "baslangic": 102,
-          "bitis": 114
+          "baslangic": 96,
+          "bitis": 109
+        },
+        {
+          "ad": "ince govde",
+          "baslangic": 120,
+          "bitis": 126
+        },
+        {
+          "ad": "arka fidan",
+          "baslangic": 170,
+          "bitis": 178
         }
-      ]
+      ],
+      "gunes": {
+        "azimut": -65,
+        "yukseklik": 12,
+        "guc": 0.3,
+        "aciklama": "Güneş diski ve belirgin ışıma yok, zeminde gölge yok (Poly Haven: alçak gün batımı ışığı). Ufkun üstündeki pus -100..-40 arasında en parlak ve en sıcak renkte (merkezi yaklaşık -65°), karşı taraf (+60..+180) koyu ve mavimsi. Bu yüzden yön -65°, alçak ama aşırı uzun gölge çizmeyecek 12°, zayıf ve yumuşak ışık (güç 0,3)."
+      }
     },
     {
       "bolge": "ormanlik",
@@ -2561,117 +2863,144 @@
         "gokKarartma": 0.45
       },
       "tip": "resim",
-      "yawKaydirma": 25,
+      "yawKaydirma": -130,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"narrow_moonlit_road\" (CC0), tonemapped 8K JPG",
       "_not": "Ay isikli agacli dar yol; gercek orman gecesi yok, en yakin aday (asfalt yol)",
       "noktalar": [
         {
-          "ad": "yol uzak",
-          "azimut": 30,
-          "mesafe": 30,
+          "ad": "yol sol",
+          "azimut": -157,
+          "mesafe": 10,
           "tur": [
-            "patlama"
+            "asker",
+            "figur"
           ]
         },
         {
-          "ad": "yol arka",
-          "azimut": -160,
-          "mesafe": 28,
+          "ad": "yol sag",
+          "azimut": -137,
+          "mesafe": 10,
           "tur": [
-            "patlama"
+            "asker",
+            "figur"
           ]
         },
         {
-          "ad": "yol",
-          "azimut": 15,
-          "mesafe": 20,
+          "ad": "toprak alan",
+          "azimut": -118,
+          "mesafe": 9,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "uzun ot onu",
+          "azimut": -99,
+          "mesafe": 8,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sev",
+          "azimut": 160,
+          "mesafe": 8,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "kaldirim arkasi",
+          "azimut": 180,
+          "mesafe": 8,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "cimen kenari",
+          "azimut": -2,
+          "mesafe": 6,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sag banket",
+          "azimut": -130,
+          "mesafe": 14,
           "tur": [
             "patlama",
             "toz"
           ]
         },
         {
-          "ad": "yol on",
-          "azimut": 30,
+          "ad": "yol yakin",
+          "azimut": -150,
           "mesafe": 14,
           "tur": [
-            "figur",
-            "asker"
+            "patlama"
           ]
         },
         {
-          "ad": "yol arka on",
-          "azimut": -160,
+          "ad": "yol uzak",
+          "azimut": -152,
+          "mesafe": 20,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sev etegi",
+          "azimut": -166,
           "mesafe": 14,
           "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "yakin",
-          "azimut": 5,
-          "mesafe": 10,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "yol uzak figur",
-          "azimut": 40,
-          "mesafe": 18,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "inis",
-          "azimut": 30,
-          "mesafe": 45,
-          "tur": [
-            "helikopter"
-          ]
-        },
-        {
-          "ad": "tank · yol uzak",
-          "azimut": 30,
-          "mesafe": 34,
-          "tur": [
-            "tank"
-          ]
-        },
-        {
-          "ad": "tank · yol arka",
-          "azimut": -160,
-          "mesafe": 32,
-          "tur": [
-            "tank"
+            "toz"
           ]
         },
         {
           "ad": "tank · yol",
-          "azimut": 15,
-          "mesafe": 24,
+          "azimut": -142,
+          "mesafe": 20,
           "tur": [
             "tank"
+          ]
+        },
+        {
+          "ad": "inis yol",
+          "azimut": -146,
+          "mesafe": 30,
+          "tur": [
+            "helikopter"
           ]
         }
       ],
       "yasak": [
         {
-          "ad": "sol calilar",
-          "baslangic": -142,
-          "bitis": 2
+          "ad": "kaldirim calilari",
+          "baslangic": 59,
+          "bitis": 156
         },
         {
-          "ad": "sag calilar",
-          "baslangic": 58,
-          "bitis": 180
+          "ad": "uzun ot ve calilar",
+          "baslangic": -95,
+          "bitis": -5
+        },
+        {
+          "ad": "direk",
+          "baslangic": 20,
+          "bitis": 25
         }
-      ]
+      ],
+      "gunes": {
+        "azimut": 36,
+        "yukseklik": 68,
+        "guc": 0.55,
+        "aciklama": "Dolunay diski açık gökte (az 36°, yükseklik 68°); özgün dosyada da oynatıcının yüklediği gece derecelendirilmiş dosyada da parlaklık tepesi aynı yerde. Ay yüksekte: gölgeler kısa ve keskin, yol kenarındaki çalı gölgeleri ayın tersine (az ≈ −144) düşüyor. Otomatik tahmin (az 32°, yük. 15°) yanlış."
+      }
     },
     {
       "bolge": "ormanlik",
@@ -3347,125 +3676,206 @@
       "zaman": "gunduz",
       "dosya": "us_bolgesi/pano_yaz_gunduz_foto_8k.jpg",
       "tip": "resim",
-      "yawKaydirma": 30,
+      "yawKaydirma": 20,
       "yukseklikKaydirma": 0,
       "_kaynak": "Poly Haven \"derelict_airfield_02\" (CC0), tonemapped 8K JPG",
       "_not": "Terk edilmis havaalani: hangarlar, beton, otlar; 24K",
       "noktalar": [
         {
+          "ad": "moloz onu",
+          "azimut": -14,
+          "mesafe": 17,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
           "ad": "apron on",
-          "azimut": 0,
-          "mesafe": 24,
-          "tur": [
-            "patlama",
-            "toz"
-          ]
-        },
-        {
-          "ad": "apron sol",
-          "azimut": -60,
-          "mesafe": 22,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "hangar onu",
-          "azimut": 80,
-          "mesafe": 30,
-          "tur": [
-            "patlama"
-          ]
-        },
-        {
-          "ad": "apron arka",
-          "azimut": 150,
+          "azimut": 12,
           "mesafe": 20,
           "tur": [
             "patlama"
           ]
         },
         {
-          "ad": "on",
-          "azimut": 10,
-          "mesafe": 14,
+          "ad": "hangar 1 onu",
+          "azimut": 52,
+          "mesafe": 20,
           "tur": [
-            "figur",
-            "asker"
+            "patlama"
           ]
         },
         {
-          "ad": "sol",
-          "azimut": -45,
-          "mesafe": 14,
+          "ad": "hangar onu",
+          "azimut": 90,
+          "mesafe": 17,
           "tur": [
-            "figur",
-            "asker"
+            "patlama",
+            "toz"
           ]
         },
         {
-          "ad": "hangar on",
-          "azimut": 70,
-          "mesafe": 18,
-          "tur": [
-            "figur",
-            "asker"
-          ]
-        },
-        {
-          "ad": "sag",
-          "azimut": 120,
+          "ad": "agaclar onu",
+          "azimut": 140,
           "mesafe": 16,
           "tur": [
-            "figur",
-            "asker"
+            "patlama"
+          ]
+        },
+        {
+          "ad": "cayir",
+          "azimut": -58,
+          "mesafe": 22,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "pist",
+          "azimut": -102,
+          "mesafe": 17,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "mevzi on",
+          "azimut": -5,
+          "mesafe": 12,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "mevzi apron",
+          "azimut": 22,
+          "mesafe": 12,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "mevzi hangar 1",
+          "azimut": 48,
+          "mesafe": 12,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "mevzi hangar",
+          "azimut": 82,
+          "mesafe": 12,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "mevzi hangar sag",
+          "azimut": 105,
+          "mesafe": 12,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "mevzi sag",
+          "azimut": 128,
+          "mesafe": 12,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "mevzi sol",
+          "azimut": -45,
+          "mesafe": 12,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "mevzi pist",
+          "azimut": -80,
+          "mesafe": 12,
+          "tur": [
+            "asker",
+            "figur"
+          ]
+        },
+        {
+          "ad": "mevzi pist sol",
+          "azimut": -103,
+          "mesafe": 12,
+          "tur": [
+            "asker",
+            "figur"
           ]
         },
         {
           "ad": "inis",
-          "azimut": -20,
+          "azimut": 15,
+          "mesafe": 38,
+          "tur": [
+            "helikopter"
+          ]
+        },
+        {
+          "ad": "inis pist",
+          "azimut": -100,
           "mesafe": 40,
           "tur": [
             "helikopter"
           ]
         },
         {
+          "ad": "tank · apron",
+          "azimut": 32,
+          "mesafe": 27,
+          "tur": [
+            "tank"
+          ]
+        },
+        {
           "ad": "tank · hangar onu",
-          "azimut": 80,
-          "mesafe": 34,
+          "azimut": 115,
+          "mesafe": 22,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · apron on",
-          "azimut": 0,
-          "mesafe": 28,
+          "ad": "tank · pist",
+          "azimut": -86,
+          "mesafe": 27,
           "tur": [
             "tank"
           ]
         },
         {
-          "ad": "tank · apron sol",
-          "azimut": -60,
-          "mesafe": 26,
+          "ad": "cakil",
+          "azimut": 35,
+          "mesafe": 13,
           "tur": [
-            "tank"
+            "toz"
           ]
         }
       ],
-      "yasak": [
-        {
-          "ad": "sag agaclar",
-          "baslangic": 126,
-          "bitis": 180
-        },
-        {
-          "ad": "sol agaclar",
-          "baslangic": -180,
-          "bitis": -135
-        }
-      ]
+      "yasak": [],
+      "gunes": {
+        "azimut": 36,
+        "yukseklik": 14,
+        "guc": 0.9,
+        "aciklama": "Güneş diski görünüyor: hangar 1'in sol çatı köşesinin hemen üstünde, az 36°, yükseklik ~14° (hafif pus ve hale). Betondaki az 35° yönündeki parlama ve önden güneş alan arka kavaklar (az −150) yönü doğruluyor. Akşamüstü ters ışık; oynatıcı gündüz yüksekliğini 18°'ye çektiği için 3B gölgeler boyun ~3 katı olur ve orta duvarda izleyiciye doğru düşer."
+      }
     }
   ],
   "dongu": [
