@@ -6,23 +6,26 @@
  *  - güneş yönü panoramadan tahmin edilir, gölgeler o yöne düşer ve zemine oturur,
  *  - patlamalar kalıcı krater + tüten duman bırakır, ortamı anlık aydınlatır,
  *  - helikopter ve figürler gerçek 3B modellerdir.
- * Görüntü, duvar başına bir perspektif kamerayla aynı tuvale (viewport/scissor) çizilir; köşelerde
- * perspektif kırılmaz. Bu tuval 2B tuvalin altındadır; 2B katman (klipler, sis, yağış, HUD) üstüne gelir.
+ * Görüntü, duvar başına bir perspektif kamerayla aynı tuvale (viewport/scissor) çizilir; kameralar duvarın
+ * gerçek düzlemine göre (genelleştirilmiş perspektif, `duvarKamerasi.ts`) kurulduğundan köşelerde perspektif
+ * kırılmaz. Bu tuval 2B tuvalin altındadır; 2B katman (klipler, sis, yağış, HUD) üstüne gelir.
  */
 import * as THREE from "three";
-import { gunesKonumu, type Yerlesim } from "../projeksiyon";
+import { gunesKonumu, ufukSatiri, type Yerlesim } from "../projeksiyon";
 import type { CatismaAyarlari, HelikopterDurumu, IzliMermiAyarlari, OrtamAyarlari } from "../tipler";
 import { CatismaSistemi, type CatismaSesleri } from "./catisma";
 import { atesDokusu, dumanDokusu, kivilcimDokusu, kraterDokusu } from "./dokular";
+import { DuvarKamerasi, sisUzakligiAyarla, uzaklikSisiGerekir } from "./duvarKamerasi";
 import { FigurKatmani, type FigurPozu, type FigurSecenekleri, type ModelTanimi } from "./figurler3b";
 import { gunesTahmin, panoramadanSahneAzimutu, type GunesTahmini } from "./gunes";
 import { HasarKatmani } from "./hasar";
 import { Helikopter3B } from "./helikopter3b";
+import { rotorTozuTuru } from "./rotorTozu";
 import { ParcacikSistemi } from "./parcaciklar";
 import { SutreKatmani, type SutreEsyasi } from "./sutre";
 import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, type AraziModu } from "./arazi";
 import { Gokyuzu } from "./gokyuzu";
-import { ZEMIN_Y, azimutYon, dikeyFov, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu, zeminY } from "./uzay";
+import { ZEMIN_Y, azimutYon, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu, zeminY } from "./uzay";
 import { aciNormalize, birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
@@ -40,6 +43,8 @@ export const KALITE_AYARLARI: Record<Kalite, { golgeHaritasi: number; kenarYumus
  */
 export const ASKER_EN_UZAK = 7;
 export const ASKER_EN_YAKIN = 4;
+/** Asker yerleşiminde istenen yöne bu açı içindeki boş noktalar (asker, sonra figür) önce denenir. */
+export const ASKER_YAKIN_TOLERANS = 50;
 
 export interface PanoramaKaynagi {
   url: string;
@@ -71,7 +76,7 @@ export class Sahne3B {
   readonly destekli: boolean;
   private renderer: THREE.WebGLRenderer | null = null;
   private readonly sahne = new THREE.Scene();
-  private kameralar: THREE.PerspectiveCamera[] = [];
+  private kameralar: DuvarKamerasi[] = [];
   private yerlesimler: Yerlesim[] = [];
   private W = 0;
   private H = 0;
@@ -93,6 +98,8 @@ export class Sahne3B {
   private readonly hasar: HasarKatmani;
   private readonly figurler = new FigurKatmani();
   private readonly heli: Helikopter3B;
+  /** Panelin helikopter iniş yönü (sahne azimutu): helikopterAyarla'dan; gelmeden önce panelin varsayılanı 12°. */
+  private heliYonu = 12;
   private readonly catisma: CatismaSistemi;
   private readonly sutre = new SutreKatmani();
   private catismaSesleri: CatismaSesleri = { carpma: () => undefined, atis: () => undefined };
@@ -106,6 +113,8 @@ export class Sahne3B {
   private gunesIsareti: THREE.Mesh | null = null;
   hazir = false;
   hata = "";
+  /** Resim panorama yükleniyor (yenisi seçildi, dokusu henüz gelmedi; yükleme biter ya da düşerse false). */
+  private yukleniyor = false;
 
   /** Kalite kademesi (`?kalite=`): gölge haritası, kenar yumuşatma ve parçacık kapasitesi. */
   readonly kalite: Kalite;
@@ -125,14 +134,15 @@ export class Sahne3B {
     this.parcaciklar = new ParcacikSistemi(dumanDokusu(128, 1), atesDokusu(128, 7), kivilcimDokusu(32), k.parcacikCarpani);
     this.hasar = new HasarKatmani([kraterDokusu(256, 3), kraterDokusu(256, 9), kraterDokusu(256, 21)], this.parcaciklar, Math.round(320 * k.parcacikCarpani));
     this.heli = new Helikopter3B(this.parcaciklar);
+    // Ses geri çağrıları sahne azimutuyla (derece, AzimutDerece): pan değil, ses motoru yerleştirir
     this.catisma = new CatismaSistemi(this.parcaciklar, {
-      carpma: (p) => this.catismaSesleri.carpma(p),
-      atis: (p, u) => this.catismaSesleri.atis(p, u),
-      uzakPatlama: (az) => {
-        this.patlama(az, 0.7, true, false);
-        this.catismaSesleri.uzakPatlama?.(az);
+      carpma: (azimut) => this.catismaSesleri.carpma(azimut),
+      atis: (azimut, uzak) => this.catismaSesleri.atis(azimut, uzak),
+      uzakPatlama: (azimut) => {
+        this.patlama(azimut, 0.7, true, false);
+        this.catismaSesleri.uzakPatlama?.(azimut);
       },
-      topAtisi: (pan) => this.catismaSesleri.topAtisi?.(pan),
+      topAtisi: (azimut) => this.catismaSesleri.topAtisi?.(azimut),
     });
     this.catisma.dostlar = () => this.figurler.silahliKonumlar();
     this.figurler.engel = (p) => this.sutre.doluMu(p, 0.3);
@@ -239,12 +249,23 @@ export class Sahne3B {
   get helikopterHazir() {
     return this.heli.hazir;
   }
+  /**
+   * Yeni resim panorama yükleniyor (saat/mevsim değişti): sahne kısa süre `hazir` değil ama 3B helikopter uçmayı sürdürür
+   * (main.ts 2B siluete geçirmez; yüklenince helikopter baştan başlamaz, yeni noktaya göre pas geçer ya da rotasını kurar).
+   */
+  get panoramaYukleniyor() {
+    return this.yukleniyor;
+  }
   get helikopterTozu() {
     return this.heli.tozSiddeti;
   }
   /** 2B katman için ufuk çizgisi (piksel, üstten). */
   get ufukY() {
-    return (this.H * (1 + (this.kaynak?.yukseklikKaydirma ?? 0))) / 2;
+    // İzdüşüm sınırlarından göz hizası satırı (ölçüsüz yerleşimde H/2) + panoramanın yukseklikKaydirma'sı.
+    // Odanın tüm duvarlarında görüntü yüksekliği ve alt kenarı aynı → satır duvarlar arasında ortak.
+    const k = this.kaynak?.yukseklikKaydirma ?? 0;
+    const orta = this.yerlesimler[Math.floor(this.yerlesimler.length / 2)];
+    return orta ? ufukSatiri(orta, k) : (this.H * (1 + k)) / 2;
   }
 
   boyutlandir(W: number, H: number, yerlesimler: Yerlesim[]) {
@@ -252,21 +273,16 @@ export class Sahne3B {
     this.H = H;
     this.yerlesimler = yerlesimler;
     this.renderer?.setSize(W, H, false);
-    this.kameralar = yerlesimler.map((y) => {
-      const k = new THREE.PerspectiveCamera(dikeyFov(y.duvar.fov, y.genislik, H), y.genislik / H, 0.1, 3000);
-      k.rotation.order = "YXZ";
-      return k;
-    });
+    this.kameralar = yerlesimler.map(() => new DuvarKamerasi(0.1, 3000));
+    // Ölçülmüş odada sis gerçek uzaklıkla (kaymış izleyicide köşede kırılmaz); ilk çizimden önce (duvarKamerasi.ts)
+    sisUzakligiAyarla(uzaklikSisiGerekir(yerlesimler));
     this.kameralariYonlendir();
   }
 
+  /** Duvar kameraları: duvar düzlemi + simetrik olmayan kesik piramit; `yukseklikKaydirma` ek eğim. */
   private kameralariYonlendir() {
     const k = this.kaynak?.yukseklikKaydirma ?? 0;
-    this.kameralar.forEach((kam, i) => {
-      const y = this.yerlesimler[i];
-      kam.rotation.y = -radyan(y.duvar.yaw);
-      kam.rotation.x = Math.atan(k * Math.tan(radyan(kam.fov) / 2));
-    });
+    this.kameralar.forEach((kam, i) => kam.duvaraAyarla(this.yerlesimler[i].izdusum, k));
   }
 
   /** Panorama resmi (equirect) → arka plan + ortam ışığı + güneş tahmini. null → katman kapanır. */
@@ -279,9 +295,8 @@ export class Sahne3B {
     const yawDegisti = this.kaynak && (this.kaynak.yawKaydirma !== kaynak.yawKaydirma || this.kaynak.yukseklikKaydirma !== kaynak.yukseklikKaydirma);
     const gunesDegisti = JSON.stringify(this.kaynak?.gunes ?? null) !== JSON.stringify(kaynak.gunes ?? null);
     this.kaynak = kaynak;
-    // Varsayılan iniş: panelin varsayılan yönüne (sahne +12°) en yakın iniş noktası (sahne koordinatına çevrilir)
-    const inis = this.noktaSec(12, "helikopter", 38, 180);
-    this.heli.inisNoktasi(inis.azimut, inis.mesafe);
+    // İniş noktası yeni planla (panelin yönüne en yakın; plan ya da yaw değişmediyse aynı nokta, uçuş etkilenmez)
+    this.heliInisiniSec();
     if (kaynak.url === this.yuklenen) {
       if (yawDegisti) this.yonelimUygula();
       if (gunesDegisti && this.arkaPlan) {
@@ -294,6 +309,7 @@ export class Sahne3B {
     this.kapat();
     this.kaynak = kaynak;
     this.yuklenen = kaynak.url;
+    this.yukleniyor = true;
     new THREE.TextureLoader().load(
       kaynak.url,
       (doku) => {
@@ -316,10 +332,13 @@ export class Sahne3B {
         this.isikGuncelle();
         this.hazir = true;
         this.hata = "";
+        this.yukleniyor = false;
       },
       undefined,
       () => {
-        if (this.yuklenen === kaynak.url) this.hata = `panorama yüklenemedi: ${kaynak.url}`;
+        if (this.yuklenen !== kaynak.url) return;
+        this.hata = `panorama yüklenemedi: ${kaynak.url}`;
+        this.yukleniyor = false;
       },
     );
   }
@@ -436,6 +455,7 @@ export class Sahne3B {
     this.gunesTahmini = null;
     this.gunesElle = false;
     this.hazir = false;
+    this.yukleniyor = false;
   }
 
   /** Bölge değişti: hasar ve parçacıklar sıfırlanır (figürler panelden yönetilir). */
@@ -468,6 +488,8 @@ export class Sahne3B {
    * Bölge değişince arazi yeniden kurulur (profil bölgeye göre).
    */
   araziAyarla(mod: AraziModu, bolge: string, mevsim: string, kok: string) {
+    // Rotor tozu zemin malzemesine göre: kışın kar, ormanda koyu toprak + yaprak, üs/meskûn mahalde beton tozu
+    this.heli.tozTuru = rotorTozuTuru(bolge, mevsim);
     if (!this.renderer) return;
     const kar = mevsim === "kis" ? 1 : mevsim === "sonbahar" ? 0.12 : 0;
     const anahtar = `${mod}|${bolge}`;
@@ -699,7 +721,8 @@ export class Sahne3B {
     const askerMi = !turler.includes("tank");
     const kisalt = (m: number) => (askerMi ? Math.min(ASKER_EN_UZAK, Math.max(ASKER_EN_YAKIN, m)) : m);
     const dolu = (p: THREE.Vector3) => this.figurler.doluMu(p) || this.sutre.doluMu(p);
-    const secim = birlikNoktasiSec(this.kaynak?.plan, s.azimut + k, turler, varsayilan, (az, m) => dolu(yerKonumu(panoramadanSahneAzimutu(az, k), kisalt(m))));
+    // Asker: istenen duvarda (±50°) boş asker, sonra figür noktası; ancak o duvar doluysa başka duvara geçilir
+    const secim = birlikNoktasiSec(this.kaynak?.plan, s.azimut + k, turler, varsayilan, (az, m) => dolu(yerKonumu(panoramadanSahneAzimutu(az, k), kisalt(m))), askerMi ? ASKER_YAKIN_TOLERANS : undefined);
     const azimut = panoramadanSahneAzimutu(secim.azimut, k);
     // Seçilen yer hâlâ bir sütre eşyasının içindeyse (Oda 2 kaya/HESCO hattı) aynı yönde biraz dışarı
     let mesafe = kisalt(secim.mesafe);
@@ -728,18 +751,29 @@ export class Sahne3B {
     this.heli.yukle(url, boy, rotor, renk);
   }
   /**
-   * `yon`: panelden iniş yönü (sahne azimutu, derece). Planda iniş noktası varsa yöne en yakın olana iner
-   * (helikopter açık alana inmeli; ağaçlık/binalı yöne serbest iniş yapılmaz); plan yoksa yön + 38 m.
+   * `yon`: panelden iniş yönü (sahne azimutu, derece; verilmezse son gelen yön kalır). Planda iniş noktası varsa yöne
+   * en yakın olana iner (helikopter açık alana inmeli; ağaçlık/binalı yöne serbest iniş yapılmaz); plan yoksa yön + 38 m.
    */
   helikopterAyarla(d: HelikopterDurumu, yon?: number) {
-    if (yon !== undefined) {
-      const secim = this.noktaSec(yon, "helikopter", 38, 180);
-      this.heli.inisNoktasi(secim.azimut, secim.mesafe);
-    }
+    if (yon !== undefined) this.heliYonu = yon;
+    this.heliInisiniSec();
     this.heli.durumAyarla(d);
+  }
+  /**
+   * İniş noktası: panelin yönüne (heliYonu) en yakın plan iniş noktası, plan yoksa o yön + 38 m (sahne koordinatı).
+   * Sabit bir varsayılana dönmez: sonuç yalnız plan (panorama), yawKaydirma ya da panelin yönü değişince değişir;
+   * Helikopter3B aynı noktayı yok sayar. Havadayken değişirse uçuş modeli rotasını kurar ya da pas geçer.
+   */
+  private heliInisiniSec() {
+    const secim = this.noktaSec(this.heliYonu, "helikopter", 38, 180);
+    this.heli.inisNoktasi(secim.azimut, secim.mesafe);
   }
   get helikopterAzimutu() {
     return this.heli.inisAzimutu;
+  }
+  /** Rotor sesinin konumu (sahne azimutu, yatay mesafe, irtifa; ses.ts helikopter); helikopter yokken null. */
+  get helikopterSesKonumu() {
+    return this.heli.sesKonumu;
   }
 
   catismaSesleriAyarla(s: CatismaSesleri) {
@@ -750,10 +784,15 @@ export class Sahne3B {
     this.catisma.catismaAyarla({ aktif: c.aktif, siddet: c.siddet, azimut, dostAtes: c.dostAtes });
     this.figurler.dusmanAzimutu = c.aktif ? azimut : null;
   }
-  /** Klasik izli mermi ayarı 3B'de: duvar yaw'ı + yön → kaynak azimutu. */
+  /**
+   * Klasik izli mermi ayarı 3B'de: kaynak seçilen duvarın ortası yönünde (duvar yaw'ı; ±10° dağılım, 150–300 m),
+   * `yon` iz doğrultusunu döndürür: 0 mermiler seçilen duvarın uzağından izleyiciye doğru gelir; ±90 mermiler komşu
+   * duvar yönünden gelip seçilen duvarın 10–60 m önünden yandan geçer (+ sağdan sola, − soldan sağa). Bkz.
+   * CatismaSistemi.izliAtis.
+   */
   izliMermiAyarla(a: IzliMermiAyarlari, duvarYawlari: number[]) {
     const yaw = duvarYawlari[a.cikisNoktasi] ?? 0;
-    this.catisma.izliAyarla({ aktif: a.aktif, azimut: yaw + a.yon * 0.5, siklik: a.siklik });
+    this.catisma.izliAyarla({ aktif: a.aktif, azimut: yaw, yon: Math.max(-90, Math.min(90, a.yon)), siklik: a.siklik });
   }
   get izSayisi() {
     return this.catisma.aktifIzSayisi;

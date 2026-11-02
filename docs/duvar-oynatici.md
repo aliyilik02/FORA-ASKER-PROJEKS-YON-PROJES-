@@ -16,17 +16,92 @@ Oda 2, efektler) anında uygular. Unreal Engine gerekmez; Unreal yalnızca içer
 Panelin üst çubuğunda **Oynatıcı bağlı (1)** rozeti görünür; birden fazla oynatıcı (ör. iki oda)
 aynı köprüye bağlanabilir.
 
-Tuşlar: **H** hata ayıklama katmanı · **K** kalibrasyon ızgarası (duvar sınırları, köşe çarpıları) ·
-**F** tam ekran · **M** sessiz · **1 / 2 / 3** patlama / toz / izli mermi testi.
+Tuşlar: **H** hata ayıklama katmanı · **K** kalibrasyon ızgarası (azimut/yükseklik çizgileri, göz hizası ufuk,
+duvar açıları; aşağıda) · **F** tam ekran · **M** sessiz · **T** hoparlör testi · **1 / 2 / 3** patlama / toz /
+izli mermi testi.
 
-Sorgu parametreleri: `?fov=90` duvar başına yatay açı (U duvar 90; düz tek duvara 3 projektör ≈ 40),
-`?doldur=1` pencereyi 48:9 oranını korumadan doldur (kiosk), `?hud=1` HUD açık başlasın.
+Sorgu parametreleri: `?oda=` ölçülmüş oda — U duvar ya da 3 projektörlü düz duvar (`?oda=duz,...`), metre;
+aşağıda "Duvar geometrisi ve kalibrasyon" —, `?fov=90` ölçü yokken duvar başına yatay açı (U duvar 90; düz tek
+duvar için `?fov=40` değil `?oda=duz,...`: döndürülmüş kameralar düz duvarda yan görüntüleri bozar), `?doldur=1`
+pencereyi 48:9 oranını korumadan doldur (kiosk), `?hud=1` HUD açık başlasın.
+
+Ses: `?ses=stereo|dortlu|5.1|7.1|otomatik` hoparlör düzeni (varsayılan otomatik: ses cihazının kanal sayısı),
+`?hoparlor=` kanal sırasıyla hoparlör azimutları, **T** hoparlör testi (ayrıntı: aşağıda "Çok kanallı ses"). İkisi de
+`?kalite=` gibi yerel kayıtta kalır; `otomatik` kaydı siler.
+
+## Duvar geometrisi ve kalibrasyon
+
+Gerçek oda ideal değildir: ön duvar genişliği, yan duvar boyu, görüntünün yüksekliği ve alt kenarı, izleyicinin
+konumu ve göz yüksekliği her duvarın izleyiciden görünen açısını belirler. Oynatıcı her duvarı izleyicinin
+gözünden **genelleştirilmiş perspektif izdüşümüyle** (Kooima; UE nDisplay'in duvar ekranlarıyla aynı fikir) çizer:
+duvar düzleminin eksenleri + simetrik olmak zorunda olmayan (off-axis) kesik piramit. Ufuk göz hizasındadır; U odada
+yan duvarlar, 3 projektörlü düz duvarda üçte birler aynı matematikle doğru çizilir. 3B sahne, 360° video panorama,
+2B klipler, efektler ve K ızgarası aynı izdüşümü kullanır (`src/projeksiyon.ts`, `sahne3b/duvarKamerasi.ts`).
+
+**Ölçü alma (saha keşfi, metre):**
+
+| Alan | `?oda=` anahtarı | Ölçü |
+|---|---|---|
+| Tip | `u` / `duz` | U: sol + ön + sağ duvar (yanlar öne dik). Düz: tek duvar, 3 projektör eşit üçte birlere |
+| Ön / düz duvar genişliği | `on` | Yansıyan görüntünün genişliği (ön duvar köşeden köşeye) |
+| Yan duvar boyu | `yan` | Yalnız U: ön köşeden izleyiciye doğru, yan duvardaki görüntünün boyu |
+| Görüntü yüksekliği | `yuk` | Yansıyan görüntünün dikey boyu (tüm duvarlarda aynı varsayılır) |
+| Alt kenar | `alt` | Görüntünün alt kenarının yerden yüksekliği (varsayılan 0) |
+| İzleyici uzaklığı | `z` | Eğitim alanının ortası (izleyici) ile ön duvar arası |
+| Yanal kayma | `x` | İzleyicinin ön duvarın ortasından sağa (+) / sola (−) kayması (varsayılan 0) |
+| Göz yüksekliği | `goz` | Ayakta ≈ 1,7 m (varsayılan), diz çökmüş ≈ 1,0 m |
+
+Örnekler: `?oda=u,on=6,yan=4,yuk=3,alt=0.3,x=0,z=3,goz=1.7` (U oda; yan duvarlar −45° … −108,4° ve 45° … 108,4°,
+ön duvar ±45°) · `?oda=duz,on=9,yuk=2.5,alt=0.3,z=4,goz=1.7` (düz duvar; üç görüntü 27,8° / 41,1° / 27,8°). Ondalık
+nokta kullanılır. Geçersiz değer (eksik zorunlu alan `on`, `yuk`, `z` — U'da `yan` —, bilinmeyen anahtar, izleyici yan
+duvarın dışında vb.) yok sayılır, HUD ve K ızgarasında uyarı görünür, ölçüsüz yerleşim kullanılır.
+
+**Öncelik:** adres çubuğu > yerel kayıt (`localStorage` "oda") > ölçüsüz varsayılan. Geçerli `?oda=` kaydedilir,
+sonraki açılışlarda adres vermeden de kullanılır; `?oda=sifirla` kaydı siler. Kiosk oynatıcı
+(`oynatici-baslat.bat`) ayrı tarayıcı profili kullandığından kendi kaydını tutar: bir kez `&oda=...` ile açmak
+(ör. bat dosyasındaki adresin sonuna geçici olarak eklemek) yeterlidir. Panelde **Sistem › Duvar geometrisi**
+formu ölçüleri alır, duvar açılarını ve kuş bakışı planı gösterir, değeri "Oynatıcı" düğmesinin adresine yazar
+("Varsayılan" seçimi `oda=sifirla` gönderir).
+
+**Ölçüsüz yerleşim** (`?oda=` yok): 3B görüntü öncekiyle birebir aynı; duvar başına `?fov=` derece (varsayılan
+90), yaw (i−1)·fov kadar döndürülmüş simetrik kameralar, dikey açı duvarın piksel oranından, ufuk ortada. `?oda=`
+verilince `?fov=` yok sayılır. 2B katmanlar ise ölçüsüzde de perspektif eşlemeye geçti (3B ile aynı yer; önceden
+azimuta doğrusaldı): 90° duvarın ortasında derece başına piksel ≈ %21 az, kenarında ≈ %57 fazla — 20°'lik klip
+ortada ≈ %21 küçük, kenara yakın daha büyük görünür; manifestteki `genislikDerece` değerleri gerekirse yeniden
+ayarlanır. 360° video panoramada (2B WebGL yolu) 2B klip ve efektlerin ufku bölgenin yer tutucu ufku (H·0,50–0,58)
+yerine panoramanın gerçek ufkudur (göz hizası satırı, ölçüsüzde H/2 + `yukseklikKaydirma`).
+
+**Köşede 2B katman:** köşeye taşan klip iki duvarda kendi izdüşümüyle kırpılarak çizilir (kaynak köşe azimutunda
+bölünür). Kenarı aşan yer tutucu sprite'lar (bulut, güneş/ay, ağaç/kaya) ve figür gölgesi kenarın ötesinde komşu
+duvarın izdüşümünü kullanır: iki duvarda aynı yere çizilir, her duvar kendi parçasını gösterir (köşede boşluk ya da
+sıçrama yok). Gölge klibin parçalarından önce çizilir.
+
+**Sis (3B):** three.js sisi kamera derinliğiyle hesaplar; ölçülmüş U odada izleyici ön ve yan duvara eşit uzaklıkta
+değilse aynı nokta iki duvar kamerasında farklı derinlikte kalır ve köşede sis tonu kırılırdı. Ölçülmüş odada
+(`?oda=`) sis gerçek uzaklıkla hesaplanır (`duvarKamerasi.ts` `sisUzakligiAyarla`); ölçüsüzde görüntü değişmez.
+
+**K ızgarası ile doğrulama:** oynatıcıda **K**. Her duvarda 10°'de bir azimut çizgisi (30°'de bir etiketli), sarı
+ufuk çizgisi (göz hizası), −20/−10/+10/+20° yükseklik eğrileri (düz duvarda kenara doğru eğilir; izleyici
+noktasından bakınca düz görünür), duvar adları ve açı aralıkları, altta geometri özeti. Kontrol:
+
+- Sarı ufuk çizgisi her duvarda **yerden göz yüksekliğinde** olmalı (metreyle ölçülür; ör. 1,70 m).
+- 0° çizgisi izleyicinin tam karşısında; ön duvarda θ çizgisi bu noktadan z·tan θ uzakta (z = 3 m, 30° → 1,73 m).
+- İzleyici noktasında göz hizasında durup bakınca çizgiler düz görünmeli, köşelerde kırılmadan (dirsek yapmadan)
+  devam etmeli; 10°'lik aralıklar köşenin iki yanında eşit görünmeli.
+- Göz görüntünün altında ya da üstündeyse (ör. alt kenar 2 m, göz 0,5 m) sarı çizgi tuvale düşmez; duvar adlarının
+  yanında "ufuk (göz hizası) görüntünün altında/üstünde" notu çıkar. Adlar ve açılar her durumda görünür kalır.
+
+Aralık köşede sıçrıyorsa duvar genişliği / yan duvar boyu / izleyici uzaklığı; ufuk göz hizasında değilse ya da
+yükseklik eğrileri köşede dirsek yapıyorsa görüntü yüksekliği, alt kenar ya da göz yüksekliği yanlış girilmiştir.
 
 ## Nasıl çiziyor
 
-Dünya, izleyicinin etrafında silindirik bir panoramadır; her nesnenin bir **azimutu** vardır
-(0° = orta duvarın ortası, sola eksi, sağa artı). Her duvar bir yaw + fov dilimi gösterir; köşelerde
-görüntü kesintisiz devam eder (`src/projeksiyon.ts`, testleri `projeksiyon.test.ts`).
+Dünya, izleyicinin etrafında silindirik bir panoramadır; her nesnenin bir **azimutu** ve ufka göre **yüksekliği**
+vardır (0° = orta duvarın ortası, sola eksi, sağa artı). Her duvar, izleyicinin gözünden görülen bir dikdörtgendir
+(yukarıdaki genelleştirilmiş perspektif); köşelerde görüntü kesintisiz devam eder (`src/projeksiyon.ts`, testleri
+`projeksiyon.test.ts`). 2B klipler ve efektler de bu perspektifle yerleşir (duvar kenarına doğru derece başına
+piksel artar; 3B katmanla birebir aynı yer). Köşeye taşan klip iki duvarda da kendi izdüşümüyle kırpılarak çizilir;
+kenarı aşan sprite köşe ötesinde komşu duvarın izdüşümünü kullanır (yukarıda "Köşede 2B katman").
 
 İki tuval üst üste: altta **3B sahne tuvali** (`#tuval3b`, Three.js), üstte saydam **2B tuval**
 (klipler, sis, yağış, HUD). 3B katman yalnızca resim panoramalarda devreye girer; video panorama ve
@@ -84,15 +159,71 @@ katmanda:
   komutları kuyruğa alınır, sahne hazır olunca uygulanır — oynatıcı yeniden açılınca köprünün yolladığı
   aktif figürler kaybolmaz.
 - **Helikopter** (`helikopter3b.ts`): `klipler.helikopter` modeli; yaklaşma → iniş → yerde → kalkış
-  (iniş noktası azimut 12°, 38 m), modelin kendi animasyonu + `rotor` düğümleri döner, yere yakınken
-  rotor tozu. Model yoksa 2B siluet.
+  (iniş noktası azimut 12°, 38 m; `inisNoktasi(azimut, mesafe)`), modelin kendi animasyonu + `rotor` düğümleri
+  döner. Model yoksa 2B siluet. Hareket saf uçuş modelinden (`helikopterUcusu.ts`, testli; gövde pivotu ağırlık
+  merkezinde, burun modelin −z'si): "yaklaşıyor" 420 m / 70 m'den karşı yandan, yanal sapması iniş noktasına
+  yaklaştıkça sönen kavisli rotayla gelir (virajda 3–5° yatış), sabit yavaşlayıp ~17 sn'de iniş kapısında
+  (~60 m kala, ~24 m, ~11 m/sn); "iniyor" gelmezse noktanın ~17 m önünde 22 m'de askıda bekler. "İniyor": son
+  ~25 m'de burun yukarı (5–10°) "flare", noktanın üstünde 2,5 m askı, askıda burun kalkış tarafına döner (yerde
+  yandan görünür), dikey iniş, kızakta küçük sekme (~10 cm); "iniyor"dan ~8–16 sn sonra yerde. Noktayı geçerse
+  yavaşça geri döner; dikey iniş yalnız noktanın üstünde (±4 m) başlar. Yerde 25 sn sonra rotor yavaşlar.
+  "Kalkıyor": rotor devir alır, ~5 m askıya dikey yükselir, burun aşağı (~12°) hızlanıp tırmanırken iniş noktasının
+  kendi yanında arkaya viraj alır (son burun yönü yan · 165°: sağdaki noktadan sağ arkaya, soldakinden sol arkaya) ve
+  karşı yan duvarı kesmeden izleyicinin ~30–40 m yanından görünmez arka bölgeye (U duvarın ±135° dışı) geçer: yan
+  noktalarda (−117°, 100°, −80°) ~7–12 sn'de, öndeki noktalarda (0°/50 m, 12°/38 m) ~13–16 sn'de görüş dışında
+  (yerde rotor yavaşladıysa devir alması 1–2 sn ekler; arkadaki 150° zaten görünmez bölgede; manifestteki 17 noktanın
+  hiçbirinde karşı duvara girmez). "Yok" geldiğinde hâlâ görünüyorsa birden kaybolmaz: o anki hızıyla
+  süzülürken 1,5 sn'de söner (opak malzemelerde `alphaHash`, sönmenin yarısında gölge kalkar; rotor sesi de söner).
+  **Havadayken iniş noktası değişirse** (uçuş sırasında saat/mevsim değişip panorama ve planı değişti ya da paneldeki
+  yön değişti): helikopter yeni noktaya geçerli bir yaklaşmadaysa (noktayı geçmemiş, yanal sapması küçük, noktaya
+  doğru uçuyor; noktaya yakınken birkaç derecelik kayma da) rota buradan kurulur, askıdaysa yakındaki (≤ 40 m) yeni
+  noktaya alçakta ≤ 5 m/sn yanal hızla yer değiştirir; değilse **pas geçer**: 35 m'ye tırmanır, yeni eksende
+  85–150 m dışarıdaki giriş noktasına gider, orada askıda burnunu noktaya çevirip yeniden yaklaşır (noktadan uzakta
+  alçalmaz, yeni noktaya iner; yavaşken burun önce döner, yan yan kaymaz; değişimden ~30–60 sn, çoğunlukla 35–50 sn
+  sonra yerde). Belirdiği karede (aynı durum mesajında panorama da değişti) değişirse yeni eksende baştan belirir. Yeni
+  resim panorama yüklenirken sahne kısa süre hazır değildir; helikopter bu arada da 3B'de uçar (`panoramaYukleniyor`,
+  main.ts `helikopter3B`): 2B siluete geçip yüklenince baştan başlamaz, rotor sesi kesilmez. Uçuş yüksekliği iniş
+  noktası zeminine göre olduğundan nokta ya da arazi (görüş koridoru, bölge) değişince havadaki helikopterin dünya
+  yüksekliği korunur. Sahne iniş noktasını yalnız plan, `yawKaydirma` ya da panelin yönü değişince yeniden seçer
+  (panelin yönüne en yakın plan noktası, yoksa o yön + 38 m); her durum mesajında sabit 12°'ye dönmez. Arazide
+  (hibrit/tam kip) uçarken 80 m ilerisine bakar, önündeki en yüksek zeminden en az 8 m (inişte 6 m) yukarıda kalır:
+  dağlık profildeki 40 m'lik sırta dibine gelmeden yükselir, aştıktan sonra iniş noktasına alçalır.
+  **Rotor tozu** (`parcaciklar.rotorTozu`, profiller `rotorTozu.ts`, testli): diskin altından (yarıçap modelden,
+  ~5–6,5 m) zemine yapışık 8–15 m/sn radyal akış, yavaşladıkça kıvrılıp 1–2 rotor çapında yükselen halka; halkanın
+  üstü diske geri emilir; hızlı kırıntı (taş, topak, yaprak). Şiddet kızaklar ~20 m'nin altına inince üstel artar,
+  rotor devriyle ölçeklenir. Zemin türü `araziAyarla`daki bölge + mevsimden (`Helikopter3B.tozTuru`): **kış** kar
+  savrulması (beyaz-mavi, ince, uzun asılı, güneşte parıltı), **kırsal/dağlık** kuru toprak, **ormanlık** koyu toprak
+  + süzülen yaprak/çimen, **üs/meskûn mahal** açık gri beton tozu (az hacim). Yayım saniye başına sınırlı (tam
+  şiddette ~200, karda ~350 canlı parçacık), parçacık nesneleri havuzdan; yeni çizim çağrısı yok.
+- **Çatışma ve izli mermi** (`catisma.ts`, yardımcılar `izliYol.ts` testli): izler tek instanced kutu (katkı karışımı;
+  köşe rengiyle baş beyazımsı, kuyruk sönük kızıl). Uzaktaki iz piksel altına inip titremesin diye kalınlık
+  mesafeyle büyür (1080p duvarda en az ~1,5 px; piksel açısı çizilen duvar kameralarının izdüşümünden ölçülür,
+  ölçülmüş odada duvarların ve yatay/dikeyin en büyüğü: duvar uzaklığı ve piksel en/boyu farklı olabilir), uzunluk da
+  biraz uzar. Panelin **izli mermi** akışı: kaynak seçilen duvarın ortası yönünde (±10°) 150–300 m'de, yerden
+  0,8–4 m; **yön** iz doğrultusunu döndürür: 0° mermiler seçilen duvarın uzağından izleyiciye doğru gelir (hedef
+  payları: figür varsa %50 figür yakını; yakın zemin 3–24 m %20, çarpar ve seker; %15 başın üstünden/yanından
+  arkaya; kalanı 28–60 m önde kısa düşer), ±90° mermiler komşu duvar yönünden gelip seçilen duvarın 10–60 m
+  önünden yandan geçer ve görüş dışına uçar (+ sağdan sola, − soldan sağa; yan duvarlarda da duvara göre). Doğru
+  izleyicinin önündeki bir eksen noktası etrafında döndüğünden kaynak da yana, ±90°'de komşu duvarın yönüne kayar
+  (yandan ateş böyle görünür; yan duvarda bir yönde komşu duvar yoktur: sağ duvarda +, sol duvarda − yönde kaynak
+  izleyicinin arkasında, ~165°'de kalır, mermiler arkadan gelir); ara açılar çapraz. Hedef yüksekliği döndürülmüş
+  noktanın zemininden (ofsetler korunur). Kaynak sırt/tepe arkasında kalırsa sınırlı yükselir
+  (`izliKaynakYuksekligi`: yerel zeminden en çok 12 m ve izleyiciden bakınca o yöndeki arazi ufkunun en çok 1,5°
+  üstü; ufuk `AraziUfku`: 2°'lik yön kovası başına 20–320 m zemin örneği, 2 sn önbellek, kare başına nesne yok).
+  Doğru yine kapalıysa mermi yine atılır ve engellendiği yerde yamaca çarpar: gökten (50–80 m'den) gelmez (sonucu
+  bkz. bilinen sınırlar: kırsal/dağlık sırt). Aynı sınır çatışma ateşinde de (`dusmanAtis`).
+  Başın ~6 m yakınından geçen düşman mermisi bir kez ses hızı üstü "çat" (çarpma sesi geri çağrısı, en yakın geçiş
+  noktasının yönünden; yere çarpacak mermi çatlamaz). İzli akışın çarpma ve "çat" sesleri jeton kovasıyla saniyede
+  en çok ~1,5 (toz, kıvılcım, sekme her çarpmada; çatışma ateşi sınırsız).
 - **Yerleşim planı** (`yerlesim.ts`, testli): panorama kaydında `noktalar` (azimut, mesafe, tür:
   patlama/figur/helikopter/toz) ve `yasak` açı aralıkları (ağaç kümesi, bina). Panelden gelen yön en
   yakın uygun noktaya yapışır (patlama 55°, figür 35° tolerans); nokta yoksa yön yasak aralığın
   dışına itilir. 2B plakalar da aynı plana uyar; helikopter iniş noktası `helikopter` türünden gelir.
   Her yeni panorama için plan yazılmalı (ağaç/bina azimutları: equirect x → (x/genişlik − 0,5)·360).
-- Üç duvar, üç perspektif kamera (yaw -90/0/+90, dikey fov duvar oranından) aynı tuvale
-  viewport/scissor ile çizilir; `yawKaydirma` arka plan + ortam dönüşü, `yukseklikKaydirma` kamera eğimi.
+- Üç duvar, üç duvar kamerası (`duvarKamerasi.ts`: duvar düzleminin eksenleri + simetrik olmayan kesik piramit,
+  `makePerspective(sol, sağ, üst, alt)`; ölçüsüzde yaw -90/0/+90, dikey açı duvar oranından) aynı tuvale
+  viewport/scissor ile çizilir; `yawKaydirma` arka plan + ortam dönüşü, `yukseklikKaydirma` duvarın sağ ekseni
+  çevresinde ek eğim (ufuk k·H/2 kayar).
 - HUD'da "3B:" satırı (güneş tahmini, figür/krater/parçacık sayısı). Konsoldan `window.duvar.sahne3b`.
 
 Katmanlar (arkadan öne):
@@ -126,8 +257,66 @@ Ses (`src/ses.ts`, Web Audio): patlama (yakın/uzak, mesafeye göre zayıflatma 
 Türkçe bağırma/çağırma (manifestte kayıt yoksa tarayıcının Türkçe konuşma sentezi), rotor döngüsü
 (`helikopter_rotor` kaydı varsa o, yoksa sentez), rüzgâr/yağış sentezi + **ortam döngüsü kaydı**
 (manifest `ortam` sözlüğü: bölge adı, `gece`, `kis`, `yagmur`; öncelik yağmur > gece > kış > bölge,
-çapraz geçişli). Konum: azimut → stereo pan; sahada 4+ kanal için ChannelMerger'a geçilir.
-Depodaki kayıtlar Mixkit Free ve OpenGameArt CC0 (manifest `sesler._kaynak`).
+çapraz geçişli). Konum: her ses sahne azimutuyla gelir; stereo düzende pan = sin(azimut), 4+ kanalda
+çok kanallı yerleşim (aşağıda). Depodaki kayıtlar Mixkit Free ve OpenGameArt CC0 (manifest `sesler._kaynak`).
+
+### Çok kanallı ses (26 Ekim 2026)
+
+Sahada U odada 4 hoparlör (ön sol/sağ, arka sol/sağ) + subwoofer beklenir, büyük olasılıkla 5.1 / 7.1 AV alıcı
+üzerinden (`docs/donanim-onerileri.md` §6). Oynatıcı bunun için Web Audio çıkışını çok kanallı açar
+(`src/ses.ts`; hesaplar `src/sesYerlesimi.ts`, testleri `sesYerlesimi.test.ts`):
+
+| Düzen (`?ses=`) | Kanal sırası (Windows/Chrome ayrık sıra) | Varsayılan azimutlar (°) |
+|---|---|---|
+| `stereo` | Sol, Sağ | – (StereoPanner, pan = sin(azimut); önceki davranış aynen) |
+| `dortlu` | Ön sol, Ön sağ, Arka sol, Arka sağ | -45, 45, -135, 135 |
+| `5.1` | Ön sol, Ön sağ, Orta, Bas (LFE), Arka sol, Arka sağ | -30, 30, 0, lfe, -110, 110 |
+| `7.1` | Ön sol, Ön sağ, Orta, Bas (LFE), Arka sol, Arka sağ, Yan sol, Yan sağ | -30, 30, 0, lfe, -150, 150, -90, 90 |
+
+- **Seçim:** `?ses=` > yerel kayıt > otomatik. Otomatik, ses cihazının kanal sayısına bakar
+  (`AudioDestinationNode.maxChannelCount`: 8 → 7.1, 6 → 5.1, 4 → 4 kanal, değilse stereo; dizüstünde stereo kalır).
+  İstenen düzen cihaza sığmazsa otomatiğe düşer ve köprü günlüğüne uyarı yazar ("5.1 istendi ama ses cihazı 2 kanal
+  veriyor …"). Panel: Sistem → Ses düzeni (oynatıcı adresine `?ses=` ekler; "Otomatik" `?ses=otomatik` gönderir,
+  oynatıcı her açılışta kayıtlı düzeni siler). Panelde seçim yokken oynatıcının kendi kaydındaki düzen gösterilir
+  (aynı kökende, köprü port 4000; oynatıcı elle `?ses=` ile açılmış olabilir).
+- **`?hoparlor=`:** sahadaki gerçek açılar, kanal sırasıyla, LFE için `lfe` (ör. `?hoparlor=-40,40,0,lfe,-120,120`;
+  0 = orta duvar, sağa artı, ±180 eğitim alanının arkası). Yalnız 4, 6 ya da 8 kanal (stereo açı kullanmaz); kanal
+  sayısı düzene uymalı, `?ses=` yoksa düzeni kanal sayısı belirler (4 → 4 kanal, 6 → 5.1, 8 → 7.1). Geçersiz değer
+  kayda yazılmaz, uyarı verir; açılar kullanılamazsa (stereo düzen, kanal sayısı tutmuyor) köprü günlüğüne
+  "?hoparlor= kullanılmadı" yazılır, varsayılan açılar geçerli olur. `?hoparlor=otomatik` kaydı siler.
+  5.1 / 7.1'de `lfe` 4. sırada kalmalı: Windows'un 5.1 / 7.1 yapılandırmasında 4. kanal (indeks 3) bas kanalıdır,
+  AV alıcı onu subwoofer'a verir ve ~120 Hz'de keser; oraya açı yazılırsa o yöndeki sesler yalnız bas olarak duyulur
+  (köprü günlüğüne "?hoparlor= 4. kanalda açı var" uyarısı yazılır). LFE'siz 6/8 tam hoparlör yalnız LFE işlemesi
+  olmayan ayrık çıkışlı çok kanallı ses kartında anlamlıdır.
+- **Yerleşim:** kaynak, açısal olarak kendisini çevreleyen iki komşu hoparlör arasında sabit güçlü (cos/sin) kaydırılır;
+  ±180 üzerinden sarma dâhil, kareler toplamı 1 (her yönde aynı ses gücü). Stereodan farkı: 30° ile 150° artık
+  ayrı (önde / arkada). Stereo kayıtlar tek noktaya indirilir (+3 dB telafi).
+- **Uzak sesler** (uzak patlama, uzak atış, uzak mermi): 600 Hz alçak geçiren + %35 yayılım (tüm hoparlörlere kısmen
+  dağılır, yön yine sezilir).
+- **LFE:** patlama, uzak patlama ve tank topu 120 Hz alçak geçirenden geçen kopyayı bas kanalına da gönderir
+  (yalnız LFE'li düzende: 5.1 / 7.1 ya da `?hoparlor=` içinde `lfe`).
+- **Ortam** (rüzgâr sentezi, manifest ortam döngüsü): dağınık; stereo döngünün sol kanalı soldaki, sağ kanalı sağdaki
+  hoparlörlere gider, ön/arka ortadaki hoparlör ikisini yarım kazançla alır (giriş gücü korunur). Rüzgâr çok kanalda
+  iki bağımsız gürültü kanalından üretilir (sol ve sağ grup ilintisiz; tek gürültü her hoparlörde aynı olur, odanın
+  ortasında hayalet kaynak gibi duyulurdu); stereoda eski tek kanallı gürültü.
+- **Çatışma ve izli mermi sesleri** (`sahne3b/catisma.ts`): atış atıcının / mermi kaynağının, çarpma çarpma
+  noktasının, ses hızı üstü "çat" en yakın geçiş noktasının azimutundan. Panelin izli mermi akışında çarpma ve "çat"
+  saniyede en çok ~1,5 (jeton kovası; yoğun akışta ses bastırmasın, görüntü aynı). Geri çağrılar (`CatismaSesleri`)
+  markalı `AzimutDerece` (sahne azimutu, derece) alır: değer `sesAzimutu(konum)` ya da `azimutDerece(derece)` ile
+  üretilir, düz sayı ya da `Math.sin(...)` gibi pan değeri derleme hatası verir (çalışma anı denetimi
+  `catismaSesleri.test.ts`).
+- **Helikopter:** 3B uçuş modelinin konumundan (`Helikopter3B.sesKonumu`: sahne azimutu, izleyiciden yatay mesafe,
+  yerel zeminden irtifa), kalıcı bir düğüm zinciriyle (kare başına düğüm üretmeden, en çok 20 Hz güncelleme): 40 m'ye
+  kadar tam seviye, ötesinde 1/r (taban %12), uzakta alçak geçiren (boğuk), yaklaşırken / uzaklaşırken ±%5 Doppler.
+  Kalkıştan sonra görüş sınırı (1500 m) aşılırsa son konumda taban seviyede kalır, "yok" gelince söner. 2B siluette
+  (model yok) eski yönsüz ses.
+- **Konuşma sentezi** (manifestte bağırma/çağırma kaydı yoksa) Web Audio'dan geçmez, konumlanamaz; kayıtlar konumludur.
+- **Hoparlör testi (T):** kanal sırasıyla her hoparlörde ~0,7 sn pembe gürültü (LFE'de 30–120 Hz bant), ekranda
+  "Hoparlör testi: Ön sol · kanal 1 / 6"; test sürerken T durdurur. Ana kazançtan geçer, sessiz kipte (M) duyulmaz.
+- HUD (H) ilk satırı: "ses açık: 5.1 (6 kanal)"; istenen düzen cihazda yoksa "istenen 7.1, cihaz 2 kanal". "T hoparlör
+  testi" tuş ipucu satırında (H hud · K kalibrasyon · … ile birlikte).
+- Windows'ta hoparlör yapılandırması 5.1 / 7.1 seçilmezse Chrome 2 kanal görür; kurulum ve test adımları
+  `docs/donanim-onerileri.md` §6.
 
 ## İçerik ekleme
 
@@ -143,8 +332,9 @@ dolunca sentez yerine kayıtlar çalar.
 
 Klip üretim kuralı (U duvar): 3 kamera, her biri 90° yatay görüş, yaw -90/0/+90, aynı konum ve
 yükseklik (1,6–1,7 m); 3 × 1920×1080 kareler yan yana birleştirilir (5760×1080); 60–90 sn, ilk ve
-son kare aynı (kusursuz döngü). Duvar ölçüleri ve açıları saha keşfinde netleşince `?fov=` ve
-kamera açıları buna göre güncellenir.
+son kare aynı (kusursuz döngü). Duvar ölçüleri ve açıları saha keşfinde netleşince oynatıcıya `?oda=`
+ile girilir (360° panorama ve 3B içerik yeniden üretilmez); düz 5760×1080 video döngüleri ise ölçülmüş kamera
+açılarıyla (duvar başına açı aralıkları K ızgarasının altında) yeniden alınmalıdır.
 
 ### Alfa klipler (figür ve efekt plakaları)
 
@@ -196,11 +386,24 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   işaretlidir (3B açıkken kullanılmaz).
 - 3B asker modelleri stilize (three.js Soldier, Poly Pizza); kabul için Mixamo "Swat" karakteri +
   Rifle animasyonları (ücretsiz Adobe hesabı, Blender → GLB) ya da yeşil perde çekimi önerilir.
-- Helikopter modeli düşük poligonlu (OGA CC-BY); 3B görsel testi henüz yapılmadı.
+- Helikopter modeli düşük poligonlu (OGA CC-BY); uçuş modeli ve rotor tozu birim testli, tarayıcıda gözle
+  doğrulanmadı (27 Ekim: yaklaşma kavisi, flare, kalkış virajı, toz renkleri ve izli mermi kalınlığı duvarda
+  bakılmalı; 2 Kasım: pas geçme, yan/arka noktalardan kalkış çıkışı, "yok"ta sönme, panorama yüklenirken uçuşun
+  sürmesi).
+- Kırsal ve dağlık hibritte önde ve sol önde ~115–205 m'de sırt var (`ARAZI_PROFILLERI.sirt`: kırsal 18 m, dağlık
+  40 m; dağlıkta izleyicinin 20–40 m çevresinde 9–13 m'lik tepeler de). Bu yönlerde uzak izli mermi ve çatışma
+  kaynakları sırtın arkasında kalır; kaynak en çok yerden 12 m yükseldiğinden (bilerek gökyüzüne kaldırılmıyor)
+  mermilerin çoğu sırtın arka yamacına çarpar ve duvarda seyrek görünür. Ölçüm (2 Kasım, arazi analitik yüksekliği,
+  koridorsuz): izleyicinin 60 m yakınına ulaşan izli mermi kırsalda orta duvar yön 0 %17, sol %48, sağ %82; dağlıkta
+  orta %8, sol %50, sağ %62; çatışma ateşi kırsal 0° %23, −60° %7, dağlık 0° %12, −60° %0 (sınırsız yükseltmeyle
+  kırsal orta %88; dal öncesi kodda kaynak düz zemin yüksekliğindeydi, kırsal orta %4). Ormanlık ve üs bölgesinde
+  %85–97. Duvarda bakılmalı; gerekirse kaynak engelleyen sırtın üstüne (sırt hattına) alınabilir ya da sınır bölgeye
+  göre gevşetilebilir.
 - Performans (23 Ekim, Iris Xe, 1277×239): boş sahne 60 fps; 4 figür + çatışma + 16 krater ≈ 38 fps (kalite yüksek).
   Darboğazlar figür iskeletleri ve krater dumanıydı (düzeltildi). 5760×1080 için hedef makine (RTX 4060+)
   gerekir; dizüstünde `?kalite=dusuk`. Parçacık üst sınırı 2100×kalite çarpanı.
 - Yaralı/diz çökme Quaternius rigine göre ayarlandı; Poly Pizza/Mixamo modellerde düşme klibi yok, klipsiz
   model yaralı olunca gövde yere yatırılır (kaba). Yere yatıp ateş (prone) duruşu yok.
-- Ses çıkışı stereo; 4 kanal yerleşimi saha donanımına göre eklenecek.
+- Çok kanallı ses (4 kanal / 5.1 / 7.1, LFE) yazılımda hazır ve birim testli; gerçek hoparlörlerle kulak testi yapılmadı
+  (donanım yok). Sahada hoparlör açıları `?hoparlor=` ile girilmeli, T testiyle kanal eşlemesi doğrulanmalı.
 - Tarayıcı: Chrome/Edge (kiosk bayrakları). 5760×1080'de 60 fps için RTX 4060 sınıfı yeterli.

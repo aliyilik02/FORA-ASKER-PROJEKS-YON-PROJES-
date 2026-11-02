@@ -25,8 +25,9 @@ yaz/kış, gece/gündüz, hava durumu, patlama/gürültü/bağırma/çağırma/i
    klipleri kullanılır. Hat: `docs/fotogercekci-icerik-hatti.md`.
 3. **Ortak içerik biçimi:** 360° equirectangular (resim 12K×6K, video 8K×4K); alfa klipler VP9
    alpha WebM (`-pix_fmt yuva420p`). Manifest: `apps/duvar-oynatici/public/icerik/manifest.json`.
-4. **U duvar, 3 projektör, duvar başına 90°** varsayılan; gerçek ölçüler saha keşfinden sonra
-   `?fov=` ile ayarlanır. İlk bölge: **kırsal açık arazi**.
+4. **U duvar, 3 projektör, duvar başına 90°** varsayılan (ölçü girilmezse); gerçek ölçüler saha keşfinden sonra
+   `?oda=` ile girilir (panel Sistem › Duvar geometrisi; duvar başına genelleştirilmiş perspektif, ufuk göz
+   hizasında, K ızgarasıyla doğrulanır). `?fov=` yalnız ölçüsüz açı ayarıdır. İlk bölge: **kırsal açık arazi**.
 5. Arayüz ve kod adlandırması **Türkçe** (dosya/sınıf/fonksiyon adları Türkçe, ASCII; örn.
    `FigurYoneticisi`, `klipler.ts`). İngilizce teknik terim gerekirse yorumla açıkla.
 
@@ -74,12 +75,27 @@ demo.bat yeniden            # Windows: yeniden derleyip başlat
 ## Oynatıcı kısa özet
 
 Silindirik panorama; her nesnenin azimutu var (0 = orta duvar ortası, sola eksi, sağa artı).
+Her duvar izleyicinin gözünden genelleştirilmiş perspektifle (Kooima, `projeksiyon.ts` + `sahne3b/duvarKamerasi.ts`)
+çizilir; 3B, video panorama, 2B klipler/efektler ve K ızgarası aynı izdüşümü kullanır. Sorgu
+`?oda=u,on=6,yan=4,yuk=3,alt=0.3,x=0,z=3,goz=1.7` ya da `?oda=duz,on=9,yuk=2.5,alt=0.3,z=4,goz=1.7` (metre; yerel
+kayıtta kalır, `?oda=sifirla` siler; panel Sistem › Duvar geometrisi); yoksa duvar başına `?fov=` (90): 3B görüntü
+eskisiyle aynı, 2B klip/efekt/yer tutucu perspektif eşlemeye geçti (azimuta doğrusal değil; manifest `genislikDerece`
+gerekirse yeniden ayarlanır). Ölçülmüş odada 3B sis gerçek uzaklıkla (köşede kırılmaz), düz duvar için `?fov=40` değil `?oda=duz`.
 Arka plan önceliği: 360° panorama (manifest `panorama`) > düz 5760×1080 döngü (`dongu`) >
 parametrik yer tutucu. Üstüne: Oda 2 ön planları, **figür klipleri** (`klipler`, kategori
 `figur`), sis, helikopter, hava, **efekt plakaları** (`klipler`, kategori `efekt`; adı
 `patlama_*`, `toz_*`, `uzak_patlama_*` olanlar panel efektlerine otomatik bağlanır), izli mermi,
-flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test. Sorgu: `?fov=`, `?panorama=`,
-`?yaw=`, `?hud=1`, `?doldur=1`, `?kalite=dusuk|orta|yuksek` (dizüstü: dusuk; yerel kayıtta kalır). Ayrıntı: `docs/duvar-oynatici.md`.
+flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test, T hoparlör testi. Sorgu: `?oda=`, `?fov=`, `?panorama=`,
+`?yaw=`, `?hud=1`, `?doldur=1`, `?kalite=dusuk|orta|yuksek` (dizüstü: dusuk; yerel kayıtta kalır), `?ses=`, `?hoparlor=`
+(Ses, aşağıda). Ayrıntı: `docs/duvar-oynatici.md`.
+
+Ses (`ses.ts` + saf hesap `sesYerlesimi.ts`): her ses sahne azimutuyla çalınır; stereoda eski StereoPanner yolu (pan =
+sin azimut), 4 kanal / 5.1 / 7.1'de ChannelMerger (iki komşu hoparlöre sabit güçlü kaydırma, ön/arka ayrılır, uzak
+sesler yayılır, patlama/top basları LFE'ye, ortam dağınık, 3B helikopter rotoru konumlu). Sorgu
+`?ses=stereo|dortlu|5.1|7.1|otomatik` (varsayılan otomatik = cihazın kanal sayısı; yerel kayıtta kalır), `?hoparlor=`
+kanal sırasıyla azimutlar (`-30,30,0,lfe,-110,110`); tuş **T** hoparlör testi; panel Sistem → Ses düzeni. Yeni ses
+çağrıları sahne azimutu (derece) geçer, `azimutPan` değil; çatışma ses geri çağrıları markalı `AzimutDerece` alır
+(`sesAzimutu(konum)` / `azimutDerece(derece)`; pan geçmek derleme hatası). Rotor sesi `Helikopter3B.sesKonumu`ndan.
 
 Panel API'si (`apps/kopru/src/api.ts`): `/api/durum`, `/oda`, `/bolge`, `/ortam`, `/isik`,
 `/izli-mermi`, `/oda2`, `/efekt`, `/figur` (oynat/durdur/temizle/poz), `/klipler`, `/figurler`,
@@ -120,6 +136,22 @@ boş nokta) yerleşir; panelde "Birlik çağır". Tank modelleri (CC-BY / CC0) m
 Idle_Gun ↔ Idle_Gun_Shoot geçişi, elde tüfek (`silahModeli`, kemik adı GLTFLoader'da "WristR").
 Oda 2 sütreleri: manifest `sutreler` (kum torbası, kaya, toprak yığını, bariyer; `modeller/sutre/`).
 Bone/klip adları: GLTFLoader noktayı siler; kısa klip adı `klipBul` ile eşleşir.
+
+**Helikopter ve izli mermi (27 Ekim):** helikopter hareketi saf uçuş modelinde (`sahne3b/helikopterUcusu.ts`,
+testli: kavisli yaklaşma, virajda yatış, flare, kızakta sekme, 5 m askıdan burun aşağı kalkış, 80 m ileriye bakan
+arazi kaçınması); rotor tozu zemine göre (`rotorTozu.ts`: kış kar, kırsal/dağlık toprak, ormanlık koyu toprak +
+yaprak, üs/meskûn beton; `Helikopter3B.tozTuru` `araziAyarla`dan). İzli mermi "yön"ü artık iz doğrultusu: 0 seçilen
+duvarın uzağından izleyiciye doğru, ±90 komşu duvar yönünden gelip seçilen duvarın önünden yandan geçer (kaynak da
+kayar; kullanıcı kararı) (`catisma.ts` `izliAtis`, yardımcılar `izliYol.ts`); uzak iz ≥ 1,5 px kalın, başın 6 m
+yakınından geçende "çat". **2 Kasım inceleme düzeltmeleri:** havadayken iniş noktası değişirse geçerli yaklaşmada
+değilse pas geçme (35 m, yeni eksende 85–150 m'den yeniden yaklaşma), sahne noktayı yalnız plan/yaw/panel yönü
+değişince seçer (sabit 12° yok); yeni resim panorama yüklenirken helikopter 3B'de uçmayı sürdürür (main.ts
+`helikopter3B`, `panoramaYukleniyor`; önceden 2B siluete geçip baştan başlıyordu); belirirken yatış sarsıntısı yok;
+kalkış iniş noktasının kendi yanından arkaya, "yok"ta 1,5 sn sönme; uzak kaynak yerden ≤ 12 m ve arazi ufkunun
+≤ 1,5° üstü (`AraziUfku`; çatışmada da), kapalı doğruda mermi yamaca çarpar; izli akışta yakın zemin payı %20,
+çarpma/"çat" sesi ≤ 1,5/sn; hedef yüksekliği döndürmeden sonra. Kırsal/dağlık hibritte önde ve sol önde
+~115–205 m'deki sırt yüzünden orta duvarın izli mermilerinin çoğu sırtın arkasına çarpıyor (ölçüm
+`docs/duvar-oynatici.md` bilinen sınırlar). Tarayıcıda gözle doğrulanmadı.
 
 **Figür duruşları (23 Ekim):** `FigurKomutu.poz` (ayakta / comelmis / yarali) ve `islem: "poz"`;
 yaralı = SWAT "HitRecieve" → "Death" (son karede kalır) + prosedürel nefes ve kol kaldırma (yardım
@@ -164,8 +196,13 @@ mesajı), önizleme fps/kalite bilgisi taşır; HUD varsayılan kapalı; panelde
 2. HESCO artık prosedürel (`sutre.ts` `tip: "hesco"`, canvas doku: tel kafes + jeotekstil + kum; üs bölgesi
    diziliminde iki hat). Sıhhiyeci "Interact" klibiyle idare ediyor; gerçek
    müdahale animasyonu (turnike) için yeşil perde çekimi (docs §2.5). Yaralı taşıma (iki kişi) yok.
-3. VFX plakaları (gerçek çekim, alfa) ve helikopter inişi için 3B toz + ses ayarı; izli mermiyi 3B'ye taşıma.
-4. 4 kanal ses; Türkçe bağırma/yaralı inleme kaydı; U duvar ölçüleri → `?fov=`.
+3. VFX plakaları (gerçek çekim, alfa). Helikopter inişi (uçuş modeli, pas geçme, zemine göre rotor tozu, konumlu
+   rotor sesi) ve 3B izli mermi yazılımda, inceleme bulguları düzeltildi (2 Kasım); duvarda gözle/kulakla ayar bekliyor.
+   Karar bekleyen: kırsal/dağlık hibritte sırtın arkasındaki uzak kaynak (12 m sınırıyla kırsal orta duvarda izli
+   merminin ~%17'si izleyiciye ulaşıyor): kaynağı sırt hattına almak ya da sınırı bölgeye göre gevşetmek.
+4. Çok kanallı ses (4 kanal / 5.1 / 7.1) ve ölçülmüş duvar geometrisi (`?oda=`) yazılımda hazır; kalan saha ayarı:
+   gerçek hoparlör açıları (`?hoparlor=`), T testi + kulak testi (LFE seviyesi), U duvar ölçüleri → `?oda=` (panel
+   Sistem › Duvar geometrisi, sahada K ızgarasıyla doğrula). Türkçe bağırma/yaralı inleme kaydı.
 5. İdareye gösterim: kırsal 4 varyant + patlama/krater + 3 asker + yaralı + helikopter.
 
 ## Belgeler

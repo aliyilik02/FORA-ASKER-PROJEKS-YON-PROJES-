@@ -5,6 +5,7 @@
  * dönük kareler vertex shader'da üretilir; gl_PointSize sınırı yoktur, büyük yakın duman da çizilir.
  */
 import * as THREE from "three";
+import type { RotorTozuProfili } from "./rotorTozu";
 
 const VERTEX = `
 attribute vec3 konum;
@@ -70,6 +71,8 @@ export class ParcacikGrubu {
   private readonly aci: THREE.InstancedBufferAttribute;
   private readonly renk: THREE.InstancedBufferAttribute;
   readonly parcaciklar: Parcacik[] = [];
+  /** Ölen parçacık nesneleri; `al()` yeniden kullanır (en çok `kapasite` kadar tutulur). */
+  private readonly havuz: Parcacik[] = [];
   /** Ortam ışığı çarpanı (duman gece kararır; ateş karartılmaz). */
   isik = 1;
 
@@ -106,8 +109,21 @@ export class ParcacikGrubu {
   }
 
   ekle(p: Parcacik) {
-    if (this.parcaciklar.length >= this.kapasite) this.parcaciklar.shift();
+    if (this.parcaciklar.length >= this.kapasite) this.havuzaVer(this.parcaciklar.shift()!);
     this.parcaciklar.push(p);
+  }
+
+  /**
+   * Havuzdan (ölmüş parçacıklardan) bir nesne, yoksa yeni. Sürekli yayıcılar (rotor tozu) kare başına nesne
+   * üretmesin diye: alanları çağıran doldurur, sonra `ekle`. `renk` dizisi nesnenin kendisinindir, yerinde yazılır
+   * (bu yüzden `ekle`ye paylaşılan sabit renk dizisi verilmez; mevcut çağıranlar hep yeni dizi verir).
+   */
+  al(): Parcacik {
+    return this.havuz.pop() ?? { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, boyut: 0, buyume: 0, alfa: 0, aci: 0, donus: 0, t: 0, sure: 1, renk: [1, 1, 1], yercekimi: 0, surtunme: 0 };
+  }
+
+  private havuzaVer(p: Parcacik) {
+    if (this.havuz.length < this.kapasite) this.havuz.push(p);
   }
 
   /** Dokuyu değiştirir; görünür piksellerin ortalama parlaklığı ölçülüp renk ona göre normalize edilir. */
@@ -141,10 +157,16 @@ export class ParcacikGrubu {
   }
 
   guncelle(dt: number) {
-    const canli: Parcacik[] = [];
-    for (const p of this.parcaciklar) {
+    // Yerinde sıkıştırma: ölen parçacıklar atlanır, kare başına yeni dizi üretilmez
+    const canli = this.parcaciklar;
+    let n = 0;
+    for (let i = 0; i < canli.length; i++) {
+      const p = canli[i];
       p.t += dt;
-      if (p.t >= p.sure) continue;
+      if (p.t >= p.sure) {
+        this.havuzaVer(p);
+        continue;
+      }
       p.vy -= p.yercekimi * dt;
       const s = Math.max(0, 1 - p.surtunme * dt);
       p.vx *= s;
@@ -155,11 +177,9 @@ export class ParcacikGrubu {
       p.z += p.vz * dt;
       p.boyut += p.buyume * dt;
       p.aci += p.donus * dt;
-      canli.push(p);
+      canli[n++] = p;
     }
-    this.parcaciklar.length = 0;
-    this.parcaciklar.push(...canli);
-    const n = canli.length;
+    canli.length = n;
     const k = this.konum.array as Float32Array;
     const b = this.boyut.array as Float32Array;
     const a = this.alfa.array as Float32Array;
@@ -190,12 +210,40 @@ export class ParcacikGrubu {
   }
 
   temizle() {
+    for (let i = 0; i < this.parcaciklar.length; i++) this.havuzaVer(this.parcaciklar[i]);
     this.parcaciklar.length = 0;
     this.geometri.instanceCount = 0;
   }
 }
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+
+/**
+ * Rotor tozu için havuzdan radyal parçacık: merkezin çevresinde rastgele açıda, `r0` uzakta ve `y0` yukarıda;
+ * yatay hız dışa doğru `hiz` (eksi: içe), dikey `vy`. Kalan alanları çağıran yazar, sonra grubun `ekle`si.
+ */
+function radyalParcacik(g: ParcacikGrubu, m: THREE.Vector3, r0: number, y0: number, hiz: number, vy: number): Parcacik {
+  const a = Math.random() * 6.283;
+  const c = Math.cos(a);
+  const sn = Math.sin(a);
+  const p = g.al();
+  p.x = m.x + c * r0;
+  p.y = m.y + y0;
+  p.z = m.z + sn * r0;
+  p.vx = c * hiz;
+  p.vy = vy;
+  p.vz = sn * hiz;
+  p.t = 0;
+  return p;
+}
+
+/** Zemin rengini parçacık başına hafif aydınlık/koyu sapmayla yerinde yazar (dizi üretmez). */
+function tonla(hedef: [number, number, number], renk: [number, number, number], sapma: number) {
+  const k = 1 + rnd(-sapma, sapma);
+  hedef[0] = Math.min(1, renk[0] * k);
+  hedef[1] = Math.min(1, renk[1] * k);
+  hedef[2] = Math.min(1, renk[2] * k);
+}
 
 /** Üst düzey yayıcılar: patlama, duman sütunu, toz bulutu, rotor tozu, kıvılcım. */
 export class ParcacikSistemi {
@@ -347,31 +395,106 @@ export class ParcacikSistemi {
     }
   }
 
-  /** Rotor tozu: iniş noktasından dışa doğru halka şeklinde savrulan toz. `siddet` 0–1. */
-  rotorTozu(p: THREE.Vector3, yaricap: number, siddet: number, dt: number) {
-    const adet = Math.round(120 * siddet * dt);
-    for (let i = 0; i < adet; i++) {
-      const a = rnd(0, 6.28);
-      const r0 = rnd(0.2, 0.6) * yaricap;
-      const hiz = rnd(3, 9) * (0.4 + siddet);
-      this.duman.ekle({
-        x: p.x + Math.cos(a) * r0,
-        y: p.y + rnd(0, 0.5),
-        z: p.z + Math.sin(a) * r0,
-        vx: Math.cos(a) * hiz,
-        vy: rnd(0.5, 2.5) * siddet,
-        vz: Math.sin(a) * hiz,
-        boyut: yaricap * rnd(0.15, 0.35),
-        buyume: yaricap * rnd(0.25, 0.5),
-        alfa: rnd(0.2, 0.45) * siddet,
-        aci: rnd(0, 6.28),
-        donus: rnd(-1, 1),
-        t: 0,
-        sure: rnd(1.5, 3.5),
-        renk: [0.6, 0.53, 0.4],
-        yercekimi: 0,
-        surtunme: 1.2,
-      });
+  /** Rotor tozu yayım birikimleri (saniyedeki oran kare hızından bağımsız, kesirli parçacık sonraki kareye kalır). */
+  private readonly rotorBirikim = { akis: 0, halka: 0, kirinti: 0, parilti: 0 };
+
+  /**
+   * Rotor tozu (aşağı akış, "brownout"): rotor diskinin altından (yarıçap ~5–6 m) zemine yapışık güçlü radyal
+   * akış (8–15 m/sn, sürtünmeyle söner, küçük dikey hız); akış yavaşladıkça kaldırma kazanıp kıvrılır ve 1–2 rotor
+   * çapında yükselen bir halka (torus) olur, halkanın üstü diske geri emilir. Üstüne hızlı savrulan kırıntı (taş,
+   * toprak topağı, yaprak, kar topağı) ve karda güneşte parıldayan kristaller. Renk, hacim, incelik ve asılı kalma
+   * zemin profilinden (`rotorTozu.ts`). `siddet` 0–1 (alçaklık × rotor gücü). Yayım saniye başına sınırlı ve kalite
+   * kapasitesiyle ölçekli (yüksek kalitede tam şiddette ~200 canlı toz parçacığı, karda ~350); yeni çizim çağrısı
+   * yok, parçacık nesneleri havuzdan. Kırıntılar normal karışımlı duman grubunda çizilir: kıvılcım grubu katkılı
+   * karışımdır (yalnız ışık ekler), koyu taş/yaprak orada görünmez, gece parlardı.
+   */
+  rotorTozu(merkez: THREE.Vector3, rotorYaricap: number, siddet: number, dt: number, profil: RotorTozuProfili) {
+    if (siddet <= 0.02 || dt <= 0) return;
+    const s = Math.min(1, siddet);
+    const kap = this.duman.kapasite / 1200;
+    const R = rotorYaricap;
+    const b = this.rotorBirikim;
+    // 1) Zemin akışı: diskin altından dışa, yere yapışık ve hızlı; yavaşlarken kaldırma (eksi yer çekimi) kıvırır
+    b.akis += 55 * s * profil.hacim * kap * dt;
+    while (b.akis >= 1) {
+      b.akis -= 1;
+      const p = radyalParcacik(this.duman, merkez, R * rnd(0.3, 1), rnd(0.05, 0.45), rnd(8, 15) * (0.55 + 0.45 * s), rnd(0.1, 0.6));
+      p.boyut = R * rnd(0.12, 0.24) * profil.boyut;
+      p.buyume = rnd(0.8, 1.6) * profil.boyut;
+      p.alfa = rnd(0.18, 0.38) * (0.4 + 0.6 * s) * profil.alfa;
+      p.aci = rnd(0, 6.28);
+      p.donus = rnd(-1.2, 1.2);
+      p.sure = rnd(1.6, 3) * profil.omur;
+      tonla(p.renk, profil.renk, profil.renkSapma);
+      p.yercekimi = -rnd(0.35, 0.9) * profil.kaldirma;
+      p.surtunme = rnd(0.7, 1.1);
+      this.duman.ekle(p);
+    }
+    // 2) Halka ("brownout" duvarı): 1–2 rotor çapında, iri, yavaş, uzun ömürlü. Alt kısmı dışa yayılıp yükselir,
+    //    üst kısmı (~%30) içe, diske geri emilir (devridaim): alçakta helikopteri saran torus
+    b.halka += 14 * s * profil.hacim * kap * dt;
+    while (b.halka >= 1) {
+      b.halka -= 1;
+      const p =
+        Math.random() < 0.3
+          ? radyalParcacik(this.duman, merkez, R * rnd(1.6, 3), rnd(1.5, 3.5), -rnd(1, 2.5), rnd(0.8, 2) * profil.kaldirma)
+          : radyalParcacik(this.duman, merkez, R * rnd(2, 4), rnd(0.2, 1.2), rnd(1.5, 4), rnd(0.6, 1.8) * profil.kaldirma);
+      p.boyut = R * rnd(0.3, 0.55) * profil.boyut;
+      p.buyume = rnd(1.2, 2.4) * profil.boyut;
+      p.alfa = rnd(0.1, 0.24) * s * profil.alfa;
+      p.aci = rnd(0, 6.28);
+      p.donus = rnd(-0.6, 0.6);
+      p.sure = rnd(2.6, 4.5) * profil.omur;
+      tonla(p.renk, profil.renk, profil.renkSapma);
+      p.yercekimi = -rnd(0.15, 0.5) * profil.kaldirma;
+      p.surtunme = rnd(0.5, 0.9);
+      this.duman.ekle(p);
+    }
+    // 3) Kırıntı: güçlü akışta küçük, hızlı, yer çekimli (taş/beton düşer; yaprak ve kar topağı süzülür)
+    if (s > 0.2) {
+      b.kirinti += 34 * ((s - 0.2) / 0.8) * profil.kirintiOrani * kap * dt;
+      const g = profil.kirintiYercekimi;
+      const hafif = g < 6;
+      while (b.kirinti >= 1) {
+        b.kirinti -= 1;
+        const vy = rnd(1.5, 5.5);
+        const p = radyalParcacik(this.duman, merkez, R * rnd(0.2, 0.9), rnd(0.05, 0.3), rnd(9, 20) * (0.5 + 0.5 * s), vy);
+        const k = profil.kirinti[(Math.random() * profil.kirinti.length) | 0];
+        p.boyut = rnd(0.05, 0.12) * (hafif ? 1.4 : 1);
+        p.buyume = 0;
+        p.alfa = rnd(0.75, 1);
+        p.aci = rnd(0, 6.28);
+        p.donus = rnd(-8, 8);
+        // Yere inince söner: ağır kırıntı hızla düşer, yaprak ve kar topağı havada daha uzun süzülür
+        p.sure = hafif ? Math.min(rnd(1.4, 2.6), (2 * vy) / g + 0.4) : Math.min(1.4, (2 * vy) / g + 0.15);
+        p.renk[0] = k[0];
+        p.renk[1] = k[1];
+        p.renk[2] = k[2];
+        p.yercekimi = g;
+        p.surtunme = profil.kirintiSurtunme;
+        this.duman.ekle(p);
+      }
+    }
+    // 4) Kar kristali parıltısı (kıvılcım grubu, katkılı): güneşte ince ışıltı, sahne ışığıyla kısılır (gece sönük)
+    if (profil.parilti > 0) {
+      b.parilti += 18 * s * profil.parilti * kap * dt;
+      const isik = this.duman.isik;
+      while (b.parilti >= 1) {
+        b.parilti -= 1;
+        const p = radyalParcacik(this.kivilcim, merkez, R * rnd(0.3, 1.5), rnd(0.1, 1), rnd(4, 10) * (0.5 + 0.5 * s), rnd(0.5, 2.5));
+        p.boyut = rnd(0.03, 0.06);
+        p.buyume = 0;
+        p.alfa = 1;
+        p.aci = 0;
+        p.donus = 0;
+        p.sure = rnd(0.8, 1.6);
+        p.renk[0] = 0.75 * isik;
+        p.renk[1] = 0.8 * isik;
+        p.renk[2] = 0.9 * isik;
+        p.yercekimi = 0.6;
+        p.surtunme = 1.4;
+        this.kivilcim.ekle(p);
+      }
     }
   }
 

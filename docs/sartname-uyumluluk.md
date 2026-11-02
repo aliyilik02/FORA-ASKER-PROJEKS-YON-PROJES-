@@ -25,7 +25,7 @@ oynatıcıdaki karşılığı:
 
 | No | Oynatıcıda karşılığı | Durum |
 |---|---|---|
-| §1 | 3 duvar tek tarayıcı penceresinde (`?fov=` duvar açısı, kalibrasyon ızgarası K tuşu), köprü 4000 portundan panel + oynatıcı | Hazır; saha ölçüleri → `?fov=` |
+| §1 | 3 duvar tek tarayıcı penceresinde (ölçülmüş oda `?oda=`: U ya da düz duvar, duvar başına doğru perspektif, ufuk göz hizasında; kalibrasyon ızgarası K tuşu), köprü 4000 portundan panel + oynatıcı | Hazır; saha ölçüleri → `?oda=` (panel Sistem › Duvar geometrisi) |
 | §2 | 5 bölge × mevsim × zaman: 23 Poly Haven CC0 8K çekim panoraması + AI kırsal panorama; panorama başına yerleşim planı (patlama/figür ağaç ve bina içine düşmez) | Hazır (içerik kullanıcının makinesinde) |
 | §3 | Mevsim/saat/bulut/sis/yağış/rüzgâr: panorama seçimi + IBL karartma, güneş yönü panoramadan (yükseklik ≥18° gündüz, gece ay ışığı), yağmurda zayıf güneş ve yumuşak gölge | Hazır |
 | §4 | Patlama: 3B ateş topu, toprak sütunu, moloz, kalıcı krater + tüten duman, flaş + sarsıntı; bağırma/çağırma sesleri (Mixkit/OGA); **figürler**: asker (mevzide, diz çökmüş, yere yatmış, koşan), tank (kule düşmana döner, top atar), **yaralı** (vurulma → düşme → yerde nefes ve yardım işareti, tüfek yere düşer), **sıhhiyeci** yaralının başında; panelde tek dokunuş ("Asker vuruldu!", "Sıhhiyeci gönder") | Hazır; Türkçe bağırma kaydı ve müdahale animasyonu (yeşil perde) bekliyor |
@@ -34,6 +34,7 @@ oynatıcıdaki karşılığı:
 | §7 | Oda 2 güvenli alan: 3B sütre dizilimleri (kum torbası, kaya, toprak yığını, jersey bariyer, sandık, **prosedürel HESCO**) manifest `sutreler` | Hazır |
 | §8 | 3B helikopter (OGA CC-BY): yaklaşma → iniş → yerde → kalkış, iniş yönü panelden, rotor tozu (parçacık) + rotor sesi; iniş noktası yerleşim planından | Hazır |
 | §9 | Uzak patlama 3B (uzak parıltı + gürültü, mesafe zayıflatma), uzak mermi sesi | Hazır |
+| §4, §5, §8, §9 (konumsal ses) | Çok kanallı ses: stereo / 4 kanal / 5.1 / 7.1 (`?ses=`, varsayılan cihazın kanal sayısı; panel Sistem → Ses düzeni), sabit güçlü kaydırmayla ön/arka ayrımı, uzak seslerde yayılım, patlama/top basları LFE'de, ortam sesi dağınık, helikopter rotoru konumlu (mesafe zayıflaması, boğuklaşma, hafif Doppler); sahadaki hoparlör açıları `?hoparlor=`; T tuşu hoparlör testi | Yazılım hazır (birim testli); sahada hoparlörlerle kulak testi bekliyor |
 | §10 | Dış bağlantı yok; içerik yerel klasörde; demo.bat | Hazır |
 
 Senaryo motoru artık **figür adımlarını** da çalıştırır (sahneye koy, yanına yerleş, duruş değiştir,
@@ -57,6 +58,8 @@ kurulumla gelir. Performans: dizüstü (Iris Xe) için `?kalite=dusuk`; saha mak
 - Figür yöneticisi: oynat/durdur/temizle/poz doğrulama, manifestten başlangıç duruşu, `yaninda` bağlama
 - Veri deposu: ilk kurulum örnekleri, mevcut kuruluma eksik örneklerin eklenmesi, örnek senaryo tutarlılığı
 - Oynatıcı: yerleşim planı (nokta seçimi, yasak aralık), güneş tahmini, projeksiyon hesapları
+- Oynatıcı sesi: çok kanallı kazançlar (enerji korunumu, ön/arka ayrımı, ±180 sarma, yayılım, LFE), düzen seçimi
+  (cihaz kanal sayısı), `?ses=` / `?hoparlor=` ayrıştırma ve yerel kayıt
 - Durum deposu: değer sınırlama, Oda 2 uzak ses parametrelerinin otomatik doldurulması
 - Örnek paket başlatıcı: komut satırı üretimi (pencere/tam ekran, FOV parametresi, tırnaklı ek parametreler), süreç başlat/durdur
 - `.env` okuyucu: yorum satırları, tırnaklar, var olan değişkenin korunması
@@ -69,5 +72,5 @@ kurulumla gelir. Performans: dizüstü (Iris Xe) için `?kalite=dusuk`; saha mak
 - Render bilgisayarı (RTX sınıfı, 16 GB VRAM) ve 3 projektör: `docs/donanim-onerileri.md`
 - Projektör sayısı, çözünürlük, yerleşim, warp/blend yöntemi (Risk: Yüksek)
 - DMX armatür kanal haritası ve Art-Net kontrolcü IP'si
-- Ses sistemi kanal sayısı ve yerleşimi (konumsal ses için)
+- Ses sistemi kanal sayısı ve yerleşimi (yazılım 4 kanal / 5.1 / 7.1 hazır; gerçek hoparlör açıları `?hoparlor=` ile girilecek)
 - Bölge içeriklerinin görsel gerçekçilik düzeyi için eğitmen görüşmesi (Faz 2)
