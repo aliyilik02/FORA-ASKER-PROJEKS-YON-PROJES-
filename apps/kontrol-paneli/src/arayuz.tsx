@@ -8,9 +8,17 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 
 export type Sekme = "sahne" | "efektler" | "figurler" | "senaryo" | "sistem";
-/** Oynatıcı kalite kademesi; "Oynatıcı" düğmesi bu değerle (`?kalite=`) açar. */
-export type OynaticiKalite = "dusuk" | "orta" | "yuksek";
-export const KALITE_ETIKETLERI: Record<OynaticiKalite, string> = { dusuk: "Düşük (dizüstü / entegre ekran kartı)", orta: "Orta", yuksek: "Yüksek (saha makinesi, RTX)" };
+/**
+ * Oynatıcı kalite kademesi; "Oynatıcı" düğmesi bu değerle (`?kalite=`) açar. "otomatik" (varsayılan): oynatıcı kendi
+ * yerel kaydını siler ve ekran kartına göre seçer (Intel entegre → orta, diğerleri → yüksek; oynatıcı kaliteSecimi.ts).
+ */
+export type OynaticiKalite = "otomatik" | "dusuk" | "orta" | "yuksek";
+export const KALITE_ETIKETLERI: Record<OynaticiKalite, string> = {
+  otomatik: "Otomatik (ekran kartına göre)",
+  dusuk: "Düşük",
+  orta: "Orta (dizüstü, Intel entegre)",
+  yuksek: "Yüksek (saha makinesi, RTX)",
+};
 
 export interface Bildirim {
   id: number;
@@ -64,9 +72,9 @@ export function ArayuzSaglayici({ children }: { children: ReactNode }) {
   const [oynaticiKalite, setKaliteHam] = useState<OynaticiKalite>(() => {
     try {
       const k = localStorage.getItem(KALITE_ANAHTARI) as OynaticiKalite | null;
-      return k && ["dusuk", "orta", "yuksek"].includes(k) ? k : "yuksek";
+      return k && Object.keys(KALITE_ETIKETLERI).includes(k) ? k : "otomatik";
     } catch {
-      return "yuksek";
+      return "otomatik";
     }
   });
   const setOynaticiKalite = useCallback((k: OynaticiKalite) => {

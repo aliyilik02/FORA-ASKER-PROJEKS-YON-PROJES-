@@ -726,7 +726,10 @@ export class Sahne3B {
   /**
    * Bölge değişti ya da sahne sıfırlandı: hasar (krater çıkartması, moloz, tüten duman), parçacıklar, uçuştaki izler ve
    * top mermileri, patlamanın anlık ışığı temizlenir (figürler panelden; sahne sıfırlamasında temeleDondur). Arazi
-   * kraterleri (çukur, yanık izi, silinen çimen) yerinde geri alınır; zemin değiştiyse figür ve sütre ona oturur.
+   * kraterleri (çukur, yanık izi, silinen çimen ve bitki) yerinde geri alınır (`AraziKatmani.kraterleriTemizle`, birkaç
+   * ms; ızgara yeniden kurulmaz, dokular yeniden yüklenmez); zemin değiştiyse figür ve sütre ona oturur. `araziBolge`ye
+   * dokunulmaz: sıfırlama bir sonraki durum mesajında arazinin yeniden kurulmasını (ve takaslı geçişi) tetiklemez.
+   * Bölge değişiminin takasında da buradan geçilir; arazi ardından yeni bölgeyle kurulur.
    */
   sahneyiSifirla() {
     this.hasar.temizle();
@@ -734,22 +737,21 @@ export class Sahne3B {
     this.catisma.temizle();
     this.flasGuc = 0;
     this.flas.intensity = 0;
-    // BIRLESTIRME: AraziKatmani.kraterleriTemizle(): boolean FPS turunda (arazi.ts) geliyor; birleşince bu dar ara katman
-    // yerine doğrudan `if (this.arazi.kraterleriTemizle()) { this.figurler.zemineOturt(); this.sutre.zemineOturt(); }`
-    // yazılır ve yedek dal (araziBolge = "": ızgara bir sonraki durum mesajında baştan kurulur) kalkar.
-    const kraterleriTemizle = (this.arazi as unknown as { kraterleriTemizle?: () => boolean }).kraterleriTemizle;
-    if (kraterleriTemizle) {
-      if (kraterleriTemizle.call(this.arazi)) {
-        this.figurler.zemineOturt();
-        this.sutre.zemineOturt();
-      }
-    } else if (this.arazi.aktif) this.araziBolge = "";
+    if (this.arazi.kraterleriTemizle()) {
+      this.figurler.zemineOturt();
+      this.sutre.zemineOturt();
+    }
   }
 
   /**
    * Sahne sıfırlaması (köprünün `sahne/sifirla` mesajı, bkz. main.ts sahneyiTemizle): figürler (yüklenmekte olanlar ve
-   * hedef bekleyen "yanında" figürler dahil) + sahneyiSifirla. Çatışma, izli mermi ve helikopterin açık/kapalı oluşu
-   * köprünün durum yayınından gelir; burada dokunulmaz. Sütre (Oda 2 güvenli alanı) kalır.
+   * hedef bekleyen "yanında" figürler dahil) + sahneyiSifirla, ekrandaki sahnede hemen. Çatışma, izli mermi ve
+   * helikopterin açık/kapalı oluşu köprünün durum yayınından gelir; burada dokunulmaz. Sütre (Oda 2 güvenli alanı) kalır.
+   *
+   * Panorama geçişi sürerken de böyle: süren hazırlık (gelen panorama) bırakılmaz, bölge geçişinin ertelenen işleri
+   * (`bekleyenSifirla`, `bekleyenArazi`) yerinde kalır; takas yeni bölgenin sahnesini yine kurar ve sahneyiSifirla'yı bir
+   * kez daha çalıştırır (sıfırlamayı geri almaz: sıfırlamadan sonra gelen figür/efektler main.ts kuyruğunda takası
+   * bekler, öncekileri sahneyiTemizle kuyruktan siler). Örtüdeki eski kare için bkz. gecis.ts `sahneTemizlendi`.
    */
   temeleDondur() {
     this.figurler.temizle();
@@ -1190,14 +1192,10 @@ export class Sahne3B {
   }
 
   /**
-   * Arazi dokuları yüklendi mi (bölge değişiminde solma bunu bekler; en çok 1,2 sn). arazi.ts'e dokunmadan: varsa
-   * `dokularHazir` (önerilen genel alan), yoksa doku haritasında görüntüsü gelmemiş doku kalmadı mı.
+   * Arazi dokuları yüklendi mi (bölge değişiminde solma bunu bekler; en çok 1,2 sn): `AraziKatmani.dokularHazir`
+   * (yüklemesi süren doku kalmadı; bulunamayan doku da bitmiş sayılır, önbellekteki ortak dokular hemen hazır).
    */
   private araziDokulariHazir(): boolean {
-    const a = this.arazi as unknown as { dokularHazir?: boolean; dokular?: Map<string, THREE.Texture> };
-    if (typeof a.dokularHazir === "boolean") return a.dokularHazir;
-    if (!this.arazi.aktif || !(a.dokular instanceof Map)) return true;
-    for (const d of a.dokular.values()) if (!d.image) return false;
-    return true;
+    return !this.arazi.aktif || this.arazi.dokularHazir;
   }
 }

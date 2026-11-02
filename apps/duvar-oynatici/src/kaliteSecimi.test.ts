@@ -9,7 +9,7 @@ const UHD = "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00005917) Direct3D11 vs_
 /** Bellek içi yerel kayıt. */
 function kayit(baslangic: Record<string, string> = {}) {
   const d = new Map(Object.entries(baslangic));
-  return { getItem: (k: string) => d.get(k) ?? null, setItem: (k: string, v: string) => void d.set(k, v), d };
+  return { getItem: (k: string) => d.get(k) ?? null, setItem: (k: string, v: string) => void d.set(k, v), removeItem: (k: string) => void d.delete(k), d };
 }
 
 describe("ekranKartiKalitesi", () => {
@@ -65,5 +65,15 @@ describe("kaliteSec (adres > yerel kayıt > otomatik)", () => {
     };
     expect(kaliteSec(null, kapali, () => IRIS).kalite).toBe("orta");
     expect(kaliteSec("dusuk", kapali, () => IRIS).kalite).toBe("dusuk");
+  });
+
+  it("?kalite=otomatik (panelin varsayılanı) yerel kaydı siler, kartı sorar; sonraki parametresiz açılış da otomatik", () => {
+    const k = kayit({ kalite: "yuksek" });
+    expect(kaliteSec("otomatik", k, () => IRIS)).toEqual({ kalite: "orta", otomatikKart: "Intel(R) Iris(R) Xe Graphics" });
+    expect(k.d.has("kalite")).toBe(false);
+    expect(kaliteSec(null, k, () => IRIS).kalite).toBe("orta");
+    // removeItem'sız (eski arayüz) kayıtta da otomatiğe gider, kayıtlı değer kullanılmaz
+    const eski = { getItem: () => "dusuk", setItem: () => undefined };
+    expect(kaliteSec("otomatik", eski, () => RTX)).toEqual({ kalite: "yuksek", otomatikKart: "NVIDIA GeForce RTX 4070" });
   });
 });

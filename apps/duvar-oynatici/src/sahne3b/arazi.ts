@@ -336,6 +336,8 @@ export class AraziKatmani {
   private dokular = new Map<string, THREE.Texture>();
   /** Bu kurulumda istenen dokular: kalanlar kurulum sonunda bırakılır (ortak dokular bölgeler arası korunur). */
   private readonly kullanilanDokular = new Set<string>();
+  /** Yüklemesi sürenler (geldi, yedeğiyle birlikte bulunamadı ya da bırakıldıysa çıkar): `dokularHazir`. */
+  private readonly yuklenenDokular = new Set<THREE.Texture>();
   /**
    * Kraterin değiştirdiği bitki örneklerinin kraterden önceki matrisi (mesh → örnek → 16 sayı): kraterleriTemizle
    * geri koyar. Koridor değişiminde yedek de aynı yükseklik farkını alır.
@@ -367,6 +369,14 @@ export class AraziKatmani {
 
   get aktif() {
     return this.mod !== "kapali" && this.yakin !== null;
+  }
+
+  /**
+   * Kurulumun dokularının yüklemesi bitti mi (gelen ya da bulunamayan; önbellekteki ortak dokular hemen hazır). Bölge
+   * geçişinde örtü solmadan önce bunu bekler (sahne3b.ts, en çok 1,2 sn): doku "pop"u eski karenin arkasında kalır.
+   */
+  get dokularHazir(): boolean {
+    return this.yuklenenDokular.size === 0;
   }
 
   /** Hibrit kipte görünür yarıçap (m); sis ayarı için. */
@@ -658,6 +668,7 @@ export class AraziKatmani {
       this.uniformlar = {};
       for (const d of this.dokular.values()) d.dispose();
       this.dokular.clear();
+      this.yuklenenDokular.clear();
     }
     this.kraterYedekleri.clear();
     this.yakin = null;
@@ -680,6 +691,7 @@ export class AraziKatmani {
       if (this.kullanilanDokular.has(ad)) continue;
       d.dispose();
       this.dokular.delete(ad);
+      this.yuklenenDokular.delete(d);
     }
   }
 
@@ -688,7 +700,7 @@ export class AraziKatmani {
    * Doku (icerik/arazi/dokular/<ad>.jpg). Shader dünya xz ile örneklediği için `repeat` kullanılmaz. Dosya
    * yoksa `yedek` denenir, o da yoksa uyarı; doku boş kalır (düz renk). Düşük kalitede 1K'ya küçültülür.
    * Önbellekte kalır (bölge değişiminde ortak dokular yeniden indirilmez); yükleme sürerken doku önbellekten
-   * çıkarıldıysa (bırakıldı) gelen resim atılır.
+   * çıkarıldıysa (bırakıldı) gelen resim atılır, yedek denenmez. Yükleme sürerken `dokularHazir` false.
    */
   private doku(ad: string, srgb: boolean, yedek?: string): THREE.Texture {
     this.kullanilanDokular.add(ad);
@@ -700,18 +712,27 @@ export class AraziKatmani {
     doku.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
     doku.anisotropy = this.kalite.anizotropi;
     this.dokular.set(ad, doku);
+    this.yuklenenDokular.add(doku);
     const yukle = (dosya: string, sonDeneme: boolean) =>
       this.dokuYukleyici.load(
         `${this.kok}arazi/dokular/${dosya}.jpg`,
         (y) => {
+          this.yuklenenDokular.delete(doku);
           if (this.dokular.get(ad) !== doku) return;
           doku.image = this.kucult(y.image as HTMLImageElement);
           doku.needsUpdate = true;
         },
         undefined,
         () => {
+          if (this.dokular.get(ad) !== doku) {
+            this.yuklenenDokular.delete(doku);
+            return;
+          }
           if (!sonDeneme && yedek && yedek !== dosya) yukle(yedek, true);
-          else this.uyari?.(`Arazi dokusu bulunamadı: arazi/dokular/${dosya}.jpg`);
+          else {
+            this.yuklenenDokular.delete(doku);
+            this.uyari?.(`Arazi dokusu bulunamadı: arazi/dokular/${dosya}.jpg`);
+          }
         },
       );
     yukle(ad, false);

@@ -1,6 +1,7 @@
 /**
- * Oynatıcı ayarları (Sistem sekmesi): kalite kademesi. "Oynatıcı" düğmesi bu değerle açar; oynatıcı değeri
- * kendi yerel kaydına yazar, sonraki açılışlarda da kullanır. Dizüstünde "düşük", sahadaki RTX makinede "yüksek".
+ * Oynatıcı ayarları (Sistem sekmesi): kalite kademesi. "Oynatıcı" düğmesi bu değerle açar; oynatıcı elle kademeyi
+ * kendi yerel kaydına yazar, sonraki açılışlarda da kullanır. "Otomatik" (varsayılan) kaydı siler, oynatıcı ekran
+ * kartına göre seçer: dizüstünde (Intel entegre) "orta", sahadaki RTX makinede "yüksek".
  */
 import { KALITE_ETIKETLERI, useArayuz, type OynaticiKalite } from "../arayuz";
 import type { BaglantiDurumu } from "../tipler";
@@ -16,8 +17,10 @@ export function OynaticiAyarlari({ baglanti }: { baglanti: BaglantiDurumu | null
         <SecenekGrubu<OynaticiKalite> deger={oynaticiKalite} secenekler={KALITE_ETIKETLERI} onChange={setOynaticiKalite} />
       </div>
       <p className="aciklama">
-        Düşük: gölge haritası 1024, kenar yumuşatma kapalı, yarı parçacık. Yüksek: 2048, tam parçacık. Değişiklik üst çubuktaki
-        "Oynatıcı" düğmesiyle açılan pencerede geçerli olur; açık oynatıcı penceresini kapatıp yeniden aç.
+        Otomatik: oynatıcı ekran kartına bakar (Intel entegre → orta, diğerleri → yüksek; HUD'da "otomatik" yazar). Düşük: gölge
+        haritası 1024, kenar yumuşatma kapalı, yarı parçacık, sahne geçişinde küçük arka plan küpü. Yüksek: 2048, tam
+        parçacık. Değişiklik üst çubuktaki "Oynatıcı" düğmesiyle açılan pencerede geçerli olur; açık oynatıcı penceresini
+        kapatıp yeniden aç.
       </p>
       {sayi > 1 && (
         <p className="aciklama uyari-metin">

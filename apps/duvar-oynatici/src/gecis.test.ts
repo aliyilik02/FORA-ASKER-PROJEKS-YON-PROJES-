@@ -122,6 +122,60 @@ describe("GecisKatmani", () => {
   });
 });
 
+describe("GecisKatmani sahne sıfırlaması (örtüde eski kare)", () => {
+  it("tam opak beklerken: yeni sahne çizilene dek örtü kalır (önizleme bekler), ilk temiz karede solmadan kalkar", () => {
+    const s = sahteOge();
+    const g = new GecisKatmani(s.oge, 600, () => 0);
+    g.boyutlandir(640, 360);
+    g.yakala(kaynak);
+    g.sahneTemizlendi();
+    expect(g.temizlikBekliyor).toBe(true);
+    // Takastan sonra gölgelendirici derlenirken 3B çizilmedi: 3B tuval de eski kareyi tutar, örtü kalır
+    expect(g.temizKaredeKaldir(false)).toBeNull();
+    expect(g.suruyor).toBe(true);
+    expect(g.temizKaredeKaldir(true)).toBe("bekliyor");
+    expect(g.suruyor).toBe(false);
+    expect(g.temizlikBekliyor).toBe(false);
+    expect(s.animasyonlar).toHaveLength(0);
+    expect(s.oge.style.visibility).toBe("hidden");
+  });
+
+  it("solarken: hemen kalkar, animasyon iptal", () => {
+    const s = sahteOge();
+    const g = new GecisKatmani(s.oge, 600, () => 0);
+    g.boyutlandir(640, 360);
+    g.yakala(kaynak);
+    g.solmaBaslat();
+    g.sahneTemizlendi();
+    expect(g.temizKaredeKaldir(false)).toBe("soluyor");
+    expect(g.suruyor).toBe(false);
+    expect(s.animasyonlar[0].iptal).toBe(true);
+  });
+
+  it("siyah örtü (ilk açılış), örtüsüz durum ve sıfırlamadan sonra yakalanan kare etkilenmez", () => {
+    const s = sahteOge();
+    const g = new GecisKatmani(s.oge, 600, () => 0);
+    g.boyutlandir(640, 360);
+    g.sahneTemizlendi();
+    expect(g.temizlikBekliyor).toBe(false);
+    g.siyahla();
+    g.sahneTemizlendi();
+    expect(g.temizlikBekliyor).toBe(false);
+    expect(g.temizKaredeKaldir(true)).toBeNull();
+    expect(g.solmaBekliyor).toBe(true);
+    g.bitir();
+    // Sıfırlama takastan önce geldi: takasta yakalanan kare zaten temiz, solma normal
+    g.yakala(kaynak);
+    expect(g.temizlikBekliyor).toBe(false);
+    g.sahneTemizlendi();
+    g.bitir();
+    g.yakala(kaynak);
+    expect(g.temizlikBekliyor).toBe(false);
+    expect(g.temizKaredeKaldir(true)).toBeNull();
+    expect(g.suruyor).toBe(true);
+  });
+});
+
 describe("gecisSuresiCoz (?gecis=)", () => {
   it("varsayılan 600 ms, 0 anlık kesme, sınır 5000, geçersiz değer varsayılan", () => {
     expect(gecisSuresiCoz(null)).toBe(600);

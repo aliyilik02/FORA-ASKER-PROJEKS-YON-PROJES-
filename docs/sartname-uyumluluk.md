@@ -39,7 +39,8 @@ oynatıcıdaki karşılığı:
 
 Senaryo motoru artık **figür adımlarını** da çalıştırır (sahneye koy, yanına yerleş, duruş değiştir,
 hepsini kaldır); örnek senaryolar "Ateş Altında Yaralıya Müdahale (TCCC)" ve "Gösterim – Kırsal Tam Tur"
-kurulumla gelir. Performans: dizüstü (Iris Xe) için `?kalite=dusuk`; saha makinesi RTX sınıfı.
+kurulumla gelir. Performans: kalite otomatik (dizüstü Iris Xe → `orta`, kırsal hibritte 1920×360'ta ~58 fps; elle
+`?kalite=`); saha makinesi RTX sınıfı (`yuksek`).
 
 ## Rapor §3 teknik mimari maddeleri
 

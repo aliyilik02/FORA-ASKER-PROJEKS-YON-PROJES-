@@ -25,7 +25,9 @@ temizlenir (duvara yazı basılmaz, konsola not). `e.code` kullanılır: Türkç
 Sorgu parametreleri: `?oda=` ölçülmüş oda — U duvar ya da 3 projektörlü düz duvar (`?oda=duz,...`), metre;
 aşağıda "Duvar geometrisi ve kalibrasyon" —, `?fov=90` ölçü yokken duvar başına yatay açı (U duvar 90; düz tek
 duvar için `?fov=40` değil `?oda=duz,...`: döndürülmüş kameralar düz duvarda yan görüntüleri bozar), `?doldur=1`
-pencereyi 48:9 oranını korumadan doldur (kiosk), `?hud=1` HUD açık başlasın.
+pencereyi 48:9 oranını korumadan doldur (kiosk), `?hud=1` HUD açık başlasın, `?kalite=dusuk|orta|yuksek|otomatik`
+(aşağıda "Kalite kademesi"; panelin Oynatıcı düğmesi varsayılan `otomatik` verir), `?gecis=600` sahne geçişinde solma
+süresi (ms, 0 anlık; aşağıda "Sahne geçişi").
 
 Ses: `?ses=stereo|dortlu|5.1|7.1|otomatik` hoparlör düzeni (varsayılan otomatik: ses cihazının kanal sayısı),
 `?hoparlor=` kanal sırasıyla hoparlör azimutları, **T** hoparlör testi (ayrıntı: aşağıda "Çok kanallı ses"). İkisi de
@@ -155,9 +157,13 @@ katmanda:
   **Otomatik varsayılan** (2 Kasım, `src/kaliteSecimi.ts`): ne `?kalite=` ne yerel kayıt varsa ekran kartı geçici bir
   WebGL bağlamından okunur (WEBGL_debug_renderer_info, sonra WEBGL_lose_context): Intel entegre (Iris Xe, UHD) →
   `orta`, yazılım çizici → `dusuk`, diğerleri (RTX) → `yuksek`. Otomatik değer kaydedilmez (kart değişirse yeniden
-  seçilir), HUD'da "kalite orta (otomatik: Intel(R) Iris(R) Xe Graphics)", köprü günlüğüne bağlanınca bir kez (istemci
-  günlüğünde bilgi düzeyi olmadığından uyarı satırı). Elle seçim önceliklidir; panelin "Oynatıcı" düğmesi her zaman
-  `?kalite=` verdiğinden (varsayılan `yuksek`) otomatik seçim yalnız düğmesiz açılışta devreye girer.
+  seçilir), HUD'da "kalite orta (otomatik: Intel(R) Iris(R) Xe Graphics)", önizleme bilgisinde "kalite orta
+  (otomatik)", köprü günlüğüne bağlanınca bir kez (istemci günlüğünde bilgi düzeyi olmadığından uyarı satırı). Elle
+  seçim önceliklidir. `?kalite=otomatik` yerel kaydı siler ve otomatiğe döner: panelin "Oynatıcı" düğmesi varsayılan
+  olarak bunu verir (Sistem › Oynatıcı ayarları: Otomatik / Düşük / Orta / Yüksek; eskiden hep `?kalite=yuksek`
+  verip kaydettiği için otomatik seçim panelden açılışta hiç devreye girmiyordu). Çözülen değer tektir
+  (`Sahne3B.kalite`): bu kademe tablosu, arazi kademesi (`ARAZI_KALITE`) ve sahne geçişinin küp yüzü / çözme genişliği
+  (`panoramaGecisi.ts` `KUP_YUZU`, aşağıda "Sahne geçişi") aynı değerden gelir.
 - **Bitki ayıklama ve arazi performansı** (2 Kasım, `arazi.ts`, `bitkiSektorleri.ts`, `araziIzgara.ts`, testli): bitki
   türleri tek InstancedMesh ve `frustumCulled=false` olduğu için her duvar ve gölge geçişi 360°'deki bütün örnekleri
   çiziyordu (Iris Xe'de karenin ~%75'i). Şimdi: model alt mesh'leri malzemeye göre tek geometride birleşir (çimen
@@ -275,8 +281,17 @@ makinesi, `panoramaCozucu.ts` + `panoramaIscisi.ts` işçi, `panoramaDokulari.ts
   ortak), takastan önce yeni ortam ve sisle `compileAsync` (programlar paralel derlenmeye başlar).
 - **Takas** tek karede: `ciz()`den hemen sonra 3B karesi `#tuvalGecis` örtüsüne kopyalanır (3B'nin üstü, 2B katmanın
   altı), `takasYap` yeni panoramayı, araziyi ve ışığı uygular, eskinin küp ve PMREM **hedefleri** `dispose()` edilir. Sonra
-  `compileAsync` bitene dek 3B çizilmez (örtü eski kareyi tutar), bölge değiştiyse arazi dokuları gelene dek (en çok
-  1,2 sn) beklenir ve örtü **0,6 sn'de compositor'da solar** (Web Animations; `?gecis=ms`, 0 = anlık kesme).
+  `compileAsync` bitene dek 3B çizilmez (örtü eski kareyi tutar), bölge değiştiyse arazi dokuları gelene dek
+  (`AraziKatmani.dokularHazir`: yüklemesi süren doku kalmadı; bulunamayan doku beklenmez, önbellekteki ortak dokular
+  hazırdır; en çok 1,2 sn) beklenir ve örtü **0,6 sn'de compositor'da solar** (Web Animations; `?gecis=ms`, 0 = anlık
+  kesme). Küp yüzü ve çözme genişliği `Sahne3B.kalite`den (otomatik kalite dahil; dizüstünde otomatik `orta`: küp 1536).
+- **Geçiş sürerken sahne sıfırlaması** (`sahne/sifirla`): ekrandaki sahne hemen temizlenir (`temeleDondur`); süren
+  hazırlık (gelen panorama) bırakılmaz, bölge geçişinin ertelenen işleri (`bekleyenSifirla`, arazi) yerinde kalır, yani
+  bölge geçişi beklerken sıfırlamadan sonra gelen figür/efektler yine takası bekler, öncekiler kuyruktan silinir; takas
+  yeni bölgede sahneyiSifirla'yı bir kez daha çalıştırır (geri almaz). Örtü takastaki eski karenin anlık görüntüsünü
+  tutuyorsa (figür, duman, iz) yeni sahnenin ilk çizilen karesinde (soluyorsa hemen) solmadan kalkar
+  (`GecisKatmani.sahneTemizlendi` / `temizKaredeKaldir`); panel önizlemesi o temiz kareyi bekler. Takastan önce gelen
+  sıfırlamada takas zaten temiz kareyi yakalar; siyah ilk açılış örtüsü etkilenmez.
 - Ardışık isteklerde yenisi eskisini geçersiz kılar (nesil numarası: işçi durdurulur, geç gelen bitmapler kapatılır, GPU
   kaynakları bırakılır); A→B→A'da geçiş olmaz; aynı dosyada yalnız yaw/plan/güneş/zaman değişirse yeniden yükleme yok.
 - **Yer tutucu** (gokyuzuCiz/araziCiz) yalnız hiç panorama gösterilmemişken ve gösterilecek panorama yokken; ilk açılışta
@@ -286,9 +301,10 @@ makinesi, `panoramaCozucu.ts` + `panoramaIscisi.ts` işçi, `panoramaDokulari.ts
   sonra aynı mevsimde en yakın zaman; gecede alacakaranlık, sonra gündüz). Zamanı farklı yedekte `zaman` boş kalır, sahne
   onu saate göre karartır. Seçim köprü günlüğüne birleşim başına bir kez yazılır ("Panorama eksik: Dağlık · kis · gece →
   daglik/pano_yaz_gece_foto_8k_gece.jpg (yaz gece)"); dosya yüklenemezse sıradaki aday, hiçbiri olmazsa ekrandaki kalır.
-- HUD son satırı `geçiş: yükleniyor <dosya> 0,4 sn` / `son geçiş 2,3 sn` ve örtü opaklığı; önizlemede örtü de görünür.
-  2 sn'yi aşan geçiş köprü günlüğüne adım süreleriyle yazılır. Konsol: `window.duvar.sahne3b.sonGecis`,
-  `window.duvar.gecis`, `window.duvar.arkaPlan()`.
+- HUD son satırı `geçiş: yükleniyor <dosya> 0,4 sn` / `son geçiş 2,3 sn` ve örtü opaklığı; önizlemede örtü de görünür
+  (duvardaki opaklığıyla), geçiş bitince (örtü kalkınca) panele önizleme 5 sn beklemeden gider. 2 sn'yi aşan geçiş köprü
+  günlüğüne adım süreleriyle yazılır. Konsol: `window.duvar.sahne3b.sonGecis`, `window.duvar.gecis`,
+  `window.duvar.arkaPlan()`.
 
 Bellek (panorama başına GPU): eski yol 8K'da ~1,6 GiB (küp 384 + derinlik 384, PMREM 2 × 384, equirect 128 MiB) ve her
 geçişte +384 MiB sızıntı (yalnız `.texture.dispose()`; aynı kalıp `gokyuzu.ts`'te de vardı, ikisi de düzeltildi). Şimdi küp
@@ -306,9 +322,11 @@ kapalı, o FPS işinin konusu; q90'a sıkıştırılmış panoramalar):
 | bellek | +384 MiB / geçiş | 10 geçişte doku 51, geometri 63, program 18 sabit; GPU süreci ~660 MB sabit | 4 geçişte doku 53, geometri 64, program 21 sabit |
 
 Takas karesinin çoğu arazi işidir: aynı bölgede yeni planın görüş koridorları (`arazi.koridorlariAyarla` yerinde, ızgara +
-normaller, 0,3–0,8 sn) ya da bölge değişiminde `arazi.kur` (~0,33 sn). Örtünün altında kalır ama ana iş parçacığını tutar;
-arazi.ts'e dokunulmadı (hazırlık sırasında hesaplanıp takasta uygulanabilir ya da Worker'a alınabilir). Bölge değişiminden
-sonra bitki modellerinin ve dokularının ilk yüklemesi solmadan sonra 0,4–0,7 sn'lik kareler bırakabiliyor (arazi.ts).
+normaller, 0,3–0,8 sn) ya da bölge değişiminde `arazi.kur` (~0,33 sn). Örtünün altında kalır ama ana iş parçacığını tutar
+(hazırlık sırasında hesaplanıp takasta uygulanabilir ya da Worker'a alınabilir; geçiş turunda arazi.ts'e dokunulmadı,
+yukarıdaki süreler FPS turundan önceki arazi koduyla). FPS turundan beri bölge değişiminde arazi/çimen malzemesi ve ortak
+dokular korunur (3–5 doku indirilir, program yeniden derlenmez); bitki modellerinin ilk yüklemesi solmadan sonra yine
+0,4–0,7 sn'lik kareler bırakabilir (birleşik ölçüm yapılmadı).
 İlk patlama artık program derlemiyor (patlama/krater/moloz malzemelerinin gizli ön derleme kopyaları): en uzun kare
 0,23 sn (eskiden 1,28 sn). Yön doğrulaması: yeni küp ile eski otomatik küp aynı kameradan çizilip karşılaştırıldı, ortalama
 piksel farkı 1,05/255 (5° kayma 12,5; 180° 37; ters çevrik 55).
@@ -459,20 +477,26 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
 - Bağlanınca `{tip:"merhaba", rol:"oynatici"}` gönderir; köprü `baglanti.oynatici` sayacını artırır.
 - `durum` mesajı → tüm sahne parametreleri; `efekt` mesajı → anlık efekt (`EfektIstegi` + zaman);
   `figur` mesajı → figür komutu + aktif figür listesi.
-- Oynatıcı komut göndermez (durumsuz; yeniden bağlanınca son durumu alır). İstisnalar: **önizleme** — iki tuvali
-  384 px JPEG'e indirip `{tip:"onizleme", veri}` yollar, en çok 5 sn'de bir ve yalnız en az bir panel bağlıyken
-  (köprü `baglanti` mesajında `panel.sayi` bildirir; toDataURL ana iş parçacığını ~0,1–0,2 sn bekletir); köprü
-  yalnızca panellere iletir, canlı sahne kartı pusulanın üstünde gösterir (15 sn'den eskiyse gizler). Sıfırlamadan
-  sonra ve yeni panel bağlanınca bir sonraki kare hemen gider. **Günlük** (`gunluk`) ve **⇧0** sıfırlama isteği.
+- Oynatıcı komut göndermez (durumsuz; yeniden bağlanınca son durumu alır). İstisnalar: **önizleme** — iki tuvali ve
+  aradaki geçiş örtüsünü (duvardaki opaklığıyla) 384 px JPEG'e indirip `{tip:"onizleme", veri, bilgi}` yollar, en çok
+  5 sn'de bir ve yalnız en az bir panel bağlıyken (köprü `baglanti` mesajında `panel.sayi` bildirir; toDataURL ana iş
+  parçacığını ~0,1–0,2 sn bekletir); köprü yalnızca panellere iletir, canlı sahne kartı pusulanın üstünde gösterir (15
+  sn'den eskiyse gizler; sıfırlamadan önceki görüntü "temizleniyor…" diye soluk). Bir sonraki kare hemen gider:
+  sıfırlamadan sonra (örtü eski kareyi tutuyorsa ilk temiz karede; yoksa panel sıfırlamadan sonra damgalanmış bayat
+  bir görüntüyü 5 sn gösterirdi), yeni panel bağlanınca ve sahne geçişi bitince. `bilgi`: fps, boyut, kalite
+  ("otomatik" işaretiyle), 3B, figür/krater sayısı, geçiş sürerken geçiş durumu. **Günlük** (`gunluk`) ve **⇧0**
+  sıfırlama isteği.
 - **Sahne sıfırlaması** (`POST /api/sahne/sifirla {kaynak?}`, köprüde `SahneYoneticisi`): köprü sırayla senaryoyu
   durdurur (await yok; bekleyen adım dönünce uygulanmaz), `figur temizle` yayınlar, çatışma/izli mermi/helikopteri
   kapatan TEK `durum` yayınını yollar (UE çağrıları sonra, beklenmeden, 3 sn zaman aşımı; DMX flaşı kesilip temel ışık
   gider), en son `{tip:"sahne", islem:"sifirla", nesil, kaynak, ozet, zaman}`. Oynatıcı bu mesajda yerel artıkları
   sabit sırayla temizler (`sahneTemizligi.ts`, adım başına try/catch, hatalar tek satırda köprü günlüğüne): bekleyen
   figür/efekt kuyrukları → 3B (`Sahne3B.temeleDondur`: figürler ve yüklenmekte olanlar, krater/moloz/duman,
-  parçacıklar, uçuştaki iz ve tank mermisi, patlama ışığı, arazi kraterleri) → 2B klipler → 2B efektler (flaş,
-  sarsıntı) → 2B izli mermi → sesler (`efektleriSustur`: tek seferlikler 30 ms'de söner, atış dizileri ve tampon
-  bekleyenler iptal, konuşma kuyruğu silinir, rotor hızla söner) → önizleme. Çatışma/izli/helikopterin açık-kapalı
+  parçacıklar, uçuştaki iz ve tank mermisi, patlama ışığı, arazi kraterleri: `AraziKatmani.kraterleriTemizle()` çukuru,
+  yanığı ve silinen bitkiyi yerinde geri alır, ızgara yeniden kurulmaz) → 2B klipler → 2B efektler (flaş, sarsıntı) →
+  2B izli mermi → sesler (`efektleriSustur`: tek seferlikler 30 ms'de söner, atış dizileri ve tampon bekleyenler iptal,
+  konuşma kuyruğu silinir, rotor hızla söner) → geçiş örtüsü (geçiş sürerken eski kare ilk temiz karede kalkar; gelen
+  panorama ve ertelenen bölge işleri etkilenmez, bkz. "Sahne geçişi") → önizleme. Çatışma/izli/helikopterin açık-kapalı
   oluşu durumdan gelir, temizlik ona dokunmaz. Ortam sesi, sütre, ortam ve bölge kalır. Eski oynatıcı yalnız
   `tip`/`islem`'e bakar, çalışmaya devam eder.
 - Bağlanan istemciye sırayla: `durum`, `senaryo`, `baglanti`, `ornek`, `{tip:"sahne", islem:"senkron", nesil}`,
@@ -507,10 +531,12 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   11,4 ms, ısınınca 14 ms; Iris Xe güç bütçesini CPU ile paylaşır) yuksek ~48, orta 52–60, 4 asker + çatışma orta ~49;
   bitki yerleşimi her açılışta rastgele olduğundan üçgen sayısı da ±%10 oynar. Bitki gölgesini kapatmak orta'da 2–3 ms
   kazandırır (yalnız çalılarınki ~1 ms); görüntü kaybı yüzünden kademelere uygulanmadı. Kalan takılmalar: panel
-  önizlemesi (2 sn'de bir toDataURL, 65–100 ms), panorama yükleme/geçiş ve ilk patlamada gölgelendirici derlemesi
-  (ayrı izler). Ölçerken aynı GPU'da başka bir oynatıcı sekmesi/başsız tarayıcı çizmemeli ve ağır CPU işi (test,
-  derleme) olmamalı: paylaşımlı Iris Xe'de GPU süresi %25–100 uzar. 5760×1080 için hedef makine (RTX 4060+).
-  Parçacık üst sınırı 2100×kalite çarpanı.
+  önizlemesi (toDataURL 65–100 ms; birleşimden sonra en çok 5 sn'de bir ve yalnız panel bağlıyken, sıfırlama/geçiş
+  sonunda bir kez daha; PBO ile eşzamansız okuma yapılmadı) ve sahne geçişinin takas karesi (0,33–0,8 sn, örtünün
+  altında; "Sahne geçişi"). İlk patlamadaki gölgelendirici derlemesi geçiş turunun ön derleme kopyalarıyla kalktı
+  (0,23 sn). Bu sayılar üç izin ayrı ölçümleri; birleşik dal tarayıcıda yeniden ölçülmedi. Ölçerken aynı GPU'da başka
+  bir oynatıcı sekmesi/başsız tarayıcı çizmemeli ve ağır CPU işi (test, derleme) olmamalı: paylaşımlı Iris Xe'de GPU
+  süresi %25–100 uzar. 5760×1080 için hedef makine (RTX 4060+). Parçacık üst sınırı 2100×kalite çarpanı.
 - Yaralı/diz çökme Quaternius rigine göre ayarlandı; Poly Pizza/Mixamo modellerde düşme klibi yok, klipsiz
   model yaralı olunca gövde yere yatırılır (kaba). Yere yatıp ateş (prone) duruşu yok.
 - Çok kanallı ses (4 kanal / 5.1 / 7.1, LFE) yazılımda hazır ve birim testli; gerçek hoparlörlerle kulak testi yapılmadı

@@ -21,10 +21,10 @@ function kayitli(hataVeren: TemizlikAdimi[] = []) {
 }
 
 describe("adimlariCalistir", () => {
-  it("sabit sıra: kuyruklar → 3B → 2B klipler → 2B efektler → 2B izli → sesler → önizleme", () => {
+  it("sabit sıra: kuyruklar → 3B → 2B klipler → 2B efektler → 2B izli → sesler → geçiş örtüsü → önizleme", () => {
     const { sira, islemler } = kayitli();
     expect(adimlariCalistir(islemler)).toEqual([]);
-    expect(sira).toEqual(["kuyruklar", "sahne3b", "klipler", "efektler", "izli", "sesler", "onizleme"]);
+    expect(sira).toEqual(["kuyruklar", "sahne3b", "klipler", "efektler", "izli", "sesler", "ortu", "onizleme"]);
   });
 
   it("bir adım hata atsa da sonrakiler çalışır; hatalar sırayla döner ve tek satırda özetlenir", () => {

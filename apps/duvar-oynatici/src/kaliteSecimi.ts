@@ -6,6 +6,12 @@
  * ayıklaması + tek geçişten sonra dizüstünde (Iris Xe) kırsal hibritte 1920×360'ta ~58 fps, "yuksek" ~54 fps
  * (önce sırasıyla 25 ve 19). Diğer kartlar (sahadaki RTX sınıfı) → "yuksek". Otomatik değer kaydedilmez: kart
  * değişirse (projektör PC'si) yeniden seçilir; elle seçim (panel adresi, ?kalite=, yerel kayıt) hep önceliklidir.
+ * `?kalite=otomatik` (panelin varsayılan "Otomatik" seçimi) yerel kaydı siler: panel düğmesiyle bir kez verilen elle
+ * kademe sonraki açılışlarda otomatiği ezmesin.
+ *
+ * Tek çözüm noktası: sonuç main.ts'te Sahne3B'ye verilir; gölge/parçacık/arazi kademesi (KALITE_AYARLARI, ARAZI_KALITE)
+ * ve sahne geçişinin küp yüzü ile çözme genişliği (panoramaGecisi.ts KUP_YUZU, yuklemeGenisligi) hep `Sahne3B.kalite`yi
+ * okur, ayrıca `?kalite=` ya da yerel kayıt okunmaz.
  */
 import type { Kalite } from "./sahne3b/sahne3b";
 
@@ -48,11 +54,19 @@ export interface KaliteSecimi {
   otomatikKart: string | null;
 }
 
+/** `?kalite=otomatik`: yerel kaydı sil, ekran kartına göre seç (panelin "Otomatik" seçeneği). */
+export const OTOMATIK_KALITE = "otomatik";
+
 /**
- * Kademe: geçerli `?kalite=` (yerel kayda yazılır) > geçerli yerel kayıt > otomatik. `kartAdi` yalnız otomatikte
- * çağrılır (geçici WebGL bağlamı gereksiz yere açılmasın); null dönerse "yuksek".
+ * Kademe: geçerli `?kalite=` (yerel kayda yazılır) > geçerli yerel kayıt > otomatik. `?kalite=otomatik` yerel kaydı
+ * siler ve doğrudan otomatiğe gider. `kartAdi` yalnız otomatikte çağrılır (geçici WebGL bağlamı gereksiz yere
+ * açılmasın); null dönerse "yuksek".
  */
-export function kaliteSec(param: string | null, kayit: Pick<Storage, "getItem" | "setItem">, kartAdi: () => string | null = ekranKartiAdi): KaliteSecimi {
+export function kaliteSec(
+  param: string | null,
+  kayit: Pick<Storage, "getItem" | "setItem"> & Partial<Pick<Storage, "removeItem">>,
+  kartAdi: () => string | null = ekranKartiAdi,
+): KaliteSecimi {
   const gecerli = (d: string | null) => KADEMELER.find((k) => k === d) ?? null;
   const elle = gecerli(param);
   if (elle) {
@@ -65,7 +79,8 @@ export function kaliteSec(param: string | null, kayit: Pick<Storage, "getItem" |
   }
   let kayitli: Kalite | null = null;
   try {
-    kayitli = gecerli(kayit.getItem("kalite"));
+    if (param === OTOMATIK_KALITE) kayit.removeItem?.("kalite");
+    else kayitli = gecerli(kayit.getItem("kalite"));
   } catch {
     kayitli = null;
   }

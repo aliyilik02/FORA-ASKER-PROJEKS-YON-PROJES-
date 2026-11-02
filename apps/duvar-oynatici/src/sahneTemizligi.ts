@@ -9,8 +9,11 @@
  */
 import type { SimulasyonDurumu } from "./tipler";
 
-/** Sabit temizlik sırası: önce kuyruklar (yeni figür/efekt doğmasın), sonra 3B ve 2B katmanlar, sesler, önizleme. */
-export const TEMIZLIK_ADIMLARI = ["kuyruklar", "sahne3b", "klipler", "efektler", "izli", "sesler", "onizleme"] as const;
+/**
+ * Sabit temizlik sırası: önce kuyruklar (yeni figür/efekt doğmasın), sonra 3B ve 2B katmanlar, sesler, geçiş örtüsü
+ * (sahne geçişi sürerken örtüdeki eski kare ilk temiz karede kalkar; gecis.ts), en son önizleme (temiz kare istenir).
+ */
+export const TEMIZLIK_ADIMLARI = ["kuyruklar", "sahne3b", "klipler", "efektler", "izli", "sesler", "ortu", "onizleme"] as const;
 export type TemizlikAdimi = (typeof TEMIZLIK_ADIMLARI)[number];
 
 /** Günlük satırı için adım adları. */
@@ -21,6 +24,7 @@ export const TEMIZLIK_ETIKETLERI: Record<TemizlikAdimi, string> = {
   efektler: "2B efektler",
   izli: "2B izli mermi",
   sesler: "sesler",
+  ortu: "geçiş örtüsü",
   onizleme: "önizleme",
 };
 

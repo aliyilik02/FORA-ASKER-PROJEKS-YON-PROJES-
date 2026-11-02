@@ -7,6 +7,9 @@
  * anındaki arazi kurulumu ya da gölgelendirici derlemesi ana iş parçacığını tutsa da solma akar. Maliyet: bir drawImage
  * ve solma boyunca bir katman. Kopya `ciz()`den hemen sonra, aynı görevde alınmalı: preserveDrawingBuffer=false'ta çizim
  * tamponu yalnız o görev boyunca geçerlidir (önizleme de aynı yolu kullanır).
+ *
+ * Geçiş sürerken sahne sıfırlanırsa örtüdeki eski kare (figür, duman, iz) gösterilmeye devam etmez: örtü yeni sahnenin
+ * ilk (temiz) karesinde solmadan kalkar, panel önizlemesi de o kareyi bekler (`sahneTemizlendi`, `temizKaredeKaldir`).
  */
 
 /** Örtü tuvalinin kullanılan kısmı (testte sahte nesne). */
@@ -32,6 +35,10 @@ export class GecisKatmani {
   private solmaBasi = 0;
   private W = 0;
   private H = 0;
+  /** Örtü bir anlık görüntü tutuyor (`yakala`; `siyahla` değil): içindeki figür, duman ve izler o karenindir. */
+  private kareVar = false;
+  /** Sahne sıfırlandı ve örtü eski kareyi tutuyor: ilk temiz karede solmadan kalkar (`temizKaredeKaldir`). */
+  private temizlikIstendi = false;
 
   /** `sureMs`: solma süresi (`?gecis=`; 0 = anlık kesme, ölçüm karşılaştırması için). */
   constructor(
@@ -63,6 +70,35 @@ export class GecisKatmani {
   get tuval(): GecisOgesi {
     return this.oge;
   }
+  /**
+   * Sıfırlamadan sonra örtü hâlâ eski kareyi (artık silinmiş figür, duman, iz) gösteriyor: panel önizlemesi bu sürede
+   * gönderilmez (main.ts onizlemeGonder), ilk temiz kareyi bekler.
+   */
+  get temizlikBekliyor(): boolean {
+    return this.temizlikIstendi && this.durum !== "kapali";
+  }
+
+  /**
+   * Sahne sıfırlandı (main.ts sahneyiTemizle). Örtü takastaki eski karenin anlık görüntüsünü tutuyorsa içindeki figür,
+   * duman ve izler artık yok: örtü yeni (temiz) sahne çizilir çizilmez solmadan kalkar (`temizKaredeKaldir`). Siyah örtü
+   * (ilk açılış) ve örtüsüz durum etkilenmez; takastan önceki sıfırlamada zaten temiz kare yakalanır.
+   */
+  sahneTemizlendi() {
+    if (this.durum !== "kapali" && this.kareVar) this.temizlikIstendi = true;
+  }
+
+  /**
+   * Her karede, takas ve solma kararlarından sonra: sıfırlama istendiyse örtü soluyorken hemen, tam opak beklerken
+   * `temizKare` olunca (yeni sahne bu karede çizildi ya da 3B katman kapandı) solmadan kalkar. Kalktıysa önceki hâli
+   * ("bekliyor": solma hiç başlamadı, çağıran geçiş ölçümünü kapatır; "soluyor"), kalkmadıysa null.
+   */
+  temizKaredeKaldir(temizKare: boolean): "bekliyor" | "soluyor" | null {
+    if (!this.temizlikBekliyor) return null;
+    if (this.durum === "bekliyor" && !temizKare) return null;
+    const onceki = this.durum === "bekliyor" ? "bekliyor" : "soluyor";
+    this.bitir();
+    return onceki;
+  }
 
   /** Tuval boyutu (3B tuvalle aynı); geçiş sürerken değişirse örtü hemen kalkar (eski kare yanlış ölçekte kalmasın). */
   boyutlandir(W: number, H: number) {
@@ -77,7 +113,7 @@ export class GecisKatmani {
     const c = this.hazirla();
     if (!c) return;
     c.drawImage(kaynak, 0, 0, this.W, this.H);
-    this.goster();
+    this.goster(true);
   }
 
   /** Henüz 3B kare yok (ilk açılış): siyah örtü; ilk sahne siyahtan solar. */
@@ -86,7 +122,7 @@ export class GecisKatmani {
     if (!c) return;
     c.fillStyle = "#000";
     c.fillRect(0, 0, this.W, this.H);
-    this.goster();
+    this.goster(false);
   }
 
   /** Örtüyü soldurur (compositor'da); bitince gizlenir. Süre 0 ise anında kalkar. */
@@ -123,6 +159,8 @@ export class GecisKatmani {
     const a = this.animasyon;
     this.animasyon = null;
     this.durum = "kapali";
+    this.kareVar = false;
+    this.temizlikIstendi = false;
     this.oge.style.visibility = "hidden";
     this.oge.style.opacity = "1";
     a?.cancel();
@@ -146,10 +184,13 @@ export class GecisKatmani {
     return c;
   }
 
-  private goster() {
+  /** `kare`: örtü bir anlık görüntü tutuyor (siyah değil); yeni yakalama önceki sıfırlama isteğini düşürür (kare temiz). */
+  private goster(kare: boolean) {
     this.oge.style.opacity = "1";
     this.oge.style.visibility = "visible";
     this.durum = "bekliyor";
+    this.kareVar = kare;
+    this.temizlikIstendi = false;
   }
 }
 

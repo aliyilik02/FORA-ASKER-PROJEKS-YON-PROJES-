@@ -10,8 +10,9 @@ Bu rehber eğitmen/sunucu içindir; teknik ayrıntı `docs/duvar-oynatici.md`'de
    açılır. Oynatıcı penceresini projeksiyon ekranına taşı, **F** ile tam ekran yap.
 3. **Tek oynatıcı penceresi** açık olsun: panel üst çubuğunda "Oynatıcı ×1" görünmeli. ×2/×3
    görünüyorsa fazla sekmeleri kapat (hepsi aynı ekran kartını kullanır, görüntü yavaşlar).
-4. Dizüstü/entegre ekran kartında: panel **Sistem → Oynatıcı ayarları → Düşük** seç, oynatıcıyı
-   kapatıp "Oynatıcı" düğmesiyle yeniden aç. Saha makinesinde (RTX) "Yüksek".
+4. Kalite: panel **Sistem → Oynatıcı ayarları** varsayılanı **Otomatik**; oynatıcı ekran kartına bakar (dizüstü /
+   Intel entegre → Orta, saha makinesi RTX → Yüksek; HUD'da "kalite orta (otomatik: …)"). Takılırsa "Düşük" seç,
+   oynatıcıyı kapatıp "Oynatıcı" düğmesiyle yeniden aç.
 5. Ses: oynatıcı penceresine bir kez tıkla (tarayıcı sesi kullanıcı etkileşimi ister); **M** sessiz/açık.
 6. Oynatıcı HUD kapalı açılır (**H** açar/kapar; fps ve tanı bilgisi). Kalibrasyon ızgarası **K** kapalı olsun.
 
@@ -53,12 +54,12 @@ Senaryo sırasında paneldeki her şey kullanılabilir (ör. ek patlama tetikle)
 - **Gerçek çekim mi?** Panoramalar gerçek 360° çekim (CC0), figürler 3B model; kabul için yeşil perde
   asker çekimi ve gerçek VFX plakaları eklenebilir (`docs/fotogercekci-icerik-hatti.md`).
 - **İnternet gerekir mi?** Hayır. Tüm içerik yerel klasörde (`icerik/`).
-- **Donanım?** Saha: RTX 4060+ ve 3 projektör (`docs/donanim-onerileri.md`). Bu dizüstünde düşük kalite kademesiyle gösterim yapılabilir.
+- **Donanım?** Saha: RTX 4060+ ve 3 projektör (`docs/donanim-onerileri.md`). Bu dizüstünde (Iris Xe) otomatik "orta" kademeyle gösterim yapılabilir.
 - **Unreal?** İsteğe bağlı yol; mevcut sistem tarayıcı tabanlı, kurulum tek `demo.bat`.
 
 ## Olası aksaklıklar
 
-- Görüntü takılıyor → Sistem sekmesinde "Düşük"; fazla oynatıcı sekmelerini kapat; HUD'da fps ve "çizim/duvar" bak.
+- Görüntü takılıyor → fazla oynatıcı sekmelerini kapat; Sistem sekmesinde "Düşük"; HUD'da fps ve "çizim/duvar" bak.
 - Ses yok → oynatıcı penceresine tıkla, **M**'ye bas; Windows ses çıkışı projeksiyon/hoparlör mü kontrol et.
 - Oynatıcı "köprü bekleniyor" diyor → köprü penceresi kapanmış; `demo.bat yeniden`.
 - Figürler gelmiyor → panel üst çubuğunda "Oynatıcı" yeşil mi; oynatıcıyı yenile (F5), köprü aktif figürleri yeniden gönderir.

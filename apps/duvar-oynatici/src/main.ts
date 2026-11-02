@@ -13,6 +13,8 @@
  *   ?ses=5.1     ses düzeni stereo|dortlu|5.1|7.1|otomatik (varsayılan otomatik: cihazın kanal sayısı; yerel kayıtta kalır)
  *   ?hoparlor=-45,45,-135,135   kanal sırasıyla hoparlör azimutları, LFE için "lfe" (sahadaki gerçek açılar)
  *   ?gecis=600   sahne geçişinde eski karenin solma süresi (ms; 0 = anlık kesme)
+ *   ?kalite=orta kademe dusuk|orta|yuksek (yerel kayıtta kalır) ya da "otomatik" (kaydı siler); hiçbiri yoksa da
+ *                otomatik: Intel entegre → orta, diğer → yuksek (kaliteSecimi.ts)
  * Tuşlar: H hud · K kalibrasyon ızgarası · F tam ekran · M sessiz · 1 patlama · 2 toz · 3 izli mermi aç/kapa ·
  *   T hoparlör testi (her kanalda sırayla gürültü, kanal adı ekranda) · ⇧0 sahneyi temele döndür (köprüye istek; köprü
  *   yoksa yalnız bu oynatıcı). Efekt tuşlarında basılı tutma (tuş tekrarı) yok sayılır.
@@ -123,9 +125,10 @@ const panorama = new PanoramaKatmani();
 const klipler = new KlipKatmani();
 /** 3B sahne katmanı: panorama resmi arka plan + IBL, 3B figür/efekt/helikopter. Video panoramada 2B yol kalır. */
 /**
- * Kalite kademesi: ?kalite=dusuk|orta|yuksek (adres çubuğu > yerel kayıt > otomatik). Otomatik: Intel entegre kart
- * (Iris Xe, UHD) "orta", diğerleri "yuksek" (bkz. kaliteSecimi.ts); HUD'da "kalite orta (otomatik: …)", köprü
- * günlüğüne bir kez.
+ * Kalite kademesi: ?kalite=dusuk|orta|yuksek|otomatik (adres çubuğu > yerel kayıt > otomatik; "otomatik" kaydı siler).
+ * Otomatik: Intel entegre kart (Iris Xe, UHD) "orta", diğerleri "yuksek" (bkz. kaliteSecimi.ts); HUD'da "kalite orta
+ * (otomatik: …)", köprü günlüğüne bir kez. Tek çözüm noktası: Sahne3B'nin kademesi (gölge, parçacık, arazi) ve sahne
+ * geçişinin küp yüzü / çözme genişliği (panoramaGecisi.ts) bu değerden gelir.
  */
 const kaliteSecimi = kaliteSec(params.get("kalite"), localStorage);
 const kalite: Kalite = kaliteSecimi.kalite;
@@ -469,7 +472,9 @@ function sahneyiTemizle(neden: string) {
     efektler: () => efektler.temizle(),
     izli: () => izli.temizle(),
     sesler: () => ses.efektleriSustur(heliYok),
-    // Temiz görüntü bir sonraki karede panele gitsin (5 sn beklemeden)
+    // Geçiş sürerken: örtüdeki eski kare (figür, duman, iz) yeni sahnenin ilk karesinde solmadan kalkar (kare)
+    ortu: () => gecis.sahneTemizlendi(),
+    // Temiz görüntü bir sonraki (örtü eski kareyi tutuyorsa ilk temiz) karede panele gitsin (5 sn beklemeden)
     onizleme: () => {
       sonOnizleme = 0;
     },
@@ -654,19 +659,23 @@ ses.uyariDinle((mesaj) => {
 });
 
 /**
- * Panel için küçük önizleme: iki tuval (3B + 2B) 384×(oran) JPEG'e indirgenir, en çok ONIZLEME_ARALIGI_MS'de bir ve
- * yalnız en az bir panel bağlıyken (köprü `baglanti.panel.sayi` ile bildirir) köprüye gönderilir (köprü yalnızca
- * panellere iletir). Kontrol odasında duvarı görmeyen eğitmen "duvarda şu an ne var" sorusunu canlı sahne kartından
- * yanıtlar. toDataURL ana iş parçacığını GPU'yu beklemeye zorlar (Iris Xe, yüksek kalite: 160–200 ms takılma); bu
- * yüzden seyrek ve izleyen yokken hiç. Sahne sıfırlaması ve yeni bağlanan panel bir sonraki kareyi hemen ister.
+ * Panel için küçük önizleme: iki tuval (3B + 2B) ve aradaki geçiş örtüsü (duvardaki opaklığıyla) 384×(oran) JPEG'e
+ * indirgenir, en çok ONIZLEME_ARALIGI_MS'de bir ve yalnız en az bir panel bağlıyken (köprü `baglanti.panel.sayi` ile
+ * bildirir) köprüye gönderilir (köprü yalnızca panellere iletir). Kontrol odasında duvarı görmeyen eğitmen "duvarda şu
+ * an ne var" sorusunu canlı sahne kartından yanıtlar. toDataURL ana iş parçacığını GPU'yu beklemeye zorlar (Iris Xe,
+ * yüksek kalite: 160–200 ms takılma); bu yüzden seyrek ve izleyen yokken hiç. Bir sonraki kareyi hemen isteyenler:
+ * sahne sıfırlaması (örtü eski kareyi tutuyorsa ilk temiz kare beklenir: panel "temizleniyor…" bayat görüntüyle
+ * bitmesin), yeni bağlanan panel ve biten sahne geçişi (yeni panorama duvarda; panel 5 sn eski sahneyi göstermesin).
  */
 const ONIZLEME_ARALIGI_MS = 5000;
 const onizlemeTuval = document.createElement("canvas");
 let sonOnizleme = 0;
 /** En az bir panel bağlı mı (köprünün `baglanti` mesajından; bilinene kadar gönderilmez). */
 let onizlemeIstenir = false;
+/** Geçiş örtüsü önceki karede görünüyordu (kalktığı karede önizleme hemen gider). */
+let ortuSuruyordu = false;
 function onizlemeGonder(simdi: number) {
-  if (kopru.durum !== "bagli" || !onizlemeIstenir || simdi - sonOnizleme < ONIZLEME_ARALIGI_MS || W === 0 || H === 0) return;
+  if (kopru.durum !== "bagli" || !onizlemeIstenir || gecis.temizlikBekliyor || simdi - sonOnizleme < ONIZLEME_ARALIGI_MS || W === 0 || H === 0) return;
   sonOnizleme = simdi;
   try {
     const g = 384;
@@ -688,7 +697,7 @@ function onizlemeGonder(simdi: number) {
       c.globalAlpha = 1;
     }
     c.drawImage(tuval, 0, 0, g, y);
-    const bilgi = `${fps.toFixed(0)} fps · ${W}×${H} · kalite ${sahne3b.kalite} · 3B ${sahne3b.hazir ? "açık" : "kapalı"} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi}${sahne3b.panoramaYukleniyor ? ` · ${sahne3b.gecisBilgisi}` : ""}`;
+    const bilgi = `${fps.toFixed(0)} fps · ${W}×${H} · kalite ${sahne3b.kalite}${kaliteSecimi.otomatikKart ? " (otomatik)" : ""} · 3B ${sahne3b.hazir ? "açık" : "kapalı"} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi}${sahne3b.panoramaYukleniyor ? ` · ${sahne3b.gecisBilgisi}` : ""}`;
     kopru.gonder({ tip: "onizleme", veri: onizlemeTuval.toDataURL("image/jpeg", 0.55), bilgi });
   } catch {
     /* tuval okunamazsa (tainted) önizleme yok */
@@ -748,6 +757,10 @@ function kare(simdi: number) {
     gecis.solmaBaslat();
     sahne3b.solmaBasladi(simdi);
   }
+  // Geçiş sürerken sahne sıfırlandıysa örtüdeki eski kare (figür, duman, iz) artık yanlış: yeni sahne bu karede
+  // çizildiyse (ya da örtü zaten soluyorsa, 3B katman kapandıysa) örtü solmadan kalkar. Solma hiç başlamadıysa geçiş
+  // ölçümü burada kapanır. Gelen panorama ve ertelenen bölge işleri (takas) etkilenmez.
+  if (gecis.temizKaredeKaldir(sahne3b.buKareCizildi || !sahne3b.hazir) === "bekliyor") sahne3b.solmaBasladi(simdi);
   gecis.guncelle(tuval3b.style.transform);
   if (videoPanoramaBekleniyor && (panorama.aktif || panorama.hata)) {
     // Video panorama oynatılabilir: 3B katman kapanır (bir sonraki karede örtüyle)
@@ -806,6 +819,9 @@ function kare(simdi: number) {
   hazirOluncaYenidenUygula();
   bekleyenFigurleriUygula();
   bekleyenEfektleriUygula();
+  // Sahne geçişi bitti (örtü kalktı, yeni sahne duvarda): panelin önizlemesi 5 sn beklemesin
+  if (ortuSuruyordu && !gecis.suruyor) sonOnizleme = 0;
+  ortuSuruyordu = gecis.suruyor;
   onizlemeGonder(simdi);
   if (kalibrasyon) kalibrasyonCiz(ctx, W, H, yerlesimler, duvarOzeti);
   const sesTesti = ses.testDurumu;
@@ -819,7 +835,7 @@ function kare(simdi: number) {
         `${durum.oda === "oda1" ? "Oda 1" : "Oda 2"} · ${BOLGE_ETIKETLERI[durum.bolge]} · ${durum.ortam.mevsim} · saat ${durum.ortam.saat.toFixed(2)} (${zamanDilimi(durum.ortam.saat)}) · ışık ${gok.isik.toFixed(2)}`,
         `bulut ${durum.ortam.bulut.toFixed(2)} · sis ${durum.ortam.sis.toFixed(2)} · yağış ${durum.ortam.yagis} · rüzgâr ${durum.ortam.ruzgarSiddeti.toFixed(2)} @ ${durum.ortam.ruzgarYonu}°`,
         `izli mermi ${durum.izliMermi.aktif ? `açık (duvar ${durum.izliMermi.cikisNoktasi}, ${durum.izliMermi.yon}°, ${durum.izliMermi.siklik}/sn)` : "kapalı"} · oda2 ${GUVENLI_ALAN_ETIKETLERI[durum.oda2.guvenliAlan]} · helikopter ${HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}`,
-        `içerik: ${ucCizildi ? "3B sahne + panorama" : panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : arkaPlan === "siyah" ? "bekleniyor (siyah)" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""}${sahne3b.hata ? ` · 3B hatası: ${sahne3b.hata}` : ""} · aktif klip ${klipler.aktifSayisi} · duvar ${duvarAcilari} · H hud · K kalibrasyon · F tam ekran · M sessiz · T hoparlör testi · 1/2/3 test`,
+        `içerik: ${ucCizildi ? "3B sahne + panorama" : panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : arkaPlan === "siyah" ? "bekleniyor (siyah)" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""}${sahne3b.hata ? ` · 3B hatası: ${sahne3b.hata}` : ""} · aktif klip ${klipler.aktifSayisi} · duvar ${duvarAcilari} · H hud · K kalibrasyon · F tam ekran · M sessiz · T hoparlör testi · 1/2/3 test · ⇧0 sıfırla`,
         `geometri: ${duvarOzeti[0]} | ${duvarOzeti[1]}`,
         `3B: ${ucAktifOlabilir ? (sahne3b.hazir ? "açık" : "bekliyor") : ucBoyut ? "desteklenmiyor" : "kapalı (?uc=0)"} · kalite ${kaliteBilgisi} · arazi ${sahne3b.araziDurumu} · ${sahne3b.gunesBilgisi} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi} · parçacık ${sahne3b.parcacikSayisi} · çizim/duvar ${sahne3b.cizimCagrisi} · iz ${sahne3b.izSayisi} · çatışma ${durum.catisma?.aktif ? `%${Math.round(durum.catisma.siddet * 100)} @ ${durum.catisma.yon}°` : "kapalı"} · helikopter ${sahne3b.helikopterHazir ? `model, iniş ${sahne3b.helikopterAzimutu.toFixed(0)}°` : "siluet"}`,
         `${sahne3b.gecisBilgisi}${gecis.suruyor ? ` · örtü %${Math.round(gecis.opaklik * 100)}` : ""} · solma ${gecis.sureMs} ms (?gecis=)`,

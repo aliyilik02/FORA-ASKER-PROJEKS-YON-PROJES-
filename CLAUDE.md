@@ -87,18 +87,23 @@ parametrik yer tutucu. Üstüne: Oda 2 ön planları, **figür klipleri** (`klip
 `patlama_*`, `toz_*`, `uzak_patlama_*` olanlar panel efektlerine otomatik bağlanır), izli mermi,
 flaş. Tuşlar: H hud, K kalibrasyon, F tam ekran, M sessiz, 1/2/3 test (basılı tutma tekrar etmez), T hoparlör testi,
 ⇧0 sahneyi sıfırla (köprüye istek; köprü yoksa yalnız o oynatıcı). Sorgu: `?oda=`, `?fov=`, `?panorama=`,
-`?yaw=`, `?hud=1`, `?doldur=1`, `?kalite=dusuk|orta|yuksek` (yerel kayıtta kalır; ikisi de yoksa otomatik: Intel entegre
-→ orta, diğer → yuksek, `src/kaliteSecimi.ts`), `?ses=`, `?hoparlor=` (Ses, aşağıda), `?gecis=600` (sahne geçişinde
-solma, ms; 0 anlık). Ayrıntı: `docs/duvar-oynatici.md`.
+`?yaw=`, `?hud=1`, `?doldur=1`, `?kalite=dusuk|orta|yuksek` (yerel kayıtta kalır) ya da `otomatik` (kaydı siler; hiçbiri
+yoksa da otomatik: Intel entegre → orta, diğer → yuksek, `src/kaliteSecimi.ts`; panelin Oynatıcı düğmesinde varsayılan
+Otomatik), `?ses=`, `?hoparlor=` (Ses, aşağıda), `?gecis=600` (sahne geçişinde solma, ms; 0 anlık). Kalite tek yerde
+çözülür ve `Sahne3B.kalite` olur: gölge/parçacık/arazi kademesi ile geçişin küp yüzü ve çözme genişliği aynı değerden.
+Ayrıntı: `docs/duvar-oynatici.md`.
 
 Sahne geçişi (2 Kasım, `sahne3b/panoramaGecisi.ts`, `gecis.ts`): eski sahne yenisi hazır olana dek canlı çizilir; panorama
 işçide çözülür (`panoramaIscisi.ts`), GPU'ya şeritlerle yüklenir, derinliksiz küp (dusuk 1024 / orta 1536 / yuksek 2048) +
 1024'lük kopyadan PMREM (hedefler `dispose()`; eski yolda 8K geçişi başına 384 MiB sızıyordu). Bölge sıfırlaması, arazi,
-kar, ışık ve helikopter iniş noktası takasa ertelenir; takasta eski kare `#tuvalGecis` örtüsüne kopyalanır, 0,6 sn'de solar.
-Yer tutucu yalnız hiç panorama yokken (beklerken siyah). Eksik bölge/mevsim/zaman en yakın panoramaya düşer
-(`video.ts panoramaAdaylari`, köprü günlüğüne yazılır). Foto panoramalar q90 4:2:0'a sıkıştırıldı
-(`araclar/panorama-sikistir.py`, özgünler `icerik/_yedek_ozgun/`). Kalan takılma takas karesinde arazi işi
-(`koridorlariAyarla` 0,3–0,8 sn, örtü altında).
+kar, ışık ve helikopter iniş noktası takasa ertelenir; takasta eski kare `#tuvalGecis` örtüsüne kopyalanır, 0,6 sn'de solar
+(bölge değiştiyse önce arazi dokuları beklenir: `AraziKatmani.dokularHazir`, en çok 1,2 sn). Yer tutucu yalnız hiç
+panorama yokken (beklerken siyah). Eksik bölge/mevsim/zaman en yakın panoramaya düşer (`video.ts panoramaAdaylari`,
+köprü günlüğüne yazılır). Foto panoramalar q90 4:2:0'a sıkıştırıldı (`araclar/panorama-sikistir.py`, özgünler
+`icerik/_yedek_ozgun/`). Kalan takılma takas karesinde arazi işi (`koridorlariAyarla` 0,3–0,8 sn, örtü altında).
+Geçiş sürerken sıfırlama: ekrandaki sahne hemen temizlenir, gelen panorama ve ertelenen bölge işleri yerinde kalır (takas
+yeni bölgede bir kez daha temizler, sıfırlamayı geri almaz); örtü eski kareyi tutuyorsa yeni sahnenin ilk karesinde
+solmadan kalkar (`GecisKatmani.sahneTemizlendi`).
 
 Ses (`ses.ts` + saf hesap `sesYerlesimi.ts`): her ses sahne azimutuyla çalınır; stereoda eski StereoPanner yolu (pan =
 sin azimut), 4 kanal / 5.1 / 7.1'de ChannelMerger (iki komşu hoparlöre sabit güçlü kaydırma, ön/arka ayrılır, uzak
@@ -122,12 +127,14 @@ efektler (2B/3B patlama, ateş, duman, toz, moloz, flaş, sarsıntı, uçuştaki
 mermi, helikopter, sesler (tek seferlikler, atış dizileri, konuşma kuyruğu; rotor hızla söner), senaryo oynatımı,
 paneldeki helikopter iniş dizisi, DMX'te takılı flaş. Köprüde `SahneYoneticisi` (`apps/kopru/src/sahne.ts`): senaryo dur
 → figür temizle → tek durum yayını (`DurumDeposu.sahneyiTemeleDondur`) → `sahne/sifirla` (nesil++) → hemen kayıt → tek
-günlük satırı; oynatıcıda `sahneTemizligi.ts` (adım başına try/catch). Bağlanan istemciye önce `sahne/senkron` (nesil;
-kaçırılan sıfırlamada yerel temizlik), sonra `figur temizle`, sonra aktif figürler. Canlı önizleme en çok 5 sn'de bir
-ve yalnız panel bağlıyken (`BaglantiDurumu.panel.sayi`). Silah sesleri tek atışlık kesimler (`silah_tek_1..8.ogg`,
+günlük satırı; oynatıcıda `sahneTemizligi.ts` (adım başına try/catch); arazi kraterleri `AraziKatmani.kraterleriTemizle()`
+ile yerinde geri alınır (ızgara yeniden kurulmaz). Bağlanan istemciye önce `sahne/senkron` (nesil; kaçırılan
+sıfırlamada yerel temizlik), sonra `figur temizle`, sonra aktif figürler. Canlı önizleme en çok 5 sn'de bir ve yalnız
+panel bağlıyken (`BaglantiDurumu.panel.sayi`); sıfırlamada (örtü eski kareyi tutuyorsa ilk temiz karede), yeni panel
+bağlanınca ve sahne geçişi bitince hemen. Silah sesleri tek atışlık kesimler (`silah_tek_1..8.ogg`,
 `araclar/silah-tek-atis.mjs`); lisans CC BY 3.0 (Vincent Sevedge), atıf gerekir.
 
-## Mevcut durum (26 Ekim 2026)
+## Mevcut durum (2 Kasım 2026)
 
 Çalışan: panel, köprü, oynatıcı, senaryo editörü, ön ayarlar, Art-Net çıkışı (donanımsız
 doğrulandı), figür paneli, demo.bat. **Oynatıcıda 3B sahne katmanı** (`apps/duvar-oynatici/src/sahne3b/`,
@@ -174,8 +181,9 @@ değişince seçer (sabit 12° yok); yeni resim panorama yüklenirken helikopter
 kalkış iniş noktasının kendi yanından arkaya, "yok"ta 1,5 sn sönme; uzak kaynak yerden ≤ 12 m ve arazi ufkunun
 ≤ 1,5° üstü (`AraziUfku`; çatışmada da), kapalı doğruda mermi yamaca çarpar; izli akışta yakın zemin payı %20,
 çarpma/"çat" sesi ≤ 1,5/sn; hedef yüksekliği döndürmeden sonra. Kırsal/dağlık hibritte önde ve sol önde
-~115–205 m'deki sırt yüzünden orta duvarın izli mermilerinin çoğu sırtın arkasına çarpıyordu; stab/fps'te kaynak
-sırtın tepesine taşınıyor (`izliYol.sirtaTasi`, aşağıda Performans). Tarayıcıda gözle doğrulanmadı.
+~115–205 m'deki sırt yüzünden orta duvarın izli mermilerinin çoğu sırtın arkasına çarpıyordu; 2 Kasım (stab/fps,
+kullanıcı kararı) kaynak sırtın tepesine taşınır (`izliYol.sirtaTasi`: izleyiciden ≥ 80 m, sırt zemininin 1,5 m üstü;
+çatışmada da; kırsal orta duvarda 60 m'ye ulaşan iz %25 → %96). Tarayıcıda gözle doğrulanmadı.
 
 **Figür duruşları (23 Ekim):** `FigurKomutu.poz` (ayakta / comelmis / yarali) ve `islem: "poz"`;
 yaralı = SWAT "HitRecieve" → "Death" (son karede kalır) + prosedürel nefes ve kol kaldırma (yardım
@@ -191,19 +199,11 @@ gelen figürler kuyruğa alınır (yeniden açılışta kaybolmaz). Tarayıcıda
 **Performans (23 Ekim):** gölge haritası karede bir kez (`shadowMap.autoUpdate=false`, `ciz()` başında
 `needsUpdate`), iskeletli mesh'ler tek Skeleton paylaşır (`iskeletleriPaylastir`), krater dumanı 3/sn + toplam
 320 topak sınırı. Iris Xe, 1277×239: boş sahne 60 fps; 4 figür + çatışma + 16 krater ≈ 38 fps (önce 30).
-HUD'da `çizim/duvar` sayısı var. **2 Kasım (stab/fps):** asıl yük 3B bitkilerdi (tek InstancedMesh, ayıklama yok: her
-duvar + gölge 360°'yi çiziyordu). Şimdi model alt mesh'leri malzemeye göre birleşir, örnekler 8 azimut sektörüne bölünür
-(`BitkiHucresi`, sınır kabuk `bitkiSektorleri.ts`), saydam iki yüzlü yapraklar tek geçiş, ot/taş 50 m, çalı 80 m,
-`kaya_buyuk` LOD 9 k üçgen; krater yalnız penceresinin normallerini hesaplar (`araziIzgara.ts`, 1–5 ms), yeni
-`AraziKatmani.kraterleriTemizle()` sıfırlamada çukuru/yanığı/silinen bitkiyi geri alır; bölge değişiminde arazi
-malzemesi ve ortak dokular korunur; çatışma izi/parçacık yalnız canlı aralığı yükler. Iris Xe 1920×360 kırsal hibrit:
-yuksek 19 → 54 fps, orta 25 → 58, dusuk 40 → 60; 4 asker + çatışma orta 18 → 55–60 (makine ısınınca orta 52–60,
-yuksek ~48; ölçerken başka sekme/başsız tarayıcı ve ağır CPU işi olmamalı). Kalite otomatik: Intel → orta.
-İzli mermi/çatışma kaynağı sırt arkasında kalırsa sırtın tepesine taşınır (`izliYol.sirtaTasi`; kırsal orta duvarda
-60 m'ye ulaşan iz %25 → %96). **Ölçüm tuzağı:** Claude-in-Chrome sekmesi/penceresi arka planda kalınca
-Chrome kareyi kısar (10–16 fps görünür); gerçek fps için normal Chrome penceresinde HUD'a bak (PowerShell
-`CopyFromScreen` ile ekran yakalama işe yarar). Üst çubuktaki "Oynatıcı ×N" sayısı 1'den büyükse birden çok
-oynatıcı sekmesi aynı GPU'yu paylaşıyor demektir; fazlasını kapat.
+HUD'da `çizim/duvar` sayısı var (2 Kasım FPS turu: aşağıda Stabilizasyon). **Ölçüm tuzağı:** Claude-in-Chrome
+sekmesi/penceresi arka planda kalınca Chrome kareyi kısar (10–16 fps görünür); gerçek fps için normal Chrome penceresinde
+HUD'a bak (PowerShell `CopyFromScreen` ile ekran yakalama işe yarar). Üst çubuktaki "Oynatıcı ×N" sayısı 1'den büyükse
+birden çok oynatıcı sekmesi aynı GPU'yu paylaşıyor demektir; fazlasını kapat. Ölçerken başsız tarayıcı ve ağır CPU işi
+(test, derleme) de olmamalı: Iris Xe güç bütçesini CPU ile paylaşır, uzun yükte ısınınca orta 52–60, yuksek ~48 fps.
 
 **23 Ekim öğleden sonra (otonom tur):** güneş yüksekliği makullük sınırı (gündüz ≥18°), gece panoramasında
 ay ışığı sınırı (zayıf/mavimsi), pusulada yaralı/diz çökmüş/yatmış işaretleri, örnek senaryolar
@@ -221,6 +221,20 @@ mesajı), önizleme fps/kalite bilgisi taşır; HUD varsayılan kapalı; panelde
 
 **3B arazi (23–26 Ekim):** `sahne3b/arazi.ts` (yükseklik haritası, splat doku karışımı, krater deformasyonu, çimen demetleri, Poly Haven CC0 kaya/çalı/fidan LOD), `gokyuzu.ts` (tam kip), `uzay.ts` zeminY. Kip: `?arazi=kapali|hibrit|tam` (yerel kayıtta kalır); varsayılan (`main.ts` `ARAZI_VARSAYILAN`) kırsal/dağlık/ormanlık/üs hibrit, meskûn mahal kapalı (panoramada binalar 5–15 m'de, 3B zemin duvar diplerini gömüyor). 26 Ekim: 5 bölge profili (doku seti, bitki seti `BITKI_SETLERI`, hibrit görünür yarıçap `yaricap` 30–160 m + kenar çanağı `kenarCukuru`), ormanlık bitkileri (fidan/çalı/eğrelti/kütük), normal haritası teğet çerçevesi düzeltmesi, `sok()` GPU kaynaklarını bırakır, krater molozu çukurun yeni zeminine, arazi yeniden kurulunca figür/sütre `zemineOturt`, düşük kalitede 1K doku, eksik içerik uyarısı köprü günlüğüne. İçerik `icerik/arazi/` (depo dışı; `araclar/arazi-indir.mjs`, `araclar/arazi-sadelestir.mjs`, lisans `icerik/arazi/LISANS.txt`). **Kullanıcı bu katmanı değiştirmeyi, yeni modeller ve yeni alan eklemeyi planlıyor (26 Ekim): derin/çok ajanlı inceleme yapma, önce yönü sor.** Açık: orman ayarı (çimen 0,35, gölge lekesi, 2–3 m fidan) gözle doğrulanmadı ve yaz orman panoraması park çimi olduğundan 3B orman tabanıyla renk uyumsuz; tam kipte gök ufukta beyaza patlıyor (olası neden: three `Sky` HDR çıktı + `NoToneMapping`); Oda 2 düzlük kontrolü; belgeler.
 
+**Stabilizasyon (2 Kasım; `stab/sifirla` + `stab/gecis` + `stab/fps` → `stab/birlesim`):** tek düğmeyle temel sahne
+(yukarıda "Temel sahne"), eski sahne canlı kalan geçiş (yukarıda "Sahne geçişi"), FPS: bitki ayıklama (8 azimut sektörü,
+`BitkiHucresi`), saydam yapraklar tek geçiş, ot/taş 50 m / çalı 80 m, kaya LOD, kısmi krater normali (`araziIzgara.ts`),
+bölge değişiminde arazi malzemesi ve ortak dokular korunur, iz/parçacık yalnız canlı aralık; Iris Xe 1920×360 kırsal
+hibrit yuksek 19 → 54 fps, orta 25 → 58, dusuk 40 → 60, 4 asker + çatışma orta 18 → 55–60 (stab/fps dalında ölçüldü,
+birleşik dal yeniden ölçülmedi). Birleşimde: sıfırlama
+araziyi `kraterleriTemizle()` ile yerinde düzeltir (ara katman kalktı, yeniden kurulum/takaslı geçiş yok); geçiş
+sürerken sıfırlama gelen panoramayı ve ertelenen bölge işlerini bozmaz, örtüdeki eski kare ilk temiz karede kalkar;
+önizleme 5 sn / panel koşulunu korur, örtüyü çizer, sıfırlamada temiz kareyi bekler, geçiş bitince hemen gider; kalite
+tek yerde çözülür (panel varsayılanı Otomatik); arazi `dokularHazir` (solma bulunamayan dokuyu beklemez). Tarayıcıda
+uçtan uca bakılmadı (birim test + derleme): Esc Esc / ⇧0, geçiş sırasında sıfırlama, krater geri dönüşü, sırt üstü
+namlu parıltıları, "Gösterim – Kırsal Tam Tur" ve "Dağlık pusu" duvarda denenmeli. Ayrıntı ve kalan takılmalar:
+`docs/duvar-oynatici.md` (Sahne geçişi, Bitki ayıklama, Köprü ile sözleşme, Sınırlamalar).
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 1. Poly Haven panoramaları (23) için yerleşim planı + `yawKaydirma`; güneş tahmini ve gece karartması
@@ -231,8 +245,8 @@ mesajı), önizleme fps/kalite bilgisi taşır; HUD varsayılan kapalı; panelde
    müdahale animasyonu (turnike) için yeşil perde çekimi (docs §2.5). Yaralı taşıma (iki kişi) yok.
 3. VFX plakaları (gerçek çekim, alfa). Helikopter inişi (uçuş modeli, pas geçme, zemine göre rotor tozu, konumlu
    rotor sesi) ve 3B izli mermi yazılımda, inceleme bulguları düzeltildi (2 Kasım); duvarda gözle/kulakla ayar bekliyor.
-   Sırt arkasındaki uzak kaynak (karar verildi, stab/fps): kaynak sırtın tepesine (≥ 80 m, zeminin 1,5 m üstü) taşınır;
-   kırsal orta duvarda izleyicinin 60 m yakınına ulaşan iz %25 → %96. Namlu parıltıları sırtta: duvarda gözle bakılmalı.
+   Sırt üstü uzak kaynak (stab/fps, yukarıda "Helikopter ve izli mermi"): namlu parıltıları sırt çizgisinde, duvarda
+   gözle bakılmalı.
 4. Çok kanallı ses (4 kanal / 5.1 / 7.1) ve ölçülmüş duvar geometrisi (`?oda=`) yazılımda hazır; kalan saha ayarı:
    gerçek hoparlör açıları (`?hoparlor=`), T testi + kulak testi (LFE seviyesi), U duvar ölçüleri → `?oda=` (panel
    Sistem › Duvar geometrisi, sahada K ızgarasıyla doğrula). Türkçe bağırma/yaralı inleme kaydı.
