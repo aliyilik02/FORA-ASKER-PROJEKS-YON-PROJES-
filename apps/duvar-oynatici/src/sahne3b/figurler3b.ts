@@ -38,7 +38,9 @@ export interface ModelTanimi {
    * Duruma göre klipler: çatışmada `ates` (nişan/atış döngüsü), aksi hâlde `animasyon`; `vurulma` (tek sefer,
    * isabet tepkisi) ve `dusme` (tek sefer, yere düşüp kalır) yaralı duruşu için. Kısa ad yeter ("Idle_Gun_Shoot").
    */
-  animasyonlar?: { ates?: string; vurulma?: string; dusme?: string };
+  animasyonlar?: { ates?: string; vurulma?: string; dusme?: string; comelmis?: string; yatmis?: string };
+  // `comelmis` / `yatmis`: duruşun klibi (ör. Mixamo "Rifle Kneel Idle", "Prone Idle"); varsa prosedürel kemik ofsetleri
+  // yerine klibe çapraz geçilir. Yoksa (Quaternius) eski prosedürel yol.
   /** Elde silah: ayrı glTF, iskeletteki kemiğe bağlanır. konum metre, donus derece, boy = silah uzunluğu (m). */
   silahModeli?: { dosya: string; kemik: string; konum?: [number, number, number]; donus?: [number, number, number]; boy?: number };
   /** Başlangıç duruşu (manifest); panel komutu `poz` ile değişir. */
@@ -168,6 +170,9 @@ interface Aktif {
   asama: PozAsamasi;
   eylemVurulma: THREE.AnimationAction | null;
   eylemDusme: THREE.AnimationAction | null;
+  /** Klip tabanlı duruşlar (varsa) ve o an çalan duruş klibi. */
+  eylemPoz: Partial<Record<"comelmis" | "yatmis", THREE.AnimationAction>>;
+  aktifPoz: THREE.AnimationAction | null;
   kemikler: Partial<Record<KemikRolu, THREE.Object3D>>;
   /** Ofset uygulanmadan önceki kemik kuaterniyonları: klip o kemiği yazmıyorsa birikmeyi önlemek için kare başında geri yüklenir. */
   kemikTemel: Map<THREE.Object3D, THREE.Quaternion>;
@@ -426,6 +431,7 @@ export class FigurKatmani {
     let eylemAtes: THREE.AnimationAction | null = null;
     let eylemVurulma: THREE.AnimationAction | null = null;
     let eylemDusme: THREE.AnimationAction | null = null;
+    const eylemPoz: Aktif["eylemPoz"] = {};
     const animasyonlar = gltf.animations ?? [];
     if (animasyonlar.length && tanim.animasyon !== "yok") {
       const klip = klipBul(animasyonlar, tanim.animasyon) ?? animasyonlar[0];
@@ -451,6 +457,13 @@ export class FigurKatmani {
       };
       eylemVurulma = tekSefer(tanim.animasyonlar?.vurulma);
       eylemDusme = tekSefer(tanim.animasyonlar?.dusme);
+      for (const poz of ["comelmis", "yatmis"] as const) {
+        const k = klipBul(animasyonlar, tanim.animasyonlar?.[poz]);
+        if (!k) continue;
+        const e = karistirici.clipAction(k);
+        e.setLoop(THREE.LoopRepeat, Infinity);
+        eylemPoz[poz] = e;
+      }
     }
     // Prosedürel duruş kemikleri (ad: manifest → varsayılan; GLTFLoader nokta/boşluğu sildiği için iki biçim)
     const kemikler: Partial<Record<KemikRolu, THREE.Object3D>> = {};
@@ -530,6 +543,8 @@ export class FigurKatmani {
       asama: "normal",
       eylemVurulma,
       eylemDusme,
+      eylemPoz,
+      aktifPoz: null,
       kemikler,
       kemikTemel: new Map(),
       kemikTemelKonum: new Map(),
@@ -597,6 +612,9 @@ export class FigurKatmani {
       a.sonrakiYardim = a.zaman + 3 + Math.random() * 3;
       return;
     }
+    // Klip tabanlı duruş: ilgili klibe çapraz geç (ayakta → bekleme klibi); prosedürel ofsetler devre dışı
+    const pozKlibi = poz === "ayakta" ? null : (a.eylemPoz[poz as "comelmis" | "yatmis"] ?? null);
+    const klipli = pozKlibi !== null || a.aktifPoz !== null;
     // ayakta / çömelmiş: yerdeyse kalk (bekleme klibine dön), silahı al
     if (onceki === "yarali") {
       a.asama = "normal";
@@ -605,8 +623,22 @@ export class FigurKatmani {
       a.icNesne.position.y = a.tabanY;
       a.eylemVurulma?.stop();
       a.eylemDusme?.stop();
-      if (a.eylemBekle) a.eylemBekle.reset().setEffectiveWeight(1).play();
+      if (a.eylemBekle && !pozKlibi) a.eylemBekle.reset().setEffectiveWeight(1).play();
       a.atesPozu = false;
+    }
+    if (klipli) {
+      const hedef = pozKlibi ?? a.eylemBekle;
+      const kaynak = a.aktifPoz ?? (a.atesPozu ? a.eylemAtes : a.eylemBekle);
+      if (hedef && hedef !== kaynak) {
+        hedef.reset().setEffectiveWeight(1).play();
+        if (kaynak && !aninda) kaynak.crossFadeTo(hedef, 0.4, false);
+        else if (kaynak) kaynak.stop();
+      }
+      a.aktifPoz = pozKlibi;
+      a.atesPozu = false;
+      a.comelme = 0;
+      a.yatma = 0;
+      return;
     }
     if (aninda) {
       a.comelme = poz === "comelmis" ? 1 : 0;
@@ -652,11 +684,12 @@ export class FigurKatmani {
 
   /** Bekleme/ateş döngülerini söndürür (tek seferlik klibe geçerken). */
   private oturanlariSondur(a: Aktif, sure: number) {
-    for (const e of [a.eylemBekle, a.eylemAtes]) {
+    for (const e of [a.eylemBekle, a.eylemAtes, a.aktifPoz]) {
       if (!e) continue;
       if (sure > 0) e.fadeOut(sure);
       else e.stop();
     }
+    a.aktifPoz = null;
   }
 
   /**
@@ -666,9 +699,9 @@ export class FigurKatmani {
    */
   private durusuUygula(a: Aktif, dt: number) {
     a.zaman += dt;
-    const hedefComelme = a.poz === "comelmis" ? 1 : 0;
+    const hedefComelme = a.poz === "comelmis" && !a.aktifPoz ? 1 : 0;
     if (a.comelme !== hedefComelme) a.comelme += Math.sign(hedefComelme - a.comelme) * Math.min(Math.abs(hedefComelme - a.comelme), dt / 0.6);
-    const hedefYatma = a.poz === "yatmis" ? 1 : 0;
+    const hedefYatma = a.poz === "yatmis" && !a.aktifPoz ? 1 : 0;
     if (a.yatma !== hedefYatma) a.yatma += Math.sign(hedefYatma - a.yatma) * Math.min(Math.abs(hedefYatma - a.yatma), dt / 0.8);
     const sag = new THREE.Vector3(1, 0, 0).applyQuaternion(a.nesne.getWorldQuaternion(new THREE.Quaternion())).normalize();
     const k = a.kemikler;
@@ -734,7 +767,7 @@ export class FigurKatmani {
 
   /** Çatışma durumuna göre bekleme ↔ ateş klipleri arasında yumuşak geçiş. */
   private pozuGuncelle(a: Aktif) {
-    if (!a.eylemAtes || !a.eylemBekle || a.poz === "yarali") return;
+    if (!a.eylemAtes || !a.eylemBekle || a.poz === "yarali" || a.aktifPoz) return;
     const istenen = a.silah && a.hiz === 0 && this.dusmanAzimutu !== null;
     if (istenen === a.atesPozu) return;
     a.atesPozu = istenen;

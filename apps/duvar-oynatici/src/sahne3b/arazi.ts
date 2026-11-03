@@ -808,6 +808,7 @@ export class AraziKatmani {
       kar: { value: 0 },
       kuruluk: { value: 0 },
       golgeLekesi: { value: 0 },
+      islaklik: { value: 0 },
       sisBaslangic: { value: 1e6 },
       sisBitis: { value: 1e6 },
       yarimBoyut: { value: YAKIN_BOYUT / 2 },
@@ -831,8 +832,11 @@ varying vec3 vDunya;
 varying vec3 vDunyaN;
 uniform sampler2D tSplat, tToprak, tCimen, tKaya, tKayaN, tCakil, tYol, tYanik, tKar, tKarN, tUzak;
 uniform float tToprakOlcek, tCimenOlcek, tKayaOlcek, tKayaNOlcek, tCakilOlcek, tYolOlcek, tYanikOlcek, tKarOlcek, tKarNOlcek, tUzakOlcek, toprakNOlcek;
-uniform float kar, kuruluk, golgeLekesi, sisBaslangic, sisBitis, yarimBoyut;
+uniform float kar, kuruluk, golgeLekesi, islaklik, sisBaslangic, sisBitis, yarimBoyut;
 struct AraziKarisim { float toprak, cimen, kaya, cakil, yol, yanik, kar; };
+// Islaklık: yüzey ıslaklığı (kar üstünde yok) ve su birikintisi (düz zemin, makro dokunun çukurları; yol/çakılda çok)
+float gIslak;
+float gBirikinti;
 // Karışım ağırlıkları parça başına bir kez hesaplanır (renk ve normal aynı değeri kullanır)
 AraziKarisim gArazi;
 vec3 gMakro;
@@ -862,6 +866,11 @@ void araziAgirliklari(vec3 geoNormal) {
   k.cakil *= kalan; kalan -= k.cakil;
   k.cimen *= kalan; k.toprak *= kalan;
   gArazi = k;
+  gIslak = islaklik * (1.0 - k.kar);
+  float duz = smoothstep(0.08, 0.02, egim);
+  float cukur = texture2D(tUzak, vDunya.xz * tUzakOlcek * 0.9 + vec2(0.53, 0.29)).b;
+  float esik = mix(0.72, 0.5, smoothstep(0.3, 1.0, islaklik)) - 0.12 * (k.yol + k.cakil);
+  gBirikinti = smoothstep(esik, esik + 0.1, cukur) * duz * smoothstep(0.25, 0.6, islaklik) * (1.0 - k.kar) * (1.0 - k.cimen * 0.7);
 }`,
         )
         .replace(
@@ -889,6 +898,9 @@ void araziAgirliklari(vec3 geoNormal) {
     float leke = texture2D(tUzak, xz * tUzakOlcek * 0.31 + vec2(0.37, 0.61)).g * 0.6 + texture2D(tUzak, xz * tUzakOlcek * 1.7 + vec2(0.11, 0.83)).g * 0.4;
     renk *= 1.0 - golgeLekesi * smoothstep(0.30, 0.55, leke) * 0.6;
   }
+  // Islak zemin koyulaşır; birikinti neredeyse siyah (gök yansıması pürüzlülükten gelir)
+  renk *= mix(1.0, 0.55, gIslak);
+  renk = mix(renk, renk * vec3(0.3, 0.32, 0.35), gBirikinti);
   diffuseColor.rgb *= renk;
   float uzaklik = length(vDunya.xz);
   diffuseColor.a *= 1.0 - smoothstep(sisBaslangic, sisBitis, uzaklik);
@@ -913,10 +925,19 @@ void araziAgirliklari(vec3 geoNormal) {
   Tg = normalize(Tg - normal * dot(normal, Tg));
   vec3 Bg = cross(Tg, normal);
   normal = normalize(mat3(Tg, Bg, normal) * mapN);
+  // Birikinti düz ayna: doku normali geometri normaline çekilir
+  normal = normalize(mix(normal, nonPerturbedNormal, gBirikinti));
 }`,
+        )
+        .replace(
+          "#include <roughnessmap_fragment>",
+          `#include <roughnessmap_fragment>
+// Islakta parlar (0,95 → 0,45), birikintide ayna (0,08): ortam haritasındaki gök zemine yansır
+roughnessFactor = mix(roughnessFactor, 0.45, gIslak);
+roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
         );
     };
-    m.customProgramCacheKey = () => "arazi-splat-v3";
+    m.customProgramCacheKey = () => "arazi-splat-v4";
     return m;
   }
 
@@ -1392,6 +1413,11 @@ void araziAgirliklari(vec3 geoNormal) {
   guncelle(dt: number) {
     this.zaman += dt;
     this.cimenZaman.value = this.zaman;
+  }
+
+  /** Yağmurdan ıslaklık 0–1 (sahne3b yağışla yavaşça yükseltip kurutur): koyu, parlak zemin ve düzlüklerde birikinti. */
+  islaklikAyarla(v: number) {
+    if (this.uniformlar.islaklik) this.uniformlar.islaklik.value = v;
   }
 
   /** Mevsim: kar örtüsü 0–1 (kış 1, sonbahar 0.15). */

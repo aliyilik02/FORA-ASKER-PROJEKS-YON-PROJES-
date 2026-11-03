@@ -1097,6 +1097,14 @@ export class Sahne3B {
   /** Karede: bulut ve sis kayması (rüzgâr), şimşek zarfı. */
   private havaGuncelle(dt: number) {
     this.sahneSaati += dt;
+    const hedefIslak = this.sonYagis === "siddetli_yagmur" ? 1 : this.sonYagis === "hafif_yagmur" ? 0.65 : 0;
+    const sabit = hedefIslak > this.islaklik ? 12 : 90;
+    const yeni = this.islaklik + (hedefIslak - this.islaklik) * Math.min(1, dt / sabit);
+    if (Math.abs(yeni - this.islaklik) > 1e-4) {
+      this.islaklik = yeni;
+      this.arazi.islaklikAyarla(yeni);
+      this.yagis3b.islaklikAyarla(yeni);
+    }
     const u = this.gokOrtusu.u;
     // Rüzgâr "nereden" esiyor (pusula oku içe bakar): bulut ters yöne kayar; düzlem biriminde (bulut yüksekliği 1)
     const yon = azimutYon(this.ruzgarYonu + 180);
@@ -1123,6 +1131,8 @@ export class Sahne3B {
     this.simsekVardi = zarf > 0.001;
   }
   private simsekVardi = false;
+  /** Zemin ıslaklığı 0–1: yağmurda ~12 sn'de ıslanır, kesilince ~90 sn'de kurur (arazi malzemesi + yağış sıçraması). */
+  private islaklik = 0;
 
   /**
    * Patlama yeri: yöne en yakın plan noktası; çevresinde (4,5 m) asker/tank varsa yöne 40° içindeki boş bir patlama

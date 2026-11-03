@@ -400,6 +400,39 @@ yağmur güneşli panoramanın üstüne yağıyordu. Şimdi 3B sahne açıkken (
 gürültüsünün içinde (21–26 fps, aynı dalgalanma). Henüz yok: yağmur sıçraması ve ıslak zemin, rüzgârda bitki
 sallanması, renkli duman, aydınlatma fişeği (docs/icerik-ihtiyac-listesi.md W7–W10).
 
+### Kendi 3B askerimiz: Meshy modeli + Mixamo hareketleri (3 Kasım 2026)
+
+`icerik/modeller/asker_komando.glb` (7,7 MB, depoda): Meshy AI ile üretilen Türk komando modeli (Image to 3D, Meshy 7.1,
+**Poz: A-Poz** açık, Remesh 30K üçgen, doku 2K; Meshy'nin kendi rig'i, 65 Mixamo adlı kemik) + 38 Mixamo klibi. Üretim
+reçetesi `docs/meshy-model-listesi.md`.
+
+**Mixamo'nun otomatik rig'i bu modeli kabul etmedi** ("Unknown error while generating motion"; A-poz, T-poz, parmaksız
+iskelet denendi; aynı modelin kolları yapışık ilk sürümü rig olmuştu). Çözüm: Meshy'nin rig'i kullanılır, Mixamo
+animasyonları Mixamo'daki herhangi bir karakterden **Without Skin** FBX olarak indirilir ve `araclar/mixamo-aktar.py`
+(Blender 5.1, başsız) ile aktarılır: her Meshy kemiğine aynı adlı Mixamo kemiğinden **dünya uzayında Copy Rotation**
+(kalçaya Copy Location, boy oranıyla), görsel anahtarlamayla pişirilir; dinlenme yönü 60°'den farklı kemikler (ayak ucu,
+parmak uçları) dinlenmede kalır. Her klip bir NLA izi → glTF'te ayrı animasyon (ad = dosya adı, ör. "Rifle Idle").
+
+```
+blender -b --python araclar/mixamo-aktar.py -- <meshy_rigli.fbx> <cikis.glb> <klip1.fbx> [klip2.fbx ...] [--render <png_klasoru>]
+```
+
+Mixamo'dan toplu indirme: sayfadaki JS ile `/api/v1/products?query=` → `/api/v1/products/<id>?character_id=` (gms_hash) →
+`POST /api/v1/animations/export` (skin false, 30 fps) → `/characters/<id>/monitor` → `job_result` adresi indirilir (bu
+oturumda Claude-in-Chrome ile yapıldı; betik scratchpad'de kalıcı değil, akış burada). Yürüme/koşma klipleri **In Place**
+(`inplace: true`), figürü kod taşır.
+
+Manifest (`klipler`, `komando_*`): `animasyonlar` artık `comelmis` / `yatmis` klip adı alır (ör. "Rifle Kneel Idle",
+"Prone Idle"); varsa `figurler3b.ts` prosedürel kemik ofsetleri yerine klibe çapraz geçer (`aktifPoz`), çatışmada ateş
+klibine geçmez. `kemikler` Mixamo adlarıyla (Spine, Spine2, Head, LeftUpLeg…; GLTFLoader ":"yi siler, iki biçim de
+denenir). `silahModeli.kemik` "mixamorig:RightHand", konum [0, 0.08, 0.02], dönüş [0, 0, −90] (gözle kabaca; ince ayar
+duvarda). Kayıtlar: bekleyen, nişan, diz çökmüş, yatan, yaralı (Hit Reaction → Dying), koşan, yürüyen, çömelerek, sürünen,
+sıhhiyeci (Kneeling Pointing), CPR, yaralı masaj alıyor (Receiving Cpr), el sallayan, telsiz, bomba, etrafa bakan. Örnek
+senaryo "Gösterim – Kendi Komandomuz (2 dk)" (`sn_komando_gosterimi`).
+
+Kaynak dosyalar (depo dışı, kullanıcının makinesinde `İndirilenler/mixamo_icin/`): Meshy FBX (rigli, dokulu),
+`animasyonlar/*.fbx` (Mixamo, Without Skin), OBJ denemeleri. GLB'yi yeniden üretmek için yukarıdaki komut.
+
 ### Çok kanallı ses (26 Ekim 2026)
 
 Sahada U odada 4 hoparlör (ön sol/sağ, arka sol/sağ) + subwoofer beklenir, büyük olasılıkla 5.1 / 7.1 AV alıcı

@@ -18,6 +18,10 @@ arama.
 
 ## 1. Modeller (Meshy)
 
+**3 Kasım durumu:** F1 (komando) üretildi, rig'lendi, 38 Mixamo klibiyle oynatıcıda (`asker_komando.glb`; süreç
+`docs/duvar-oynatici.md` "Kendi 3B askerimiz"). Sıradaki: S1 tüfek, V1 helikopter, T1 kum torbası, T3–T5 TCCC nesneleri.
+
+
 ### Teknik şartlar (hepsi için)
 
 - Biçim **GLB** (FBX de olur, ben dönüştürürüm). Ölçek **metre**, gerçek boy. Taban (ayak/teker) **orijinde**, Y yukarı.

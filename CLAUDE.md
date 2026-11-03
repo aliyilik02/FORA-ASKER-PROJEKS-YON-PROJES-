@@ -245,6 +245,13 @@ doğrusal eğri; sis nesnesi artık her kipte sahnede), şimşek aydınlanması.
 Chrome'da görüntüyle doğrulandı (kırsal, dağlık, gece, kar, tipi); duvarda bakılmadı. Ayrıntı `docs/duvar-oynatici.md`
 "Hava". Kalan: yağmur sıçraması/ıslak zemin, bitki sallanması, renkli duman, aydınlatma fişeği, yıldırım çizgisi.
 
+**Kendi askerimiz (3 Kasım):** `icerik/modeller/asker_komando.glb` = Meshy modeli (A-Poz açık, Remesh 30K) + Meshy rig'i
++ 38 Mixamo klibi (`araclar/mixamo-aktar.py`, Blender başsız, dünya uzayında Copy Rotation). **Mixamo otomatik rig bu
+modeli reddediyor** (A/T-poz fark etmez); Meshy rig + aktarım yolu kullanılır. Manifest `komando_*` kayıtları;
+`animasyonlar.comelmis/yatmis` klip tabanlı duruş (`figurler3b.ts` `aktifPoz`), `kemikler` Mixamo adları. Örnek senaryo
+`sn_komando_gosterimi`. Tüfek ele kabaca oturuyor (konum/dönüş ince ayarı duvarda). Ayrıntı `docs/duvar-oynatici.md`
+"Kendi 3B askerimiz". Meshy'de aynı reçete diğer modeller için: Image to 3D → Remesh; askerde Poz: A-Poz şart.
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 0. **Gösterim hazır (2 Kasım):** örnek senaryo "Gösterim – Güncel Durum (5 dk)" (`sn_gosterim_guncel`; akış

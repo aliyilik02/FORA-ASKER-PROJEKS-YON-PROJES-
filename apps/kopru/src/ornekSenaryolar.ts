@@ -155,6 +155,34 @@ export const ORNEK_SENARYOLAR: Senaryo[] = [
     ],
   },
   {
+    id: "sn_komando_gosterimi",
+    ad: "Gösterim – Kendi Komandomuz (2 dk)",
+    aciklama:
+      "Meshy ile ürettiğimiz, Mixamo hareketleriyle canlandırılan Türk komando modeli: mevzi, diz çökme, yere yatma, telsiz, " +
+      "yürüyüş, temas ve yaralanma, sıhhiyecinin kalp masajı, koşarak geçiş; sonunda fırtına (kapalı gök, yağmur, şimşek, ıslak zemin).",
+    oda: "oda1",
+    adimlar: [
+      { id: "k1", gecikmeMs: 0, aciklama: "Kırsal açık arazi", islem: { tip: "bolge", bolge: "kirsal_acik_arazi" } },
+      { id: "k2", gecikmeMs: 300, aciklama: "Yaz, 10:30, açık hava", islem: { tip: "ortam", ortam: { mevsim: "yaz", saat: 10.5, bulut: 0.15, sis: 0, yagis: "yok", ruzgarSiddeti: 0.2, simsek: false } } },
+      { id: "k3", gecikmeMs: 4000, aciklama: "Komando mevzide (sol)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_k3", klip: "komando_bekleyen", azimut: -18, yukseklik: -7, olcek: 1, dongu: true } } },
+      { id: "k4", gecikmeMs: 5500, aciklama: "Komando diz çökmüş (karşı)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_k4", klip: "komando_diz_cokmus", azimut: 4, yukseklik: -7, olcek: 1, dongu: true } } },
+      { id: "k5", gecikmeMs: 7000, aciklama: "Komando yere yatmış (sağ)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_k5", klip: "komando_yatan", azimut: 24, yukseklik: -8, olcek: 1, dongu: true } } },
+      { id: "k6", gecikmeMs: 9000, aciklama: "Telsizci (sol geri)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_k6", klip: "komando_telsiz", azimut: -42, yukseklik: -6, olcek: 1, dongu: true } } },
+      { id: "k7", gecikmeMs: 12000, aciklama: "Devriye yürüyüşü (sağ duvardan)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_k7", klip: "komando_yuruyen", azimut: 70, yukseklik: -6, olcek: 1, dongu: true, yansit: true } } },
+      { id: "k8", gecikmeMs: 22000, aciklama: "Uzaktan atış sesi", islem: { tip: "efekt", efekt: { tur: "gurultu", siddet: 0.6, yon: 300 } } },
+      { id: "k9", gecikmeMs: 25000, aciklama: "Patlama (orta)", islem: { tip: "efekt", efekt: { tur: "patlama", siddet: 0.9, yon: 12 } } },
+      { id: "k10", gecikmeMs: 27000, aciklama: "Soldaki komando vuruldu", islem: { tip: "figur", figur: { islem: "poz", id: "senaryo_k3", poz: "yarali" } } },
+      { id: "k11", gecikmeMs: 28500, aciklama: "Bağırma: 'Yaralı var!'", islem: { tip: "efekt", efekt: { tur: "bagirma", siddet: 1, yon: -18 } } },
+      { id: "k12", gecikmeMs: 31000, aciklama: "Çağırma: 'Sıhhiye!'", islem: { tip: "efekt", efekt: { tur: "cagirma", siddet: 0.9, yon: -18 } } },
+      { id: "k13", gecikmeMs: 34000, aciklama: "Sıhhiyeci yaralının yanında kalp masajı", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_k13", klip: "komando_cpr", yaninda: "senaryo_k3", olcek: 1, dongu: true } } },
+      { id: "k14", gecikmeMs: 42000, aciklama: "Takviye koşarak geçiyor (soldan sağa)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_k14", klip: "komando_kosan", azimut: -75, yukseklik: -6, olcek: 1, dongu: true } } },
+      { id: "k15", gecikmeMs: 48000, aciklama: "El bombası (sağ)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_k15", klip: "komando_bomba", azimut: 36, yukseklik: -7, olcek: 1, dongu: true } } },
+      { id: "k16", gecikmeMs: 60000, aciklama: "Hava kapanır, şiddetli yağmur, şimşek", islem: { tip: "ortam", ortam: { mevsim: "yaz", saat: 10.5, bulut: 1, sis: 0.15, yagis: "siddetli_yagmur", ruzgarSiddeti: 0.5, simsek: true } } },
+      { id: "k17", gecikmeMs: 66000, aciklama: "Yakın şimşek (orta)", islem: { tip: "efekt", efekt: { tur: "simsek", siddet: 1, yon: 10, mesafe: 800 } } },
+      { id: "k18", gecikmeMs: 100000, aciklama: "Yağmur diner, hava açılır", islem: { tip: "ortam", ortam: { mevsim: "yaz", saat: 10.5, bulut: 0.3, sis: 0, yagis: "yok", ruzgarSiddeti: 0.2, simsek: false } } },
+    ],
+  },
+  {
     id: "sn_gosterim_guncel",
     ad: "Gösterim – Güncel Durum (5 dk)",
     aciklama:
