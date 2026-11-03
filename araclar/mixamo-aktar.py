@@ -65,19 +65,38 @@ for pb in arm.pose.bones:
     pb.rotation_mode = "QUATERNION"
 arm.animation_data_create()
 hips_ad = "mixamorig:Hips"
-meshy_kalca = (AW @ arm.data.bones[hips_ad].head_local).z
+meshy_kalca_dunya = AW @ arm.data.bones[hips_ad].head_local
+meshy_kalca = meshy_kalca_dunya.z
 sonuclar = []
 
 for yol in animler:
     ad = re.sub(r"\.fbx$", "", os.path.basename(yol), flags=re.I)
+    ad = re.sub(r"\s*\(\d+\)$", "", ad)  # tarayıcının "(2)" eki klip adına girmesin
     onceki = set(bpy.data.objects)
     bpy.ops.import_scene.fbx(filepath=yol)
     yeni = [o for o in bpy.data.objects if o not in onceki]
     src = next(o for o in yeni if o.type == "ARMATURE")
     act = src.animation_data.action
     SW = src.matrix_world.copy()
-    src_kalca = (SW @ src.data.bones[hips_ad].head_local).z if src.data.bones.get(hips_ad) else meshy_kalca
+    # Kalça konumu için yalnız dönüş: Mixamo "Without Skin" FBX'inde armatür 0,01 ölçekli gelir ama kemik verisi zaten
+    # metredir (SW ile çarpınca kalça 1 cm'ye iner, oran 1 kalır, gövde zemine gömülür). "With Skin" indirmede ise
+    # kemikler cm'dir; iki durumda da kaynak armatür uzayında ölçüp Meshy kalça yüksekliğine oranlamak doğru sonucu verir.
+    SWd = SW.normalized()
+    SWd.translation = Vector((0, 0, 0))
+    src_hips = src.data.bones.get(hips_ad)
+    KM = SW  # kalça konumu için kullanılacak dönüşüm
+    if src_hips:
+        makul = lambda M: 0.4 < (M @ src_hips.head_local).z < 2.0
+        if makul(SW):
+            KM = SW  # kemikler cm, armatür 0,01: standart yol
+        elif makul(SWd):
+            KM = SWd  # Without Skin: kemikler zaten metre, armatür ölçeği yok sayılır
+        else:
+            print("UYARI kalça yüksekliği makul değil", ad, (SW @ src_hips.head_local).z, (SWd @ src_hips.head_local).z)
+    src_kalca = (KM @ src_hips.head_local).z if src_hips else meshy_kalca
     oran = meshy_kalca / src_kalca if src_kalca > 0.05 else 1.0
+    if not (0.5 < oran < 2.0):
+        print("UYARI kalça oranı şüpheli", ad, round(oran, 3), "kaynak kalça", round(src_kalca, 3))
     # Kemik başına sabitler: hizalama ve dinlenme dönüşleri
     bilgi = {}
     atla = set()
@@ -120,7 +139,10 @@ for yol in animler:
                 basis = basis_rot.to_matrix().to_4x4()
                 if b.name == hips_ad:
                     # Kalça konumu: kaynağın dünya konumu boy oranıyla, armatür uzayına
-                    konum_dunya = (SW @ spb.matrix).to_translation() * oran
+                    konum_dunya = (KM @ spb.matrix.to_translation()) * oran
+                    # Yalnız yükseklik kaynaktan: Mixamo klipleri "in place" değil (koşarak ölme 3,9 m ilerler, CPR
+                    # çifti 0,8 m yana kayar); oynatıcı figürü demirde bekler, yürüme/koşmayı sarmal taşır.
+                    konum_dunya.x, konum_dunya.y = meshy_kalca_dunya.x, meshy_kalca_dunya.y
                     konum_arm = AWi @ konum_dunya
                     basis.translation = b.matrix_local.inverted() @ konum_arm
             M = dinlenme_zinciri @ basis

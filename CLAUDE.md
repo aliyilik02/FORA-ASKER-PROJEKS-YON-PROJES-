@@ -250,8 +250,12 @@ Chrome'da görüntüyle doğrulandı (kırsal, dağlık, gece, kar, tipi); duvar
 düz dünya-uzayı kopyası bacak/kol roll farkı yüzünden mesh'i "çöp adam" gibi inceltiyordu, 3 Kasım düzeltildi). **Mixamo otomatik rig bu
 modeli reddediyor** (A/T-poz fark etmez); Meshy rig + aktarım yolu kullanılır. Manifest `komando_*` kayıtları;
 `animasyonlar.comelmis/yatmis` klip tabanlı duruş (`figurler3b.ts` `aktifPoz`), `kemikler` Mixamo adları. Örnek senaryo
-`sn_komando_gosterimi`. Tüfek ele kabaca oturuyor (konum/dönüş ince ayarı duvarda). Ayrıntı `docs/duvar-oynatici.md`
-"Kendi 3B askerimiz". Meshy'de aynı reçete diğer modeller için: Image to 3D → Remesh; askerde Poz: A-Poz şart.
+`sn_komando_gosterimi`. Tüfek ele kabaca oturuyor (konum/dönüş ince ayarı duvarda). **3 Kasım akşam duvarda görülen
+"askerin vücudu zeminin altında" hatası:** Mixamo Without Skin FBX'inde armatür 0,01 ölçekli ama kemikler metre; kalça 1 cm'ye
+inip 37 klipte gövde 0,97 m gömülüyordu. Betik artık kalça yüksekliğini birimden bağımsız ölçer, yatay kalça konumunu Meshy
+dinlenmesinde sabit tutar (Mixamo klipleri in-place değil), "(N)" dosya ekini klip adından kırpar; GLB yeniden üretildi,
+başsız tarayıcıda doğrulandı. Ayrıntı `docs/duvar-oynatici.md` "Kendi 3B askerimiz". Meshy'de aynı reçete diğer modeller
+için: Image to 3D → Remesh; askerde Poz: A-Poz şart.
 
 ## Sıradaki işler (öncelik sırasıyla)
 

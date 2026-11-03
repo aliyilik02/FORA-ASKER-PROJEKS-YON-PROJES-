@@ -28,3 +28,6 @@ __pycache__/
 
 # Meshy API anahtarı (yerel, depoya girmez)
 .meshy_api_anahtari
+
+# Playwright MCP ekran görüntüleri
+.playwright-mcp/

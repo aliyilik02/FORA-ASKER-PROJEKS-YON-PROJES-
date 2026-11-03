@@ -415,6 +415,14 @@ kopyalamak uzuvları kendi ekseninde burkuyor ve mesh "çöp adam" gibi inceliyo
 konumu boy oranıyla; dinlenme yönü 60°'den farklı kemikler (ayak ucu, parmak uçları) dinlenmede kalır. Matrislerle kemik
 başına keyframe (kısıt/pişirme yok). Her klip bir NLA izi → glTF'te ayrı animasyon (ad = dosya adı, ör. "Rifle Idle").
 
+**Kalça yüksekliği tuzağı (3 Kasım akşam, duvarda görüldü: "askerin vücudu zeminin altında"):** Mixamo **Without Skin**
+FBX'inde armatür 0,01 ölçekli gelir ama kemik verisi zaten metredir; `matrix_world` ile çarpınca kalça 1 cm'ye iner, oran
+koruması 1,0'da kalır ve 37 klipte kalça yere yazılır (gövde 0,97 m gömülü; yalnız cm birimli "Kneeling Down" doğruydu).
+Betik artık kalça yüksekliğini hangi dönüşüm makul (0,4–2 m) veriyorsa onunla ölçer (ölçekli / yalnız dönüş), oran şüpheliyse
+uyarı basar. Ayrıca yalnız **yükseklik** kaynaktan alınır; yatay kalça konumu Meshy dinlenmesinde sabittir, çünkü Mixamo
+klipleri "in place" değil ("Rifle Run To Dying" 3,9 m ilerler, CPR çifti 0,8 m yana kayar) ve oynatıcı figürü demirde
+bekler. Yeni modelde ilk iş: `node`/Blender ile GLB'de `mixamorig:Hips` çeviri kanalının ilk karesine bak (ayakta ≈ 0,95 m).
+
 ```
 blender -b --python araclar/mixamo-aktar.py -- <meshy_rigli.fbx> <cikis.glb> <klip1.fbx> [klip2.fbx ...] [--render <png_klasoru>]
 ```
