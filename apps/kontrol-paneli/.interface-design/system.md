@@ -1,40 +1,39 @@
-# Eğitmen paneli tasarım sistemi
+# Eğitmen paneli tasarım sistemi — Tema A "Cam ve ışık" (4 Kasım 2026)
 
-**Yön:** Gece kontrol odası, "harekât masası". Eğitmen bir elle, gözü eğitim alanında, doğru olayı doğru anda
-tetikler. Sakin ve koyu; yalnız eylem (amber) ve tehlike (izli kızılı) renk taşır.
+> Önceki "harekât masası" (22 Ekim) belirteçleri `stil.css`'te duruyor; `tema-a.css` onları ezer. Yeni bileşen yazarken
+> bu dosyaya ve `tema-a.css`'e uy. Taslaklar ve seçim: artifact "Eğitmen Paneli Tasarım Seçenekleri" (A + D2 + F).
 
-**Belirteçler (`src/stil.css` :root):** `--gece` tuval, `--masa` / `--masa-ust` / `--masa-yukari` üç yüzey
-kademesi (yalnız açıklık değişir, ton aynı), `--girdi` girdiler yüzeyden koyu. Metin dört kademe:
-`--murekkep`, `-2`, `-3`, `-silik`. Vurgu tek: `--amber`; semantik: `--izli` (tehlike), `--nvg` (bağlı/iyi),
-`--uyari`, `--gok` (bilgi/ay). `--kum` yapısal ikincil (pusula duvarları, liste işaretleri).
+## Dünya
+Koyu kontrol odası, buzlu cam yüzeyler, tek sıcak vurgu. Apple'ın koyu arayüz dili: derinlik gölgeyle, kenarlık ince,
+köşeler 9 / 12 / 18 px. Süs yok; hareket yalnız durum bildirir (150–220 ms).
 
-**Derinlik:** yalnız kenarlık + yüzey açıklığı. Gölge yok (bildirimler hariç). Kenarlık kademeleri
-`--cizgi-yumusak` < `--cizgi` < `--cizgi-vurgu`.
+## Belirteçler (`:root`, tema-a.css)
+- Zemin: `body` radyal (#26282c → #131416 → #0b0c0d). Kart: `--cam` rgba(255,255,255,.045) + `--cam-kenar` .08 +
+  `--golge` 0 24px 48px -24px rgba(0,0,0,.7) + blur(14px).
+- Metin: `--murekkep` #ecebe6, `--murekkep-2` #c4c3bd, `--murekkep-3` #a3a39d (ikincil, 4.5:1 sağlar), silik #6b6b67.
+- Vurgu: `--amber` #e3b267 (yalnız birincil eylem, seçili durum, sayısal değer); koyu #c99a52; üzeri #f0c98a.
+- Durum: tehlike `--izli` #f0806a (zemin #2a1a17, kenar #5a2f27, metin #f0a799); başarı `--nvg` #74c98a; uyarı #e8c54a.
+- Yazı: Manrope (500/600/700/800; başlık 800, düğme 700, gövde 500), sayılar JetBrains Mono, `font-variant-numeric:
+  tabular-nums`. Yerel kopya `public/fonts/fontlar.css` (OFL) — internet yok.
+- Ölçek: başlık 22, bölüm 15, düğme/satır 13.5, açıklama 12. Tracking −0.015em başlıklarda.
 
-**Tipografi:** Bahnschrift (Windows'ta hazır; internet yok) → Segoe UI. Sayılar ve saatler `--mono`
-(Cascadia Mono) tablo hizalı. Bölüm başlıkları 15/600, kart başlığı 22/600, etiketler 12.5 px.
+## Bileşenler (F kiti)
+- Düğme: yüzey #26282c, kenarlık yok; hover #2f3237; basılı 1 px aşağı; odak 2 px amber halka (offset 3); devre dışı
+  #1f2124 + silik metin (opaklık değil); yükleniyor `aria-busy="true"` → dönen halka. Birincil amber + amber gölge;
+  ikincil saydam + kenarlık; tehlike kırmızı tonlu; iki aşamalı onay (`OnayliDugme`) kırmızı dolu, animasyonsuz.
+- Bölmeli denetim (`.secenek-grubu`, yön/mesafe/kalite): koyu tepsi rgba(0,0,0,.38) içinde 8 px köşeli segmentler,
+  seçili açık yüzey; yön seçicide seçili amber. Uzun etiket tek satır, sığmazsa segment alt sıraya iner.
+- Anahtar 44×26, beyaz topuz; açık amber. Kaydırıcı 5 px ray, beyaz 20 px topuz, değer amber.
+- Rozet: yumuşak yüzey, kenarlıksız. LED: 8 px nokta, parıltısız.
+- Liste satırı: rgba(0,0,0,.3), 12 px köşe, seçili amber kenarlık; sol simge kutusu 30 px (`GrupSimgesi`).
+- Bildirim: cam, 8 px renkli nokta (başarı yeşil, hata kızıl, bilgi amber), gölge.
+- Simgeler: `Simgeler.tsx` (gruplar) ve `ortak.tsx Ikon` — tek çizgi 1.75, emoji yok.
 
-**Aralık:** 4 px birim; kart içi 16 px, bölümler arası 16 px, sütunlar arası 20 px. Yarıçap 6 / 10 / 14.
+## Yön seçimi (D2)
+`YonSecici`: beş bölge (Sol −90, Sol-ön −45, Karşı 0, Sağ-ön 45, Sağ 90) + ±5° + derece; seçili bölge en yakın
+merkez (±22,5°). Sahnedekiler (figür, yaralı, düşman, helikopter) altta metin. Saat tetiği yok (eski SVG pusula 250 ms'de
+yeniden çizilip oynatıcının kare hızını düşürüyordu).
 
-**İmza:** Sahne pusulası (`Pusula.tsx`): U duvar kuş bakışı, yön seçimi sahnenin kendisinden; figür, patlama
-halkası, helikopter, güneş/ay ve rüzgâr aynı yüzeyde. Pusula + hızlı efektler her bölümde görünür (`CanliSahne`).
-
-**Desenler:** `Bolum` kartı (ikon + başlık + alt başlık + sağ alan); `Kaydirici` gecikmeli gönderim, amber dolgu;
-`SecenekGrubu` segment (seçili = amber dolgu, koyu metin); `Anahtar` 40×22 ray; `OnayliDugme` iki aşamalı
-tehlikeli işlem (confirm() yok); `Led` bağlantı lambası (bekliyor = nefes animasyonu); `Rozet` küçük durum
-etiketi; `.efekt-satir` ad + açıklama + "TETİKLE" ucu; bildirimler sağ altta, 3 s.
-
-**Hareket:** 160 ms yavaşlayan eğri; bölüm geçişi 220 ms belirme; efekt tetiklenince halka darbesi;
-`prefers-reduced-motion` saygı. Yay/sıçrama yok.
-
-**Düzen:** üst çubuk (marka · oda · görev saati · Sıfırla · lambalar) + sol görev rayı (92 px) + sol sütun canlı sahne
-(400 px, sticky) + sağ sütun bölüm. ≤1180 px tek sütun; ≤900 px ray altta sekme çubuğu olur.
-
-**Tek global tehlikeli eylem — Sıfırla (`SifirlaDugmesi`):** üst çubukta, lambaların başında; üst çubuk her genişlikte
-sticky olduğundan düğme hep görünür. Tehlike tonu (`button.tehlike`), sahnede etkin öğe yokken ikincil; süpürge ikonu
-(`Ikon.temizle`, Senkron'un yenile ikonundan ayrı), etkin öğe sayısı kızıl rozet, `<kbd>Esc</kbd>` (≤900 px'te gizli).
-İki aşama `OnayliDugme` ile aynı dil: ilk dokunuş kurar (`onay-bekliyor` kızıl nabız, "Temizlensin mi?"), 3 sn içinde
-ikinci dokunuş uygular; klavye karşılığı Esc, Esc (tuş tekrarı ve Ctrl/Alt/Meta/Shift yok sayılır, yazı alanında
-devre dışı). Kurulu durum Uygulama'da tutulur, düğme ve klavye paylaşır. Sonuç tek bildirim (her panelde, nesil başına
-bir). Başka global tehlikeli eylem üst çubuğa eklenmez; kart içi dar araçlar (ör. "Hepsi çekilsin mi?") kendi
-`OnayliDugme`'siyle kalır. İleride panele modal gelirse modal açıkken Esc sıfırlamaya gitmemeli.
+## Yerleşim
+Üst çubuk 64 px cam; sol ray 208 px satır ikon+ad; içerik `minmax(400px,440px) 1fr`; 900 px altı ray sekme çubuğu,
+1100 px altı oda adları gizli (yalnız numara).

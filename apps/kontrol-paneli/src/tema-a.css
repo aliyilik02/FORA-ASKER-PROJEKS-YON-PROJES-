@@ -888,3 +888,23 @@ button.birlik.sihhiyeci {
   display: inline;
   margin-left: auto;
 }
+/* Bölmeli denetim: uzun etiketler tek satırda kalır, sığmazsa düğme alt sıraya iner (Sistem sekmesi) */
+.secenek-grubu {
+  flex-wrap: wrap;
+}
+.secenek-grubu button {
+  flex: 1 1 auto;
+  white-space: nowrap;
+}
+/* Dar üst çubuk: oda adları tek satır, sığmazsa yalnız numara */
+.oda-ad {
+  white-space: nowrap;
+}
+@media (max-width: 1100px) {
+  .oda-ad {
+    display: none;
+  }
+  .oda-secici button {
+    padding: 0 8px;
+  }
+}

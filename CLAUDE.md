@@ -153,7 +153,11 @@ parçacık dokuları (`icerik/dokular/`). Depoda: asker modelleri (three.js Sold
 helikopter (OGA CC-BY). Kaynak/lisans notları manifestte `_kaynak`. Araştırma listeleri (128 HDRI,
 modeller, VFX/ses adayları) oturum scratchpad'indeydi; yeniden gerekirse Poly Haven API ile üretilir.
 
-**Kontrol paneli yeniden tasarlandı** (22 Ekim): "harekât masası" teması, sahne pusulası (yön seçimi
+**Panel Tema A (4 Kasım):** kullanıcı seçimi A + D2 + F (artifact "Eğitmen Paneli Tasarım Seçenekleri";
+`tasarim-taslak/` depo dışı): `apps/kontrol-paneli/src/tema-a.css` stil.css'i ezer (cam kartlar, Manrope/JetBrains Mono
+yerel `public/fonts`, bileşen durumları), `YonSecici.tsx` pusulanın yerine (Pusula.tsx silindi), `Simgeler.tsx` SVG grup
+simgeleri (emoji yok). Tasarım sistemi `.interface-design/system.md` güncellendi; yeni bileşen ona uyar.
+Önceki: **Kontrol paneli yeniden tasarlandı** (22 Ekim): "harekât masası" teması, sahne pusulası (yön seçimi
 pusuladan; figür/patlama/helikopter/güneş/rüzgâr üzerinde), sol görev rayı (F1–F5), canlı sahne kartı +
 hızlı efektler (1–5), bildirimler, gecikmeli kaydırıcılar, iki aşamalı onay, tablet düzeni. Tasarım
 belirteçleri ve desenler `apps/kontrol-paneli/.interface-design/system.md`; yeni bileşen eklerken ona uy.
