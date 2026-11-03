@@ -409,9 +409,11 @@ reçetesi `docs/meshy-model-listesi.md`.
 **Mixamo'nun otomatik rig'i bu modeli kabul etmedi** ("Unknown error while generating motion"; A-poz, T-poz, parmaksız
 iskelet denendi; aynı modelin kolları yapışık ilk sürümü rig olmuştu). Çözüm: Meshy'nin rig'i kullanılır, Mixamo
 animasyonları Mixamo'daki herhangi bir karakterden **Without Skin** FBX olarak indirilir ve `araclar/mixamo-aktar.py`
-(Blender 5.1, başsız) ile aktarılır: her Meshy kemiğine aynı adlı Mixamo kemiğinden **dünya uzayında Copy Rotation**
-(kalçaya Copy Location, boy oranıyla), görsel anahtarlamayla pişirilir; dinlenme yönü 60°'den farklı kemikler (ayak ucu,
-parmak uçları) dinlenmede kalır. Her klip bir NLA izi → glTF'te ayrı animasyon (ad = dosya adı, ör. "Rifle Idle").
+(Blender 5.1, başsız) ile aktarılır. İki iskeletin kemik **roll**'ları farklı (bacak ~175°, kol ~120°): dönüşü aynen
+kopyalamak uzuvları kendi ekseninde burkuyor ve mesh "çöp adam" gibi inceliyordu (3 Kasım ilk sürüm). Şimdi kemik başına
+`hedef = kaynak_poz · kaynak_dinlenme⁻¹ · hizala · hedef_dinlenme`: yön Mixamo klibinden, roll Meshy dinlenmesinden; kalça
+konumu boy oranıyla; dinlenme yönü 60°'den farklı kemikler (ayak ucu, parmak uçları) dinlenmede kalır. Matrislerle kemik
+başına keyframe (kısıt/pişirme yok). Her klip bir NLA izi → glTF'te ayrı animasyon (ad = dosya adı, ör. "Rifle Idle").
 
 ```
 blender -b --python araclar/mixamo-aktar.py -- <meshy_rigli.fbx> <cikis.glb> <klip1.fbx> [klip2.fbx ...] [--render <png_klasoru>]

@@ -246,7 +246,8 @@ Chrome'da görüntüyle doğrulandı (kırsal, dağlık, gece, kar, tipi); duvar
 "Hava". Kalan: yağmur sıçraması/ıslak zemin, bitki sallanması, renkli duman, aydınlatma fişeği, yıldırım çizgisi.
 
 **Kendi askerimiz (3 Kasım):** `icerik/modeller/asker_komando.glb` = Meshy modeli (A-Poz açık, Remesh 30K) + Meshy rig'i
-+ 38 Mixamo klibi (`araclar/mixamo-aktar.py`, Blender başsız, dünya uzayında Copy Rotation). **Mixamo otomatik rig bu
++ 38 Mixamo klibi (`araclar/mixamo-aktar.py`, Blender başsız; yön Mixamo'dan, kemik roll'u Meshy dinlenmesinden —
+düz dünya-uzayı kopyası bacak/kol roll farkı yüzünden mesh'i "çöp adam" gibi inceltiyordu, 3 Kasım düzeltildi). **Mixamo otomatik rig bu
 modeli reddediyor** (A/T-poz fark etmez); Meshy rig + aktarım yolu kullanılır. Manifest `komando_*` kayıtları;
 `animasyonlar.comelmis/yatmis` klip tabanlı duruş (`figurler3b.ts` `aktifPoz`), `kemikler` Mixamo adları. Örnek senaryo
 `sn_komando_gosterimi`. Tüfek ele kabaca oturuyor (konum/dönüş ince ayarı duvarda). Ayrıntı `docs/duvar-oynatici.md`
