@@ -83,6 +83,12 @@ function hatalar(tip: OdaTipi, o: Olculer): Partial<Record<Alan, string>> {
   if (!(o.on >= 0.5 && o.on <= 60)) h.on = "Genişlik 0,5–60 m olmalı.";
   if (tip === "u" && !(o.yan >= 0.2 && o.yan <= 60)) h.yan = "Yan duvar 0,2–60 m olmalı.";
   if (!(o.yuk >= 0.2 && o.yuk <= 20)) h.yuk = "Görüntü yüksekliği 0,2–20 m olmalı.";
+  else {
+    // Projektör görüntüsü 16:9 (düz duvarda 3 projektör yan yana: 48:9). Yükseklik duvarın değil görüntünün yüksekliğidir;
+    // oran %30'dan çok saparsa oynatıcı görüntüyü ezer/uzatır ve geometriyi reddeder (main.ts geometriMakulMu).
+    const beklenen = (tip === "u" ? o.on : o.on / 3) * (9 / 16);
+    if (Math.abs(o.yuk / beklenen - 1) > 0.3) h.yuk = `Görüntü 16:9 olmalı: ${o.on} m genişlik için yükseklik ≈ ${beklenen.toFixed(2)} m (duvar yüksekliği değil, yansıtılan görüntünün yüksekliği).`;
+  }
   if (!(o.alt >= -2 && o.alt <= 10)) h.alt = "Alt kenar −2…10 m olmalı.";
   if (!(o.z >= 0.2 && o.z <= 60)) h.z = "Duvara uzaklık 0,2–60 m olmalı.";
   if (!(o.goz >= 0.3 && o.goz <= 3)) h.goz = "Göz yüksekliği 0,3–3 m olmalı.";

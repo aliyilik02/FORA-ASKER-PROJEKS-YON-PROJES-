@@ -25,7 +25,9 @@ yaz/kış, gece/gündüz, hava durumu, patlama/gürültü/bağırma/çağırma/i
    klipleri kullanılır. Hat: `docs/fotogercekci-icerik-hatti.md`.
 3. **Ortak içerik biçimi:** 360° equirectangular (resim 12K×6K, video 8K×4K); alfa klipler VP9
    alpha WebM (`-pix_fmt yuva420p`). Manifest: `apps/duvar-oynatici/public/icerik/manifest.json`.
-4. **U duvar, 3 projektör, duvar başına 90°** varsayılan (ölçü girilmezse); gerçek ölçüler saha keşfinden sonra
+4. **U duvar, 3 projektör, duvar başına 90°** varsayılan (ölçü girilmezse); geometrideki `yuk` yansıtılan görüntünün
+   yüksekliğidir (16:9: ön genişlik × 9/16); %30'dan çok sapan geometri oynatıcıda reddedilir, panelde hata verir (3 Kasım:
+   yuk=8 kaydı "panorama basık" şikâyetinin nedeniydi; kayıt adrese göre ayrıdır: localhost / 127.0.0.1 / IP). Gerçek ölçüler saha keşfinden sonra
    `?oda=` ile girilir (panel Sistem › Duvar geometrisi; duvar başına genelleştirilmiş perspektif, ufuk göz
    hizasında, K ızgarasıyla doğrulanır). `?fov=` yalnız ölçüsüz açı ayarıdır. İlk bölge: **kırsal açık arazi**.
 5. Arayüz ve kod adlandırması **Türkçe** (dosya/sınıf/fonksiyon adları Türkçe, ASCII; örn.

@@ -80,14 +80,28 @@ const ucBoyut = params.get("uc") !== "0";
 const odaParam = params.get("oda");
 let odaUyarisi = "";
 let oda: OdaGeometrisi | null = null;
+/**
+ * Makullük: projektör görüntüsü 16:9'dur; ön duvar genişlik/yükseklik oranı bundan %30'dan çok sapıyorsa (ör. yuk=8 m)
+ * görüntü duvara sığdırılırken ezilir/uzar. 3 Kasım: panelden yanlışlıkla girilen yüksekliği her açılış yeniden
+ * uyguluyor, "panorama basık" görünüyordu. Böyle geometri kaydedilmez ve uygulanmaz; HUD uyarır.
+ */
+const geometriMakulMu = (g: OdaGeometrisi) => Math.abs(g.on / g.yukseklik / (16 / 9) - 1) <= 0.3;
 if (odaParam === "sifirla") localStorage.removeItem("oda");
 else if (odaParam) {
   oda = odaGeometrisiCoz(odaParam);
-  if (oda) localStorage.setItem("oda", odaGeometrisiYaz(oda));
+  if (oda && !geometriMakulMu(oda)) {
+    odaUyarisi = `?oda= görüntü oranı 16:9 değil (${oda.on} × ${oda.yukseklik} m); yükseklik projektör görüntüsünün olmalı (≈ genişlik × 9/16). Ölçüsüz yerleşim kullanılıyor`;
+    oda = null;
+    localStorage.removeItem("oda");
+  } else if (oda) localStorage.setItem("oda", odaGeometrisiYaz(oda));
   else odaUyarisi = `?oda=${odaParam} geçersiz; ölçüsüz yerleşim kullanılıyor`;
 } else {
   const kayitli = localStorage.getItem("oda");
   oda = odaGeometrisiCoz(kayitli);
+  if (oda && !geometriMakulMu(oda)) {
+    odaUyarisi = "kayıtlı duvar geometrisi 16:9 değil, yok sayıldı";
+    oda = null;
+  }
   if (kayitli && !oda) localStorage.removeItem("oda");
 }
 if (odaUyarisi) console.warn(odaUyarisi);
