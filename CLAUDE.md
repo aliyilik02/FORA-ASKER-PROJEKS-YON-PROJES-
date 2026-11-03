@@ -270,4 +270,5 @@ namlu parıltıları, "Gösterim – Kırsal Tam Tur" ve "Dağlık pusu" duvarda
 - `docs/ornek-calisma-inceleme.md` – firmadan gelen TCCC örnek paketi incelemesi
 - `docs/donanim-onerileri.md`, `docs/kaynak-proje-talebi.md`, `docs/sartname-uyumluluk.md`
 - `docs/icerik-ihtiyac-listesi.md` – Meshy modelleri, Türkçe/CC0 sesler, hava efekti eksikleri (3 Kasım), öncelikli
+- `docs/meshy-model-listesi.md` – 43 modelin Meshy promptları, ayarlar, dosya adları, Mixamo animasyonları (kopyalanabilir sayfa: artifact "Meshy Model Listesi")
 - `docs/gosterim-rehberi.md` – idareye sunum: hazırlık, tek tuş "Gösterim – Tam Tur" akışı, elle 3 dk, sorulara cevaplar, aksaklıklar
