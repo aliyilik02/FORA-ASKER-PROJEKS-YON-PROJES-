@@ -19,7 +19,7 @@ function sahteIsci(davranis: Davranis) {
       setTimeout(() => {
         if (davranis === "yanit") {
           const bitmap = { width: 8, height: 4, close: () => undefined } as unknown as ImageBitmap;
-          this.onmessage?.({ data: { tamam: true, sonuc: { tam: bitmap, kucuk: bitmap, analiz: null, kaynakGenisligi: 8, kaynakYuksekligi: 4, sureler: { indirme: 0, cozme: 0, kucultme: 0, analiz: 0 } } } });
+          this.onmessage?.({ data: { tamam: true, sonuc: { tam: bitmap, kucuk: bitmap, analiz: null, gok: null, kaynakGenisligi: 8, kaynakYuksekligi: 4, sureler: { indirme: 0, cozme: 0, kucultme: 0, analiz: 0, gok: 0 } } } });
         } else if (davranis === "hata") this.onmessage?.({ data: { tamam: false, hata: "HTTP 404" } });
         else if (davranis === "altyapi") this.onerror?.({ preventDefault: () => undefined, message: "betik yüklenemedi" });
       }, 0);

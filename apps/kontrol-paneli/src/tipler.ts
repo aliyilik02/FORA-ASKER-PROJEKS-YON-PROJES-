@@ -31,6 +31,11 @@ export interface OrtamAyarlari {
   ruzgarSiddeti: number;
   /** 0–360 derece rüzgâr yönü. */
   ruzgarYonu: number;
+  /**
+   * Şimşekli fırtına: köprü 12–40 sn'de bir (şiddetli yağmurda sık) rastgele yönden şimşek çaktırır (gök örtüsünde
+   * çakma, DMX flaşı, mesafeye göre gecikmeli gök gürültüsü). Eski kayıtlarda yok: kapalı sayılır.
+   */
+  simsek?: boolean;
 }
 
 /** Şartname §6: ortam ışığı DMX512/Art-Net üzerinden. */
@@ -86,7 +91,8 @@ export type EfektTuru =
   | "cagirma"
   | "toz_duman"
   | "uzak_patlama"
-  | "uzak_mermi_sesi";
+  | "uzak_mermi_sesi"
+  | "simsek";
 
 export interface EfektIstegi {
   tur: EfektTuru;
@@ -350,6 +356,7 @@ export const EFEKT_ETIKETLERI: Record<EfektTuru, string> = {
   toz_duman: "Toz / duman",
   uzak_patlama: "Uzaktan patlama",
   uzak_mermi_sesi: "Uzaktan mermi sesi",
+  simsek: "Şimşek",
 };
 
 export function varsayilanDurum(): SimulasyonDurumu {
@@ -364,6 +371,7 @@ export function varsayilanDurum(): SimulasyonDurumu {
       yagis: "yok",
       ruzgarSiddeti: 0.1,
       ruzgarYonu: 90,
+      simsek: false,
     },
     isik: { parlaklik: 0.8, r: 255, g: 244, b: 224, senaryoyaBagli: true },
     izliMermi: { aktif: false, cikisNoktasi: 1, yon: 0, siklik: 3 },

@@ -9,6 +9,7 @@ import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import type { CozmeIsi } from "./panoramaIsi";
 import type { CozulmusPanorama } from "./panoramaCozucu";
+import { GokOrtusu } from "./gokOrtusu";
 import { Sahne3B, type PanoramaKaynagi } from "./sahne3b";
 
 function kur(arazi: Record<string, unknown>) {
@@ -95,6 +96,7 @@ function gecisliKur() {
   };
   Object.assign(s, {
     renderer: {},
+    gokOrtusu: new GokOrtusu(),
     sahne: new THREE.Scene(),
     kameralar: [],
     yerlesimler: [],

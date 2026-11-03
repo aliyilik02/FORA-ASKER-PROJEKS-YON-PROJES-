@@ -34,6 +34,8 @@ export interface PanoramaKaydiManifest {
    * `araclar/plan-onizleme.py` yeşil halka olarak gösterir.
    */
   gunes?: { azimut: number; yukseklik: number; guc?: number; aciklama?: string };
+  /** false: gök maskesi çıkarılmaz (gök sanılan beton tavan gibi); kapalı havada bulut çizilmez (sahne3b/gokMaskesi.ts). */
+  gok?: boolean;
   _ornek?: boolean;
 }
 

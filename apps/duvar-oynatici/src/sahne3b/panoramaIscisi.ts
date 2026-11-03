@@ -21,7 +21,7 @@ const kapsam = self as unknown as IsciKapsami;
 kapsam.onmessage = (e) => {
   const { url, secenek } = e.data;
   panoramaCoz(url, secenek).then(
-    (sonuc) => kapsam.postMessage({ tamam: true, sonuc }, [sonuc.tam, sonuc.kucuk]),
+    (sonuc) => kapsam.postMessage({ tamam: true, sonuc }, sonuc.gok ? [sonuc.tam, sonuc.kucuk, sonuc.gok.veri.buffer] : [sonuc.tam, sonuc.kucuk]),
     (h: unknown) => kapsam.postMessage({ tamam: false, hata: h instanceof Error ? h.message : String(h) }),
   );
 };

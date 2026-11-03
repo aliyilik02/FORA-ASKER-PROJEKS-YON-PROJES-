@@ -366,6 +366,40 @@ Türkçe bağırma/çağırma (manifestte kayıt yoksa tarayıcının Türkçe k
 çapraz geçişli). Konum: her ses sahne azimutuyla gelir; stereo düzende pan = sin(azimut), 4+ kanalda
 çok kanallı yerleşim (aşağıda). Depodaki kayıtlar Mixkit Free ve OpenGameArt CC0 (manifest `sesler._kaynak`).
 
+### Hava: gök örtüsü, 3B yağış, sis, şimşek (3 Kasım 2026)
+
+Eskiden yağmur/kar ekrana düz 2B çizgi ve nokta, sis tüm ekranı eşit kaplayan renk geçişi, bulut yalnız karartmaydı;
+yağmur güneşli panoramanın üstüne yağıyordu. Şimdi 3B sahne açıkken (2B yol yalnız 3B yokken, `main.ts`):
+
+- **Gök maskesi** (`sahne3b/gokMaskesi.ts`, saf, testli): panorama işçide çözülürken 2048×1024 (düşük kalitede 1024)
+  kopyadan gök pikselleri bulunur (~0,4 sn, işçide). Zenit bandından kenarda duran taşma doldurma, kenar haritası (iki
+  piksel açıklık), yaprak/gece ışığı dışlama, satır gök profili (puslu uzak dağ ve güneşli cephe dışarıda), gökle çevrili
+  delikler (güneş, bulut) göğe katılır, siluet şeridi profile yakınsa geri büyütülür. 24 panoramada denendi; beton
+  tavanlı üs kış gündüz panoraması manifestte `"gok": false` (maske çıkarılmaz). Bilinen: ağaçlarla çevrili, zenite
+  bağlanmayan küçük gök parçaları ve ufka değen bulutlar maskede yok; gece sırt çizgisinde ince açık çizgi kalabiliyor.
+- **Gök örtüsü** (`sahne3b/gokOrtusu.ts`): three'nin arka plan kutusunun yerini alır (`sahne.background` null; aynı küp,
+  aynı döndürme ve parlaklık; hava açıkken çıktı aynı). Gökte rüzgârla akan bulut (düzlem izdüşümü, ufka doğru küçülür;
+  örtü `bulut` ya da yağıştan: hafif yağmur ≥ 0,8, şiddetli ≥ 0,95, kar ≥ 0,85), kapalı havada zemin doygunluğu düşer;
+  güneş/ay diski (manifestteki ya da güvenilir tahmin) bulutun arkasında kalır. Bulut rengi panoramanın gök
+  parlaklığından ve ufuk tonundan; parçalı bulut güneşte beyaz. Kapalı havada güneş söner, gölge yumuşar, yerine yaygın
+  gök ışığı (`dolgu`) gelir. Maskeyi görmek: konsolda `duvar.sahne3b.gokOrtusu.u.maskeGoster.value = 1`.
+- **Sis**: tek three sisi (doğrusal) her kipte sahnede; hibrit arazi kenarı (ufuk rengi) ile ortam sisi birleşir
+  (görüş: sis 1 → 35 m, 0,5 → 385 m). Gök örtüsü panoramayı aynı eğriyle sisler: zemin pikselinin uzaklığı göz
+  yüksekliğinden, gökte sis katmanı içindeki yol (40–200 m kalınlık); rüzgârla kayan kümeler yer yer koyulaştırır.
+- **3B yağış** (`sahne3b/yagis3b.ts`): konumlar gölgelendiricide (CPU işi yok), iki katman (yakın 26 m kutu, uzak 110 m),
+  kalite 0,35/0,6/1 × 9000 + 9000. Yağmur hareket bulanık çizgi (1/30 sn yol), kar salınan yumuşak tane; rüzgâr
+  "nereden" esiyorsa ters yöne savrulur (karda güçlü rüzgâr tipi). İzleyiciden 2,5 m'ye dek damla yok (duvarın önü,
+  odanın içi). Çizgi en az ~1 piksel, incesi karekök saydamlıkla.
+- **Şimşek**: efekt `simsek` (yön, mesafe); ortamda `simsek: true` iken köprü 12–40 sn'de bir rastgele çaktırır
+  (`kopru/src/firtina.ts`, şiddetli yağmur yoksa 1,6 kat seyrek). Oynatıcıda gökte çakma yönünde aydınlanma + sahne
+  ışığında 2–4 darbe (`Sahne3B.simsek`), DMX'te çift flaş (ışık senaryoya bağlıyken), gök gürültüsü mesafe/343 sn sonra
+  (`ses.gokGurultusu`: manifest `sesler.gok_gurultusu` kaydı ya da sentez: yakında çatırtı + yuvarlanan gürleme, LFE).
+  Panelde Ortam › "Şimşek" anahtarı ve Efektler › Şimşek. Gökte görünen yıldırım çizgisi yok (yalnız aydınlanma).
+
+Ölçüm (başsız Chrome, Iris Xe, 3840×720 yüksek): açık hava ile kapalı + şiddetli yağmur + sis arasında fark ölçüm
+gürültüsünün içinde (21–26 fps, aynı dalgalanma). Henüz yok: yağmur sıçraması ve ıslak zemin, rüzgârda bitki
+sallanması, renkli duman, aydınlatma fişeği (docs/icerik-ihtiyac-listesi.md W7–W10).
+
 ### Çok kanallı ses (26 Ekim 2026)
 
 Sahada U odada 4 hoparlör (ön sol/sağ, arka sol/sağ) + subwoofer beklenir, büyük olasılıkla 5.1 / 7.1 AV alıcı

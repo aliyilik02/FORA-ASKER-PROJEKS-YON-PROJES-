@@ -235,6 +235,16 @@ uçtan uca bakılmadı (birim test + derleme): Esc Esc / ⇧0, geçiş sırasın
 namlu parıltıları, "Gösterim – Kırsal Tam Tur" ve "Dağlık pusu" duvarda denenmeli. Ayrıntı ve kalan takılmalar:
 `docs/duvar-oynatici.md` (Sahne geçişi, Bitki ayıklama, Köprü ile sözleşme, Sınırlamalar).
 
+**Hava (3 Kasım):** 3B sahnede 2B sis/yağış/karartma kapalı. Panorama işçide çözülürken gök maskesi çıkarılır
+(`sahne3b/gokMaskesi.ts`; manifest `"gok": false` kapatır, üs kış gündüz beton tavan). `sahne3b/gokOrtusu.ts` three arka
+planının yerine çizer (`sahne.background` null): akan bulut ve kapalı gök, zemin tonlaması, yükseklik sisi (3B sisle aynı
+doğrusal eğri; sis nesnesi artık her kipte sahnede), şimşek aydınlanması. Kapalı havada güneş söner, `dolgu` artar.
+`sahne3b/yagis3b.ts` 3B yağmur/kar (gölgelendiricide, iki katman, 2,5 m'den yakında yok). Şimşek: efekt `simsek`
+(`tipler.ts` EfektTuru), ortam `simsek?: boolean` → köprü `firtina.ts` 12–40 sn'de bir çaktırır, DMX çift flaş,
+`ses.gokGurultusu` (mesafe/343 sn gecikme; manifest `sesler.gok_gurultusu` yoksa sentez); panel Ortam › Şimşek. Başsız
+Chrome'da görüntüyle doğrulandı (kırsal, dağlık, gece, kar, tipi); duvarda bakılmadı. Ayrıntı `docs/duvar-oynatici.md`
+"Hava". Kalan: yağmur sıçraması/ıslak zemin, bitki sallanması, renkli duman, aydınlatma fişeği, yıldırım çizgisi.
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 0. **Gösterim hazır (2 Kasım):** örnek senaryo "Gösterim – Güncel Durum (5 dk)" (`sn_gosterim_guncel`; akış

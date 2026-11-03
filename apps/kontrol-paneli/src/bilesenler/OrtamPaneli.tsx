@@ -1,7 +1,7 @@
 import { api } from "../api";
 import { useArayuz } from "../arayuz";
 import { BOLGE_ETIKETLERI, MEVSIM_ETIKETLERI, YAGIS_ETIKETLERI, type SimulasyonDurumu } from "../tipler";
-import { Bolum, Ikon, Kaydirici, SecenekGrubu, saatBicimi } from "./ortak";
+import { Anahtar, Bolum, Ikon, Kaydirici, SecenekGrubu, saatBicimi } from "./ortak";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 
@@ -72,6 +72,7 @@ export function OrtamPaneli({ durum, calistir }: { durum: SimulasyonDurumu; cali
         <span className="etiket">Yağış</span>
         <SecenekGrubu secenekler={YAGIS_ETIKETLERI} deger={o.yagis} onChange={(yagis) => guncelle({ yagis })} />
       </div>
+      <Anahtar acik={o.simsek ?? false} onChange={(simsek) => guncelle({ simsek })} etiket="Şimşek" aciklama="Fırtınada rastgele yönden çakma; oda ışığı flaş yapar, gök gürültüsü uzaklığa göre gecikir" />
       <div className="iki-sutun">
         <Kaydirici etiket="Bulut" deger={o.bulut} min={0} max={1} bicim={(v) => `%${Math.round(v * 100)}`} onChange={(bulut) => guncelle({ bulut })} />
         <Kaydirici etiket="Sis" deger={o.sis} min={0} max={1} bicim={(v) => `%${Math.round(v * 100)}`} onChange={(sis) => guncelle({ sis })} />

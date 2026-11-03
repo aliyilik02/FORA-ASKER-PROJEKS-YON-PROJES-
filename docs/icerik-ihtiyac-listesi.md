@@ -159,6 +159,11 @@ CC0 aramasını ben de yapabilirim.
 
 ## 3. Hava ve efektler (kod işi, ben yaparım)
 
+**3 Kasım durumu:** W1 (yeni panorama yerine gök maskesi + gök örtüsü), W2 (3B yağmur; sıçrama ve ıslak zemin yok),
+W3 (şimşek: aydınlanma, DMX, gök gürültüsü; yıldırım çizgisi yok), W4 (3B kar ve tipi; zemin tozu ve nefes yok),
+W5 (yükseklik sisi + akan kümeler; ışık huzmesi yok), W6 (akan bulut, kapalı havada güneş ve gölge; arazide bulut
+gölgesi yok) yapıldı. Ayrıntı `docs/duvar-oynatici.md` "Hava".
+
 | # | Eksik | Bugün | Yapılacak | Ö |
 |---|-------|-------|-----------|---|
 | W1 | **Hava panoramaları** | Yağmur/kar/sis güneşli gökyüzü panoramasının üstüne düşüyor; en büyük inandırıcılık sorunu bu | Her bölgeye kapalı / yağmurlu / sisli gök. Poly Haven CC0'da kapalı hava HDRI'ları var (ben indiririm); yoksa Skybox AI | A |

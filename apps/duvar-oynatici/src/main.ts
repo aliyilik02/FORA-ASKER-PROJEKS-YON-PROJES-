@@ -181,6 +181,7 @@ function panoramaKaynagi(a: PanoramaAdayi): PanoramaKaynagi {
     zaman: a.zamanFarkli ? undefined : k.zaman,
     plan: { noktalar: k.noktalar, yasak: k.yasak },
     gunes: k.gunes,
+    gok: k.gok,
   };
 }
 
@@ -333,6 +334,15 @@ function efektUygula(e: EfektIstegi) {
     case "uzak_mermi_sesi":
       void ses.mermi(azimut, true);
       break;
+    case "simsek": {
+      // Çakma hemen (ışık), gök gürültüsü mesafe/343 sn sonra (ses motorunda)
+      const mesafe = e.mesafe ?? 2000;
+      const guc = siddet * Math.max(0.35, 1 - mesafe / 9000);
+      if (uc) sahne3b.simsek(azimut, guc);
+      else efektler.simsekFlasi(0.35 * guc);
+      ses.gokGurultusu(azimut, mesafe, siddet);
+      break;
+    }
   }
 }
 
@@ -795,17 +805,22 @@ function kare(simdi: number) {
   }
   // Figürler ve diğer klipler sahnenin içinde: sisin altında kalır
   klipler.ciz(ctx, yerlesimler, ufukYy, H, gok.isik, ["figur", "diger", "hava"]);
-  for (const y of yerlesimler) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(y.x, 0, y.genislik, H);
-    ctx.clip();
-    sisCiz(ctx, y, ufukYy, H, durum.ortam, gok);
-    ctx.restore();
+  // 3B sahnede sis, bulut ve yağış gök örtüsünde ve 3B katmanda (sahne3b); 2B katmanlar yalnız 3B yokken
+  if (!ucCizildi) {
+    for (const y of yerlesimler) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(y.x, 0, y.genislik, H);
+      ctx.clip();
+      sisCiz(ctx, y, ufukYy, H, durum.ortam, gok);
+      ctx.restore();
+    }
   }
   heli.ciz(ctx, yerlesimler, ufukYy, H, gok.isik);
-  kararmaCiz(ctx, W, H, durum.ortam, gok.isik);
-  hava.ciz(ctx, durum.ortam, gok.isik);
+  if (!ucCizildi) {
+    kararmaCiz(ctx, W, H, durum.ortam, gok.isik);
+    hava.ciz(ctx, durum.ortam, gok.isik);
+  }
   // Efekt plakaları (patlama, toz) kendi ışığıyla en üstte
   klipler.ciz(ctx, yerlesimler, ufukYy, H, gok.isik, ["efekt"]);
   efektler.ciz(ctx);

@@ -10,6 +10,7 @@
  * texture.flipY yok sayıldığından GPU'ya bu düzende gider ve three'nin equirect örneklemesiyle (eski flipY=true
  * yüklemeyle) aynı yön çıkar. Analiz kopyası yeniden çevrilir (dik: üst satır gök), gunes.ts bunu bekler.
  */
+import { gokMaskesiHesapla, type GokMaskesi } from "./gokMaskesi";
 import { ANALIZ_GENISLIGI, ANALIZ_YUKSEKLIGI, panoramaAnalizEt, type PanoramaAnalizi } from "./panoramaAnalizi";
 
 /** PMREM (ortam ışığı) girdisi: sabit 1024×512 → 256'lık küp; malzeme programları panorama değişince yeniden derlenmez. */
@@ -18,6 +19,8 @@ export const PMREM_GIRDI_GENISLIGI = 1024;
 export interface CozumSecenekleri {
   /** Tam görüntünün en büyük genişliği (piksel; kalite kademesinin küp yüzünün 4 katı). Kaynak daha genişse işçide küçülür. 0 = kaynak. */
   enGenis: number;
+  /** Gök maskesinin genişliği (piksel, yüksekliğin 2 katı); 0 = maske yok (manifest `gok: false`). */
+  gokGenisligi?: number;
 }
 
 export interface CozulmusPanorama {
@@ -27,10 +30,12 @@ export interface CozulmusPanorama {
   kucuk: ImageBitmap;
   /** Okunamadıysa null (sahne sabit sınırlara ve saate göre güneşe düşer; eski "tainted canvas" davranışı). */
   analiz: PanoramaAnalizi | null;
+  /** Gök maskesi (dik düzen; gokMaskesi.ts); istenmediyse ya da okunamadıysa null. */
+  gok: GokMaskesi | null;
   kaynakGenisligi: number;
   kaynakYuksekligi: number;
-  /** Adım süreleri (ms; işçinin saatiyle): indirme, çözme, küçültme (tam + 1024), analiz. */
-  sureler: { indirme: number; cozme: number; kucultme: number; analiz: number };
+  /** Adım süreleri (ms; işçinin saatiyle): indirme, çözme, küçültme (tam + 1024), analiz, gök maskesi. */
+  sureler: { indirme: number; cozme: number; kucultme: number; analiz: number; gok: number };
 }
 
 export async function panoramaCoz(url: string, secenek: CozumSecenekleri, sinyal?: AbortSignal): Promise<CozulmusPanorama> {
@@ -68,5 +73,26 @@ export async function panoramaCoz(url: string, secenek: CozumSecenekleri, sinyal
     a.close();
   }
   const t4 = performance.now();
-  return { tam, kucuk, analiz, kaynakGenisligi, kaynakYuksekligi, sureler: { indirme: t1 - t0, cozme: t2 - t1, kucultme: t3 - t2, analiz: t4 - t3 } };
+  // Gök maskesi tam çözümden (dik: flipY'li bitmap yeniden çevrilir); gök örtüsü onu duvar başına ~4 piksellik
+  // kenarla örnekler (2048 genişlikte). Okunamazsa maske yok, gök örtüsü yalnız ufuk pusu ve zemin tonlaması yapar.
+  let gok: GokMaskesi | null = null;
+  const gw = secenek.gokGenisligi ?? 0;
+  if (gw > 0) {
+    const gh = gw >> 1;
+    const m = await createImageBitmap(tam, { resizeWidth: gw, resizeHeight: gh, resizeQuality: "medium", imageOrientation: "flipY" });
+    try {
+      const tuval = new OffscreenCanvas(gw, gh);
+      const ctx = tuval.getContext("2d", { willReadFrequently: true });
+      if (ctx) {
+        ctx.drawImage(m, 0, 0);
+        gok = gokMaskesiHesapla(ctx.getImageData(0, 0, gw, gh).data, gw, gh);
+      }
+    } catch {
+      gok = null;
+    } finally {
+      m.close();
+    }
+  }
+  const t5 = performance.now();
+  return { tam, kucuk, analiz, gok, kaynakGenisligi, kaynakYuksekligi, sureler: { indirme: t1 - t0, cozme: t2 - t1, kucultme: t3 - t2, analiz: t4 - t3, gok: t5 - t4 } };
 }

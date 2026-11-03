@@ -12,6 +12,7 @@ const ODA1_EFEKTLERI: Array<{ tur: EfektTuru; aciklama: string; sinif?: string }
   { tur: "gurultu", aciklama: "Seri atış (6–10 el)" },
   { tur: "bagirma", aciklama: "Yaralı var! Siper al!" },
   { tur: "cagirma", aciklama: "Sıhhiye! Sedye getirin!" },
+  { tur: "simsek", aciklama: "Seçilen yönde çakma, gecikmeli gök gürültüsü, oda ışığında flaş" },
 ];
 
 /**

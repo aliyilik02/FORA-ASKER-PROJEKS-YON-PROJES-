@@ -18,6 +18,7 @@ import { apiOlustur, baglantiDurumu } from "./api.js";
 import { ArtNetGonderici } from "./artnet.js";
 import { ayarlariOku, envDosyasiniYukle, varsayilanEnvYolu } from "./ayarlar.js";
 import { VeriDeposu } from "./depo.js";
+import { FirtinaZamanlayici } from "./firtina.js";
 import { DurumDeposu } from "./durum.js";
 import { FigurYoneticisi } from "./figur.js";
 import { Gunluk } from "./gunluk.js";
@@ -42,6 +43,8 @@ const artnet = new ArtNetGonderici({
 });
 const depo = new DurumDeposu(unreal, artnet, gunluk);
 const senaryo = new SenaryoMotoru(depo, gunluk);
+const firtina = new FirtinaZamanlayici({ ortam: () => depo.al().ortam, simsek: (siddet) => void depo.efektTetikle({ tur: "simsek", siddet }) });
+setInterval(() => firtina.adim(Date.now()), 1000);
 const veri = new VeriDeposu(ayarlar.veriKlasoru, ORNEK_SENARYOLAR);
 const ornek = new OrnekBaslatici(ornekKomutuOlustur(ayarlar.ornek), gunluk);
 

@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 import type { HelikopterDurumu } from "../tipler";
 import type { CozmeIsi } from "./panoramaIsi";
 import type { CozulmusPanorama } from "./panoramaCozucu";
+import { GokOrtusu } from "./gokOrtusu";
 import { Sahne3B, type PanoramaKaynagi } from "./sahne3b";
 import type { YerlesimPlani } from "./yerlesim";
 
@@ -48,6 +49,7 @@ function kur(kaynak: PanoramaKaynagi) {
   const arazi = { mod: "kapali", aktif: false, koridorlariAyarla: () => false };
   Object.assign(s, {
     renderer: {},
+    gokOrtusu: new GokOrtusu(),
     sahne: new THREE.Scene(),
     kameralar: [],
     yerlesimler: [],
@@ -71,7 +73,7 @@ function hazirYap(ic: IcErisim) {
 /** Çözülmüş sahte sonuç (bitmapler kapatılabilir nesneler). */
 function sahteSonuc(): CozulmusPanorama {
   const bitmap = { width: 64, height: 32, close: () => undefined } as unknown as ImageBitmap;
-  return { tam: bitmap, kucuk: bitmap, analiz: null, kaynakGenisligi: 64, kaynakYuksekligi: 32, sureler: { indirme: 0, cozme: 0, kucultme: 0, analiz: 0 } };
+  return { tam: bitmap, kucuk: bitmap, analiz: null, gok: null, kaynakGenisligi: 64, kaynakYuksekligi: 32, sureler: { indirme: 0, cozme: 0, kucultme: 0, analiz: 0, gok: 0 } };
 }
 const bekle = () => new Promise((r) => setTimeout(r, 0));
 

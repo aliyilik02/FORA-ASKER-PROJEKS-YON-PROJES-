@@ -30,12 +30,14 @@ import { ParcacikSistemi } from "./parcaciklar";
 import { SutreKatmani, type SutreEsyasi } from "./sutre";
 import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, type AraziModu } from "./arazi";
 import { Gokyuzu } from "./gokyuzu";
+import { GokOrtusu } from "./gokOrtusu";
+import { Yagis3B } from "./yagis3b";
 import type { PanoramaAnalizi } from "./panoramaAnalizi";
 import type { CozumSecenekleri, CozulmusPanorama } from "./panoramaCozucu";
 import { EquirectYukleyici, KupDonusturucu, pmremUret } from "./panoramaDokulari";
 import { ADIM_ADLARI, PanoramaGecisi, kupYuzuSec, solmaBaslayabilir, yuklemeGenisligi } from "./panoramaGecisi";
 import { cozmeBaslat, type CozmeIsi } from "./panoramaIsi";
-import { ZEMIN_Y, azimutYon, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu, zeminY } from "./uzay";
+import { GOZ_YUKSEKLIGI, ZEMIN_Y, azimutYon, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu, zeminY } from "./uzay";
 import { aciNormalize, birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
@@ -66,6 +68,8 @@ export interface PanoramaKaynagi {
   plan?: YerlesimPlani;
   /** Manifestte elle belirlenmiş ışık kaynağı (panorama koordinatı); varsa otomatik tahmin yapılmaz. */
   gunes?: { azimut: number; yukseklik: number; guc?: number };
+  /** false: gök maskesi çıkarılmaz (beton tavan gibi gök sanılan üst yüzey); bulut çizilmez, sis ve tonlama kalır. */
+  gok?: boolean;
 }
 
 /** Manifestteki elle girilmiş güneş/ay → tahmin biçimi (yükseklik doğrulanmış sayılır). */
@@ -75,7 +79,7 @@ function elleGunes(g: { azimut: number; yukseklik: number; guc?: number }): Gune
 
 /** Aynı dosyada takas gerektiren alanlar (yaw, ufuk, zaman, güneş, plan). */
 function kaynakImzasi(k: PanoramaKaynagi): string {
-  return JSON.stringify([k.yawKaydirma ?? 0, k.yukseklikKaydirma ?? 0, k.zaman ?? null, k.gunes ?? null, k.plan ?? null]);
+  return JSON.stringify([k.yawKaydirma ?? 0, k.yukseklikKaydirma ?? 0, k.zaman ?? null, k.gunes ?? null, k.plan ?? null, k.gok ?? true]);
 }
 function dosyaAdi(url: string): string {
   return url.split("/").slice(-2).join("/");
@@ -95,6 +99,8 @@ interface PanoramaVerisi {
   kup: THREE.WebGLCubeRenderTarget | null;
   pmrem: THREE.WebGLRenderTarget | null;
   analiz: PanoramaAnalizi | null;
+  /** Gök maskesinin dokusu (takasta maskeden kurulur, bırakılırken atılır). */
+  gokDokusu: THREE.DataTexture | null;
   /** performance.now: istek ve adım bitişleri (ölçüm). */
   zaman: { istek: number; cozum?: number; yukleme?: number; kup?: number; pmrem?: number; takas?: number; ilkKare?: number };
   isciSureleri: CozulmusPanorama["sureler"] | null;
@@ -203,9 +209,21 @@ export class Sahne3B {
   /** 3B arazi (hibrit / tam) ve tam kipte prosedürel gökyüzü. */
   readonly arazi = new AraziKatmani();
   private readonly gokyuzu = new Gokyuzu();
+  private readonly gokOrtusu = new GokOrtusu();
+  private readonly yagis3b: Yagis3B;
   private golgeZemini: THREE.Mesh | null = null;
   private araziBolge = "";
   private sonBulut = 0.2;
+  /** Ortamın son hava değerleri (gök örtüsü ve sis; ortamAyarla). */
+  private sonSis = 0;
+  private sonYagis: OrtamAyarlari["yagis"] = "yok";
+  private ruzgarSiddeti = 0.2;
+  private ruzgarYonu = 0;
+  private readonly sisRengi = new THREE.Color();
+  /** Şimşek: darbe zamanları (sn, sahne saatine göre) ve ışık tabanı (isikGuncelle'nin bıraktığı değerler). */
+  private simsekDarbeleri: Array<{ t: number; guc: number }> = [];
+  private sahneSaati = 0;
+  private isikTabani = { dolgu: 0, ortam: 1 };
   private gunesIsareti: THREE.Mesh | null = null;
   /** Ekranda bir panorama var (ilk takastan sonra; geçişler sırasında da açık kalır). */
   hazir = false;
@@ -218,6 +236,7 @@ export class Sahne3B {
 
   constructor(tuval: HTMLCanvasElement, hataAyiklama = false, kalite: Kalite = "yuksek") {
     this.kalite = kalite;
+    this.yagis3b = new Yagis3B(kalite);
     const k = KALITE_AYARLARI[kalite];
     let r: THREE.WebGLRenderer | null = null;
     try {
@@ -278,6 +297,7 @@ export class Sahne3B {
     this.golgeZemini = zemin;
     this.gokyuzu.baglan(r, this.pmrem);
 
+    this.sahne.add(this.gokOrtusu.kutu, this.yagis3b.grup);
     this.sahne.add(this.arazi.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
 
     if (hataAyiklama) {
@@ -396,6 +416,7 @@ export class Sahne3B {
     this.H = H;
     this.yerlesimler = yerlesimler;
     this.renderer?.setSize(W, H, false);
+    this.yagis3b.boyutlandir(H);
     this.kameralar = yerlesimler.map(() => new DuvarKamerasi(0.1, 3000));
     // Ölçülmüş odada sis gerçek uzaklıkla (kaymış izleyicide köşede kırılmaz); ilk çizimden önce (duvarKamerasi.ts)
     sisUzakligiAyarla(uzaklikSisiGerekir(yerlesimler));
@@ -426,8 +447,8 @@ export class Sahne3B {
 
   /** Yeni hazırlık: dosya işçide çözülür (indirme, çözme, küçültme, analiz); GPU adımları sonra karelere yayılır. */
   private hazirlikBaslat(k: PanoramaKaynagi, no: number): PanoramaVerisi {
-    const v: PanoramaVerisi = { no, isi: null, cozum: null, yukleyici: null, kup: null, pmrem: null, analiz: null, zaman: { istek: performance.now() }, isciSureleri: null, seritSayisi: 0, boyut: [0, 0], kupYuzu: 0, birakildi: false };
-    const isi = (this.cozucu ?? cozmeBaslat)(k.url, { enGenis: yuklemeGenisligi(this.kalite) });
+    const v: PanoramaVerisi = { no, isi: null, cozum: null, yukleyici: null, kup: null, pmrem: null, analiz: null, gokDokusu: null, zaman: { istek: performance.now() }, isciSureleri: null, seritSayisi: 0, boyut: [0, 0], kupYuzu: 0, birakildi: false };
+    const isi = (this.cozucu ?? cozmeBaslat)(k.url, { enGenis: yuklemeGenisligi(this.kalite), gokGenisligi: k.gok === false ? 0 : this.kalite === "dusuk" ? 1024 : 2048 });
     v.isi = isi;
     isi.sonuc.then(
       (s) => {
@@ -439,6 +460,8 @@ export class Sahne3B {
         }
         v.cozum = s;
         v.analiz = s.analiz;
+        // Maske dokusu şimdi (CPU nesnesi; GPU'ya ilk çizimde gider): çözüm GPU'ya yüklenince bırakılır
+        v.gokDokusu = s.gok ? GokOrtusu.maskeDokusu(s.gok) : null;
         v.isciSureleri = s.sureler;
         v.boyut = [s.tam.width, s.tam.height];
         v.zaman.cozum = performance.now();
@@ -512,7 +535,8 @@ export class Sahne3B {
     const prob = (this.probSahne ??= new THREE.Scene());
     const hedefMod = this.bekleyenArazi?.mod ?? this.arazi.mod;
     prob.environment = hedefMod === "tam" ? this.sahne.environment : v.pmrem.texture;
-    prob.fog = hedefMod === "hibrit" || hedefMod === "tam" ? this.sis : null;
+    // Sis her kipte açık (kapalı kipte de, sis 0 iken etkisiz uzaklıkla): sis ayarı programları yeniden derletmez
+    prob.fog = this.sis;
     const sinir = setTimeout(ilerle, 2000);
     r.compileAsync(this.sahne, kamera, prob).then(
       () => {
@@ -544,6 +568,8 @@ export class Sahne3B {
     // PMREM'in kendi hedefi: yalnız `.texture.dispose()` GPU belleğini bırakmıyordu (8K'da her geçişte +384 MiB)
     v.pmrem?.dispose();
     v.pmrem = null;
+    v.gokDokusu?.dispose();
+    v.gokDokusu = null;
   }
 
   /**
@@ -605,7 +631,9 @@ export class Sahne3B {
   private arkaPlaniUygula() {
     if (this.arazi.mod === "tam") return;
     const v = this.gecis.etkin?.veri;
-    this.sahne.background = v?.kup?.texture ?? null;
+    // Arka plan three'nin kutusu yerine gök örtüsünde (aynı küp; bulut, sis, şimşek onun içinde)
+    this.sahne.background = null;
+    this.gokOrtusu.ayarla(v?.kup?.texture ?? null, v?.gokDokusu ?? null);
     this.sahne.environment = v?.pmrem?.texture ?? null;
   }
 
@@ -719,6 +747,7 @@ export class Sahne3B {
   private yonelimUygula() {
     const yaw = radyan(UC_YAW_TABANI + (this.kaynak?.yawKaydirma ?? 0));
     this.sahne.backgroundRotation.set(0, yaw, 0);
+    this.gokOrtusu.donusAyarla(this.sahne.backgroundRotation);
     this.sahne.environmentRotation.set(0, yaw, 0);
     this.kameralariYonlendir();
   }
@@ -762,6 +791,11 @@ export class Sahne3B {
     this.saat = ortam.saat;
     this.isik = isik;
     this.sonBulut = ortam.bulut;
+    this.sonSis = ortam.sis;
+    this.sonYagis = ortam.yagis;
+    this.ruzgarSiddeti = ortam.ruzgarSiddeti;
+    this.ruzgarYonu = ortam.ruzgarYonu;
+    this.yagis3b.ayarla(ortam);
     // Güneşli panoramada yağmur/kar: sahneyi kıs, güneşi yumuşat (yağışlı panorama yoksa inandırıcılık için)
     this.yagisKararma = ortam.yagis === "siddetli_yagmur" ? 0.62 : ortam.yagis === "hafif_yagmur" ? 0.8 : ortam.yagis === "kar" ? 0.85 : 1;
     this.yagisKararma *= 1 - ortam.bulut * 0.18;
@@ -841,7 +875,6 @@ export class Sahne3B {
       this.hasar.cikartmaCiz = !this.arazi.aktif;
       if (mod !== "tam") {
         this.gokyuzu.sok(this.sahne);
-        this.sahne.fog = null;
         this.arkaPlaniUygula();
       }
       this.isikGuncelle();
@@ -875,6 +908,7 @@ export class Sahne3B {
     const z = this.kaynak?.zaman;
     const faktor = (z === "gece" ? 1 : z === "alacakaranlik" ? Math.min(1, 0.55 + this.isik * 0.45) : 0.08 + 0.92 * this.isik) * this.yagisKararma;
     this.sahne.backgroundIntensity = faktor;
+    this.gokOrtusu.u.parlaklik.value = faktor;
     this.sahne.environmentIntensity = faktor;
     this.parcaciklar.isik = faktor;
     this.catisma.isik = this.isik;
@@ -887,6 +921,7 @@ export class Sahne3B {
       // Tam 3B: gökyüzü saatten, panorama yalnız plan için; sis ufuk rengine
       this.gokyuzu.guncelle(this.saat, this.sonBulut, this.sahne);
       this.sahne.background = null;
+      this.gokOrtusu.kutu.visible = false;
       this.sis.color.copy(this.gokyuzu.ufukRengi(this.sonBulut));
       this.sis.near = 180;
       this.sis.far = 1400 - this.sonBulut * 700;
@@ -908,17 +943,10 @@ export class Sahne3B {
       this.sahne.environmentIntensity = (0.15 + 0.85 * gun) * this.yagisKararma;
       this.parcaciklar.isik = 0.1 + 0.9 * gun;
       this.catisma.isik = gun;
+      this.isikTabani = { dolgu: this.dolgu.intensity, ortam: this.sahne.environmentIntensity };
       return;
     }
-    if (this.arazi.mod === "hibrit" && this.gecis.etkin) {
-      // Hibrit: arazi kenarı (profil yarıçapı) panoramanın ufuk rengine karışsın; kaya/çalı da aynı sise girer.
-      // Tek sis nesnesi güncellenir (yenisi her çağrıda tüm sisli malzemelerde program değerlendirmesi tetikliyordu).
-      const r = this.arazi.yaricap;
-      this.sis.color.copy(this.ufukRengi()).multiplyScalar(faktor);
-      this.sis.near = r * 0.55;
-      this.sis.far = r * 1.45;
-      this.sahne.fog = this.sis;
-    }
+    this.sisUygula(faktor);
     if (this.gunesTahmini && this.gunesTahmini.guc > 0.05) {
       azimut = panoramadanSahneAzimutu(this.gunesTahmini.azimut, this.kaynak?.yawKaydirma ?? 0);
       guc = this.gunesTahmini.guc;
@@ -971,7 +999,130 @@ export class Sahne3B {
     } else if (z === "alacakaranlik") {
       this.gunes.intensity = Math.min(this.gunes.intensity, 1.2);
     }
+    // Kapalı gök (bulut ya da yağış): güneş bulutun arkasında, gölgeler söner; gök örtüsü göğü buluta çevirir
+    const ortu = this.etkinBulut;
+    const kapali = Math.max(0, Math.min(1, (ortu - 0.45) / 0.5));
+    this.gunes.intensity *= 1 - 0.85 * kapali * kapali * (3 - 2 * kapali);
+    this.gunes.shadow.radius = Math.max(this.gunes.shadow.radius, 2 + 10 * kapali);
+    // Güneşin yerini yaygın gök ışığı alır (kapalı havada kar ve zemin yine aydınlık; yalnız gölge kaybolur)
+    this.dolgu.intensity += kapali * 1.6 * faktor;
+    this.gokHavasiAyarla(d, ortu);
+    // Panoramadaki güneş/ay diskinin gerçek yeri (ışık yönü makullük sınırıyla yükseltilmiş olabilir; disk değil)
+    const t = this.gunesTahmini;
+    const du = this.gokOrtusu.u;
+    du.diskVar.value = t && t.yukseklikGuvenilir && t.guc > 0.05 && t.yukseklik > 1 ? 1 : 0;
+    if (t && du.diskVar.value) {
+      const dy = azimutYon(panoramadanSahneAzimutu(t.azimut, this.kaynak?.yawKaydirma ?? 0));
+      const de = radyan(t.yukseklik);
+      (du.diskYonu.value as THREE.Vector3).set(dy.x * Math.cos(de), Math.sin(de), dy.z * Math.cos(de));
+    }
+    this.isikTabani = { dolgu: this.dolgu.intensity, ortam: this.sahne.environmentIntensity };
   }
+
+  /** Yağış göğü kapatır: hafif yağmurda en az 0,8, şiddetlide 0,95, karda 0,85 bulut. */
+  private get etkinBulut(): number {
+    const y = this.sonYagis;
+    return Math.max(this.sonBulut, y === "siddetli_yagmur" ? 0.95 : y === "hafif_yagmur" ? 0.8 : y === "kar" ? 0.85 : 0);
+  }
+
+  /** Gök örtüsünün bulut değerleri: örtü, yağış koyuluğu, bulut rengi (panoramanın gök parlaklığından), güneş yönü. */
+  private gokHavasiAyarla(gunesYonu: THREE.Vector3, ortu: number) {
+    const u = this.gokOrtusu.u;
+    u.bulut.value = ortu;
+    const y = this.sonYagis;
+    u.yagis.value = y === "siddetli_yagmur" ? 1 : y === "hafif_yagmur" ? 0.55 : y === "kar" ? 0.25 : 0;
+    // Kapalı gök, açık göğün bant ortalamasından biraz açık ve nötr gri; ufkun tonu (alacakaranlıkta turuncu) %25
+    const p = this.panoramaParlakligi();
+    const L = Math.max(0.02, Math.min(0.85, (p ? p.gok : 0.45) * 1.1));
+    const ufuk = this.ufukRengi();
+    const uL = Math.max(1e-4, 0.2126 * ufuk.r + 0.7152 * ufuk.g + 0.0722 * ufuk.b);
+    (u.bulutRengi.value as THREE.Color).setRGB(L * (0.75 * 0.97 + (0.25 * ufuk.r) / uL), L * (0.75 * 0.99 + (0.25 * ufuk.g) / uL), L * (0.75 * 1.03 + (0.25 * ufuk.b) / uL));
+    (u.gunesYonu.value as THREE.Vector3).copy(gunesYonu).normalize();
+    (u.gunesRengi.value as THREE.Color).copy(this.gunes.color);
+    this.yagis3b.isikAyarla(u.bulutRengi.value as THREE.Color, u.parlaklik.value as number);
+  }
+
+  /**
+   * Sis: hibrit arazinin kenarı (profil yarıçapı, panoramanın ufuk rengine) ve ortamın sisi tek three sisinde
+   * (doğrusal). Sis arttıkça renk sis rengine, uzak sınır görüş mesafesine iner (sis 1 → 35 m, 0,5 → 385 m). Gök
+   * örtüsü panoramayı aynı eğriyle sisler (zemin pikselinin uzaklığı göz yüksekliğinden), 3B ve panorama birleşir.
+   * Sis nesnesi her kipte sahnede: kapalı kipte sis 0 iken uzaklık etkisizdir (programlar sis ayarında yeniden derlenmez).
+   */
+  private sisUygula(faktor: number) {
+    const s = Math.max(0, Math.min(1, this.sonSis));
+    const a = Math.min(1, s / 0.12);
+    const t = a * a * (3 - 2 * a);
+    const gorus = 35 + 1400 * (1 - s) ** 2;
+    const ufuk = this.ufukRengi();
+    const L = 0.2126 * ufuk.r + 0.7152 * ufuk.g + 0.0722 * ufuk.b;
+    this.sisRengi.setRGB(ufuk.r + (L * 1.05 - ufuk.r) * 0.6, ufuk.g + (L * 1.05 - ufuk.g) * 0.6, ufuk.b + (L * 1.08 - ufuk.b) * 0.6).multiplyScalar(faktor);
+    let yakin = 1e5;
+    let uzak = 1e6;
+    let kenar = this.sisRengi;
+    if (this.arazi.mod === "hibrit" && this.gecis.etkin) {
+      const r = this.arazi.yaricap;
+      yakin = r * 0.55;
+      uzak = r * 1.45;
+      kenar = this.ufukRengiGecici.copy(ufuk).multiplyScalar(faktor);
+    }
+    this.sis.color.copy(kenar).lerp(this.sisRengi, t);
+    this.sis.far = t > 0 ? Math.min(uzak, gorus) : uzak;
+    this.sis.near = Math.min(yakin * (1 - t), this.sis.far * 0.5);
+    this.sahne.fog = this.sis;
+    const u = this.gokOrtusu.u;
+    u.sisMiktar.value = t;
+    u.sisYakin.value = 0;
+    u.sisUzak.value = gorus;
+    u.sisYuksekligi.value = 40 + 160 * s;
+    u.gozYuksekligi.value = GOZ_YUKSEKLIGI;
+    (u.sisRengi.value as THREE.Color).copy(this.sisRengi);
+  }
+
+  /**
+   * Şimşek: gök örtüsünde çakma yönünde aydınlanan bulutlar ve sahne ışığında kısa artış (ortam ışığı, dolgu). Bir
+   * çakma 2–4 darbedir (ilki en güçlü). `azimut` sahne azimutu; gök gürültüsü çağıranda (mesafeye göre gecikmeli).
+   */
+  simsek(azimut: number, guc = 1) {
+    const yon = azimutYon(azimut);
+    (this.gokOrtusu.u.simsekYonu.value as THREE.Vector3).set(yon.x, 0.35, yon.z).normalize();
+    const t0 = this.sahneSaati;
+    const n = 2 + Math.floor(Math.random() * 3);
+    let t = t0;
+    for (let i = 0; i < n; i++) {
+      this.simsekDarbeleri.push({ t, guc: guc * (i === 0 ? 1 : 0.35 + Math.random() * 0.5) });
+      t += 0.06 + Math.random() * 0.16;
+    }
+  }
+
+  /** Karede: bulut ve sis kayması (rüzgâr), şimşek zarfı. */
+  private havaGuncelle(dt: number) {
+    this.sahneSaati += dt;
+    const u = this.gokOrtusu.u;
+    // Rüzgâr "nereden" esiyor (pusula oku içe bakar): bulut ters yöne kayar; düzlem biriminde (bulut yüksekliği 1)
+    const yon = azimutYon(this.ruzgarYonu + 180);
+    const hiz = 0.006 + 0.05 * this.ruzgarSiddeti;
+    const bk = u.bulutKayma.value as THREE.Vector2;
+    bk.x -= yon.x * hiz * dt;
+    bk.y -= yon.z * hiz * dt;
+    const sk = u.sisKayma.value as THREE.Vector2;
+    sk.x += (0.02 + 0.12 * this.ruzgarSiddeti) * dt;
+    // Şimşek zarfı: her darbe 25 ms'de tepe, ~90 ms'de söner
+    let zarf = 0;
+    const simdi = this.sahneSaati;
+    this.simsekDarbeleri = this.simsekDarbeleri.filter((d) => simdi - d.t < 0.6);
+    for (const d of this.simsekDarbeleri) {
+      const g = simdi - d.t;
+      if (g < 0) continue;
+      zarf = Math.max(zarf, d.guc * (g < 0.025 ? g / 0.025 : Math.exp(-(g - 0.025) / 0.09)));
+    }
+    u.simsek.value = zarf;
+    if (zarf > 0.001 || this.simsekVardi) {
+      this.dolgu.intensity = this.isikTabani.dolgu + zarf * 1.2;
+      this.sahne.environmentIntensity = this.isikTabani.ortam * (1 + zarf * 2.2);
+    }
+    this.simsekVardi = zarf > 0.001;
+  }
+  private simsekVardi = false;
 
   /**
    * Patlama yeri: yöne en yakın plan noktası; çevresinde (4,5 m) asker/tank varsa yöne 40° içindeki boş bir patlama
@@ -1147,6 +1298,8 @@ export class Sahne3B {
       this.isikBekliyor = false;
       this.isikGuncelle();
     }
+    this.havaGuncelle(dt);
+    this.yagis3b.guncelle(dt);
     this.catisma.guncelle(dt);
     this.parcaciklar.guncelle(dt);
     this.hasar.guncelle(dt);

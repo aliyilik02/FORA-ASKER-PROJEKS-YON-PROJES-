@@ -29,6 +29,8 @@ export interface SesManifesti {
   bagirma?: string[];
   cagirma?: string[];
   mermi_vizilti?: string[];
+  /** Gök gürültüsü kayıtları (yoksa sentez: yakında çatırtı + uzun gürleme). */
+  gok_gurultusu?: string[];
   helikopter_rotor?: string | null;
   ortam?: Record<string, string>;
 }
@@ -415,6 +417,58 @@ export class SesMotoru {
     this.anlik(o, g);
     o.start();
     o.stop(c.currentTime + 1);
+  }
+
+  /**
+   * Gök gürültüsü: şimşekten mesafe/343 sn sonra (en çok 20 sn). Manifest `gok_gurultusu` kaydı varsa o (mesafeyle
+   * kısılır), yoksa sentez: 1,5 km'den yakında önce sert çatırtı, sonra 3–6 yuvarlanmalı alçak gürleme; LFE'ye bas.
+   * Sahne sıfırlanınca bekleyen gürültü çalmaz.
+   */
+  gokGurultusu(azimut: number, mesafe: number, siddet = 1) {
+    if (!this.hazir) return;
+    const nesil = this.efektNesli;
+    const zay = Math.max(0.15, 1 - mesafe / 12000) * siddet;
+    const uzak = mesafe > 1500;
+    setTimeout(
+      () => {
+        if (nesil !== this.efektNesli) return;
+        void this.dosyaCal(this.manifest.gok_gurultusu, azimut, zay, uzak, 0.7).then((caldi) => {
+          if (!caldi && nesil === this.efektNesli) this.gokGurultusuSentez(azimut, mesafe, zay);
+        });
+      },
+      Math.min(20, mesafe / 343) * 1000,
+    );
+  }
+
+  private gokGurultusuSentez(azimut: number, mesafe: number, kazanc: number) {
+    if (!this.ctx || !this.gurultuTampon) return;
+    const c = this.ctx;
+    const t = c.currentTime;
+    const yakin = mesafe < 1500;
+    if (yakin) this.gurultuPatlamasi(azimut, 0.9 * kazanc, 0.45, 7000, false, "highpass");
+    const s = c.createBufferSource();
+    s.buffer = this.gurultuTampon;
+    s.loop = true;
+    const f = c.createBiquadFilter();
+    f.type = "lowpass";
+    f.frequency.value = yakin ? 280 : 160;
+    f.Q.value = 0.7;
+    const g = c.createGain();
+    const sure = 3.5 + Math.random() * 3;
+    const n = 3 + Math.floor(Math.random() * 4);
+    g.gain.setValueAtTime(0.0001, t);
+    let z = t + (yakin ? 0.08 : 0.25);
+    for (let i = 0; i < n; i++) {
+      z += 0.12 + (Math.random() * sure) / n;
+      g.gain.exponentialRampToValueAtTime(Math.max(0.002, kazanc * (1.1 - i * 0.15) * (0.6 + 0.4 * Math.random())), z);
+      z += 0.25 + Math.random() * 0.45;
+      g.gain.exponentialRampToValueAtTime(Math.max(0.001, kazanc * 0.2 * (1 - i / n)), z);
+    }
+    g.gain.exponentialRampToValueAtTime(0.0003, z + 1.5);
+    s.connect(f).connect(g).connect(this.cikis(azimut, 1, !yakin, 0.8));
+    this.anlik(s, g);
+    s.start(t);
+    s.stop(z + 1.6);
   }
 
   async gurultu(azimut: number, siddet: number, uzak = false) {

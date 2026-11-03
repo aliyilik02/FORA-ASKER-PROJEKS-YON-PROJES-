@@ -99,6 +99,7 @@ export class DurumDeposu {
       yagis: kismi.yagis ?? o.yagis,
       ruzgarSiddeti: sinirla(kismi.ruzgarSiddeti ?? o.ruzgarSiddeti, 0, 1),
       ruzgarYonu: ((kismi.ruzgarYonu ?? o.ruzgarYonu) % 360 + 360) % 360,
+      simsek: kismi.simsek ?? o.simsek ?? false,
     };
     await this.unreal.ortamAyarla(this.durum.ortam);
     if (this.durum.isik.senaryoyaBagli) {
@@ -172,6 +173,11 @@ export class DurumDeposu {
       mesafe: efekt.mesafe,
     };
     // Oda 2'deki uzak sesler panelde ayarlanan mesafe/yöne göre zayıflatılır (§9).
+    // Şimşek: yön ve mesafe verilmezse rastgele (yakın çakma seyrek: mesafe 0,5–7,5 km, karesel dağılım)
+    if (istek.tur === "simsek") {
+      istek.yon = istek.yon ?? Math.round(Math.random() * 360 - 180);
+      istek.mesafe = istek.mesafe ?? Math.round(500 + Math.random() ** 2 * 7000);
+    }
     if ((istek.tur === "uzak_patlama" || istek.tur === "uzak_mermi_sesi") && istek.mesafe === undefined) {
       istek.mesafe = this.durum.oda2.uzakSesMesafesi;
       istek.yon = istek.yon ?? this.durum.oda2.uzakSesYonu;
@@ -180,6 +186,12 @@ export class DurumDeposu {
     await this.unreal.efektTetikle(istek);
     if (istek.tur === "patlama" && this.durum.isik.senaryoyaBagli) {
       this.artnet.patlamaFlasi(istek.siddet ?? 1);
+    }
+    // Şimşek odada da çakar: kısa çift flaş (uzak şimşek sönük)
+    if (istek.tur === "simsek" && this.durum.isik.senaryoyaBagli) {
+      const g = (istek.siddet ?? 1) * Math.max(0.35, 1 - (istek.mesafe ?? 2000) / 9000);
+      this.artnet.patlamaFlasi(g, 90);
+      setTimeout(() => this.artnet.patlamaFlasi(g * 0.6, 70), 170);
     }
     const olay = { ...istek, zaman: Date.now() };
     this.durum.sonEfektler.unshift(olay);

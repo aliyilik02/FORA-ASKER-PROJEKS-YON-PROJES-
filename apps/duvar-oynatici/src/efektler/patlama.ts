@@ -58,6 +58,11 @@ export class EfektSistemi {
     this.sallanti = Math.max(this.sallanti, 8 + siddet * 20);
   }
 
+  /** Şimşek (3B sahne yokken): sarsıntısız, kısa beyaz flaş. */
+  simsekFlasi(siddet: number) {
+    this.flas = Math.max(this.flas, siddet);
+  }
+
   uzakPatlama(azimut: number, siddet: number, yerlesimler: Yerlesim[], ufukY: number, H: number) {
     const konum = azimutKonum(azimut, yerlesimler, 20);
     if (!konum) {
