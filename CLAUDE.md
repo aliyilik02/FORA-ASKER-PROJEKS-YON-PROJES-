@@ -269,4 +269,5 @@ namlu parıltıları, "Gösterim – Kırsal Tam Tur" ve "Dağlık pusu" duvarda
 - `docs/mimari.md`, `docs/unreal-kurulum.md`, `docs/3-projeksiyon-tek-ekran.md`
 - `docs/ornek-calisma-inceleme.md` – firmadan gelen TCCC örnek paketi incelemesi
 - `docs/donanim-onerileri.md`, `docs/kaynak-proje-talebi.md`, `docs/sartname-uyumluluk.md`
+- `docs/icerik-ihtiyac-listesi.md` – Meshy modelleri, Türkçe/CC0 sesler, hava efekti eksikleri (3 Kasım), öncelikli
 - `docs/gosterim-rehberi.md` – idareye sunum: hazırlık, tek tuş "Gösterim – Tam Tur" akışı, elle 3 dk, sorulara cevaplar, aksaklıklar
