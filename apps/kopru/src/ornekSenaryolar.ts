@@ -247,6 +247,8 @@ export const ORNEK_SENARYOLAR: Senaryo[] = [
       { id: "b15", gecikmeMs: 68000, aciklama: "Kerpiç ev köşesi (sağ)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b15", klip: "nesne_kerpic_ev_kosesi", azimut: 50, yukseklik: -7, olcek: 1, dongu: false } } },
       { id: "b16", gecikmeMs: 70000, aciklama: "Yanmış araç enkazı", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b16", klip: "nesne_arac_enkazi", azimut: 10, yukseklik: -9, olcek: 1, dongu: false } } },
       { id: "b17", gecikmeMs: 72000, aciklama: "Moloz yığını", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b17", klip: "nesne_moloz_yigini", azimut: -12, yukseklik: -7, olcek: 1, dongu: false } } },
+      { id: "b17a", gecikmeMs: 74000, aciklama: "Enkaz yanıyor (alev, kor, kara duman)", islem: { tip: "efekt", efekt: { tur: "yangin", siddet: 0.8, yon: 10 } } },
+      { id: "b17b", gecikmeMs: 86000, aciklama: "Yangın söner", islem: { tip: "efekt", efekt: { tur: "yangin_sondur" } } },
       { id: "b18", gecikmeMs: 90000, aciklama: "Figürler kaldırılır", islem: { tip: "figur", figur: { islem: "temizle" } } },
       { id: "b19", gecikmeMs: 91000, aciklama: "Oda 2: operasyonel bölge (konteyner, jeneratör, variller, nöbet kulübesi)", islem: { tip: "oda2", oda2: { guvenliAlan: "operasyonel_bolge", helikopter: "yok", uzakSesMesafesi: 800, uzakSesYonu: 45 } } },
       { id: "b20", gecikmeMs: 92000, aciklama: "Oda 2", islem: { tip: "oda", oda: "oda2" } },

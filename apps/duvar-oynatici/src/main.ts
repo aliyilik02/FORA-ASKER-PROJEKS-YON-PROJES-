@@ -304,7 +304,7 @@ function bekleyenEfektleriUygula() {
 }
 
 function efektUygula(e: EfektIstegi) {
-  if (ucAktifOlabilir && (!sahne3b.hazir || sahne3b.bolgeGecisiBekliyor) && (e.tur === "patlama" || e.tur === "toz_duman" || e.tur === "uzak_patlama")) {
+  if (ucAktifOlabilir && (!sahne3b.hazir || sahne3b.bolgeGecisiBekliyor) && (e.tur === "patlama" || e.tur === "toz_duman" || e.tur === "uzak_patlama" || e.tur === "yangin")) {
     bekleyenEfektler.push({ e, zaman: performance.now() });
     return;
   }
@@ -359,6 +359,13 @@ function efektUygula(e: EfektIstegi) {
     }
     case "uzak_mermi_sesi":
       void ses.mermi(azimut, true);
+      break;
+    case "yangin":
+      if (uc) sahne3b.yangin(azimut, siddet);
+      else efektler.flasVeSarsinti(siddet * 0.2);
+      break;
+    case "yangin_sondur":
+      if (uc) sahne3b.yanginSondur();
       break;
     case "simsek": {
       // Çakma hemen (ışık), gök gürültüsü mesafe/343 sn sonra (ses motorunda)

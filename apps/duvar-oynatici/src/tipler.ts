@@ -92,7 +92,9 @@ export type EfektTuru =
   | "toz_duman"
   | "uzak_patlama"
   | "uzak_mermi_sesi"
-  | "simsek";
+  | "simsek"
+  | "yangin"
+  | "yangin_sondur";
 
 export interface EfektIstegi {
   tur: EfektTuru;
@@ -239,6 +241,12 @@ export interface KlipOzeti {
   baslik: string;
   kategori: string;
   dongu: boolean;
+  /** Panel grubu: asker | sihhiye | yarali | tank | arac | silah | nesne | yapi (manifest `grup`; yoksa addan türetilir). */
+  grup?: string;
+  /** Panelde gösterilen simge (manifest `simge`, emoji). */
+  simge?: string;
+  /** Eski yer tutucu model (Quaternius vb.): panelde varsayılan gizli, senaryolar için çalışır. */
+  eski?: boolean;
 }
 
 /**
@@ -357,6 +365,8 @@ export const EFEKT_ETIKETLERI: Record<EfektTuru, string> = {
   uzak_patlama: "Uzaktan patlama",
   uzak_mermi_sesi: "Uzaktan mermi sesi",
   simsek: "Şimşek",
+  yangin: "Yangın",
+  yangin_sondur: "Yangınları söndür",
 };
 
 export function varsayilanDurum(): SimulasyonDurumu {

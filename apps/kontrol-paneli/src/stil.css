@@ -1203,6 +1203,18 @@ button.birlik.vuruldu .birlik-ad {
   text-align: left;
   font-size: 13.5px;
 }
+.klip-simge {
+  font-size: 1.05em;
+  margin-right: 0.35em;
+  filter: saturate(0.85);
+}
+.klip-karti.eski {
+  opacity: 0.55;
+}
+.liste-isaret.figur {
+  font-size: 1.1em;
+  line-height: 1;
+}
 .klip-karti small {
   font-size: 10.5px;
   letter-spacing: 0.08em;

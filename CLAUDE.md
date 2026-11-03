@@ -276,6 +276,12 @@ oynatıcı, bağlantıyla gelen figürleri bazen yüklemiyor (`figurler.aktifler
 yükleniyor; başsız Chrome'da 3840×720, yavaş açılışta görüldü) — `bekleyenFigurler` / `sahne/senkron` sırası incelenmeli.
 Bu oturumun kalan düzeltmesi: "askerin vücudu zeminin altında" (kalça yüksekliği, fb03730).
 
+**Yangın, duman, panel (3 Kasım gece):** efekt `yangin` / `yangin_sondur` (`sahne3b/yangin.ts`: alev + kor + kara duman +
+titreyen ışık, rüzgârla sürüklenir; senaryo adımı `efekt`), duman topakları güneş yönüne göre gölgeli (parçacık
+gölgelendiricisi `golgeleme`/`isikYonu`), `Parcacik.renkSon`. Panel: manifest `grup`/`simge`/`eski`; eski Quaternius
+modeller gizli, hızlı düğmeler yeni Meshy modellerini kullanır. Kullanıcı kararı: **alan/yapı modülleri (meskûn mahal,
+hangar) listesi şimdilik çıkarılmayacak**; ortam panoramada kalır. Ayrıntı docs "Yangın ve duman aydınlatması", "Panel".
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 0. **Gösterim hazır (2 Kasım):** örnek senaryo "Gösterim – Güncel Durum (5 dk)" (`sn_gosterim_guncel`; akış

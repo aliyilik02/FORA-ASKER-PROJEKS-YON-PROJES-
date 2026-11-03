@@ -538,6 +538,31 @@ yan yatmıştı). `figurler3b.ts kuleyiDondur`: dönme ekseni artık düğümün
 seçilir (`Aktif.kuleEksen`; Quaternius z, Meshy y). Başsız tarayıcıda düşman 20° → namlu 20° ölçüldü.
 `araclar/tank-birlestir.py` (ayrı gövde + kule birleştirme) yazıldı ama Meshy ayrı parça vermediğinden kullanılmadı.
 
+### Yangın ve duman aydınlatması (3 Kasım 2026 gece)
+
+- **Efekt `yangin`** (panel Efektler, API `/efekt {tur:"yangin", siddet, yon}`): seçilen yöndeki patlama noktasında kalıcı
+  yangın (`sahne3b/yangin.ts` `YanginKatmani`): tabandan yükselen kısa ömürlü alevler (katkılı, sarı çekirdek → turuncu →
+  koyu kızıl, `renkSon` ile ömür boyu renk geçişi), savrulan korlar, üstte kara → gri rüzgârla sürüklenen duman sütunu
+  (`ParcacikSistemi.yangin`, saniye başına oranla, kalite kapasitesiyle), titreyen turuncu `PointLight` (60 cd·yarıçap;
+  520 zemini turuncuya boyuyordu). Aynı noktaya ikinci yangın büyütür. **`yangin_sondur`** hepsini söndürür: alev 2,5 sn'de
+  iner, beyazımsı duman tüter, kayıt silinir. Sahne sıfırlama (`temeleDondur`) anında kaldırır. Panorama yüklenirken
+  gelen `yangin` kuyruğa alınır (patlama gibi). Ses yok (yangın çıtırtısı manifest `sesler.yangin` ile eklenebilir, kod
+  bağlanmadı).
+- **Duman aydınlatması:** parçacık gölgelendiricisi duman topağını kart düzleminde sanal yarım küre sayar, güneş yönüne
+  (`isikYonu` uniform, `isikYonuAyarla` her kare güneşten) göre aydınlık/koyu tonlar (`golgeleme` uniform: duman 1,
+  ateş/kıvılcım 0). Patlama ve krater dumanı da aynı yoldan daha hacimli görünür.
+- `Parcacik.renkSon`: ömür boyu renk geçişi (havuzdan dönen nesnede sıfırlanır).
+
+### Panel: gruplar, simgeler, eski modeller (3 Kasım gece)
+
+Manifest `klipler` kayıtlarında `grup` (asker | sihhiye | yarali | tank | arac | silah | nesne | yapi | heli), `simge`
+(emoji) ve `eski` (Quaternius/test yer tutucuları: asker_swat/kamuflaj/taktik/mixamo, tank_mbt/quaternius, webm
+siluetler) alanları; köprü `klipleriOku` bunları `KlipOzeti`ye geçirir. Figür paneli: hızlı düğmeler ve "Gelişmiş" listesi
+gruplara göre simgeli; `eski` kayıtlar varsayılan gizli ("Eski modelleri göster" anahtarı), hızlı düğmeler (asker çağır,
+tank, koşan, yaralı, sıhhiyeci) yalnız yeni modelleri kullanır (eski yalnız hiç yenisi yoksa). Sahnedeki birlik listesinde
+simge; Vuruldu/Diz çök/Yat düğmeleri grup asker/yarali/sihhiye için. Örnek senaryolar eski adlarla (asker_bekleyen vb.)
+çalışmaya devam eder (gizli ama yüklenir).
+
 ### Çok kanallı ses (26 Ekim 2026)
 
 Sahada U odada 4 hoparlör (ön sol/sağ, arka sol/sağ) + subwoofer beklenir, büyük olasılıkla 5.1 / 7.1 AV alıcı

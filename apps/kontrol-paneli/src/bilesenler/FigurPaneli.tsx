@@ -9,6 +9,21 @@ import { Anahtar, Bolum, Ikon, Kaydirici, OnayliDugme, yonMetni } from "./ortak"
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 
 const KATEGORI_ETIKETLERI: Record<string, string> = { figur: "Figürler", efekt: "Efekt plakaları", hava: "Hava", diger: "Diğer" };
+/** Panel grupları (manifest `grup`): sıra, başlık ve simge. Yeni Meshy modelleri gruplu gelir; eski yer tutucular `eski`. */
+const GRUPLAR: Array<[string, string, string]> = [
+  ["asker", "Askerler", "🪖"],
+  ["sihhiye", "Sıhhiye", "🩺"],
+  ["yarali", "Yaralılar", "🩹"],
+  ["tank", "Tanklar", "🛡️"],
+  ["arac", "Araçlar", "🚙"],
+  ["silah", "Silahlar", "🔫"],
+  ["nesne", "TCCC ve nesneler", "📦"],
+  ["yapi", "Yapılar", "🧱"],
+  ["heli", "Helikopter", "🚁"],
+];
+const BOS_KLIP: KlipOzeti = { ad: "", baslik: "", kategori: "diger", dongu: false };
+const grupAdi = (k: KlipOzeti) => k.grup ?? (k.kategori === "figur" ? "nesne" : k.kategori);
+const simgesi = (k: KlipOzeti | undefined) => k?.simge ?? GRUPLAR.find((g) => g[0] === grupAdi(k ?? BOS_KLIP))?.[2] ?? "▫️";
 const MESAFELER: Array<[number, string]> = [
   [-12, "Yakın · 8 m"],
   [-7, "Orta · 14 m"],
@@ -29,6 +44,7 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
   const [olcek, setOlcek] = useState(1);
   const [yansit, setYansit] = useState(false);
   const [sayac, setSayac] = useState(0);
+  const [eskileriGoster, setEskileriGoster] = useState(false);
 
   const yenile = () =>
     void calistir(() => api.klipler()).then((k) => {
@@ -38,11 +54,14 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
     });
   useEffect(yenile, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const askerler = klipler.filter((k) => k.kategori === "figur" && /^asker_(bekleyen|kamuflaj)/.test(k.ad)).map((k) => k.ad);
-  const tanklar = klipler.filter((k) => k.kategori === "figur" && /^tank/.test(k.ad)).map((k) => k.ad);
-  const kosanlar = klipler.filter((k) => /^asker_(kosan|yuruyen)/.test(k.ad)).map((k) => k.ad);
-  const yaralilar = klipler.filter((k) => k.kategori === "figur" && /^asker_yarali_3b/.test(k.ad)).map((k) => k.ad);
-  const sihhiyeciler = klipler.filter((k) => /^asker_sihhiyeci/.test(k.ad)).map((k) => k.ad);
+  // Yeni modeller öncelikli: eski yer tutucular (manifest `eski`) yalnız hiç yenisi yoksa kullanılır
+  const guncel = klipler.filter((k) => !k.eski);
+  const havuz = guncel.length ? guncel : klipler;
+  const askerler = havuz.filter((k) => grupAdi(k) === "asker" && /_(bekleyen|nisan)$/.test(k.ad)).map((k) => k.ad);
+  const tanklar = havuz.filter((k) => grupAdi(k) === "tank").map((k) => k.ad);
+  const kosanlar = havuz.filter((k) => grupAdi(k) === "asker" && /_(kosan|yuruyen)$/.test(k.ad)).map((k) => k.ad);
+  const yaralilar = havuz.filter((k) => grupAdi(k) === "yarali" && /_yarali$/.test(k.ad)).map((k) => k.ad);
+  const sihhiyeciler = havuz.filter((k) => grupAdi(k) === "sihhiye" && /_sihhiyeci$/.test(k.ad)).map((k) => k.ad);
   /** Sahnedeki yaralılar; sıhhiyeci en son vurulanın yanına gider. */
   const yaraliAktifler = aktifler.filter((f) => f.poz === "yarali");
   const baslik = (ad: string) => klipler.find((k) => k.ad === ad)?.baslik ?? ad;
@@ -123,12 +142,21 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
   const secili = klipler.find((k) => k.ad === klip);
   const gruplar = Object.entries(
     klipler
-      .filter((k) => k.kategori !== "efekt")
+      .filter((k) => k.kategori !== "efekt" && (eskileriGoster || !k.eski))
       .reduce<Record<string, KlipOzeti[]>>((g, k) => {
-        (g[k.kategori] ??= []).push(k);
+        (g[grupAdi(k)] ??= []).push(k);
         return g;
       }, {}),
-  );
+  ).sort(([a], [b]) => {
+    const ia = GRUPLAR.findIndex((g) => g[0] === a);
+    const ib = GRUPLAR.findIndex((g) => g[0] === b);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+  const grupBasligi = (g: string) => {
+    const t = GRUPLAR.find((x) => x[0] === g);
+    return t ? `${t[2]} ${t[1]}` : (KATEGORI_ETIKETLERI[g] ?? g);
+  };
+  const eskiSayisi = klipler.filter((k) => k.eski).length;
 
   return (
     <>
@@ -143,35 +171,35 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
         ) : (
           <div className="birlik-dugmeleri">
             <button type="button" className="birlik asker" disabled={!askerler.length} onClick={askerCagir}>
-              <span className="birlik-ad">Asker çağır</span>
+              <span className="birlik-ad">🪖 Asker çağır</span>
               <small>Mevziye bir asker</small>
             </button>
             <button type="button" className="birlik cephe" disabled={!askerler.length} onClick={cepheKur}>
-              <span className="birlik-ad">Cephe kur</span>
+              <span className="birlik-ad">🪖🪖🪖 Cephe kur</span>
               <small>3 asker + düşman yönü</small>
             </button>
             <button type="button" className="birlik tank" disabled={!tanklar.length} onClick={tankCagir}>
-              <span className="birlik-ad">Tank çağır</span>
+              <span className="birlik-ad">🛡️ Tank çağır</span>
               <small>Açık alana bir tank</small>
             </button>
             <button type="button" className="birlik" disabled={!kosanlar.length} onClick={() => kosanGonder(false)}>
-              <span className="birlik-ad">Koşan asker →</span>
+              <span className="birlik-ad">🏃 Koşan asker →</span>
               <small>Soldan sağa geçer</small>
             </button>
             <button type="button" className="birlik" disabled={!kosanlar.length} onClick={() => kosanGonder(true)}>
-              <span className="birlik-ad">← Koşan asker</span>
+              <span className="birlik-ad">← 🏃 Koşan asker</span>
               <small>Sağdan sola geçer</small>
             </button>
             <button type="button" className="birlik yarali" disabled={!yaralilar.length} onClick={yaraliCagir}>
-              <span className="birlik-ad">Yaralı asker</span>
+              <span className="birlik-ad">🩹 Yaralı asker</span>
               <small>Yakında yerde, yardım ister</small>
             </button>
             <button type="button" className="birlik vuruldu" disabled={!vurulabilir.length} onClick={askerVuruldu} title="Pusulaya en yakın ayakta asker vurulur ve yere düşer">
-              <span className="birlik-ad">Asker vuruldu!</span>
+              <span className="birlik-ad">💥 Asker vuruldu!</span>
               <small>{vurulabilir.length ? `${vurulabilir.length} asker sahnede` : "Önce asker çağır"}</small>
             </button>
             <button type="button" className="birlik sihhiyeci" disabled={!sihhiyeciler.length || !yaraliAktifler.length} onClick={sihhiyeciGonder} title="Son yaralının yanına diz çöker, müdahale eder">
-              <span className="birlik-ad">Sıhhiyeci gönder</span>
+              <span className="birlik-ad">🩺 Sıhhiyeci gönder</span>
               <small>{yaraliAktifler.length ? "Yaralının başına diz çöker" : "Önce yaralı olmalı"}</small>
             </button>
           </div>
@@ -182,18 +210,25 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
             <div className="klip-kartlari">
               {gruplar.map(([kategori, liste]) => (
                 <div key={kategori} className="klip-grubu">
-                  <span className="klip-grubu-ad">{KATEGORI_ETIKETLERI[kategori] ?? kategori}</span>
+                  <span className="klip-grubu-ad">{grupBasligi(kategori)}</span>
                   <div className="klip-grubu-liste">
                     {liste.map((k) => (
-                      <button key={k.ad} type="button" className={`klip-karti ${klip === k.ad ? "secili" : ""}`} onClick={() => setKlip(k.ad)}>
-                        {k.baslik}
+                      <button key={k.ad} type="button" className={`klip-karti ${klip === k.ad ? "secili" : ""} ${k.eski ? "eski" : ""}`} onClick={() => setKlip(k.ad)} title={k.eski ? "Eski yer tutucu model" : k.baslik}>
+                        <span className="klip-simge" aria-hidden="true">{simgesi(k)}</span>
+                        {k.baslik.replace(/ \(kendi modelimiz[^)]*\)/, "")}
                         {k.dongu && <small>döngü</small>}
+                        {k.eski && <small>eski</small>}
                       </button>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
+            {eskiSayisi > 0 && (
+              <div className="satir">
+                <Anahtar acik={eskileriGoster} onChange={setEskileriGoster} etiket={`Eski modelleri göster (${eskiSayisi})`} aciklama="Quaternius/test yer tutucuları; yeni Meshy modelleri varken gerekmez" />
+              </div>
+            )}
             <div className="satir">
               <span className="etiket">Mesafe</span>
               <div className="secenek-grubu">
@@ -247,7 +282,7 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
           <ul className="liste">
             {aktifler.map((f) => (
               <li key={f.id}>
-                <span className="liste-isaret figur" />
+                <span className="liste-isaret figur">{simgesi(klipler.find((k) => k.ad === f.klip))}</span>
                 <div className="liste-govde">
                   <strong>{baslik(f.klip ?? "")}</strong>
                   <small>
@@ -256,7 +291,7 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
                     {f.poz && f.poz !== "ayakta" ? ` · ${FIGUR_POZ_ETIKETLERI[f.poz].toLowerCase()}` : ""}
                   </small>
                 </div>
-                {/^asker_/.test(f.klip ?? "") && !/^asker_(kosan|yuruyen)/.test(f.klip ?? "") && (
+                {["asker", "yarali", "sihhiye"].includes(grupAdi(klipler.find((k) => k.ad === f.klip) ?? BOS_KLIP)) && !/_(kosan|yuruyen|comelerek|surunen)$/.test(f.klip ?? "") && (
                   <span className="dugme-grubu">
                     {f.poz !== "yarali" && (
                       <button type="button" className="kucuk tehlike" onClick={() => pozDegistir(f, "yarali")} title="Vurulur, yere düşer, yardım çağırır">

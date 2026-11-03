@@ -13,13 +13,18 @@ attribute float boyut;
 attribute float alfa;
 attribute float aci;
 attribute vec3 renk;
+uniform vec3 isikYonu; // dünya uzayında güneşe/ışığa doğru birim vektör
 varying vec2 vUv;
 varying float vAlfa;
 varying vec3 vRenk;
+varying vec3 vIsik;
+varying float vAci;
 void main() {
   vUv = uv;
   vAlfa = alfa;
   vRenk = renk;
+  vAci = aci;
+  vIsik = normalize((viewMatrix * vec4(isikYonu, 0.0)).xyz);
   vec4 mv = modelViewMatrix * vec4(konum, 1.0);
   float c = cos(aci); float s = sin(aci);
   vec2 p = vec2(position.x * c - position.y * s, position.x * s + position.y * c) * boyut;
@@ -30,12 +35,27 @@ void main() {
 const FRAGMENT = `
 uniform sampler2D doku;
 uniform float renkOlcek; // doku gri ise (Kenney ~0.42) rengi normalize eder
+uniform float golgeleme; // 0: düz (ateş/kıvılcım), 1: duman topağı küre gibi aydınlanır (güneş tarafı açık, arkası koyu)
 varying vec2 vUv;
 varying float vAlfa;
 varying vec3 vRenk;
+varying vec3 vIsik;
+varying float vAci;
 void main() {
   vec4 t = texture2D(doku, vUv);
-  gl_FragColor = vec4(min(vec3(1.0), t.rgb * renkOlcek) * vRenk, t.a * vAlfa);
+  vec3 renk = min(vec3(1.0), t.rgb * renkOlcek) * vRenk;
+  if (golgeleme > 0.0) {
+    // Topağın küre normali (kart düzleminde uv → sanal yarım küre; kart dönüşü geri alınır ki ışık yönü sabit kalsın)
+    vec2 q = vUv * 2.0 - 1.0;
+    float c = cos(-vAci); float s = sin(-vAci);
+    q = vec2(q.x * c - q.y * s, q.x * s + q.y * c);
+    float r2 = dot(q, q);
+    vec3 n = normalize(vec3(q, sqrt(max(0.0, 1.0 - r2 * 0.85))));
+    float d = dot(n, vIsik);
+    float aydinlik = 0.55 + 0.45 * max(0.0, d) - 0.18 * max(0.0, -d);
+    renk *= mix(1.0, aydinlik, golgeleme);
+  }
+  gl_FragColor = vec4(renk, t.a * vAlfa);
   if (gl_FragColor.a < 0.004) discard;
 }
 `;
@@ -55,6 +75,8 @@ export interface Parcacik {
   t: number;
   sure: number;
   renk: [number, number, number];
+  /** Ömür boyunca varılacak renk (ör. yangın dumanı kara → gri, alev sarı → koyu kızıl); yoksa sabit. */
+  renkSon?: [number, number, number];
   yercekimi: number;
   surtunme: number;
 }
@@ -78,6 +100,11 @@ export class ParcacikGrubu {
   /** Ortam ışığı çarpanı (duman gece kararır; ateş karartılmaz). */
   isik = 1;
 
+  /** Işık yönü (dünya, güneşe doğru birim vektör): duman topakları güneş tarafından aydınlanır. */
+  isikYonuAyarla(v: THREE.Vector3) {
+    (this.mesh.material as THREE.ShaderMaterial).uniforms.isikYonu.value.copy(v).normalize();
+  }
+
   constructor(doku: THREE.Texture, readonly kapasite: number, karisim: Karisim, readonly isikliMi: boolean) {
     const temel = new THREE.PlaneGeometry(1, 1);
     const g = new THREE.InstancedBufferGeometry();
@@ -98,7 +125,7 @@ export class ParcacikGrubu {
     g.instanceCount = 0;
     this.geometri = g;
     const m = new THREE.ShaderMaterial({
-      uniforms: { doku: { value: doku }, renkOlcek: { value: 1 } },
+      uniforms: { doku: { value: doku }, renkOlcek: { value: 1 }, isikYonu: { value: new THREE.Vector3(0.3, 0.9, 0.3) }, golgeleme: { value: isikliMi ? 1 : 0 } },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
       transparent: true,
@@ -122,7 +149,12 @@ export class ParcacikGrubu {
    * (bu yüzden `ekle`ye paylaşılan sabit renk dizisi verilmez; mevcut çağıranlar hep yeni dizi verir).
    */
   al(): Parcacik {
-    return this.havuz.pop() ?? { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, boyut: 0, buyume: 0, alfa: 0, aci: 0, donus: 0, t: 0, sure: 1, renk: [1, 1, 1], yercekimi: 0, surtunme: 0 };
+    const p = this.havuz.pop();
+    if (p) {
+      p.renkSon = undefined; // havuzdan dönen nesne önceki kullanımın renk geçişini taşımasın
+      return p;
+    }
+    return { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, boyut: 0, buyume: 0, alfa: 0, aci: 0, donus: 0, t: 0, sure: 1, renk: [1, 1, 1], yercekimi: 0, surtunme: 0 };
   }
 
   private havuzaVer(p: Parcacik) {
@@ -200,9 +232,16 @@ export class ParcacikGrubu {
       b[i] = p.boyut;
       a[i] = p.alfa * Math.max(0, zarf);
       c[i] = p.aci;
-      r[i * 3] = p.renk[0] * isik;
-      r[i * 3 + 1] = p.renk[1] * isik;
-      r[i * 3 + 2] = p.renk[2] * isik;
+      if (p.renkSon) {
+        const w = Math.min(1, u * 1.15);
+        r[i * 3] = (p.renk[0] + (p.renkSon[0] - p.renk[0]) * w) * isik;
+        r[i * 3 + 1] = (p.renk[1] + (p.renkSon[1] - p.renk[1]) * w) * isik;
+        r[i * 3 + 2] = (p.renk[2] + (p.renkSon[2] - p.renk[2]) * w) * isik;
+      } else {
+        r[i * 3] = p.renk[0] * isik;
+        r[i * 3 + 1] = p.renk[1] * isik;
+        r[i * 3 + 2] = p.renk[2] * isik;
+      }
     }
     this.geometri.instanceCount = n;
     // Yalnız canlı aralık yüklenir; parçacık yokken hiç yükleme yok (sayı 0: çizim de yok). Önceden her karede beş
@@ -352,6 +391,113 @@ export class ParcacikSistemi {
         yercekimi: 9.8,
         surtunme: 0.25,
       });
+    }
+  }
+
+  /** Yangın yayım birikimleri (saniyedeki oran kare hızından bağımsız). */
+  private readonly yanginBirikim = { alev: 0, kor: 0, duman: 0 };
+
+  /**
+   * Sürekli yangın (yangin.ts): tabandan yükselen kısa ömürlü alevler (sarı çekirdek → turuncu → koyu kızıl, katkılı,
+   * yukarı doğru daralır), savrulan korlar, üstte kara → gri sürüklenen duman sütunu. `siddet` 0–1 (güç dahil);
+   * `sonuyor` iken alev kesilir, yalnız seyrek beyaz duman tüter. Yayım kalite kapasitesiyle ölçekli.
+   */
+  yangin(p: THREE.Vector3, yaricap: number, siddet: number, sonuyor: boolean, dt: number, ruzgar: THREE.Vector3) {
+    if (dt <= 0) return;
+    const s = Math.max(0, Math.min(1, siddet));
+    const kap = this.duman.kapasite / 1200;
+    const b = this.yanginBirikim;
+    const r = yaricap;
+    // Alevler: saniyede 55·s·r (kapasiteyle), ömür 0,45–0,9 sn
+    b.alev += (sonuyor ? 0 : 55 * s * r * Math.min(1, kap)) * dt;
+    while (b.alev >= 1) {
+      b.alev -= 1;
+      const a = Math.random() * 6.283;
+      const rr = Math.sqrt(Math.random()) * r * 0.75;
+      const q = this.ates.al();
+      q.x = p.x + Math.cos(a) * rr;
+      q.y = p.y + rnd(0, 0.25);
+      q.z = p.z + Math.sin(a) * rr;
+      q.vx = rnd(-0.35, 0.35) + ruzgar.x * 0.15;
+      q.vy = rnd(1.4, 3.2) * (0.6 + 0.4 * s);
+      q.vz = rnd(-0.35, 0.35) + ruzgar.z * 0.15;
+      q.boyut = r * rnd(0.3, 0.55);
+      q.buyume = r * rnd(0.25, 0.6);
+      q.alfa = rnd(0.55, 0.95);
+      q.aci = rnd(0, 6.28);
+      q.donus = rnd(-2.5, 2.5);
+      q.t = 0;
+      q.sure = rnd(0.45, 0.9);
+      q.renk[0] = 1;
+      q.renk[1] = rnd(0.82, 0.95);
+      q.renk[2] = rnd(0.35, 0.55);
+      q.renkSon = [0.75, 0.18, 0.03];
+      q.yercekimi = -1.5; // kaldırma: hızlanarak yükselir
+      q.surtunme = 1.2;
+      this.ates.ekle(q);
+    }
+    // Korlar: saniyede 14·s·r
+    b.kor += (sonuyor ? 2 : 14 * s * r) * dt;
+    while (b.kor >= 1) {
+      b.kor -= 1;
+      const a = Math.random() * 6.283;
+      const q = this.kivilcim.al();
+      q.x = p.x + Math.cos(a) * r * 0.5;
+      q.y = p.y + rnd(0.2, 0.8);
+      q.z = p.z + Math.sin(a) * r * 0.5;
+      q.vx = rnd(-1.2, 1.2) + ruzgar.x * 0.4;
+      q.vy = rnd(1.5, 4.5);
+      q.vz = rnd(-1.2, 1.2) + ruzgar.z * 0.4;
+      q.boyut = rnd(0.02, 0.05);
+      q.buyume = -0.008;
+      q.alfa = 1;
+      q.aci = 0;
+      q.donus = 0;
+      q.t = 0;
+      q.sure = rnd(1.2, 3);
+      q.renk[0] = 1;
+      q.renk[1] = rnd(0.45, 0.7);
+      q.renk[2] = 0.15;
+      q.renkSon = [0.5, 0.08, 0.0];
+      q.yercekimi = 0.6;
+      q.surtunme = 0.6;
+      this.kivilcim.ekle(q);
+    }
+    // Duman: saniyede 9·r (sönerken 4·r, beyazımsı), ömür 5–9 sn; kara → gri, büyür, rüzgârla sürüklenir
+    b.duman += (sonuyor ? 4 : 9 * (0.5 + 0.5 * s)) * r * Math.min(1, kap) * dt;
+    while (b.duman >= 1) {
+      b.duman -= 1;
+      const a = Math.random() * 6.283;
+      const rr = Math.sqrt(Math.random()) * r * 0.6;
+      const q = this.duman.al();
+      q.x = p.x + Math.cos(a) * rr;
+      q.y = p.y + rnd(0.8, 1.6) * r * 0.5;
+      q.z = p.z + Math.sin(a) * rr;
+      q.vx = rnd(-0.3, 0.3) + ruzgar.x * 0.6;
+      q.vy = rnd(1.2, 2.2) * (0.7 + 0.3 * s);
+      q.vz = rnd(-0.3, 0.3) + ruzgar.z * 0.6;
+      q.boyut = r * rnd(0.5, 0.9);
+      q.buyume = r * rnd(0.35, 0.6);
+      q.alfa = sonuyor ? rnd(0.12, 0.22) : rnd(0.3, 0.5);
+      q.aci = rnd(0, 6.28);
+      q.donus = rnd(-0.5, 0.5);
+      q.t = 0;
+      q.sure = rnd(5, 9);
+      if (sonuyor) {
+        q.renk[0] = 0.62;
+        q.renk[1] = 0.6;
+        q.renk[2] = 0.58;
+        q.renkSon = [0.72, 0.71, 0.7];
+      } else {
+        const k = rnd(0.07, 0.13);
+        q.renk[0] = k * 1.1;
+        q.renk[1] = k;
+        q.renk[2] = k * 0.95;
+        q.renkSon = [0.34, 0.33, 0.32];
+      }
+      q.yercekimi = -0.25;
+      q.surtunme = 0.35;
+      this.duman.ekle(q);
     }
   }
 

@@ -142,7 +142,7 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
     "/efekt",
     sarmala(async (req, res) => {
       const tur = req.body?.tur;
-      const gecerli = ["patlama", "gurultu", "bagirma", "cagirma", "toz_duman", "uzak_patlama", "uzak_mermi_sesi", "simsek"];
+      const gecerli = ["patlama", "gurultu", "bagirma", "cagirma", "toz_duman", "uzak_patlama", "uzak_mermi_sesi", "simsek", "yangin", "yangin_sondur"];
       if (!gecerli.includes(tur)) return res.status(400).json({ hata: `tur şunlardan biri olmalı: ${gecerli.join(", ")}` });
       await b.depo.efektTetikle(req.body);
       res.json({ tamam: true });

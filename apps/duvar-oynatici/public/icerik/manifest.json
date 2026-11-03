@@ -3990,7 +3990,10 @@
       "taban": "zemin",
       "dongu": true,
       "golge": true,
-      "yedek": true
+      "yedek": true,
+      "grup": "asker",
+      "simge": "🪖",
+      "eski": true
     },
     "patlama_yakin_1": {
       "_ornek": true,
@@ -4010,7 +4013,10 @@
       "taban": "zemin",
       "dongu": true,
       "golge": true,
-      "_not": "Okulda yeşil perde önünde gerçek personelle çekim; kamera 1,7 m göz hizası, 4K 50 fps; keying sonrası VP9 alpha. Döngü için ilk ve son poz aynı."
+      "_not": "Okulda yeşil perde önünde gerçek personelle çekim; kamera 1,7 m göz hizası, 4K 50 fps; keying sonrası VP9 alpha. Döngü için ilk ve son poz aynı.",
+      "grup": "yarali",
+      "simge": "🩹",
+      "eski": true
     },
     "asker_siper_ates": {
       "_ornek": true,
@@ -4019,7 +4025,10 @@
       "ad": "Asker – siperden ateş ediyor",
       "genislikDerece": 7,
       "taban": "zemin",
-      "dongu": true
+      "dongu": true,
+      "grup": "asker",
+      "simge": "🪖",
+      "eski": true
     },
     "helikopter_inis_sprite": {
       "_ornek": true,
@@ -4048,7 +4057,10 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖",
+      "eski": true
     },
     "asker_bekleyen": {
       "dosya": "modeller/asker_swat.glb",
@@ -4086,7 +4098,10 @@
       ],
       "genislikDerece": 4,
       "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt",
-      "renk": "#8a8460"
+      "renk": "#8a8460",
+      "grup": "asker",
+      "simge": "🪖",
+      "eski": true
     },
     "asker_taktik": {
       "dosya": "modeller/asker_taktik.glb",
@@ -4123,7 +4138,10 @@
         "figur"
       ],
       "genislikDerece": 4,
-      "_kaynak": "Quaternius Soldier (Poly Pizza, CC-BY 3.0) - LISANS_asker_quaternius.txt"
+      "_kaynak": "Quaternius Soldier (Poly Pizza, CC-BY 3.0) - LISANS_asker_quaternius.txt",
+      "grup": "asker",
+      "simge": "🪖",
+      "eski": true
     },
     "asker_yarali_3b": {
       "dosya": "modeller/asker_swat.glb",
@@ -4162,7 +4180,10 @@
       "_not": "Oda 1 (ateş altında yaralıya müdahale): yakın mesafede yerde; nefes alır, ara ara kol kaldırıp yardım çağırır. Panelden ayakta askere \"Vuruldu\" denince aynı duruma geçer. Yerleşim planı atlanır (serbestYerlesim): panelin mesafesi aynen; Oda 2'de sütrenin içine (3,5 m) konur.",
       "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt",
       "serbestYerlesim": true,
-      "renk": "#8a8460"
+      "renk": "#8a8460",
+      "grup": "yarali",
+      "simge": "🩹",
+      "eski": true
     },
     "asker_diz_cokmus": {
       "dosya": "modeller/asker_swat.glb",
@@ -4202,7 +4223,10 @@
       "genislikDerece": 4,
       "_not": "Prosedürel diz çökme (kemik ofsetleri); çatışmada nişan alır.",
       "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt",
-      "renk": "#8a8460"
+      "renk": "#8a8460",
+      "grup": "asker",
+      "simge": "🪖",
+      "eski": true
     },
     "asker_sihhiyeci": {
       "dosya": "modeller/asker_swat.glb",
@@ -4222,7 +4246,10 @@
       "_not": "Panelde \"Sıhhiyeci gönder\": yaralının yanına, ona dönük yerleşir (figür komutu yaninda=<yaralı id>). Silahsız; çatışmada düşmana dönmez.",
       "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt",
       "serbestYerlesim": true,
-      "renk": "#8a8460"
+      "renk": "#8a8460",
+      "grup": "sihhiye",
+      "simge": "🩺",
+      "eski": true
     },
     "asker_kosan": {
       "dosya": "modeller/asker_swat.glb",
@@ -4254,7 +4281,10 @@
       ],
       "genislikDerece": 4,
       "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt",
-      "renk": "#8a8460"
+      "renk": "#8a8460",
+      "grup": "asker",
+      "simge": "🪖",
+      "eski": true
     },
     "asker_yuruyen": {
       "dosya": "modeller/asker_swat.glb",
@@ -4286,7 +4316,10 @@
       ],
       "genislikDerece": 4,
       "_kaynak": "Quaternius Ultimate Animated Character Pack (Poly Pizza), CC0 - modeller/LISANS_asker_quaternius.txt",
-      "renk": "#8a8460"
+      "renk": "#8a8460",
+      "grup": "asker",
+      "simge": "🪖",
+      "eski": true
     },
     "asker_zirhli": {
       "dosya": "modeller/asker_mixamo.glb",
@@ -4303,7 +4336,10 @@
         "figur"
       ],
       "genislikDerece": 4,
-      "_kaynak": "three.js examples Soldier.glb (Mixamo)"
+      "_kaynak": "three.js examples Soldier.glb (Mixamo)",
+      "grup": "asker",
+      "simge": "🪖",
+      "eski": true
     },
     "komando_bekleyen": {
       "dosya": "modeller/asker_komando.glb",
@@ -4355,7 +4391,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_nisan": {
       "dosya": "modeller/asker_komando.glb",
@@ -4407,7 +4445,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_diz_cokmus": {
       "dosya": "modeller/asker_komando.glb",
@@ -4460,7 +4500,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_yatan": {
       "dosya": "modeller/asker_komando.glb",
@@ -4513,7 +4555,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_yarali": {
       "dosya": "modeller/asker_komando.glb",
@@ -4565,7 +4609,9 @@
       "yerlesim": [
         "figur"
       ],
-      "serbestYerlesim": true
+      "serbestYerlesim": true,
+      "grup": "yarali",
+      "simge": "🩹"
     },
     "komando_kosan": {
       "dosya": "modeller/asker_komando.glb",
@@ -4616,7 +4662,9 @@
       "hiz": 4.5,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_yuruyen": {
       "dosya": "modeller/asker_komando.glb",
@@ -4667,7 +4715,9 @@
       "hiz": 1.5,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_comelerek": {
       "dosya": "modeller/asker_komando.glb",
@@ -4718,7 +4768,9 @@
       "hiz": 1.0,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_surunen": {
       "dosya": "modeller/asker_komando.glb",
@@ -4769,7 +4821,9 @@
       "hiz": 0.5,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_sihhiyeci": {
       "dosya": "modeller/asker_komando.glb",
@@ -4805,7 +4859,9 @@
       "yerlesim": [
         "figur"
       ],
-      "serbestYerlesim": true
+      "serbestYerlesim": true,
+      "grup": "sihhiye",
+      "simge": "🩺"
     },
     "komando_el_sallayan": {
       "dosya": "modeller/asker_komando.glb",
@@ -4840,7 +4896,9 @@
       "silah": false,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_telsiz": {
       "dosya": "modeller/asker_komando.glb",
@@ -4875,7 +4933,9 @@
       "silah": false,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_bomba": {
       "dosya": "modeller/asker_komando.glb",
@@ -4910,7 +4970,9 @@
       "silah": false,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_etrafa_bakan": {
       "dosya": "modeller/asker_komando.glb",
@@ -4945,7 +5007,9 @@
       "silah": false,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_cpr": {
       "dosya": "modeller/asker_komando.glb",
@@ -4981,7 +5045,9 @@
       "yerlesim": [
         "figur"
       ],
-      "serbestYerlesim": true
+      "serbestYerlesim": true,
+      "grup": "sihhiye",
+      "simge": "🩺"
     },
     "komando_yarali_masaj": {
       "dosya": "modeller/asker_komando.glb",
@@ -5017,7 +5083,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "silah": false
+      "silah": false,
+      "grup": "yarali",
+      "simge": "🩹"
     },
     "helikopter": {
       "dosya": "modeller/nesneler/helikopter_govde.glb",
@@ -5030,7 +5098,9 @@
       "rotor": [
         "rotor",
         "kuyruk_rotor"
-      ]
+      ],
+      "grup": "heli",
+      "simge": "🚁"
     },
     "tank_mbt": {
       "dosya": "modeller/tank_mbt.glb",
@@ -5049,7 +5119,10 @@
         "patlama",
         "figur"
       ],
-      "agirSilah": true
+      "agirSilah": true,
+      "grup": "tank",
+      "simge": "🛡️",
+      "eski": true
     },
     "tank_eski": {
       "dosya": "modeller/tank_quaternius.glb",
@@ -5071,7 +5144,10 @@
       "agirSilah": true,
       "kule": "Tank_Turret",
       "namlu": "Tank_Gun",
-      "animasyon": "yok"
+      "animasyon": "yok",
+      "grup": "tank",
+      "simge": "🛡️",
+      "eski": true
     },
     "komando_bere_bekleyen": {
       "dosya": "modeller/asker_komando_bere.glb",
@@ -5123,7 +5199,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_bere_nisan": {
       "dosya": "modeller/asker_komando_bere.glb",
@@ -5175,7 +5253,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_bere_diz_cokmus": {
       "dosya": "modeller/asker_komando_bere.glb",
@@ -5228,7 +5308,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_bere_yatan": {
       "dosya": "modeller/asker_komando_bere.glb",
@@ -5281,7 +5363,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_bere_yarali": {
       "dosya": "modeller/asker_komando_bere.glb",
@@ -5333,7 +5417,9 @@
       "yerlesim": [
         "figur"
       ],
-      "serbestYerlesim": true
+      "serbestYerlesim": true,
+      "grup": "yarali",
+      "simge": "🩹"
     },
     "komando_bere_kosan": {
       "dosya": "modeller/asker_komando_bere.glb",
@@ -5384,7 +5470,9 @@
       "hiz": 4.5,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_bere_yuruyen": {
       "dosya": "modeller/asker_komando_bere.glb",
@@ -5435,7 +5523,9 @@
       "hiz": 1.5,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_bere_etrafa_bakan": {
       "dosya": "modeller/asker_komando_bere.glb",
@@ -5470,7 +5560,9 @@
       "silah": false,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_bere_bomba": {
       "dosya": "modeller/asker_komando_bere.glb",
@@ -5505,7 +5597,9 @@
       "silah": false,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_bere_comelerek": {
       "dosya": "modeller/asker_komando_bere.glb",
@@ -5556,7 +5650,9 @@
       "hiz": 1.0,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "telsizci_telsiz": {
       "dosya": "modeller/asker_telsizci.glb",
@@ -5591,7 +5687,9 @@
       "silah": false,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "telsizci_bekleyen": {
       "dosya": "modeller/asker_telsizci.glb",
@@ -5643,7 +5741,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "telsizci_diz_cokmus": {
       "dosya": "modeller/asker_telsizci.glb",
@@ -5696,7 +5796,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "telsizci_yuruyen": {
       "dosya": "modeller/asker_telsizci.glb",
@@ -5747,7 +5849,9 @@
       "hiz": 1.5,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "telsizci_kosan": {
       "dosya": "modeller/asker_telsizci.glb",
@@ -5798,7 +5902,9 @@
       "hiz": 4.5,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "telsizci_yarali": {
       "dosya": "modeller/asker_telsizci.glb",
@@ -5850,7 +5956,9 @@
       "yerlesim": [
         "figur"
       ],
-      "serbestYerlesim": true
+      "serbestYerlesim": true,
+      "grup": "yarali",
+      "simge": "🩹"
     },
     "sihhiyeci_sihhiyeci": {
       "dosya": "modeller/asker_sihhiyeci.glb",
@@ -5886,7 +5994,9 @@
       "yerlesim": [
         "figur"
       ],
-      "serbestYerlesim": true
+      "serbestYerlesim": true,
+      "grup": "sihhiye",
+      "simge": "🩺"
     },
     "sihhiyeci_cpr": {
       "dosya": "modeller/asker_sihhiyeci.glb",
@@ -5922,7 +6032,9 @@
       "yerlesim": [
         "figur"
       ],
-      "serbestYerlesim": true
+      "serbestYerlesim": true,
+      "grup": "sihhiye",
+      "simge": "🩺"
     },
     "sihhiyeci_bekleyen": {
       "dosya": "modeller/asker_sihhiyeci.glb",
@@ -5958,7 +6070,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "sihhiye",
+      "simge": "🩺"
     },
     "sihhiyeci_yuruyen": {
       "dosya": "modeller/asker_sihhiyeci.glb",
@@ -5994,7 +6108,9 @@
       "yerlesim": [
         "figur"
       ],
-      "silah": false
+      "silah": false,
+      "grup": "sihhiye",
+      "simge": "🩺"
     },
     "sihhiyeci_kosan": {
       "dosya": "modeller/asker_sihhiyeci.glb",
@@ -6030,7 +6146,9 @@
       "yerlesim": [
         "figur"
       ],
-      "silah": false
+      "silah": false,
+      "grup": "sihhiye",
+      "simge": "🩺"
     },
     "sihhiyeci_diz_cokmus": {
       "dosya": "modeller/asker_sihhiyeci.glb",
@@ -6067,7 +6185,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "sihhiye",
+      "simge": "🩺"
     },
     "sihhiyeci_el_sallayan": {
       "dosya": "modeller/asker_sihhiyeci.glb",
@@ -6102,7 +6222,9 @@
       "silah": false,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "sihhiye",
+      "simge": "🩺"
     },
     "komando_kis_bekleyen": {
       "dosya": "modeller/asker_kis.glb",
@@ -6154,7 +6276,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_kis_nisan": {
       "dosya": "modeller/asker_kis.glb",
@@ -6206,7 +6330,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_kis_diz_cokmus": {
       "dosya": "modeller/asker_kis.glb",
@@ -6259,7 +6385,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_kis_yatan": {
       "dosya": "modeller/asker_kis.glb",
@@ -6312,7 +6440,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_kis_yarali": {
       "dosya": "modeller/asker_kis.glb",
@@ -6364,7 +6494,9 @@
       "yerlesim": [
         "figur"
       ],
-      "serbestYerlesim": true
+      "serbestYerlesim": true,
+      "grup": "yarali",
+      "simge": "🩹"
     },
     "komando_kis_kosan": {
       "dosya": "modeller/asker_kis.glb",
@@ -6415,7 +6547,9 @@
       "hiz": 4.5,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_kis_yuruyen": {
       "dosya": "modeller/asker_kis.glb",
@@ -6466,7 +6600,9 @@
       "hiz": 1.5,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_kis_surunen": {
       "dosya": "modeller/asker_kis.glb",
@@ -6517,7 +6653,9 @@
       "hiz": 0.5,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "nesne_turnike": {
       "dosya": "modeller/nesneler/turnike.glb",
@@ -6534,7 +6672,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "nesne",
+      "simge": "📦"
     },
     "nesne_sihhiye_cantasi_acik": {
       "dosya": "modeller/nesneler/sihhiye_cantasi_acik.glb",
@@ -6551,7 +6691,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "nesne",
+      "simge": "📦"
     },
     "nesne_sihhiye_cantasi_kapali": {
       "dosya": "modeller/nesneler/sihhiye_cantasi_kapali.glb",
@@ -6568,7 +6710,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "nesne",
+      "simge": "📦"
     },
     "nesne_sedye": {
       "dosya": "modeller/nesneler/sedye.glb",
@@ -6585,7 +6729,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "nesne",
+      "simge": "📦"
     },
     "nesne_duman_bombasi": {
       "dosya": "modeller/nesneler/duman_bombasi.glb",
@@ -6602,7 +6748,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "nesne",
+      "simge": "📦"
     },
     "nesne_kum_torbasi_1": {
       "dosya": "modeller/nesneler/kum_torbasi_1.glb",
@@ -6619,7 +6767,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "nesne",
+      "simge": "📦"
     },
     "nesne_kum_torbasi_2": {
       "dosya": "modeller/nesneler/kum_torbasi_2.glb",
@@ -6636,7 +6786,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "nesne",
+      "simge": "📦"
     },
     "komando_agir_bekleyen": {
       "dosya": "modeller/asker_agir_yuk.glb",
@@ -6688,7 +6840,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_agir_yuruyen": {
       "dosya": "modeller/asker_agir_yuk.glb",
@@ -6739,7 +6893,9 @@
       "hiz": 1.5,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_agir_diz_cokmus": {
       "dosya": "modeller/asker_agir_yuk.glb",
@@ -6792,7 +6948,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_agir_etrafa_bakan": {
       "dosya": "modeller/asker_agir_yuk.glb",
@@ -6827,7 +6985,9 @@
       "silah": false,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "komando_agir_kosan": {
       "dosya": "modeller/asker_agir_yuk.glb",
@@ -6878,7 +7038,9 @@
       "hiz": 4.5,
       "yerlesim": [
         "figur"
-      ]
+      ],
+      "grup": "asker",
+      "simge": "🪖"
     },
     "yarali_asker_yarali": {
       "dosya": "modeller/asker_yarali.glb",
@@ -6930,7 +7092,9 @@
       "yerlesim": [
         "figur"
       ],
-      "serbestYerlesim": true
+      "serbestYerlesim": true,
+      "grup": "yarali",
+      "simge": "🩹"
     },
     "yarali_asker_yarali_masaj": {
       "dosya": "modeller/asker_yarali.glb",
@@ -6966,7 +7130,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "silah": false
+      "silah": false,
+      "grup": "yarali",
+      "simge": "🩹"
     },
     "yarali_asker_bekleyen": {
       "dosya": "modeller/asker_yarali.glb",
@@ -7018,7 +7184,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "yarali",
+      "simge": "🩹"
     },
     "yarali_asker_diz_cokmus": {
       "dosya": "modeller/asker_yarali.glb",
@@ -7071,7 +7239,9 @@
       "yerlesim": [
         "asker",
         "figur"
-      ]
+      ],
+      "grup": "yarali",
+      "simge": "🩹"
     },
     "yarali_asker_yuruyen": {
       "dosya": "modeller/asker_yarali.glb",
@@ -7107,7 +7277,9 @@
       "yerlesim": [
         "figur"
       ],
-      "silah": false
+      "silah": false,
+      "grup": "yarali",
+      "simge": "🩹"
     },
     "nesne_makineli_tufek": {
       "dosya": "modeller/nesneler/makineli_tufek.glb",
@@ -7124,7 +7296,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "silah",
+      "simge": "🔫"
     },
     "nesne_zirhli_arac": {
       "dosya": "modeller/nesneler/zirhli_arac.glb",
@@ -7141,7 +7315,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "arac",
+      "simge": "🚙"
     },
     "nesne_arac_enkazi": {
       "dosya": "modeller/nesneler/arac_enkazi.glb",
@@ -7158,7 +7334,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "arac",
+      "simge": "🚙"
     },
     "nesne_bandaj_paketi": {
       "dosya": "modeller/nesneler/bandaj_paketi.glb",
@@ -7175,7 +7353,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "nesne",
+      "simge": "📦"
     },
     "nesne_t_duvar": {
       "dosya": "modeller/nesneler/t_duvar.glb",
@@ -7192,7 +7372,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "yapi",
+      "simge": "🧱"
     },
     "nesne_gozetleme_kulesi": {
       "dosya": "modeller/nesneler/gozetleme_kulesi.glb",
@@ -7209,7 +7391,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "yapi",
+      "simge": "🧱"
     },
     "nesne_nobet_kulubesi": {
       "dosya": "modeller/nesneler/nobet_kulubesi.glb",
@@ -7226,7 +7410,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "yapi",
+      "simge": "🧱"
     },
     "nesne_yakit_varili": {
       "dosya": "modeller/nesneler/yakit_varili.glb",
@@ -7243,7 +7429,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "nesne",
+      "simge": "📦"
     },
     "nesne_jenerator": {
       "dosya": "modeller/nesneler/jenerator.glb",
@@ -7260,7 +7448,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "yapi",
+      "simge": "🧱"
     },
     "nesne_konteyner": {
       "dosya": "modeller/nesneler/konteyner.glb",
@@ -7277,7 +7467,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "yapi",
+      "simge": "🧱"
     },
     "nesne_yikik_duvar": {
       "dosya": "modeller/nesneler/yikik_duvar.glb",
@@ -7294,7 +7486,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "yapi",
+      "simge": "🧱"
     },
     "nesne_kerpic_ev_kosesi": {
       "dosya": "modeller/nesneler/kerpic_ev_kosesi.glb",
@@ -7311,7 +7505,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "yapi",
+      "simge": "🧱"
     },
     "nesne_moloz_yigini": {
       "dosya": "modeller/nesneler/moloz_yigini.glb",
@@ -7328,7 +7524,9 @@
         "figur"
       ],
       "serbestYerlesim": true,
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "yapi",
+      "simge": "🧱"
     },
     "tank_altay": {
       "dosya": "modeller/nesneler/tank_altay.glb",
@@ -7349,7 +7547,9 @@
       "agirSilah": true,
       "kule": "kule",
       "namlu": "namlu",
-      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "grup": "tank",
+      "simge": "🛡️"
     }
   },
   "sesler": {

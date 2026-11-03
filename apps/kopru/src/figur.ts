@@ -132,6 +132,9 @@ export class FigurYoneticisi {
             baslik: typeof t.ad === "string" ? t.ad : ad,
             kategori: typeof t.kategori === "string" ? t.kategori : "diger",
             dongu: Boolean(t.dongu),
+            grup: typeof t.grup === "string" ? t.grup : undefined,
+            simge: typeof t.simge === "string" ? t.simge : undefined,
+            eski: t.eski === true ? true : undefined,
           }));
       } catch (hata) {
         this.gunluk.uyari(`manifest okunamadı (${yol}): ${hata instanceof Error ? hata.message : String(hata)}`);
