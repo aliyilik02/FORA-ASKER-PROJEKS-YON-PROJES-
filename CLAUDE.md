@@ -260,9 +260,10 @@ için: Image to 3D → Remesh; askerde Poz: A-Poz şart.
 **Meshy A listesi (3 Kasım akşam, Meshy CLI ile API üretimi):** 13 model üretildi ve entegre edildi (≈ 505 kredi):
 4 asker (`asker_komando_bere/telsizci/sihhiyeci/kis.glb`, API rig'i 24 öneksiz kemik + 38 Mixamo klibi; manifest
 `komando_bere_*`, `telsizci_*`, `sihhiyeci_*`, `komando_kis_*`), piyade tüfeği (`nesneler/tufek_piyade.glb`, tüm
-komando/bere/kış/telsizci kayıtlarında; `donus [-65,-135,0]`, `konum [0.12,0.11,0.05]`, tüfek ekseni kemik uzayında z;
-başsız tarayıcıda bekleyen/yürüyen/diz çökmüş kliplerde doğru, **nişan klibinde kollar yana bakıyor** — aktarım/rig
-sorunu, incelenmedi), palasız gövde + prosedürel rotorlu helikopter (`nesneler/helikopter_govde.glb`, manifest
+komando/bere/kış/telsizci kayıtlarında; konum/dönüş **ölçülür, tahmin edilmez**: `window.duvar.silahHizala(id, klipler)`
+(`sahne3b/silahHizalama.ts`, skill `.claude/skills/silah-soketi`); API rig `[0.114,0.187,-0.111]/[156.4,-27.4,72.9]`,
+web rig `[0.096,0.164,-0.144]/[155.6,-45.9,74.7]`; bekleyen/nişan/yürüyen kliplerde doğrulandı — önceki "nişan klibinde
+kollar yana" bulgusu yanlış tahmin edilmiş dönüşten kaynaklanıyordu), palasız gövde + prosedürel rotorlu helikopter (`nesneler/helikopter_govde.glb`, manifest
 `helikopter.rotor`), TCCC nesneleri (`nesne_*`: turnike, çantalar, sedye, duman bombası, kum torbaları; `olcekSabit`),
 kum torbası duvarı (`sutre.ts` `torba_duvari`, Oda 2 operasyonel bölge). Araçlar: `araclar/meshy-uret.mjs` (plan →
 üretim/indirme, kaldığı yerden), `araclar/model-hazirla.py` (seyreltme/ölçek/orijin), `araclar/helikopter-hazirla.py`,

@@ -483,6 +483,31 @@ cihaz girişi: `npm exec --yes --package=meshy-cli@0.4.0 -- meshy auth login --d
   kredi); T9 duman bombası silindir değil el bombası biçiminde; tüfek MPT-76'dan çok M4 benzeri (dürbünlü), tamam.
   Asker varyantlarında tüfek konumu/dönüşü duvarda ince ayar ister.
 
+### Silah soketi: tüfeğin ele oturtulması ölçüyle (3 Kasım 2026 gece)
+
+Deneme-yanılma (`donus` tahmini + ekran görüntüsü) her rig/tüfekte yeniden başa dönüyordu. Artık ölçülüyor
+(`sahne3b/silahHizalama.ts`, oyun motorlarındaki "weapon socket" yaklaşımı):
+
+1. **Namlu doğrultusu** Mixamo tüfek kliplerinden: sağ el tutamakta, sol el kundakta → sağ elden sol ele vektör; tüfek
+   yatık taşınmadığından "yukarı" = dünya yukarısının bu doğrultuya dik bileşeni. 6 klip × 4 kare örneklenir (Rifle Idle,
+   Walk, Firing, Aiming Idle, Kneel Idle, Crouch Walk), kuaterniyonlar ortalanır; her örneğin ortalamadan sapması raporlanır
+   (sapma > 25° → o klipte el yönelimi tutarsız, aktarım/rig sorunu).
+2. **Tüfek modelinin kendi ekseni** geometriden: en uzun kenar = eksen; dar kesitli uç = namlu ağzı; eksen boyunca 12
+   dilimde dik eksenin min/max'ı — namlu hattından en çok çıkıntı yapan taraf (şarjör + tutamak) aşağı (nokta yoğunluğu
+   yanıltır: dürbünlü tüfekte üst yarıda daha çok köşe var, ilk sürüm "yukarı"yı ters bulmuştu). Kavrama noktası: en derin
+   çıkıntı (şarjör) diliminden dipçiğe doğru bir dilim (tutamak), tutamağın altından yüksekliğin %12'si yukarı.
+3. **Avuç** = bilek kemiği + önkol→el doğrultusunda 7 cm. Silah orijini = avuç − R·kavrama; kemik uzayına çevrilir.
+   Çıktı doğrudan manifest biçimi: `konum` metre (kemik yönelimiyle; oynatıcı olcek·kemikOlcek ile kemik birimine çevirir),
+   `donus` three.js Euler XYZ derece.
+
+Kullanım: figürü sahneye koy (silahlı kayıt), tarayıcı konsolunda
+`await window.duvar.silahHizala("<figür id>", ["Rifle Idle", "Rifle Walk", "Rifle Aiming Idle"], 0.95)` → `konum`,
+`donus`, `tufek` (eksen/namlu/yukarı tespiti), `ornekler` (sapmalar), `uyari`. Sonucu o rig'in bütün kayıtlarına yaz.
+3 Kasım ölçümü (tufek_piyade.glb): Meshy API rig'i (RightHand) `konum [0.114, 0.187, -0.111]`, `donus [156.4, -27.4, 72.9]`,
+sapma ≤ 8°; web rig'i (mixamorig:RightHand) `konum [0.096, 0.164, -0.144]`, `donus [155.6, -45.9, 74.7]`, sapma ≤ 11°.
+Başsız tarayıcıda bekleyen (göğüs önünde taşıma), nişan (dürbün gözde, izleyiciye), yürüyen kliplerde doğrulandı.
+Yeni tüfek ya da yeni rig geldiğinde aynı çağrı; elle değer tahmin etme. Proje skill'i: `.claude/skills/silah-soketi/SKILL.md`.
+
 ### Çok kanallı ses (26 Ekim 2026)
 
 Sahada U odada 4 hoparlör (ön sol/sağ, arka sol/sağ) + subwoofer beklenir, büyük olasılıkla 5.1 / 7.1 AV alıcı

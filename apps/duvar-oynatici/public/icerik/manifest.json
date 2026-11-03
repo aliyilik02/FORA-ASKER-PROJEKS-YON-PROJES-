@@ -4320,16 +4320,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "mixamorig:RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.096,
+          0.164,
+          -0.144
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          155.6,
+          -45.9,
+          74.7
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "mixamorig:Spine",
@@ -4371,16 +4372,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "mixamorig:RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.096,
+          0.164,
+          -0.144
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          155.6,
+          -45.9,
+          74.7
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "mixamorig:Spine",
@@ -4422,16 +4424,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "mixamorig:RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.096,
+          0.164,
+          -0.144
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          155.6,
+          -45.9,
+          74.7
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "mixamorig:Spine",
@@ -4474,16 +4477,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "mixamorig:RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.096,
+          0.164,
+          -0.144
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          155.6,
+          -45.9,
+          74.7
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "mixamorig:Spine",
@@ -4526,16 +4530,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "mixamorig:RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.096,
+          0.164,
+          -0.144
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          155.6,
+          -45.9,
+          74.7
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "mixamorig:Spine",
@@ -4577,16 +4582,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "mixamorig:RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.096,
+          0.164,
+          -0.144
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          155.6,
+          -45.9,
+          74.7
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "mixamorig:Spine",
@@ -4627,16 +4633,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "mixamorig:RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.096,
+          0.164,
+          -0.144
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          155.6,
+          -45.9,
+          74.7
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "mixamorig:Spine",
@@ -4677,16 +4684,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "mixamorig:RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.096,
+          0.164,
+          -0.144
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          155.6,
+          -45.9,
+          74.7
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "mixamorig:Spine",
@@ -4727,16 +4735,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "mixamorig:RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.096,
+          0.164,
+          -0.144
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          155.6,
+          -45.9,
+          74.7
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "mixamorig:Spine",
@@ -5079,16 +5088,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -5130,16 +5140,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -5181,16 +5192,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -5233,16 +5245,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -5285,16 +5298,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -5336,16 +5350,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -5386,16 +5401,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -5506,16 +5522,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -5591,16 +5608,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -5642,16 +5660,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -5694,16 +5713,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -5744,16 +5764,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -5794,16 +5815,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -6097,16 +6119,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -6148,16 +6171,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -6199,16 +6223,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -6251,16 +6276,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -6303,16 +6329,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -6354,16 +6381,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -6404,16 +6432,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",
@@ -6454,16 +6483,17 @@
         "dosya": "modeller/nesneler/tufek_piyade.glb",
         "kemik": "RightHand",
         "konum": [
-          0.12,
-          0.11,
-          0.05
+          0.114,
+          0.187,
+          -0.111
         ],
         "donus": [
-          -65,
-          -135,
-          0
+          156.4,
+          -27.4,
+          72.9
         ],
-        "boy": 0.95
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
       },
       "kemikler": {
         "govde": "Spine02",

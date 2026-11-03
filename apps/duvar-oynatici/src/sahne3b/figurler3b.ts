@@ -147,10 +147,12 @@ export interface FigurSecenekleri {
 
 type PozAsamasi = "normal" | "vuruluyor" | "dusuyor" | "yerde";
 
-interface Aktif {
+export interface Aktif {
   id: string;
   nesne: THREE.Object3D;
   karistirici: THREE.AnimationMixer | null;
+  /** Modelin bütün klipleri (silah hizalama örneklemesi için). */
+  klipler: THREE.AnimationClip[];
   hiz: number;
   sola: boolean;
   bitti: boolean;
@@ -243,6 +245,11 @@ export class FigurKatmani {
    */
   private readonly yuklemeler = new Map<string, number>();
   private jeton = 0;
+
+  /** Tanı/hizalama: kimliğe göre aktif kayıt (silahHizalama.ts). */
+  aktifBul(id: string): Aktif | undefined {
+    return this.aktifler.find((a) => a.id === id);
+  }
 
   /** Yüklenmekte olan figür sayısı (tanı). */
   get yukleniyor() {
@@ -527,6 +534,7 @@ export class FigurKatmani {
       id: s.id,
       nesne: sarmal,
       karistirici,
+      klipler: animasyonlar,
       hiz,
       sola,
       bitti: false,

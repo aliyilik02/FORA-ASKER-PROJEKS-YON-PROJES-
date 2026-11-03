@@ -28,6 +28,7 @@ import { GecisKatmani, gecisSuresiCoz } from "./gecis";
 import { hudCiz, kalibrasyonCiz, uyariCiz } from "./hud";
 import { kaliteSec } from "./kaliteSecimi";
 import { KlipKatmani } from "./klipler";
+import { silahHizala } from "./sahne3b/silahHizalama";
 import { duvarYerlesimleri, duvarlariOlustur, geometriOzeti, odaDuvarlari, odaGeometrisiCoz, odaGeometrisiYaz, type OdaGeometrisi, ufukSatiri, type Yerlesim, xAzimut, yonAzimut, zamanDilimi, type ZamanDilimi } from "./projeksiyon";
 import { araziCiz, araziGuncelle, ufukY as bolgeUfukY } from "./sahne/arazi";
 import { gokyuzuCiz, gokyuzuGuncelle, gokyuzuRenkleri } from "./sahne/gokyuzu";
@@ -162,7 +163,18 @@ sahne3b.figurSesleriAyarla((tur, azimut) => {
 });
 // Hata ayıklama: tarayıcı konsolundan sahneye erişim (window.duvar.sahne3b, window.duvar.THREE); geçiş ölçümü için
 // örtü (window.duvar.gecis) ve son karenin arka plan kararı (window.duvar.arkaPlan(): "yok" | "siyah" | "yer_tutucu")
-(window as unknown as { duvar: unknown }).duvar = { sahne3b, THREE, gecis, arkaPlan: () => sonArkaPlan };
+(window as unknown as { duvar: unknown }).duvar = {
+  sahne3b,
+  THREE,
+  gecis,
+  arkaPlan: () => sonArkaPlan,
+  // Silah soketi ölçümü: await window.duvar.silahHizala("<figür id>", ["Rifle Idle", "Rifle Walk"], 0.95) → manifest konum/donus
+  silahHizala: (id: string, klipler: string[], boy?: number) => {
+    const a = sahne3b.figurAktifBul(id);
+    if (!a) throw new Error(`figür yok: ${id}`);
+    return silahHizala(a, klipler, boy);
+  },
+};
 /** ?panorama=<url> ile hızlı deneme: manifestten bağımsız, her bölgede bu 360° kaynak gösterilir. */
 const testPanorama = params.get("panorama");
 const testYaw = Number(params.get("yaw") ?? 0);

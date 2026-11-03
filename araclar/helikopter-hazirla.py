@@ -111,7 +111,8 @@ def palalar(ad, yaricap, kord, kalinlik, adet, govde_yaricap, govde_yuk):
 
 
 rotor = palalar("rotor", 0.54 * L, 0.035 * L, 0.006 * L, 4, 0.03 * L, 0.02 * H)
-rotor.location = gobek
+# Palalar göbek plakasının üstünde döner: direğin tepesinden yüksekliğin %3 yukarı (duvarda "pala biraz aşağıda" görüldü)
+rotor.location = gobek + Vector((0, 0, 0.03 * H))
 # Ana rotor: dönme ekseni dünya Z (glTF Y). Yerel Z zaten yukarı.
 kuyruk = palalar("kuyruk_rotor", 0.11 * L, 0.018 * L, 0.004 * L, 4, 0.012 * L, 0.012 * L)
 # Kuyruk rotoru: pala düzlemi dikey (x-z), dönme ekseni yanal (dünya Y). Yerel Z'yi dünya Y'ye çevir: X etrafında -90°.

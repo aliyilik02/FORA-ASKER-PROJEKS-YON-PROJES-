@@ -1248,6 +1248,11 @@ export class Sahne3B {
     this.figurler.onYukle(url);
   }
 
+  /** Tanı/hizalama: kimliğe göre aktif figür kaydı (silahHizalama.ts). */
+  figurAktifBul(id: string) {
+    return this.figurler.aktifBul(id);
+  }
+
   helikopterYukle(url: string, boy?: number, rotor?: string[], renk?: string) {
     this.heli.yukle(url, boy, rotor, renk);
   }
