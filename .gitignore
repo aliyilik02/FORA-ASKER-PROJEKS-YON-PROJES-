@@ -34,3 +34,6 @@ __pycache__/
 
 # Meshy CLI is klasoru (gorev kayitlari, ham indirmeler)
 meshy_output/
+
+# Panel tasarım taslakları (artifact kaynakları)
+tasarim-taslak/

@@ -801,7 +801,8 @@ button.efekt.tetiklendi {
   fill: var(--amber);
   stroke: #1a1206;
   stroke-width: 2;
-  filter: drop-shadow(0 0 6px rgba(232, 163, 60, 0.8));
+  /* drop-shadow filtresi her çizimde raster katman yeniliyordu (fps); parıltı yerine kalın kontur */
+  stroke: #3a2a0a;
 }
 .pusula-sec-cizgi.disi,
 .pusula-sec-nokta.disi {

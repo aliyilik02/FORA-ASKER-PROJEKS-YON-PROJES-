@@ -47,10 +47,15 @@ export function CanliSahne({
   const { seciliYon, setSeciliYon, bildir } = useArayuz();
   const [simdi, setSimdi] = useState(Date.now());
   const [sonTetik, setSonTetik] = useState<string | null>(null);
+  // Saat yalnız gerektiğinde ilerler: pusuladaki efekt halkaları (8 sn) sürerken 250 ms, yoksa 1 sn ("sn önce" metni).
+  // Sürekli 250 ms tetik, pusulayı (50+ SVG öğesi, önizleme resmi) saniyede 4 kez yeniden çizip aynı GPU'yu paylaşan
+  // oynatıcının kare hızını düşürüyordu (kullanıcı: "radar panelinde çok fps düşmesi var", 3 Kasım gece).
+  const sonEfekt = durum.sonEfektler?.length ? Math.max(...durum.sonEfektler.map((e) => e.zaman)) : 0;
+  const halkaCanli = Date.now() - sonEfekt < 8500;
   useEffect(() => {
-    const t = window.setInterval(() => setSimdi(Date.now()), 250);
+    const t = window.setInterval(() => setSimdi(Date.now()), halkaCanli ? 250 : 1000);
     return () => window.clearInterval(t);
-  }, []);
+  }, [halkaCanli]);
 
   const hizli = durum.oda === "oda1" ? HIZLI_ODA1 : HIZLI_ODA2;
   // Oda 1'in en önemli tek dokunuşu: pusulaya en yakın ayakta/diz çökmüş asker vurulur (6 tuşu)
