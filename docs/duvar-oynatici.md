@@ -458,7 +458,14 @@ cihaz girişi: `npm exec --yes --package=meshy-cli@0.4.0 -- meshy auth login --d
     (`--input-task-id`, standard, PBR 2K, `--pose-mode a-pose`) → `remesh` 30K üçgen → `rigging` (`--height-meters`)
     → rigli GLB + **FBX**. API rig'i **24 kemik, öneksiz** (Hips, Spine02→Spine01→Spine→neck→Head, LeftArm…,
     LeftToeBase); web rig'i 65 "mixamorig:" kemikti.
-- **Yerel hazırlama (Blender 5.1, başsız):** `araclar/model-hazirla.py <girdi> <cikti> --ucgen N --boy M
+- **Yerel hazırlama — DİKKAT (3 Kasım gece, kullanıcı duvarda gördü: "kırılıp yapıştırılmış porselen gibi"):** Blender
+  Decimate (`model-hazirla.py`) üçgen sayısını 100 kat düşürürken UV adalarını yırtıyor, her dikişte koyu çatlak ve
+  yüzey kırıkları çıkıyor. Artık **`node araclar/model-sadelestir.mjs <girdi> <cikti> --ucgen N --boy M [--eksen] [--doku]`**
+  (meshoptimizer, `lockBorder` → dikişler sabit; ölçek/taban kök düğüm dönüşümüyle; dokular sharp ile JPEG). Helikopter ve
+  tank da önce bununla sadeleştirilip Blender betiklerine `--ucgen 9999999` ile verilir (Decimate atlanır). Çok parçalı
+  modelde (moloz, binlerce ayrık parça) kilitli sınırlar sadeleşmeyi engeller → Meshy `remesh` (5 kredi) sonra sadeleştir.
+  `model-hazirla.py` yalnız referans; yeni modelde kullanma.
+- **(Eski) Blender hazırlama:** `araclar/model-hazirla.py <girdi> <cikti> --ucgen N --boy M
   [--eksen uzun|yukseklik] [--doku 1024] [--render png]`: Decimate (UV korunur), en uzun kenar ya da yükseklik = boy,
   orijin taban merkezi, JPEG dokular. Çıktılar `icerik/modeller/nesneler/` (depoda; 0,3–1,5 MB).
   Helikopter: `araclar/helikopter-hazirla.py`: Meshy'ye "palasız gövde" referans görseli (gpt-image-2) → Image to 3D

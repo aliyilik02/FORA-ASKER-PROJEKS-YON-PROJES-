@@ -268,7 +268,8 @@ web rig `[0.096,0.164,-0.144]/[155.6,-45.9,74.7]`; bekleyen/nişan/yürüyen kli
 kollar yana" bulgusu yanlış tahmin edilmiş dönüşten kaynaklanıyordu), palasız gövde + prosedürel rotorlu helikopter (`nesneler/helikopter_govde.glb`, manifest
 `helikopter.rotor`), TCCC nesneleri (`nesne_*`: turnike, çantalar, sedye, duman bombası, kum torbaları; `olcekSabit`),
 kum torbası duvarı (`sutre.ts` `torba_duvari`, Oda 2 operasyonel bölge). Araçlar: `araclar/meshy-uret.mjs` (plan →
-üretim/indirme, kaldığı yerden), `araclar/model-hazirla.py` (seyreltme/ölçek/orijin), `araclar/helikopter-hazirla.py`,
+üretim/indirme, kaldığı yerden), **`araclar/model-sadelestir.mjs`** (meshoptimizer, dikiş korur; Blender Decimate
+`model-hazirla.py` UV'yi yırtıp "kırık porselen" görüntüsü verdi, kullanma), `araclar/helikopter-hazirla.py`,
 `araclar/glb-bilgi.mjs`. `mixamo-aktar.py`: kemik adı eşlemesi, 85° eşik, GLB girdi. Tuzaklar ve kalanlar
 `docs/duvar-oynatici.md` "Meshy üretim hattı". **Açık hata:** sahne sıfırla + figür yerleştirip hemen sonra açılan
 oynatıcı, bağlantıyla gelen figürleri bazen yüklemiyor (`figurler.aktifler` 0; aynı komutlar yeniden gönderilince
