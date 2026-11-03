@@ -185,6 +185,8 @@ export interface Aktif {
   silahNesne: THREE.Object3D | null;
   silahKemik: THREE.Object3D | null;
   silahTemel: { konum: THREE.Vector3; donus: THREE.Quaternion; olcek: THREE.Vector3 } | null;
+  /** Kulenin dönme ekseni (yerel; ilk döndürmede dünya yukarısından seçilir). */
+  kuleEksen?: THREE.Vector3;
   silahYerde: boolean;
   /** İç model düğümü (sarmalın çocuğu) ve ayakta dururkenki y'si; diz çökünce aşağı iner. */
   icNesne: THREE.Object3D;
@@ -306,9 +308,18 @@ export class FigurKatmani {
 
   private kuleyiDondur(a: Aktif, dt: number) {
     if (!a.kule || !a.kuleTemel || this.dusmanAzimutu === null) return;
-    // Hedef: namlu dünya yönü düşman azimutuna baksın. Kule, temel dönüşünün yerel z'si (dünya yukarı) etrafında döner.
+    // Hedef: namlu dünya yönü düşman azimutuna baksın. Kule, temel dönüşünde dünya yukarısına denk gelen yerel ekseni
+    // etrafında döner (Quaternius tankta yerel z, Meshy/Blender tankta yerel y; düğüm dönüşü modelden modele değişir).
     const hedef = radyan(this.dusmanAzimutu);
-    const eksen = new THREE.Vector3(0, 0, 1);
+    if (!a.kuleEksen) {
+      a.kule.quaternion.copy(a.kuleTemel);
+      a.kule.updateMatrixWorld(true);
+      const yerelYukari = new THREE.Vector3(0, 1, 0).applyQuaternion(a.kule.getWorldQuaternion(new THREE.Quaternion()).invert());
+      const b = [Math.abs(yerelYukari.x), Math.abs(yerelYukari.y), Math.abs(yerelYukari.z)];
+      const i = b.indexOf(Math.max(...b));
+      a.kuleEksen = new THREE.Vector3(i === 0 ? Math.sign(yerelYukari.x) : 0, i === 1 ? Math.sign(yerelYukari.y) : 0, i === 2 ? Math.sign(yerelYukari.z) : 0);
+    }
+    const eksen = a.kuleEksen;
     const deneme = (aci: number) => {
       a.kule!.quaternion.copy(a.kuleTemel!).multiply(new THREE.Quaternion().setFromAxisAngle(eksen, aci));
       a.kule!.updateMatrixWorld(true);

@@ -222,6 +222,39 @@ export const ORNEK_SENARYOLAR: Senaryo[] = [
     ],
   },
   {
+    id: "sn_meshy_b_listesi",
+    ad: "Gösterim – B Listesi Modelleri (2 dk)",
+    aciklama:
+      "3 Kasım B listesi: Altay benzeri tank (kule düşmana döner), Kirpi benzeri zırhlı araç, ağır yüklü dağ komandosu, turnikeli " +
+      "yaralı asker (aksayarak yürür), bandaj ve makineli tüfek yerde; meskûn mahalde yıkık duvar, kerpiç köşe, moloz ve enkaz; " +
+      "Oda 2 üs bölgesinde konteyner, jeneratör, variller, nöbet kulübesi, gözetleme kulesi ve T-duvar.",
+    oda: "oda1",
+    adimlar: [
+      { id: "b1", gecikmeMs: 0, aciklama: "Kırsal açık arazi, yaz gündüz", islem: { tip: "bolge", bolge: "kirsal_acik_arazi" } },
+      { id: "b2", gecikmeMs: 300, aciklama: "Ortam", islem: { tip: "ortam", ortam: { mevsim: "yaz", saat: 10.5, bulut: 0.2, sis: 0, yagis: "yok", ruzgarSiddeti: 0.2, simsek: false } } },
+      { id: "b3", gecikmeMs: 4000, aciklama: "Tank (Altay benzeri) mevziye", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b3", klip: "tank_altay", azimut: -40, yukseklik: -5, olcek: 1, dongu: true } } },
+      { id: "b4", gecikmeMs: 6000, aciklama: "Zırhlı araç (sağ)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b4", klip: "nesne_zirhli_arac", azimut: 48, yukseklik: -4.5, olcek: 1, dongu: false } } },
+      { id: "b5", gecikmeMs: 8000, aciklama: "Ağır yüklü dağ komandosu (karşı)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b5", klip: "komando_agir_bekleyen", azimut: -8, yukseklik: -7, olcek: 1, dongu: true } } },
+      { id: "b6", gecikmeMs: 10000, aciklama: "Makineli tüfek yerde (sol)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b6", klip: "nesne_makineli_tufek", azimut: -22, yukseklik: -7.5, olcek: 1, dongu: false } } },
+      { id: "b7", gecikmeMs: 13000, aciklama: "Yaralı asker aksayarak geliyor (sağdan)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b7", klip: "yarali_asker_yuruyen", azimut: 40, yukseklik: -6, olcek: 1, dongu: true, yansit: true } } },
+      { id: "b8", gecikmeMs: 22000, aciklama: "Çatışma: kule düşmana döner, tank ateş eder", islem: { tip: "catisma", catisma: { aktif: true, siddet: 0.5, yon: 15, dostAtes: true } } },
+      { id: "b9", gecikmeMs: 40000, aciklama: "Çatışma biter", islem: { tip: "catisma", catisma: { aktif: false } } },
+      { id: "b10", gecikmeMs: 42000, aciklama: "Yaralı yerde", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b10", klip: "yarali_asker_yarali", azimut: 14, yukseklik: -8, olcek: 1, dongu: true } } },
+      { id: "b11", gecikmeMs: 44000, aciklama: "Bandaj paketleri yanında", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b11", klip: "nesne_bandaj_paketi", azimut: 20, yukseklik: -8, olcek: 1, dongu: false } } },
+      { id: "b12", gecikmeMs: 60000, aciklama: "Figürler kaldırılır", islem: { tip: "figur", figur: { islem: "temizle" } } },
+      { id: "b13", gecikmeMs: 61000, aciklama: "Meskûn mahal", islem: { tip: "bolge", bolge: "meskun_mahal" } },
+      { id: "b14", gecikmeMs: 66000, aciklama: "Yıkık duvar (sol)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b14", klip: "nesne_yikik_duvar", azimut: -45, yukseklik: -7, olcek: 1, dongu: false } } },
+      { id: "b15", gecikmeMs: 68000, aciklama: "Kerpiç ev köşesi (sağ)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b15", klip: "nesne_kerpic_ev_kosesi", azimut: 50, yukseklik: -7, olcek: 1, dongu: false } } },
+      { id: "b16", gecikmeMs: 70000, aciklama: "Yanmış araç enkazı", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b16", klip: "nesne_arac_enkazi", azimut: 10, yukseklik: -9, olcek: 1, dongu: false } } },
+      { id: "b17", gecikmeMs: 72000, aciklama: "Moloz yığını", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b17", klip: "nesne_moloz_yigini", azimut: -12, yukseklik: -7, olcek: 1, dongu: false } } },
+      { id: "b18", gecikmeMs: 90000, aciklama: "Figürler kaldırılır", islem: { tip: "figur", figur: { islem: "temizle" } } },
+      { id: "b19", gecikmeMs: 91000, aciklama: "Oda 2: operasyonel bölge (konteyner, jeneratör, variller, nöbet kulübesi)", islem: { tip: "oda2", oda2: { guvenliAlan: "operasyonel_bolge", helikopter: "yok", uzakSesMesafesi: 800, uzakSesYonu: 45 } } },
+      { id: "b20", gecikmeMs: 92000, aciklama: "Oda 2", islem: { tip: "oda", oda: "oda2" } },
+      { id: "b21", gecikmeMs: 97000, aciklama: "Gözetleme kulesi (sol geri)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b21", klip: "nesne_gozetleme_kulesi", azimut: -62, yukseklik: -3, olcek: 1, dongu: false } } },
+      { id: "b22", gecikmeMs: 99000, aciklama: "T-duvar (sağ)", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_b22", klip: "nesne_t_duvar", azimut: 66, yukseklik: -5, olcek: 1, dongu: false } } },
+    ],
+  },
+  {
     id: "sn_gosterim_guncel",
     ad: "Gösterim – Güncel Durum (5 dk)",
     aciklama:

@@ -285,9 +285,9 @@ Bu oturumun kalan düzeltmesi: "askerin vücudu zeminin altında" (kalça yükse
    Kalan 10'un son düzeltme sürümleri doğrulanmadı (dağlık kış/yaz gündüz, meskûn kış/yaz alacakaranlık, yaz gece, yaz
    gündüz, ormanlık kış alacakaranlık/gündüz, üs kış gündüz); dosyalar oturum scratchpad'inde (`plan3/oneri`), kalıcı
    değil — gerekirse `araclar/plan-onizleme.py` ile yeniden. Eksik 7 bölge/mevsim/zaman birleşimi en yakın panoramaya düşer.
-   **Kendi 3B modellerimiz:** A listesi bitti (yukarıda). Sırada B listesi (`docs/meshy-model-listesi.md`: ağır yük
-   komandosu, yaralı turnikeli, MG3, Kirpi, tank gövde/kule, enkaz, T-duvar, gözetleme kulesi, yıkık duvarlar…) aynı
-   hatla: `node araclar/meshy-uret.mjs --kod ...` (plan.json'a B satırları eklenir) → `model-hazirla.py` → manifest.
+   **Kendi 3B modellerimiz:** A ve B listeleri bitti (3 Kasım; B: 17 model, tank `araclar/tank-ayir.py` ile
+   gövde/kule/namlu'ya ayrıldı, kule ekseni oynatıcıda otomatik; ayrıntı docs "B listesi modelleri"). C listesi
+   aynı hatla: plan.json'a satır → `meshy-uret.mjs --kod` → `model-hazirla.py` → manifest. Meshy bakiyesi ~190 kredi.
    T5 açık çantada haç yerine kızılay, T9 silindir duman bombası için yeniden üretim (30 kredi/parça) isteğe bağlı.
 2. HESCO artık prosedürel (`sutre.ts` `tip: "hesco"`, canvas doku: tel kafes + jeotekstil + kum; üs bölgesi
    diziliminde iki hat). Sıhhiyeci "Interact" klibiyle idare ediyor; gerçek

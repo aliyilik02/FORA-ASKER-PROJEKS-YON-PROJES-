@@ -6637,6 +6637,719 @@
       ],
       "serbestYerlesim": true,
       "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "komando_agir_bekleyen": {
+      "dosya": "modeller/asker_agir_yuk.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.114,
+          0.187,
+          -0.111
+        ],
+        "donus": [
+          156.4,
+          -27.4,
+          72.9
+        ],
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Dağ komandosu (ağır yük) – mevzide, tüfekli",
+      "animasyon": "Rifle Idle",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_agir_yuruyen": {
+      "dosya": "modeller/asker_agir_yuk.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.114,
+          0.187,
+          -0.111
+        ],
+        "donus": [
+          156.4,
+          -27.4,
+          72.9
+        ],
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Dağ komandosu (ağır yük) – yürüyor",
+      "animasyon": "Rifle Walk",
+      "hiz": 1.5,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_agir_diz_cokmus": {
+      "dosya": "modeller/asker_agir_yuk.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.114,
+          0.187,
+          -0.111
+        ],
+        "donus": [
+          156.4,
+          -27.4,
+          72.9
+        ],
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Dağ komandosu (ağır yük) – diz çökmüş, tüfekli",
+      "animasyon": "Rifle Idle",
+      "poz": "comelmis",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_agir_etrafa_bakan": {
+      "dosya": "modeller/asker_agir_yuk.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Dağ komandosu (ağır yük) – etrafı gözlüyor",
+      "animasyon": "Look Around",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_agir_kosan": {
+      "dosya": "modeller/asker_agir_yuk.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.114,
+          0.187,
+          -0.111
+        ],
+        "donus": [
+          156.4,
+          -27.4,
+          72.9
+        ],
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Dağ komandosu (ağır yük) – koşuyor (kendi modelimiz; sağa, yansıt = sola)",
+      "animasyon": "Rifle Run",
+      "hiz": 4.5,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "yarali_asker_yarali": {
+      "dosya": "modeller/asker_yarali.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.114,
+          0.187,
+          -0.111
+        ],
+        "donus": [
+          156.4,
+          -27.4,
+          72.9
+        ],
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 9,
+      "dongu": true,
+      "genislikDerece": 5,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Yaralı asker (turnikeli) – yaralı, yerde",
+      "animasyon": "Rifle Idle",
+      "poz": "yarali",
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true
+    },
+    "yarali_asker_yarali_masaj": {
+      "dosya": "modeller/asker_yarali.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 9,
+      "dongu": true,
+      "genislikDerece": 5,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Yaralı asker (turnikeli) – yerde, kalp masajı alıyor",
+      "animasyon": "Receiving Cpr",
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "silah": false
+    },
+    "yarali_asker_bekleyen": {
+      "dosya": "modeller/asker_yarali.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.114,
+          0.187,
+          -0.111
+        ],
+        "donus": [
+          156.4,
+          -27.4,
+          72.9
+        ],
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Yaralı asker (turnikeli) – mevzide, tüfekli",
+      "animasyon": "Rifle Idle",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "yarali_asker_diz_cokmus": {
+      "dosya": "modeller/asker_yarali.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.114,
+          0.187,
+          -0.111
+        ],
+        "donus": [
+          156.4,
+          -27.4,
+          72.9
+        ],
+        "boy": 0.95,
+        "_not": "silahHizalama.ts ile ölçüldü (window.duvar.silahHizala), 3 Kasım"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Yaralı asker (turnikeli) – diz çökmüş, tüfekli",
+      "animasyon": "Rifle Idle",
+      "poz": "comelmis",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "yarali_asker_yuruyen": {
+      "dosya": "modeller/asker_yarali.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Yaralı asker – aksayarak yürüyor",
+      "animasyon": "Injured Walk",
+      "hiz": 0.7,
+      "yerlesim": [
+        "figur"
+      ],
+      "silah": false
+    },
+    "nesne_makineli_tufek": {
+      "dosya": "modeller/nesneler/makineli_tufek.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Makineli tüfek (MG3, bipodlu, yerde)",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 8,
+      "genislikDerece": 4,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_zirhli_arac": {
+      "dosya": "modeller/nesneler/zirhli_arac.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Zırhlı araç 4×4 (Kirpi benzeri)",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 18,
+      "genislikDerece": 14,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_arac_enkazi": {
+      "dosya": "modeller/nesneler/arac_enkazi.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Yanmış araç enkazı",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 14,
+      "genislikDerece": 10,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_bandaj_paketi": {
+      "dosya": "modeller/nesneler/bandaj_paketi.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Bandaj paketleri (yerde)",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 9,
+      "genislikDerece": 2,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_t_duvar": {
+      "dosya": "modeller/nesneler/t_duvar.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Beton T-duvar",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 10,
+      "genislikDerece": 8,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_gozetleme_kulesi": {
+      "dosya": "modeller/nesneler/gozetleme_kulesi.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Gözetleme kulesi",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 25,
+      "genislikDerece": 10,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_nobet_kulubesi": {
+      "dosya": "modeller/nesneler/nobet_kulubesi.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Nöbet kulübesi",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 14,
+      "genislikDerece": 6,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_yakit_varili": {
+      "dosya": "modeller/nesneler/yakit_varili.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Yakıt varili",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 9,
+      "genislikDerece": 3,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_jenerator": {
+      "dosya": "modeller/nesneler/jenerator.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Jeneratör (römorklu)",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 12,
+      "genislikDerece": 6,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_konteyner": {
+      "dosya": "modeller/nesneler/konteyner.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "ISO konteyner (20 ft)",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 16,
+      "genislikDerece": 12,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_yikik_duvar": {
+      "dosya": "modeller/nesneler/yikik_duvar.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Yıkık bina duvarı",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 12,
+      "genislikDerece": 10,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_kerpic_ev_kosesi": {
+      "dosya": "modeller/nesneler/kerpic_ev_kosesi.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Yıkık kerpiç ev köşesi",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 12,
+      "genislikDerece": 8,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_moloz_yigini": {
+      "dosya": "modeller/nesneler/moloz_yigini.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Moloz yığını",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 10,
+      "genislikDerece": 8,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "tank_altay": {
+      "dosya": "modeller/nesneler/tank_altay.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Tank – Altay benzeri (kendi modelimiz, kule döner)",
+      "animasyon": "yok",
+      "boy": 2.6,
+      "mesafe": 30,
+      "yonDerece": 90,
+      "silah": true,
+      "genislikDerece": 8,
+      "yerlesim": [
+        "tank",
+        "patlama",
+        "figur"
+      ],
+      "agirSilah": true,
+      "kule": "kule",
+      "namlu": "namlu",
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs, B listesi 3 Kasım), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
     }
   },
   "sesler": {
@@ -6809,6 +7522,48 @@
         "azimut": 62,
         "mesafe": 7.5,
         "yonDerece": 0
+      },
+      {
+        "dosya": "modeller/nesneler/konteyner.glb",
+        "azimut": -88,
+        "mesafe": 9.5,
+        "boy": 2.6,
+        "yonDerece": 20
+      },
+      {
+        "dosya": "modeller/nesneler/jenerator.glb",
+        "azimut": -46,
+        "mesafe": 7.6,
+        "boy": 1.9,
+        "yonDerece": -30
+      },
+      {
+        "dosya": "modeller/nesneler/yakit_varili.glb",
+        "azimut": 43,
+        "mesafe": 6.2,
+        "boy": 0.9,
+        "yonDerece": 0
+      },
+      {
+        "dosya": "modeller/nesneler/yakit_varili.glb",
+        "azimut": 46,
+        "mesafe": 6.6,
+        "boy": 0.9,
+        "yonDerece": 40
+      },
+      {
+        "dosya": "modeller/nesneler/yakit_varili.glb",
+        "azimut": 40,
+        "mesafe": 6.7,
+        "boy": 0.9,
+        "yonDerece": 80
+      },
+      {
+        "dosya": "modeller/nesneler/nobet_kulubesi.glb",
+        "azimut": 86,
+        "mesafe": 8.5,
+        "boy": 2.4,
+        "yonDerece": -60
       }
     ],
     "kaya_sutre_arkasi": [
@@ -6965,6 +7720,34 @@
         "mesafe": 4.6,
         "boy": 0.6,
         "yonDerece": 20
+      },
+      {
+        "dosya": "modeller/nesneler/yikik_duvar.glb",
+        "azimut": -56,
+        "mesafe": 6.8,
+        "boy": 2.5,
+        "yonDerece": 15
+      },
+      {
+        "dosya": "modeller/nesneler/kerpic_ev_kosesi.glb",
+        "azimut": 58,
+        "mesafe": 6.8,
+        "boy": 3,
+        "yonDerece": -20
+      },
+      {
+        "dosya": "modeller/nesneler/moloz_yigini.glb",
+        "azimut": -12,
+        "mesafe": 5.6,
+        "boy": 0.9,
+        "yonDerece": 30
+      },
+      {
+        "dosya": "modeller/nesneler/arac_enkazi.glb",
+        "azimut": 30,
+        "mesafe": 7.4,
+        "boy": 1.4,
+        "yonDerece": 60
       }
     ]
   }

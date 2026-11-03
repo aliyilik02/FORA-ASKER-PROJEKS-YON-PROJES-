@@ -511,6 +511,26 @@ sapma ≤ 8°; web rig'i (mixamorig:RightHand) `konum [0.096, 0.164, -0.144]`, `
 Başsız tarayıcıda bekleyen (göğüs önünde taşıma), nişan (dürbün gözde, izleyiciye), yürüyen kliplerde doğrulandı.
 Yeni tüfek ya da yeni rig geldiğinde aynı çağrı; elle değer tahmin etme. Proje skill'i: `.claude/skills/silah-soketi/SKILL.md`.
 
+### B listesi modelleri (3 Kasım 2026 gece)
+
+17 model aynı hatla (≈ 560 kredi; bakiye ~190): ağır yüklü dağ komandosu (`asker_agir_yuk.glb`, `komando_agir_*`),
+turnikeli yaralı asker (`asker_yarali.glb`, `yarali_asker_*`; `yarali_asker_yuruyen` = Mixamo "Injured Walk", 0,7 m/s);
+nesneler `nesne_*`: makineli tüfek (MG3 istendi, üretici kısa namlulu tüfek verdi), Kirpi benzeri zırhlı araç, yanmış
+enkaz, bandaj paketleri, T-duvar, gözetleme kulesi (kum torbaları havada asılı çıktı, 6 m'de fark edilmiyor), nöbet
+kulübesi, yakıt varili, jeneratör, konteyner, yıkık duvar, kerpiç ev köşesi, moloz yığını (7,6 M üçgen, binlerce ayrık
+parça; Decimate 147 bin'e kadar indi, 11 MB). Sütre dizilimleri: operasyonel bölgeye konteyner/jeneratör/variller/kulübe,
+meskûn mahale yıkık duvar/kerpiç köşe/moloz/enkaz eklendi. Örnek senaryo "Gösterim – B Listesi Modelleri (2 dk)".
+
+**Tank (`nesneler/tank_altay.glb`, manifest `tank_altay`):** Meshy "kulesiz gövde" ve "namlusuz kule" promptlarına rağmen
+tam tank üretti (V3 = tam tank, V4 = yine tam tank). `araclar/tank-ayir.py` tam tankı ayırır: uzun eksen x, ön = dik
+kesiti küçük (namlu taşan) uç → −x; güverte yüksekliği = gövdenin arka dış köşelerindeki (x arka %30, |y| > %30 W) tepe
+hücrelerinin ortancası (dilim tepeleri kule kuyruğu/anten, genişlik profili kule darlığı yüzünden yanılttı); güvertenin
+%2 H üstündeki yüzler kule, bunların burun ötesine taşan ya da kule ön kenarından ileri uzanan ince kısmı namlu.
+Kule/namlu düğümleri dönüşsüz, orijin bilezikte (glTF dışa aktarımı nesne dönüşünü taşımadı, ilk sürümde kule tepede
+yan yatmıştı). `figurler3b.ts kuleyiDondur`: dönme ekseni artık düğümün dünya yukarısına denk gelen yerel ekseninden
+seçilir (`Aktif.kuleEksen`; Quaternius z, Meshy y). Başsız tarayıcıda düşman 20° → namlu 20° ölçüldü.
+`araclar/tank-birlestir.py` (ayrı gövde + kule birleştirme) yazıldı ama Meshy ayrı parça vermediğinden kullanılmadı.
+
 ### Çok kanallı ses (26 Ekim 2026)
 
 Sahada U odada 4 hoparlör (ön sol/sağ, arka sol/sağ) + subwoofer beklenir, büyük olasılıkla 5.1 / 7.1 AV alıcı
