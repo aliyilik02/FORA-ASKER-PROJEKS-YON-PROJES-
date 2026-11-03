@@ -5,25 +5,26 @@ import { vurulabilirAskerler, yoneEnYakin } from "../figurYardimcilari";
 import { FIGUR_POZ_ETIKETLERI, type FigurKomutu, type FigurPozu, type KlipOzeti } from "../tipler";
 import { sifirlamaNesli } from "../useKopru";
 import { Anahtar, Bolum, Ikon, Kaydirici, OnayliDugme, yonMetni } from "./ortak";
+import { GrupSimgesi } from "./Simgeler";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 
 const KATEGORI_ETIKETLERI: Record<string, string> = { figur: "Figürler", efekt: "Efekt plakaları", hava: "Hava", diger: "Diğer" };
 /** Panel grupları (manifest `grup`): sıra, başlık ve simge. Yeni Meshy modelleri gruplu gelir; eski yer tutucular `eski`. */
-const GRUPLAR: Array<[string, string, string]> = [
-  ["asker", "Askerler", "🪖"],
-  ["sihhiye", "Sıhhiye", "🩺"],
-  ["yarali", "Yaralılar", "🩹"],
-  ["tank", "Tanklar", "🛡️"],
-  ["arac", "Araçlar", "🚙"],
-  ["silah", "Silahlar", "🔫"],
-  ["nesne", "TCCC ve nesneler", "📦"],
-  ["yapi", "Yapılar", "🧱"],
-  ["heli", "Helikopter", "🚁"],
+const GRUPLAR: Array<[string, string]> = [
+  ["asker", "Askerler"],
+  ["sihhiye", "Sıhhiye"],
+  ["yarali", "Yaralılar"],
+  ["tank", "Tanklar"],
+  ["arac", "Araçlar"],
+  ["silah", "Silahlar"],
+  ["nesne", "TCCC ve nesneler"],
+  ["yapi", "Yapılar"],
+  ["heli", "Helikopter"],
 ];
 const BOS_KLIP: KlipOzeti = { ad: "", baslik: "", kategori: "diger", dongu: false };
 const grupAdi = (k: KlipOzeti) => k.grup ?? (k.kategori === "figur" ? "nesne" : k.kategori);
-const simgesi = (k: KlipOzeti | undefined) => k?.simge ?? GRUPLAR.find((g) => g[0] === grupAdi(k ?? BOS_KLIP))?.[2] ?? "▫️";
+const simgesi = (k: KlipOzeti | undefined) => <GrupSimgesi grup={grupAdi(k ?? BOS_KLIP)} />;
 const MESAFELER: Array<[number, string]> = [
   [-12, "Yakın · 8 m"],
   [-7, "Orta · 14 m"],
@@ -152,10 +153,7 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
     const ib = GRUPLAR.findIndex((g) => g[0] === b);
     return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
   });
-  const grupBasligi = (g: string) => {
-    const t = GRUPLAR.find((x) => x[0] === g);
-    return t ? `${t[2]} ${t[1]}` : (KATEGORI_ETIKETLERI[g] ?? g);
-  };
+  const grupBasligi = (g: string) => GRUPLAR.find((x) => x[0] === g)?.[1] ?? KATEGORI_ETIKETLERI[g] ?? g;
   const eskiSayisi = klipler.filter((k) => k.eski).length;
 
   return (
@@ -171,35 +169,35 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
         ) : (
           <div className="birlik-dugmeleri">
             <button type="button" className="birlik asker" disabled={!askerler.length} onClick={askerCagir}>
-              <span className="birlik-ad">🪖 Asker çağır</span>
+              <span className="birlik-ad">Asker çağır</span>
               <small>Mevziye bir asker</small>
             </button>
             <button type="button" className="birlik cephe" disabled={!askerler.length} onClick={cepheKur}>
-              <span className="birlik-ad">🪖🪖🪖 Cephe kur</span>
+              <span className="birlik-ad">Cephe kur</span>
               <small>3 asker + düşman yönü</small>
             </button>
             <button type="button" className="birlik tank" disabled={!tanklar.length} onClick={tankCagir}>
-              <span className="birlik-ad">🛡️ Tank çağır</span>
+              <span className="birlik-ad">Tank çağır</span>
               <small>Açık alana bir tank</small>
             </button>
             <button type="button" className="birlik" disabled={!kosanlar.length} onClick={() => kosanGonder(false)}>
-              <span className="birlik-ad">🏃 Koşan asker →</span>
+              <span className="birlik-ad">Koşan asker →</span>
               <small>Soldan sağa geçer</small>
             </button>
             <button type="button" className="birlik" disabled={!kosanlar.length} onClick={() => kosanGonder(true)}>
-              <span className="birlik-ad">← 🏃 Koşan asker</span>
+              <span className="birlik-ad">← Koşan asker</span>
               <small>Sağdan sola geçer</small>
             </button>
             <button type="button" className="birlik yarali" disabled={!yaralilar.length} onClick={yaraliCagir}>
-              <span className="birlik-ad">🩹 Yaralı asker</span>
+              <span className="birlik-ad">Yaralı asker</span>
               <small>Yakında yerde, yardım ister</small>
             </button>
             <button type="button" className="birlik vuruldu" disabled={!vurulabilir.length} onClick={askerVuruldu} title="Pusulaya en yakın ayakta asker vurulur ve yere düşer">
-              <span className="birlik-ad">💥 Asker vuruldu!</span>
+              <span className="birlik-ad">Asker vuruldu!</span>
               <small>{vurulabilir.length ? `${vurulabilir.length} asker sahnede` : "Önce asker çağır"}</small>
             </button>
             <button type="button" className="birlik sihhiyeci" disabled={!sihhiyeciler.length || !yaraliAktifler.length} onClick={sihhiyeciGonder} title="Son yaralının yanına diz çöker, müdahale eder">
-              <span className="birlik-ad">🩺 Sıhhiyeci gönder</span>
+              <span className="birlik-ad">Sıhhiyeci gönder</span>
               <small>{yaraliAktifler.length ? "Yaralının başına diz çöker" : "Önce yaralı olmalı"}</small>
             </button>
           </div>
@@ -210,7 +208,9 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
             <div className="klip-kartlari">
               {gruplar.map(([kategori, liste]) => (
                 <div key={kategori} className="klip-grubu">
-                  <span className="klip-grubu-ad">{grupBasligi(kategori)}</span>
+                  <span className="klip-grubu-ad">
+                    <GrupSimgesi grup={kategori} /> {grupBasligi(kategori)}
+                  </span>
                   <div className="klip-grubu-liste">
                     {liste.map((k) => (
                       <button key={k.ad} type="button" className={`klip-karti ${klip === k.ad ? "secili" : ""} ${k.eski ? "eski" : ""}`} onClick={() => setKlip(k.ad)} title={k.eski ? "Eski yer tutucu model" : k.baslik}>

@@ -9,7 +9,7 @@ import { useArayuz } from "../arayuz";
 import { BOLGE_ETIKETLERI, EFEKT_ETIKETLERI, HELIKOPTER_ETIKETLERI, MEVSIM_ETIKETLERI, YAGIS_ETIKETLERI, type EfektTuru, type FigurKomutu, type SenaryoDurumu, type SimulasyonDurumu } from "../tipler";
 import { vurulabilirAskerler, yoneEnYakin } from "../figurYardimcilari";
 import { Ikon, Rozet, saatBicimi, sureBicimi, yonMetni } from "./ortak";
-import { Pusula } from "./Pusula";
+import { YonSecici } from "./YonSecici";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 
@@ -47,15 +47,12 @@ export function CanliSahne({
   const { seciliYon, setSeciliYon, bildir } = useArayuz();
   const [simdi, setSimdi] = useState(Date.now());
   const [sonTetik, setSonTetik] = useState<string | null>(null);
-  // Saat yalnız gerektiğinde ilerler: pusuladaki efekt halkaları (8 sn) sürerken 250 ms, yoksa 1 sn ("sn önce" metni).
-  // Sürekli 250 ms tetik, pusulayı (50+ SVG öğesi, önizleme resmi) saniyede 4 kez yeniden çizip aynı GPU'yu paylaşan
-  // oynatıcının kare hızını düşürüyordu (kullanıcı: "radar panelinde çok fps düşmesi var", 3 Kasım gece).
-  const sonEfekt = durum.sonEfektler?.length ? Math.max(...durum.sonEfektler.map((e) => e.zaman)) : 0;
-  const halkaCanli = Date.now() - sonEfekt < 8500;
+  // Saat yalnız önizlemenin "sn önce" metni için (1 sn). Eski SVG pusula 250 ms'de bir yeniden çizilip oynatıcının
+  // kare hızını düşürüyordu; 4 Kasım'da yerini D2 yön seçici (YonSecici) aldı.
   useEffect(() => {
-    const t = window.setInterval(() => setSimdi(Date.now()), halkaCanli ? 250 : 1000);
+    const t = window.setInterval(() => setSimdi(Date.now()), 1000);
     return () => window.clearInterval(t);
-  }, [halkaCanli]);
+  }, []);
 
   const hizli = durum.oda === "oda1" ? HIZLI_ODA1 : HIZLI_ODA2;
   // Oda 1'in en önemli tek dokunuşu: pusulaya en yakın ayakta/diz çökmüş asker vurulur (6 tuşu)
@@ -119,31 +116,14 @@ export function CanliSahne({
           </figcaption>
         </figure>
       )}
-      <Pusula
+      <YonSecici
         yon={seciliYon}
         onYon={setSeciliYon}
-        ortam={o}
         figurler={figurler}
-        efektler={durum.sonEfektler}
         helikopter={durum.oda === "oda2" ? durum.oda2.helikopter : "yok"}
         helikopterYonu={durum.oda2.helikopterYonu ?? 12}
         dusmanYonu={durum.catisma?.aktif ? durum.catisma.yon : null}
-        simdi={simdi}
       />
-
-      <div className="hizli-yonler">
-        {[
-          [-90, "Sol"],
-          [-45, "Sol-ön"],
-          [0, "Karşı"],
-          [45, "Sağ-ön"],
-          [90, "Sağ"],
-        ].map(([a, ad]) => (
-          <button key={ad} type="button" className={`kucuk ${((seciliYon + 180) % 360) - 180 === a ? "secili" : "ikincil"}`} onClick={() => setSeciliYon(Number(a))}>
-            {ad}
-          </button>
-        ))}
-      </div>
 
       <div className="hizli-efektler">
         {hizli.map((h) => (
@@ -166,8 +146,8 @@ export function CanliSahne({
         )}
       </div>
       <p className="ipucu">
-        Yönü pusuladan seç, efekti tek dokunuşla tetikle. Klavye: 1–5 efekt, 6 asker vuruldu, ←/→ yön, Boşluk senaryo oynat/duraklat. Sahneyi temizlemek: üst
-        çubukta <strong>Sıfırla</strong> (iki dokunuş) ya da Esc, Esc; ortam ve bölge kalır.
+        Yönü seç, efekti tek dokunuşla tetikle. Klavye: 1–5 efekt, 6 asker vuruldu, ←/→ yön 5°, Boşluk senaryo oynat/duraklat. Sahneyi temizlemek: üst çubukta{" "}
+        <strong>Sıfırla</strong> (iki dokunuş) ya da Esc, Esc; ortam ve bölge kalır.
       </p>
     </section>
   );
