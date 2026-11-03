@@ -57,15 +57,22 @@ H, L = mx.z - mn.z, mx.x - mn.x
 merkez = Vector(((mn.x + mx.x) / 2, (mn.y + mx.y) / 2, mn.z))
 for v in govde.data.vertices:
     v.co -= merkez
-mn, mx = kutu(govde)
+govde.data.update()
 vs = [v.co.copy() for v in govde.data.vertices]
+# Sınır kutusu noktalardan: bound_box köşe kaydırmasından sonra güncellenmiyor (3 Kasım: göbek 2,5 m'de, palalar çatıda)
+mn = Vector((min(v.x for v in vs), min(v.y for v in vs), min(v.z for v in vs)))
+mx = Vector((max(v.x for v in vs), max(v.y for v in vs), max(v.z for v in vs)))
 
-# Ana rotor göbeği: en üst %4'teki noktaların merkezi (rotor direği)
-ust = [v for v in vs if v.z > mx.z - 0.04 * H]
-gobek = Vector((sum(v.x for v in ust) / len(ust), sum(v.y for v in ust) / len(ust), mx.z - 0.01 * H))
-# Kuyruk: göbekten uzak olan uç
-kuyruk_isaret = 1 if abs(mx.x - gobek.x) > abs(mn.x - gobek.x) else -1
-kuyruk_x = mx.x if kuyruk_isaret > 0 else mn.x
+# Ana rotor göbeği: gövde ortasındaki (|x| < L/4) en üst %4 noktaların merkezi (kuyruk dikey kanadının tepesi de direğe
+# yakın yükseklikte olduğundan bütün modelin en üst dilimi göbeği kuyruğa kaydırıyordu)
+ust = [v for v in vs if v.z > mx.z - 0.04 * H and abs(v.x) < 0.25 * L]
+if not ust:
+    ust = [v for v in vs if v.z > mx.z - 0.04 * H]
+gobek = Vector((sum(v.x for v in ust) / len(ust), sum(v.y for v in ust) / len(ust), max(v.z for v in ust)))
+# Kuyruk: tepesi yüksek olan uç (dikey kanat); burun alçaktır
+def uc_tepe(x0):
+    return max((v.z for v in vs if abs(v.x - x0) < 0.12 * L), default=0.0)
+kuyruk_x = mx.x if uc_tepe(mx.x) > uc_tepe(mn.x) else mn.x
 aday = [v for v in vs if abs(v.x - kuyruk_x) < 0.12 * L and v.z > mn.z + 0.55 * H]
 if not aday:
     aday = [v for v in vs if abs(v.x - kuyruk_x) < 0.2 * L]

@@ -463,7 +463,10 @@ cihaz girişi: `npm exec --yes --package=meshy-cli@0.4.0 -- meshy auth login --d
   orijin taban merkezi, JPEG dokular. Çıktılar `icerik/modeller/nesneler/` (depoda; 0,3–1,5 MB).
   Helikopter: `araclar/helikopter-hazirla.py`: Meshy'ye "palasız gövde" referans görseli (gpt-image-2) → Image to 3D
   (ilk text-to-3d denemesi palalı ve kızaklı geldi, palaları gövdeden ayırmak geometriyle mümkün olmadı); palalar
-  prosedürel: "rotor" (4 pala, yarıçap gövde boyunun %54'ü, göbek = en üst nokta kümesi) ve "kuyruk_rotor" (yerel x
+  prosedürel: "rotor" (4 pala, yarıçap gövde boyunun %54'ü, göbek = gövde ortasındaki (|x| < L/4) en üst %4 nokta kümesi,
+  palalar tepeden %3 yukarıda; kuyruk = tepesi yüksek olan uç — 3 Kasım gece iki tuzak: köşe kaydırmasından sonra Blender
+  `bound_box` güncellenmiyor (noktalardan hesapla), kuyruk kanadı tepesi direğe yakın yükseklikte olduğundan bütün modelin
+  üst dilimi göbeği kuyruğa kaydırıyordu) ve "kuyruk_rotor" (yerel x
   ekseni yanal; oynatıcı `rotation.x`), manifest `helikopter.rotor: ["rotor", "kuyruk_rotor"]`, `renk` kaldırıldı
   (boya Meshy dokusunu ezerdi).
 - **Mixamo aktarımı** (`araclar/mixamo-aktar.py`) API rig'i için: kemik adı eşlemesi `kaynak_adi()` (öneksiz ad →
