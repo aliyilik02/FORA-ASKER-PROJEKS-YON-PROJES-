@@ -4305,31 +4305,723 @@
       "genislikDerece": 4,
       "_kaynak": "three.js examples Soldier.glb (Mixamo)"
     },
-    "komando_bekleyen": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "silahModeli": {"dosya": "modeller/tufek.glb", "kemik": "mixamorig:RightHand", "konum": [0, 0.08, 0.02], "donus": [0, 0, -90], "boy": 0.85}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 14, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – mevzide, tüfekli (kendi modelimiz)", "animasyon": "Rifle Idle", "silah": true, "yerlesim": ["asker", "figur"]},
-    "komando_nisan": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "silahModeli": {"dosya": "modeller/tufek.glb", "kemik": "mixamorig:RightHand", "konum": [0, 0.08, 0.02], "donus": [0, 0, -90], "boy": 0.85}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 14, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – nişanda (kendi modelimiz)", "animasyon": "Rifle Aiming Idle", "silah": true, "yerlesim": ["asker", "figur"]},
-    "komando_diz_cokmus": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "silahModeli": {"dosya": "modeller/tufek.glb", "kemik": "mixamorig:RightHand", "konum": [0, 0.08, 0.02], "donus": [0, 0, -90], "boy": 0.85}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 14, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – diz çökmüş, tüfekli (kendi modelimiz)", "animasyon": "Rifle Idle", "poz": "comelmis", "silah": true, "yerlesim": ["asker", "figur"]},
-    "komando_yatan": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "silahModeli": {"dosya": "modeller/tufek.glb", "kemik": "mixamorig:RightHand", "konum": [0, 0.08, 0.02], "donus": [0, 0, -90], "boy": 0.85}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 14, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – yere yatmış, tüfekli (kendi modelimiz)", "animasyon": "Rifle Idle", "poz": "yatmis", "silah": true, "yerlesim": ["asker", "figur"]},
-    "komando_yarali": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "silahModeli": {"dosya": "modeller/tufek.glb", "kemik": "mixamorig:RightHand", "konum": [0, 0.08, 0.02], "donus": [0, 0, -90], "boy": 0.85}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 9, "dongu": true, "genislikDerece": 5, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – yaralı, yerde (kendi modelimiz)", "animasyon": "Rifle Idle", "poz": "yarali", "yerlesim": ["figur"], "serbestYerlesim": true},
-    "komando_kosan": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "silahModeli": {"dosya": "modeller/tufek.glb", "kemik": "mixamorig:RightHand", "konum": [0, 0.08, 0.02], "donus": [0, 0, -90], "boy": 0.85}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 14, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – koşuyor (kendi modelimiz; sağa, yansıt = sola)", "animasyon": "Rifle Run", "hiz": 4.5, "yerlesim": ["figur"]},
-    "komando_yuruyen": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "silahModeli": {"dosya": "modeller/tufek.glb", "kemik": "mixamorig:RightHand", "konum": [0, 0.08, 0.02], "donus": [0, 0, -90], "boy": 0.85}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 14, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – yürüyor (kendi modelimiz)", "animasyon": "Rifle Walk", "hiz": 1.5, "yerlesim": ["figur"]},
-    "komando_comelerek": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "silahModeli": {"dosya": "modeller/tufek.glb", "kemik": "mixamorig:RightHand", "konum": [0, 0.08, 0.02], "donus": [0, 0, -90], "boy": 0.85}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 14, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – çömelerek ilerliyor (kendi modelimiz)", "animasyon": "Rifle Crouch Walk", "hiz": 1.0, "yerlesim": ["figur"]},
-    "komando_surunen": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "silahModeli": {"dosya": "modeller/tufek.glb", "kemik": "mixamorig:RightHand", "konum": [0, 0.08, 0.02], "donus": [0, 0, -90], "boy": 0.85}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 14, "dongu": true, "genislikDerece": 5, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – sürünüyor (kendi modelimiz)", "animasyon": "Low Crawl", "hiz": 0.5, "yerlesim": ["figur"]},
-    "komando_sihhiyeci": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 12, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Sıhhiyeci – diz çökmüş, müdahale (kendi modelimiz)", "animasyon": "Kneeling Pointing", "silah": false, "yerlesim": ["figur"], "serbestYerlesim": true},
-    "komando_el_sallayan": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 14, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – el sallıyor / çağırıyor (kendi modelimiz)", "animasyon": "Waving", "silah": false, "yerlesim": ["figur"]},
-    "komando_telsiz": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 14, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – telsizle konuşuyor (kendi modelimiz)", "animasyon": "Talking On Phone", "silah": false, "yerlesim": ["figur"]},
-    "komando_bomba": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 14, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – el bombası atıyor (kendi modelimiz)", "animasyon": "Toss Grenade", "silah": false, "yerlesim": ["figur"]},
-    "komando_etrafa_bakan": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 14, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Komando – etrafı gözlüyor (kendi modelimiz)", "animasyon": "Look Around", "silah": false, "yerlesim": ["figur"]},
-    "komando_cpr": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 12, "dongu": true, "genislikDerece": 4, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Sıhhiyeci – kalp masajı (CPR) (kendi modelimiz)", "animasyon": "Administering Cpr", "silah": false, "yerlesim": ["figur"], "serbestYerlesim": true},
-    "komando_yarali_masaj": {"dosya": "modeller/asker_komando.glb", "tip": "model", "kategori": "figur", "animasyonlar": {"ates": "Firing Rifle", "vurulma": "Hit Reaction", "dusme": "Dying", "comelmis": "Rifle Kneel Idle", "yatmis": "Prone Idle"}, "kemikler": {"govde": "mixamorig:Spine", "gogus": "mixamorig:Spine2", "bas": "mixamorig:Head", "solUstBacak": "mixamorig:LeftUpLeg", "solAltBacak": "mixamorig:LeftLeg", "sagUstBacak": "mixamorig:RightUpLeg", "sagAltBacak": "mixamorig:RightLeg", "sagUstKol": "mixamorig:RightArm", "solAyak": "mixamorig:LeftFoot", "sagAyak": "mixamorig:RightFoot"}, "boy": 1.8, "mesafe": 9, "dongu": true, "genislikDerece": 5, "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)", "ad": "Yaralı komando – yerde, kalp masajı alıyor (kendi modelimiz)", "animasyon": "Receiving Cpr", "yerlesim": ["figur"], "serbestYerlesim": true, "silah": false},
+    "komando_bekleyen": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "mixamorig:RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – mevzide, tüfekli (kendi modelimiz)",
+      "animasyon": "Rifle Idle",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_nisan": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "mixamorig:RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – nişanda (kendi modelimiz)",
+      "animasyon": "Rifle Aiming Idle",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_diz_cokmus": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "mixamorig:RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – diz çökmüş, tüfekli (kendi modelimiz)",
+      "animasyon": "Rifle Idle",
+      "poz": "comelmis",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_yatan": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "mixamorig:RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – yere yatmış, tüfekli (kendi modelimiz)",
+      "animasyon": "Rifle Idle",
+      "poz": "yatmis",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_yarali": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "mixamorig:RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 9,
+      "dongu": true,
+      "genislikDerece": 5,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – yaralı, yerde (kendi modelimiz)",
+      "animasyon": "Rifle Idle",
+      "poz": "yarali",
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true
+    },
+    "komando_kosan": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "mixamorig:RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – koşuyor (kendi modelimiz; sağa, yansıt = sola)",
+      "animasyon": "Rifle Run",
+      "hiz": 4.5,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_yuruyen": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "mixamorig:RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – yürüyor (kendi modelimiz)",
+      "animasyon": "Rifle Walk",
+      "hiz": 1.5,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_comelerek": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "mixamorig:RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – çömelerek ilerliyor (kendi modelimiz)",
+      "animasyon": "Rifle Crouch Walk",
+      "hiz": 1.0,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_surunen": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "mixamorig:RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 5,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – sürünüyor (kendi modelimiz)",
+      "animasyon": "Low Crawl",
+      "hiz": 0.5,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_sihhiyeci": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 12,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Sıhhiyeci – diz çökmüş, müdahale (kendi modelimiz)",
+      "animasyon": "Kneeling Pointing",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true
+    },
+    "komando_el_sallayan": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – el sallıyor / çağırıyor (kendi modelimiz)",
+      "animasyon": "Waving",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_telsiz": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – telsizle konuşuyor (kendi modelimiz)",
+      "animasyon": "Talking On Phone",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_bomba": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – el bombası atıyor (kendi modelimiz)",
+      "animasyon": "Toss Grenade",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_etrafa_bakan": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Komando – etrafı gözlüyor (kendi modelimiz)",
+      "animasyon": "Look Around",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_cpr": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 12,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Sıhhiyeci – kalp masajı (CPR) (kendi modelimiz)",
+      "animasyon": "Administering Cpr",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true
+    },
+    "komando_yarali_masaj": {
+      "dosya": "modeller/asker_komando.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "mixamorig:Spine",
+        "gogus": "mixamorig:Spine2",
+        "bas": "mixamorig:Head",
+        "solUstBacak": "mixamorig:LeftUpLeg",
+        "solAltBacak": "mixamorig:LeftLeg",
+        "sagUstBacak": "mixamorig:RightUpLeg",
+        "sagAltBacak": "mixamorig:RightLeg",
+        "sagUstKol": "mixamorig:RightArm",
+        "solAyak": "mixamorig:LeftFoot",
+        "sagAyak": "mixamorig:RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 9,
+      "dongu": true,
+      "genislikDerece": 5,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans) + Meshy rig; animasyonlar Mixamo (Adobe, kullanım serbest), Blender'da aktarıldı (araclar/mixamo-aktar.py)",
+      "ad": "Yaralı komando – yerde, kalp masajı alıyor (kendi modelimiz)",
+      "animasyon": "Receiving Cpr",
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "silah": false
+    },
     "helikopter": {
-      "dosya": "modeller/helikopter/scene.gltf",
+      "dosya": "modeller/nesneler/helikopter_govde.glb",
       "tip": "model",
       "kategori": "diger",
       "ad": "Helikopter (3B, Oda 2)",
       "boy": 5.2,
       "genislikDerece": 20,
-      "_kaynak": "OpenGameArt \"Rescue Helicopter (low poly)\" – blueskinrulez, CC-BY 4.0",
-      "renk": "#4f5a40"
+      "_kaynak": "Kendi modelimiz: Meshy AI Image to 3D (palasız gövde) + prosedürel palalar (araclar/helikopter-hazirla.py)",
+      "rotor": [
+        "rotor",
+        "kuyruk_rotor"
+      ]
     },
     "tank_mbt": {
       "dosya": "modeller/tank_mbt.glb",
@@ -4371,6 +5063,1550 @@
       "kule": "Tank_Turret",
       "namlu": "Tank_Gun",
       "animasyon": "yok"
+    },
+    "komando_bere_bekleyen": {
+      "dosya": "modeller/asker_komando_bere.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Komando (bordo bere) – mevzide, tüfekli",
+      "animasyon": "Rifle Idle",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_bere_nisan": {
+      "dosya": "modeller/asker_komando_bere.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Komando (bordo bere) – nişanda",
+      "animasyon": "Rifle Aiming Idle",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_bere_diz_cokmus": {
+      "dosya": "modeller/asker_komando_bere.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Komando (bordo bere) – diz çökmüş, tüfekli",
+      "animasyon": "Rifle Idle",
+      "poz": "comelmis",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_bere_yatan": {
+      "dosya": "modeller/asker_komando_bere.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Komando (bordo bere) – yere yatmış, tüfekli",
+      "animasyon": "Rifle Idle",
+      "poz": "yatmis",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_bere_yarali": {
+      "dosya": "modeller/asker_komando_bere.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 9,
+      "dongu": true,
+      "genislikDerece": 5,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Komando (bordo bere) – yaralı, yerde",
+      "animasyon": "Rifle Idle",
+      "poz": "yarali",
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true
+    },
+    "komando_bere_kosan": {
+      "dosya": "modeller/asker_komando_bere.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Komando (bordo bere) – koşuyor (kendi modelimiz; sağa, yansıt = sola)",
+      "animasyon": "Rifle Run",
+      "hiz": 4.5,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_bere_yuruyen": {
+      "dosya": "modeller/asker_komando_bere.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Komando (bordo bere) – yürüyor",
+      "animasyon": "Rifle Walk",
+      "hiz": 1.5,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_bere_etrafa_bakan": {
+      "dosya": "modeller/asker_komando_bere.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Komando (bordo bere) – etrafı gözlüyor",
+      "animasyon": "Look Around",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_bere_bomba": {
+      "dosya": "modeller/asker_komando_bere.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Komando (bordo bere) – el bombası atıyor",
+      "animasyon": "Toss Grenade",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_bere_comelerek": {
+      "dosya": "modeller/asker_komando_bere.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Komando (bordo bere) – çömelerek ilerliyor",
+      "animasyon": "Rifle Crouch Walk",
+      "hiz": 1.0,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "telsizci_telsiz": {
+      "dosya": "modeller/asker_telsizci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.82,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Telsizci – telsizle konuşuyor",
+      "animasyon": "Talking On Phone",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "telsizci_bekleyen": {
+      "dosya": "modeller/asker_telsizci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.82,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Telsizci – mevzide, tüfekli",
+      "animasyon": "Rifle Idle",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "telsizci_diz_cokmus": {
+      "dosya": "modeller/asker_telsizci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.82,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Telsizci – diz çökmüş, tüfekli",
+      "animasyon": "Rifle Idle",
+      "poz": "comelmis",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "telsizci_yuruyen": {
+      "dosya": "modeller/asker_telsizci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.82,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Telsizci – yürüyor",
+      "animasyon": "Rifle Walk",
+      "hiz": 1.5,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "telsizci_kosan": {
+      "dosya": "modeller/asker_telsizci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.82,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Telsizci – koşuyor (kendi modelimiz; sağa, yansıt = sola)",
+      "animasyon": "Rifle Run",
+      "hiz": 4.5,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "telsizci_yarali": {
+      "dosya": "modeller/asker_telsizci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.82,
+      "mesafe": 9,
+      "dongu": true,
+      "genislikDerece": 5,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Telsizci – yaralı, yerde",
+      "animasyon": "Rifle Idle",
+      "poz": "yarali",
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true
+    },
+    "sihhiyeci_sihhiyeci": {
+      "dosya": "modeller/asker_sihhiyeci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 12,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Sıhhiyeci – diz çökmüş, müdahale",
+      "animasyon": "Kneeling Pointing",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true
+    },
+    "sihhiyeci_cpr": {
+      "dosya": "modeller/asker_sihhiyeci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 12,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Sıhhiyeci – kalp masajı (CPR)",
+      "animasyon": "Administering Cpr",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true
+    },
+    "sihhiyeci_bekleyen": {
+      "dosya": "modeller/asker_sihhiyeci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Sıhhiyeci – mevzide, tüfekli",
+      "animasyon": "Rifle Idle",
+      "silah": false,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "sihhiyeci_yuruyen": {
+      "dosya": "modeller/asker_sihhiyeci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Sıhhiyeci – yürüyor",
+      "animasyon": "Rifle Walk",
+      "hiz": 1.5,
+      "yerlesim": [
+        "figur"
+      ],
+      "silah": false
+    },
+    "sihhiyeci_kosan": {
+      "dosya": "modeller/asker_sihhiyeci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Sıhhiyeci – koşuyor (kendi modelimiz; sağa, yansıt = sola)",
+      "animasyon": "Rifle Run",
+      "hiz": 4.5,
+      "yerlesim": [
+        "figur"
+      ],
+      "silah": false
+    },
+    "sihhiyeci_diz_cokmus": {
+      "dosya": "modeller/asker_sihhiyeci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Sıhhiyeci – diz çökmüş, tüfekli",
+      "animasyon": "Rifle Idle",
+      "poz": "comelmis",
+      "silah": false,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "sihhiyeci_el_sallayan": {
+      "dosya": "modeller/asker_sihhiyeci.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.78,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Sıhhiyeci – el sallıyor / çağırıyor",
+      "animasyon": "Waving",
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_kis_bekleyen": {
+      "dosya": "modeller/asker_kis.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Kış komandosu – mevzide, tüfekli",
+      "animasyon": "Rifle Idle",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_kis_nisan": {
+      "dosya": "modeller/asker_kis.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Kış komandosu – nişanda",
+      "animasyon": "Rifle Aiming Idle",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_kis_diz_cokmus": {
+      "dosya": "modeller/asker_kis.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Kış komandosu – diz çökmüş, tüfekli",
+      "animasyon": "Rifle Idle",
+      "poz": "comelmis",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_kis_yatan": {
+      "dosya": "modeller/asker_kis.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Kış komandosu – yere yatmış, tüfekli",
+      "animasyon": "Rifle Idle",
+      "poz": "yatmis",
+      "silah": true,
+      "yerlesim": [
+        "asker",
+        "figur"
+      ]
+    },
+    "komando_kis_yarali": {
+      "dosya": "modeller/asker_kis.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 9,
+      "dongu": true,
+      "genislikDerece": 5,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Kış komandosu – yaralı, yerde",
+      "animasyon": "Rifle Idle",
+      "poz": "yarali",
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true
+    },
+    "komando_kis_kosan": {
+      "dosya": "modeller/asker_kis.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Kış komandosu – koşuyor (kendi modelimiz; sağa, yansıt = sola)",
+      "animasyon": "Rifle Run",
+      "hiz": 4.5,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_kis_yuruyen": {
+      "dosya": "modeller/asker_kis.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 4,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Kış komandosu – yürüyor",
+      "animasyon": "Rifle Walk",
+      "hiz": 1.5,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "komando_kis_surunen": {
+      "dosya": "modeller/asker_kis.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "animasyonlar": {
+        "ates": "Firing Rifle",
+        "vurulma": "Hit Reaction",
+        "dusme": "Dying",
+        "comelmis": "Rifle Kneel Idle",
+        "yatmis": "Prone Idle"
+      },
+      "silahModeli": {
+        "dosya": "modeller/nesneler/tufek_piyade.glb",
+        "kemik": "RightHand",
+        "konum": [
+          0.12,
+          0.11,
+          0.05
+        ],
+        "donus": [
+          -65,
+          -135,
+          0
+        ],
+        "boy": 0.95
+      },
+      "kemikler": {
+        "govde": "Spine02",
+        "gogus": "Spine",
+        "bas": "Head",
+        "solUstBacak": "LeftUpLeg",
+        "solAltBacak": "LeftLeg",
+        "sagUstBacak": "RightUpLeg",
+        "sagAltBacak": "RightLeg",
+        "sagUstKol": "RightArm",
+        "solAyak": "LeftFoot",
+        "sagAyak": "RightFoot"
+      },
+      "boy": 1.8,
+      "mesafe": 14,
+      "dongu": true,
+      "genislikDerece": 5,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)",
+      "ad": "Kış komandosu – sürünüyor",
+      "animasyon": "Low Crawl",
+      "hiz": 0.5,
+      "yerlesim": [
+        "figur"
+      ]
+    },
+    "nesne_turnike": {
+      "dosya": "modeller/nesneler/turnike.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Turnike (yerde)",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 9,
+      "genislikDerece": 3,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_sihhiye_cantasi_acik": {
+      "dosya": "modeller/nesneler/sihhiye_cantasi_acik.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Sıhhiye çantası – açık (yerde)",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 9,
+      "genislikDerece": 4,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_sihhiye_cantasi_kapali": {
+      "dosya": "modeller/nesneler/sihhiye_cantasi_kapali.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Sıhhiye çantası – kapalı",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 9,
+      "genislikDerece": 4,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_sedye": {
+      "dosya": "modeller/nesneler/sedye.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Katlanır sedye (yerde)",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 9,
+      "genislikDerece": 6,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_duman_bombasi": {
+      "dosya": "modeller/nesneler/duman_bombasi.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Duman bombası (iniş işareti)",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 9,
+      "genislikDerece": 3,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_kum_torbasi_1": {
+      "dosya": "modeller/nesneler/kum_torbasi_1.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Kum torbası (haki)",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 7,
+      "genislikDerece": 3,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
+    },
+    "nesne_kum_torbasi_2": {
+      "dosya": "modeller/nesneler/kum_torbasi_2.glb",
+      "tip": "model",
+      "kategori": "figur",
+      "ad": "Kum torbası (çuval bezi)",
+      "animasyon": "yok",
+      "olcekSabit": true,
+      "mesafe": 7,
+      "genislikDerece": 3,
+      "dongu": false,
+      "silah": false,
+      "yerlesim": [
+        "figur"
+      ],
+      "serbestYerlesim": true,
+      "_kaynak": "Kendi modelimiz: Meshy AI (Pro, özel lisans; araclar/meshy-uret.mjs), animasyonlar Mixamo (araclar/mixamo-aktar.py)"
     }
   },
   "sesler": {
@@ -4418,47 +6654,72 @@
     "_kaynak": "Mixkit Free lisansı (ticari kullanım serbest): patlama, uzak patlama, bağırma (İngilizce yer tutucu; Türkçe kayıt gelecek), helikopter rotoru, ortam döngüleri (bölge adı / gece / kis / yagmur anahtarları). Silah: \"Gunshot Sounds\", © 2009 Vincent Sevedge (OpenGameArt: Tabasco, https://opengameart.org/content/gunshot-sounds), CC BY 3.0 — ATIF GEREKİR (gösterim/belgelerde: \"Silah sesleri: Vincent Sevedge, CC BY 3.0, değiştirildi\"). silah_tek_1–4 Mosin-Nagant, 5–8 SKS: özgün çok atışlı silah_mosin.ogg / silah_sks.ogg'dan tek atışlara kesildi, sonu sönümlendi (araclar/silah-tek-atis.mjs); çatışmada her atış bir kesim çalar, gürültü efekti 6–10'unu art arda. Lisans metni sesler/LISANS_tabasco_silah_CC-BY-3.0.txt."
   },
   "sutreler": {
-    "_aciklama": "Oda 2 sütre dizilimleri (3B, sahne3b/sutre.ts): guvenliAlan → eşyalar. Konum sahne koordinatında (azimut 0 = orta duvar, mesafe m), boy = hedef yükseklik (m); yonDerece modelin kendi dönüşü. Lisanslar modeller/sutre/LISANS_sutre.txt.",
+    "_aciklama": "Oda 2 sütre dizilimleri (3B, sahne3b/sutre.ts): guvenliAlan → eşyalar. Konum sahne koordinatında (azimut 0 = orta duvar, mesafe m), boy = hedef yükseklik (m); yonDerece modelin kendi dönüşü. Lisanslar modeller/sutre/LISANS_sutre.txt. tip torba_duvari: tek torba modellerinden (dosyalar) örülen duvar; genislik m, sira kat, kavis derece.",
     "operasyonel_bolge": [
       {
-        "dosya": "modeller/sutre/kum_torbasi_siper_quaternius.glb",
+        "tip": "torba_duvari",
+        "dosyalar": [
+          "modeller/nesneler/kum_torbasi_1.glb",
+          "modeller/nesneler/kum_torbasi_2.glb"
+        ],
         "azimut": -28,
         "mesafe": 5.6,
-        "boy": 1.1,
         "yonDerece": 0,
-        "renk": "#9c8c64"
+        "genislik": 2.4,
+        "sira": 4,
+        "kavis": 50
       },
       {
-        "dosya": "modeller/sutre/kum_torbasi_siper_quaternius.glb",
+        "tip": "torba_duvari",
+        "dosyalar": [
+          "modeller/nesneler/kum_torbasi_1.glb",
+          "modeller/nesneler/kum_torbasi_2.glb"
+        ],
         "azimut": 0,
         "mesafe": 5.2,
-        "boy": 1.1,
         "yonDerece": 0,
-        "renk": "#9c8c64"
+        "genislik": 2.4,
+        "sira": 4,
+        "kavis": 50
       },
       {
-        "dosya": "modeller/sutre/kum_torbasi_siper_quaternius.glb",
+        "tip": "torba_duvari",
+        "dosyalar": [
+          "modeller/nesneler/kum_torbasi_1.glb",
+          "modeller/nesneler/kum_torbasi_2.glb"
+        ],
         "azimut": 28,
         "mesafe": 5.6,
-        "boy": 1.1,
         "yonDerece": 0,
-        "renk": "#9c8c64"
+        "genislik": 2.4,
+        "sira": 4,
+        "kavis": 50
       },
       {
-        "dosya": "modeller/sutre/kum_torbasi_siper_kucuk_quaternius.glb",
+        "tip": "torba_duvari",
+        "dosyalar": [
+          "modeller/nesneler/kum_torbasi_1.glb",
+          "modeller/nesneler/kum_torbasi_2.glb"
+        ],
         "azimut": -50,
         "mesafe": 6.4,
-        "boy": 0.9,
         "yonDerece": 20,
-        "renk": "#9c8c64"
+        "genislik": 1.6,
+        "sira": 3,
+        "kavis": 30
       },
       {
-        "dosya": "modeller/sutre/kum_torbasi_siper_kucuk_quaternius.glb",
+        "tip": "torba_duvari",
+        "dosyalar": [
+          "modeller/nesneler/kum_torbasi_1.glb",
+          "modeller/nesneler/kum_torbasi_2.glb"
+        ],
         "azimut": 50,
         "mesafe": 6.4,
-        "boy": 0.9,
         "yonDerece": -20,
-        "renk": "#9c8c64"
+        "genislik": 1.6,
+        "sira": 3,
+        "kavis": 30
       },
       {
         "dosya": "modeller/sutre/jersey_bariyer_jtoastie.glb",

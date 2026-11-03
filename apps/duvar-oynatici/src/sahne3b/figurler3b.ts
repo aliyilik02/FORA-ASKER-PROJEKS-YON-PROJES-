@@ -14,6 +14,8 @@ export interface ModelTanimi {
   animasyon?: string;
   /** Hedef boy (metre); modelin sınır kutusu buna ölçeklenir. Varsayılan 1.8. */
   boy?: number;
+  /** Model zaten metre ölçeğinde (Meshy nesneleri: turnike, sedye…): boy normalizasyonu atlanır, yalnız `olcek` çarpanı. */
+  olcekSabit?: boolean;
   /** Modelin ön yüzü +z değilse düzeltme (derece). */
   yonDerece?: number;
   /** Yana hareket hızı (m/s); yürüme/koşma klipleri için. Yansıt = sola. */
@@ -384,7 +386,7 @@ export class FigurKatmani {
     const boyut = new THREE.Vector3();
     kutu.getSize(boyut);
     const hedefBoy = (tanim.boy ?? 1.8) * (s.olcek ?? 1);
-    const olcek = boyut.y > 1e-4 ? hedefBoy / boyut.y : 1;
+    const olcek = tanim.olcekSabit ? (s.olcek ?? 1) : boyut.y > 1e-4 ? hedefBoy / boyut.y : 1;
     const sarmal = new THREE.Group();
     nesne.scale.setScalar(olcek);
     // Ayak tabanı y=0'a

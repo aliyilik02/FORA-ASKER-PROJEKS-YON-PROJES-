@@ -443,6 +443,46 @@ senaryo "Gösterim – Kendi Komandomuz (2 dk)" (`sn_komando_gosterimi`).
 Kaynak dosyalar (depo dışı, kullanıcının makinesinde `İndirilenler/mixamo_icin/`): Meshy FBX (rigli, dokulu),
 `animasyonlar/*.fbx` (Mixamo, Without Skin), OBJ denemeleri. GLB'yi yeniden üretmek için yukarıdaki komut.
 
+### Meshy üretim hattı ve A listesi modelleri (3 Kasım 2026 akşam)
+
+`docs/meshy-model-listesi.md`'deki **A öncelikli 13 model** Meshy API'siyle (Meshy CLI 0.4.0, kullanıcının Pro hesabına
+cihaz girişi: `npm exec --yes --package=meshy-cli@0.4.0 -- meshy auth login --device`) üretildi; toplam ≈ 505 kredi
+(nesne 30: preview 20 + doku 10; asker 49: görsel 9 + Image to 3D 30 + remesh 5 + rig 5; helikopter ikinci kez 39).
+
+- **Sürücü:** `node araclar/meshy-uret.mjs [--kod F2,T1] [--eszamanli 4]`; plan `meshy_output/plan.json` (listeden
+  `Ö == A` satırları), durum model başına `meshy_output/<kod>/durum.json` (kaldığı yerden sürer, adımı iki kez ödemez),
+  günlük `meshy_output/gunluk.txt`. `meshy_output/` depoda değil.
+  - nesne: `text-to-3d preview` → `refine` (PBR, 2K) → GLB + önizleme. **`target_polycount` API'de uygulanmıyor**
+    (satır içi JSON da `@dosya` da denendi; 150 bin–2,6 milyon üçgen geliyor) → seyreltme yerelde.
+  - asker: `text-to-image` (gpt-image-2, `--pose-mode a-pose`, prompt + "Görsel eki (asker)") → `image-to-3d`
+    (`--input-task-id`, standard, PBR 2K, `--pose-mode a-pose`) → `remesh` 30K üçgen → `rigging` (`--height-meters`)
+    → rigli GLB + **FBX**. API rig'i **24 kemik, öneksiz** (Hips, Spine02→Spine01→Spine→neck→Head, LeftArm…,
+    LeftToeBase); web rig'i 65 "mixamorig:" kemikti.
+- **Yerel hazırlama (Blender 5.1, başsız):** `araclar/model-hazirla.py <girdi> <cikti> --ucgen N --boy M
+  [--eksen uzun|yukseklik] [--doku 1024] [--render png]`: Decimate (UV korunur), en uzun kenar ya da yükseklik = boy,
+  orijin taban merkezi, JPEG dokular. Çıktılar `icerik/modeller/nesneler/` (depoda; 0,3–1,5 MB).
+  Helikopter: `araclar/helikopter-hazirla.py`: Meshy'ye "palasız gövde" referans görseli (gpt-image-2) → Image to 3D
+  (ilk text-to-3d denemesi palalı ve kızaklı geldi, palaları gövdeden ayırmak geometriyle mümkün olmadı); palalar
+  prosedürel: "rotor" (4 pala, yarıçap gövde boyunun %54'ü, göbek = en üst nokta kümesi) ve "kuyruk_rotor" (yerel x
+  ekseni yanal; oynatıcı `rotation.x`), manifest `helikopter.rotor: ["rotor", "kuyruk_rotor"]`, `renk` kaldırıldı
+  (boya Meshy dokusunu ezerdi).
+- **Mixamo aktarımı** (`araclar/mixamo-aktar.py`) API rig'i için: kemik adı eşlemesi `kaynak_adi()` (öneksiz ad →
+  "mixamorig:" + ad; Spine02→Spine, Spine01→Spine1, Spine→Spine2, neck→Neck, head_end→HeadTop_End), girdi FBX ya da
+  GLB, çıkış adı mesh adı. **Atlama eşiği 60° → 85°:** A-pozdaki kollar T-poza 65–74° uzak olduğundan kol/el kemikleri
+  dinlenmede kalıyordu (kollar düz aşağı, baş yana eğik). Kalça: yükseklik kaynaktan, yatay sabit (yukarıdaki tuzak).
+- **Manifest:** `komando_bere_*`, `telsizci_*`, `sihhiyeci_*`, `komando_kis_*` (komando_* şablonlarından alt küme;
+  `kemikler` API adlarıyla: govde Spine02, gogus Spine, bas Head…; `silahModeli.kemik` "RightHand"), `nesne_*` (turnike,
+  açık/kapalı sıhhiye çantası, sedye, duman bombası, iki kum torbası; `olcekSabit: true`, `animasyon: "yok"`,
+  `serbestYerlesim`, "yanında" ile yaralının yanına konur), komando tüfeği `modeller/nesneler/tufek_piyade.glb`.
+  `figurler3b.ts` `ModelTanimi.olcekSabit`: boy normalizasyonu atlanır (yassı nesneleri 1,8 m'ye büyütmesin).
+- **Kum torbası duvarı** (`sutre.ts` `tip: "torba_duvari"`): `dosyalar` (iki torba çeşidi), `genislik` m, `sira` kat,
+  `kavis` derece; katlar yarım torba şaşırtmalı, çeşit ve ±7° dönüş tohumlu rastgele; torbalar bastırılır
+  (1,12 × 0,62 × 0,62) ki tombul Meshy torbası dolu torba oranına gelsin ve aralık kalmasın. Oda 2 `operasyonel_bolge`
+  Quaternius siperleri bununla değişti.
+- Eksik/geliştirme: T5 açık çantada kızılay yerine beyaz haç çıktı (doku elle düzeltilebilir ya da yeniden üretim 30
+  kredi); T9 duman bombası silindir değil el bombası biçiminde; tüfek MPT-76'dan çok M4 benzeri (dürbünlü), tamam.
+  Asker varyantlarında tüfek konumu/dönüşü duvarda ince ayar ister.
+
 ### Çok kanallı ses (26 Ekim 2026)
 
 Sahada U odada 4 hoparlör (ön sol/sağ, arka sol/sağ) + subwoofer beklenir, büyük olasılıkla 5.1 / 7.1 AV alıcı

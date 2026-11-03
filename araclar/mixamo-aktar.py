@@ -11,7 +11,7 @@ adam"). Burada her kemik için hedef dünya dönüşü şöyle kurulur:
 
 `hizala`: Meshy kemiğinin dinlenme yönünü Mixamo kemiğinin dinlenme yönüne götüren en küçük dönüş. Böylece kemiğin
 YÖNÜ Mixamo klibini izler, ROLL'u Meshy'nin kendi dinlenmesine göre kalır (mesh burkulmaz). Kalça konumu kaynaktan,
-boy oranıyla. Dinlenme yönü 60°'den fazla farklı kemikler (ayak ucu, parmak uçları) dinlenmede kalır. Çözüm sahne
+boy oranıyla. Dinlenme yönü 85°'den fazla farklı kemikler (ayak ucu, parmak uçları) dinlenmede kalır. Çözüm sahne
 güncellemesi olmadan matrislerle hesaplanır (kemik başına keyframe), her klip bir eylem → NLA izi → glTF'te ayrı animasyon.
 """
 import bpy, sys, os, math, re
@@ -26,11 +26,14 @@ if "--render" in arg:
 model, cikis, animler = arg[0], arg[1], arg[2:]
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
-bpy.ops.import_scene.fbx(filepath=model, use_anim=False)
+if model.lower().endswith((".glb", ".gltf")):
+    bpy.ops.import_scene.gltf(filepath=model)
+else:
+    bpy.ops.import_scene.fbx(filepath=model, use_anim=False)
 arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
 arm.name = "Armature"
 mesh = next(o for o in bpy.data.objects if o.type == "MESH")
-mesh.name = "asker_komando"
+mesh.name = re.sub(r"\.glb$", "", os.path.basename(cikis), flags=re.I)
 for im in bpy.data.images:
     if im.size[0] > 2048:
         im.scale(2048, 2048)
@@ -64,7 +67,15 @@ def yon(ao, b):
 for pb in arm.pose.bones:
     pb.rotation_mode = "QUATERNION"
 arm.animation_data_create()
-hips_ad = "mixamorig:Hips"
+# Kemik adı eşlemesi: Meshy web rig'i Mixamo adlarını kullanır ("mixamorig:Hips"), Meshy API rig'i önek siz ve
+# omurgayı ters sayar (Hips → Spine02 → Spine01 → Spine → neck → Head). Hedef kemik → Mixamo klip kemiği.
+OZEL = {"spine02": "Spine", "spine01": "Spine1", "spine": "Spine2", "neck": "Neck", "head_end": "HeadTop_End"}
+def kaynak_adi(hedef):
+    if hedef.startswith("mixamorig:"):
+        return hedef
+    return "mixamorig:" + OZEL.get(hedef.lower(), hedef)
+SRC_HIPS = "mixamorig:Hips"
+hips_ad = "mixamorig:Hips" if arm.data.bones.get("mixamorig:Hips") else "Hips"
 meshy_kalca_dunya = AW @ arm.data.bones[hips_ad].head_local
 meshy_kalca = meshy_kalca_dunya.z
 sonuclar = []
@@ -83,7 +94,7 @@ for yol in animler:
     # kemikler cm'dir; iki durumda da kaynak armatür uzayında ölçüp Meshy kalça yüksekliğine oranlamak doğru sonucu verir.
     SWd = SW.normalized()
     SWd.translation = Vector((0, 0, 0))
-    src_hips = src.data.bones.get(hips_ad)
+    src_hips = src.data.bones.get(SRC_HIPS)
     KM = SW  # kalça konumu için kullanılacak dönüşüm
     if src_hips:
         makul = lambda M: 0.4 < (M @ src_hips.head_local).z < 2.0
@@ -101,11 +112,11 @@ for yol in animler:
     bilgi = {}
     atla = set()
     for b in ebeveyn_once:
-        m = src.data.bones.get(b.name)
+        m = src.data.bones.get(kaynak_adi(b.name))
         if not m:
             continue
         d1, d2 = yon(arm, b), yon(src, m)
-        if math.degrees(d1.angle(d2, 0)) > 60:
+        if math.degrees(d1.angle(d2, 0)) > 85:  # A-poz kolları T-poza 65–75° uzak (Meshy API rig); yalnız uç kemikler atlanır
             atla.add(b.name)
             continue
         hizala = d1.rotation_difference(d2)
@@ -121,7 +132,7 @@ for yol in animler:
         poz = {}  # kemik adı → hedef poz-uzayı matrisi (armatür uzayı)
         for b in ebeveyn_once:
             pb = arm.pose.bones[b.name]
-            spb = src.pose.bones.get(b.name)
+            spb = src.pose.bones.get(kaynak_adi(b.name))
             if b.parent is None:
                 ust = Matrix.Identity(4)
                 ust_local = Matrix.Identity(4)

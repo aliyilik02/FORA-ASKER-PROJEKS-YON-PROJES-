@@ -257,6 +257,21 @@ dinlenmesinde sabit tutar (Mixamo klipleri in-place değil), "(N)" dosya ekini k
 başsız tarayıcıda doğrulandı. Ayrıntı `docs/duvar-oynatici.md` "Kendi 3B askerimiz". Meshy'de aynı reçete diğer modeller
 için: Image to 3D → Remesh; askerde Poz: A-Poz şart.
 
+**Meshy A listesi (3 Kasım akşam, Meshy CLI ile API üretimi):** 13 model üretildi ve entegre edildi (≈ 505 kredi):
+4 asker (`asker_komando_bere/telsizci/sihhiyeci/kis.glb`, API rig'i 24 öneksiz kemik + 38 Mixamo klibi; manifest
+`komando_bere_*`, `telsizci_*`, `sihhiyeci_*`, `komando_kis_*`), piyade tüfeği (`nesneler/tufek_piyade.glb`, tüm
+komando/bere/kış/telsizci kayıtlarında; `donus [-65,-135,0]`, `konum [0.12,0.11,0.05]`, tüfek ekseni kemik uzayında z;
+başsız tarayıcıda bekleyen/yürüyen/diz çökmüş kliplerde doğru, **nişan klibinde kollar yana bakıyor** — aktarım/rig
+sorunu, incelenmedi), palasız gövde + prosedürel rotorlu helikopter (`nesneler/helikopter_govde.glb`, manifest
+`helikopter.rotor`), TCCC nesneleri (`nesne_*`: turnike, çantalar, sedye, duman bombası, kum torbaları; `olcekSabit`),
+kum torbası duvarı (`sutre.ts` `torba_duvari`, Oda 2 operasyonel bölge). Araçlar: `araclar/meshy-uret.mjs` (plan →
+üretim/indirme, kaldığı yerden), `araclar/model-hazirla.py` (seyreltme/ölçek/orijin), `araclar/helikopter-hazirla.py`,
+`araclar/glb-bilgi.mjs`. `mixamo-aktar.py`: kemik adı eşlemesi, 85° eşik, GLB girdi. Tuzaklar ve kalanlar
+`docs/duvar-oynatici.md` "Meshy üretim hattı". **Açık hata:** sahne sıfırla + figür yerleştirip hemen sonra açılan
+oynatıcı, bağlantıyla gelen figürleri bazen yüklemiyor (`figurler.aktifler` 0; aynı komutlar yeniden gönderilince
+yükleniyor; başsız Chrome'da 3840×720, yavaş açılışta görüldü) — `bekleyenFigurler` / `sahne/senkron` sırası incelenmeli.
+Bu oturumun kalan düzeltmesi: "askerin vücudu zeminin altında" (kalça yüksekliği, fb03730).
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 0. **Gösterim hazır (2 Kasım):** örnek senaryo "Gösterim – Güncel Durum (5 dk)" (`sn_gosterim_guncel`; akış
@@ -267,10 +282,10 @@ için: Image to 3D → Remesh; askerde Poz: A-Poz şart.
    Kalan 10'un son düzeltme sürümleri doğrulanmadı (dağlık kış/yaz gündüz, meskûn kış/yaz alacakaranlık, yaz gece, yaz
    gündüz, ormanlık kış alacakaranlık/gündüz, üs kış gündüz); dosyalar oturum scratchpad'inde (`plan3/oneri`), kalıcı
    değil — gerekirse `araclar/plan-onizleme.py` ile yeniden. Eksik 7 bölge/mevsim/zaman birleşimi en yakın panoramaya düşer.
-   **Kendi 3B modellerimiz:** kullanıcı Meshy AI (Tripo yedek) ile asker, tüfek (MPT-76 benzeri) ve kum torbası sütre
-   üretecek; silah ayrı model (ele `silahModeli` ile takılır), asker A-pozda silahsız, iskelet/animasyon Mixamo (FBX) →
-   oynatıcıya iskelet uyarlaması gerekecek (bugünkü kod Quaternius SWAT kemik/klip adlarına bağlı). Ölçüler: GLB (FBX
-   de olur, dönüştürülür), metre, taban orijinde; asker 20–30 bin üçgen, nesne 5–10 bin; doku 2K.
+   **Kendi 3B modellerimiz:** A listesi bitti (yukarıda). Sırada B listesi (`docs/meshy-model-listesi.md`: ağır yük
+   komandosu, yaralı turnikeli, MG3, Kirpi, tank gövde/kule, enkaz, T-duvar, gözetleme kulesi, yıkık duvarlar…) aynı
+   hatla: `node araclar/meshy-uret.mjs --kod ...` (plan.json'a B satırları eklenir) → `model-hazirla.py` → manifest.
+   T5 açık çantada haç yerine kızılay, T9 silindir duman bombası için yeniden üretim (30 kredi/parça) isteğe bağlı.
 2. HESCO artık prosedürel (`sutre.ts` `tip: "hesco"`, canvas doku: tel kafes + jeotekstil + kum; üs bölgesi
    diziliminde iki hat). Sıhhiyeci "Interact" klibiyle idare ediyor; gerçek
    müdahale animasyonu (turnike) için yeşil perde çekimi (docs §2.5). Yaralı taşıma (iki kişi) yok.

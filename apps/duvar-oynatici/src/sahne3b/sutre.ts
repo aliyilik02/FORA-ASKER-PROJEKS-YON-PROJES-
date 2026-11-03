@@ -12,8 +12,16 @@ export interface SutreEsyasi {
   /** glTF dosyası; `tip: "hesco"` ise gerekmez (prosedürel). */
   dosya?: string;
   /** "hesco": prosedürel HESCO bastion hattı (tel kafes + jeotekstil + kum dolgu); `adet` hücre yan yana. */
-  tip?: "model" | "hesco";
+  /** "torba_duvari": tek torba modellerinden (`dosyalar`) örülen kum torbası duvarı; `genislik` m, `sira` kat. */
+  tip?: "model" | "hesco" | "torba_duvari";
   adet?: number;
+  /** torba_duvari: torba glTF'leri (metre ölçeğinde, taban orijinde; rastgele karışır). */
+  dosyalar?: string[];
+  /** torba_duvari: duvar genişliği (m, varsayılan 2,4) ve kat sayısı (varsayılan 4). */
+  genislik?: number;
+  sira?: number;
+  /** torba_duvari: yarım ay kavisi (derece, varsayılan 0 = düz; 60 → iki uç izleyiciye doğru kıvrılır). */
+  kavis?: number;
   /** HESCO hücre boyutu (m): genişlik × yükseklik; varsayılan 1,1 × 1,37 (Mil 1). */
   hucre?: [number, number];
   azimut: number;
@@ -141,6 +149,73 @@ export class SutreKatmani {
     return false;
   }
 
+  /**
+   * Tek torba modellerinden örülen kum torbası duvarı: `sira` kat, her kat yarım torba şaşırtmalı, çeşitler ve
+   * küçük dönüşler rastgele (tohum yerleşimden: her açılışta aynı duvar). `kavis` > 0 ise uçlar izleyiciye kıvrılır.
+   */
+  private async torbaDuvari(e: SutreEsyasi, kok: string, nesil: number) {
+    const dosyalar = e.dosyalar?.length ? e.dosyalar : e.dosya ? [e.dosya] : [];
+    if (!dosyalar.length) return;
+    const gltfler = await Promise.all(dosyalar.map((d) => this.yukle(/^(https?:|data:|blob:|\/)/.test(d) ? d : kok + d).catch(() => null)));
+    if (nesil !== this.nesil) return;
+    const torbalar = gltfler
+      .filter((g): g is GLTF => g !== null)
+      .map((g) => {
+        g.scene.updateMatrixWorld(true);
+        const kutu = new THREE.Box3().setFromObject(g.scene);
+        return { sahne: g.scene, kutu, boyut: kutu.getSize(new THREE.Vector3()), merkez: kutu.getCenter(new THREE.Vector3()) };
+      });
+    if (!torbalar.length) return;
+    const genislik = e.genislik ?? 2.4;
+    const sira = e.sira ?? 4;
+    const kavis = radyan(e.kavis ?? 0);
+    // Torba ölçüleri: dolu torba ~0,6 × 0,3 × 0,16 m; Meshy torbaları tombul (0,6 × 0,55 × 0,25) → derinlik ve
+    // yükseklik bastırılır, uzunluk %12 taşırılır ki sıradaki torbalar birbirine yaslansın (aralık kalmasın)
+    const BASKI = new THREE.Vector3(1.12, 0.62, 0.62);
+    const torbaUzunluk = Math.max(...torbalar.map((t) => Math.max(t.boyut.x, t.boyut.z)));
+    const torbaYuk = Math.min(...torbalar.map((t) => t.boyut.y)) * BASKI.y * 0.92; // üst üste hafif gömülü
+    const adet = Math.max(1, Math.round(genislik / (torbaUzunluk * 0.88)));
+    const adim = genislik / adet;
+    let tohum = Math.round(genislik * 100 + sira * 7 + Math.abs(e.azimut) * 3 + e.mesafe * 11) || 1;
+    const rnd = () => {
+      tohum = (tohum * 9301 + 49297) % 233280;
+      return tohum / 233280;
+    };
+    const sarmal = new THREE.Group();
+    for (let k = 0; k < sira; k++) {
+      const n = k % 2 ? adet - 1 : adet;
+      const kaydirma = k % 2 ? adim / 2 : 0;
+      for (let i = 0; i < n; i++) {
+        const t = torbalar[Math.floor(rnd() * torbalar.length)];
+        const x = -genislik / 2 + adim * (i + 0.5) + kaydirma;
+        // Kavis: kiriş `genislik` olan yay; uçlar izleyiciye (+z yerel) doğru gelir
+        const aci = kavis ? (x / (genislik / 2)) * (kavis / 2) : 0;
+        const yaricap = kavis ? genislik / 2 / Math.sin(kavis / 2) : 0;
+        const z = kavis ? (1 - Math.cos(aci)) * yaricap : 0;
+        const torba = t.sahne.clone(true);
+        torba.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh) {
+            m.castShadow = true;
+            m.receiveShadow = true;
+          }
+        });
+        const ic = new THREE.Group();
+        // Torba merkezi orijine, uzun ekseni x'e
+        torba.position.set(-t.merkez.x, -t.kutu.min.y, -t.merkez.z);
+        if (t.boyut.z > t.boyut.x) torba.rotation.y = Math.PI / 2;
+        ic.add(torba);
+        ic.scale.copy(BASKI);
+        ic.position.set(x, k * torbaYuk, z);
+        ic.rotation.y = -aci + (rnd() - 0.5) * radyan(14);
+        sarmal.add(ic);
+      }
+    }
+    sarmal.position.copy(yerKonumu(e.azimut, e.mesafe));
+    sarmal.rotation.y = -radyan(e.azimut) + radyan(e.yonDerece ?? 0);
+    this.grup.add(sarmal);
+  }
+
   /** Dizilimi değiştirir; aynı tip zaten açıksa dokunmaz. */
   ayarla(tip: string | null, esyalar: SutreEsyasi[] | undefined, kok: string) {
     if (tip === this.aktifTip) return;
@@ -150,6 +225,10 @@ export class SutreKatmani {
     if (!tip || !esyalar?.length) return;
     const nesil = ++this.nesil;
     for (const e of esyalar) {
+      if (e.tip === "torba_duvari") {
+        void this.torbaDuvari(e, kok, nesil);
+        continue;
+      }
       if (e.tip === "hesco" || !e.dosya) {
         if (e.tip !== "hesco") continue;
         const sarmal = new THREE.Group();

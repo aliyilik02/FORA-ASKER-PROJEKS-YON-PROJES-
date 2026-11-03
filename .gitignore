@@ -31,3 +31,6 @@ __pycache__/
 
 # Playwright MCP ekran görüntüleri
 .playwright-mcp/
+
+# Meshy CLI is klasoru (gorev kayitlari, ham indirmeler)
+meshy_output/
