@@ -25,3 +25,6 @@ apps/duvar-oynatici/public/icerik/arazi/**
 # Araç çıktıları
 __pycache__/
 .plan-onizleme/
+
+# Meshy API anahtarı (yerel, depoya girmez)
+.meshy_api_anahtari
