@@ -908,3 +908,85 @@ button.birlik.sihhiyeci {
     padding: 0 8px;
   }
 }
+
+/* --- Senaryo, editör, Oda 2 (ikinci tur) --- */
+html {
+  background: #0b0c0d;
+}
+body {
+  min-height: 100vh;
+}
+.editor {
+  border: 1px solid var(--cam-kenar);
+  background: rgba(0, 0, 0, 0.25);
+  animation: none;
+  padding: 14px;
+}
+.adim-formu {
+  border-color: var(--cizgi-yumusak);
+  border-radius: var(--yaricap);
+  background: rgba(255, 255, 255, 0.03);
+}
+.adim-formu legend {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--murekkep-2);
+}
+.alan {
+  font-weight: 600;
+}
+.alan input,
+.alan select {
+  min-height: 36px;
+  font-weight: 500;
+}
+.adim-listesi li {
+  background: rgba(0, 0, 0, 0.3);
+  border-left-width: 2px;
+  border-radius: var(--yaricap-k);
+}
+.adim-listesi li.sirada {
+  background: rgba(227, 178, 103, 0.08);
+}
+.zaman-cizgisi-ray {
+  height: 6px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.12);
+}
+.zaman-cizgisi-dolgu {
+  background: var(--amber);
+}
+.bolum.oynuyor .zaman-cizgisi-dolgu::after {
+  animation: none;
+  display: none;
+}
+.zaman-cizgisi-isaret {
+  top: -4px;
+  height: 14px;
+  width: 2px;
+  border-radius: 1px;
+  opacity: 0.6;
+}
+.heli-ilerleme {
+  border: 1px solid var(--cam-kenar);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--yaricap);
+}
+.heli-ilerleme-ray {
+  background: rgba(255, 255, 255, 0.12);
+}
+.heli-ilerleme-ray span,
+.heli-asamalar .tamam {
+  background: var(--amber);
+}
+.heli-asamalar .tamam {
+  background: none;
+  color: var(--amber);
+}
+.komut {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--cizgi-yumusak);
+  border-radius: 8px;
+}

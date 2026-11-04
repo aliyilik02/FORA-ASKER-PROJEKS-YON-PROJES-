@@ -119,7 +119,7 @@ function Govde() {
       }
       if (e.key === "6" && durum.oda === "oda1") {
         if (e.repeat) return;
-        // Canlı sahne kartındaki "Asker vuruldu" ile aynı: pusulaya en yakın ayakta asker
+        // Canlı sahne kartındaki "Asker vuruldu" ile aynı: seçili yöne en yakın ayakta asker
         const f = yoneEnYakin(vurulabilirAskerler(figurler), seciliYon);
         if (f) void calistir(() => api.figur({ islem: "poz", id: f.id, poz: "yarali" })).then((r) => r && bildir({ tur: "hata", baslik: "Asker vuruldu" }));
         return;

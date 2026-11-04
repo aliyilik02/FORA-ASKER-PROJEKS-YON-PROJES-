@@ -39,7 +39,7 @@ export function EfektPaneli({ durum, calistir }: { durum: SimulasyonDurumu; cali
     <>
       <Bolum
         baslik="Efektler"
-        altBaslik="Yön pusuladan gelir; her efekt panoramanın açık alanlarına yerleşir (ağaç ve bina içinde patlamaz)"
+        altBaslik="Yön soldaki seçiciden gelir; her efekt panoramanın açık alanlarına yerleşir (ağaç ve bina içinde patlamaz)"
         ikon={<Ikon.efekt />}
         sag={<span className="rozet amber">yön {yonMetni(seciliYon)}</span>}
       >
@@ -73,12 +73,12 @@ export function EfektPaneli({ durum, calistir }: { durum: SimulasyonDurumu; cali
           <span className="etiket">Düşman yönü</span>
           <span className="rozet kotu">{yonMetni(c.yon)}</span>
           <button type="button" className="kucuk" disabled={c.yon === seciliYon} onClick={() => catismaGuncelle({ yon: seciliYon })}>
-            Pusuladaki yönü al ({seciliYon}°)
+            Seçili yönü al ({seciliYon}°)
           </button>
         </div>
         <Kaydirici etiket="Şiddet" deger={c.siddet} min={0.05} max={1} bicim={(v) => (v < 0.3 ? `%${Math.round(v * 100)} · tek tük` : v < 0.7 ? `%${Math.round(v * 100)} · yoğun` : `%${Math.round(v * 100)} · ağır çatışma`)} onChange={(siddet) => catismaGuncelle({ siddet })} vurgu="izli" />
         <Anahtar acik={c.dostAtes} onChange={(dostAtes) => catismaGuncelle({ dostAtes })} etiket="Dost ateşi" aciklama="Sahnedeki silahlı figürler (asker, tank) düşmana döner ve ateş eder" />
-        <p className="aciklama">Figür eklemek için Figürler bölümünden "Cephe kur" kullan: pusuladaki yöne üç asker yerleşir.</p>
+        <p className="aciklama">Figür eklemek için Figürler bölümünden "Cephe kur" kullan: seçili yöne üç asker yerleşir.</p>
       </Bolum>
 
       <Bolum baslik="İzli Mermi" altBaslik="Seçilen duvardan sürekli izli mermi akışı (çatışmadan bağımsız)" ikon={<Ikon.efekt />} sag={<Anahtar acik={m.aktif} onChange={(aktif) => mermiGuncelle({ aktif })} etiket={m.aktif ? "Açık" : "Kapalı"} />}>

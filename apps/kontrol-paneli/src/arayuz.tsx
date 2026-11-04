@@ -1,6 +1,6 @@
 /**
  * Arayüz bağlamı: paneller arasında paylaşılan hafif durum.
- *  - seciliYon: pusuladan seçilen yön (0–359, 0 = karşı/orta duvar, saat yönünde); efekt ve figür
+ *  - seciliYon: yön seçiciden seçilen yön (0–359, 0 = karşı/orta duvar, saat yönünde); efekt ve figür
  *    panelleri bu yönü kullanır, böylece eğitmen yönü bir kez seçer.
  *  - bildirimler: sağ altta kısa süreli geri bildirim ("Patlama tetiklendi → 35°").
  *  - sekme: sol raydaki açık bölüm (yeniden yüklemede hatırlanır).

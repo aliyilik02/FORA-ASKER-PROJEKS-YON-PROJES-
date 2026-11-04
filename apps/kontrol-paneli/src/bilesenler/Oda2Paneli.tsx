@@ -73,7 +73,7 @@ export function Oda2Paneli({ durum, calistir }: { durum: SimulasyonDurumu; calis
           <span className="etiket">İniş yönü</span>
           <span className="rozet uyari">{yonMetni(o.helikopterYonu ?? 12)}</span>
           <button type="button" className="kucuk" disabled={(o.helikopterYonu ?? 12) === seciliYon} onClick={() => guncelle({ helikopterYonu: seciliYon })}>
-            Pusuladaki yöne indir ({seciliYon}°)
+            Seçili yöne indir ({seciliYon}°)
           </button>
         </div>
         <div className="satir">
@@ -82,7 +82,7 @@ export function Oda2Paneli({ durum, calistir }: { durum: SimulasyonDurumu; calis
         </div>
       </Bolum>
 
-      <Bolum baslik="Uzaktan Sesler" altBaslik="Mesafeye göre boğuk ve zayıf; yön pusuladan" ikon={<Ikon.efekt />} sag={<span className="rozet amber">yön {yonMetni(seciliYon)}</span>}>
+      <Bolum baslik="Uzaktan Sesler" altBaslik="Mesafeye göre boğuk ve zayıf; yön soldaki seçiciden" ikon={<Ikon.efekt />} sag={<span className="rozet amber">yön {yonMetni(seciliYon)}</span>}>
         <Kaydirici etiket="Mesafe" deger={o.uzakSesMesafesi} min={100} max={5000} adim={50} birim=" m" onChange={(uzakSesMesafesi) => guncelle({ uzakSesMesafesi })} />
         <div className="efekt-listesi">
           {(["uzak_patlama", "uzak_mermi_sesi"] as const).map((tur) => (

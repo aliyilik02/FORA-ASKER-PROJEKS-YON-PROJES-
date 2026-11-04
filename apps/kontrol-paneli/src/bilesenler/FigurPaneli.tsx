@@ -34,7 +34,7 @@ const MESAFELER: Array<[number, string]> = [
 
 /**
  * Birlik: eğitmen yer seçmez. Asker, tank ve cephe tek dokunuşla çağrılır; oynatıcı o panoramanın
- * hazır mevzi/tank noktalarından pusuladaki yöne en yakın BOŞ olanı kullanır (üst üste binmez).
+ * hazır mevzi/tank noktalarından seçili yöne en yakın BOŞ olanı kullanır (üst üste binmez).
  * Elle yerleştirme "Gelişmiş" altında saklı kalır.
  */
 export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Array<FigurKomutu & { id: string }>; calistir: Calistir; oda?: "oda1" | "oda2" }) {
@@ -97,7 +97,7 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
       (r) => r && bildir({ tur: "basari", baslik: "Sıhhiyeci yaralının başında", metin: `${yonMetni(((yarali.azimut ?? 0) + 360) % 360)} tarafı` }),
     );
   };
-  /** Tek dokunuş: sahnedeki ayakta askerlerden biri (pusulaya en yakın) vurulur, yere düşer. */
+  /** Tek dokunuş: sahnedeki ayakta askerlerden biri (seçili yöne en yakın) vurulur, yere düşer. */
   const askerVuruldu = () => {
     const f = yoneEnYakin(vurulabilir, seciliYon);
     if (f) pozDegistir(f, "yarali");
@@ -160,7 +160,7 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
     <>
       <Bolum
         baslik="Birlik çağır"
-        altBaslik="Yer seçmene gerek yok: her sahnenin hazır mevzileri var, pusuladaki tarafa en yakın boş mevzi kullanılır"
+        altBaslik="Yer seçmene gerek yok: her sahnenin hazır mevzileri var, seçili tarafa en yakın boş mevzi kullanılır"
         ikon={<Ikon.figur />}
         sag={<span className="rozet amber">taraf {yonMetni(seciliYon)}</span>}
       >
@@ -192,7 +192,7 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
               <span className="birlik-ad">Yaralı asker</span>
               <small>Yakında yerde, yardım ister</small>
             </button>
-            <button type="button" className="birlik vuruldu" disabled={!vurulabilir.length} onClick={askerVuruldu} title="Pusulaya en yakın ayakta asker vurulur ve yere düşer">
+            <button type="button" className="birlik vuruldu" disabled={!vurulabilir.length} onClick={askerVuruldu} title="Seçili yöne en yakın ayakta asker vurulur ve yere düşer">
               <span className="birlik-ad">Asker vuruldu!</span>
               <small>{vurulabilir.length ? `${vurulabilir.length} asker sahnede` : "Önce asker çağır"}</small>
             </button>

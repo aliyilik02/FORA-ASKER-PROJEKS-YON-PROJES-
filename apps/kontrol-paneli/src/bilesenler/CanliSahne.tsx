@@ -1,5 +1,5 @@
 /**
- * Canlı sahne kartı: her bölümde görünür kalır. Pusula (yön seçimi + sahnedeki her şey), durum
+ * Canlı sahne kartı: her bölümde görünür kalır. Yön seçici (beş bölge + ince ayar, sahnedekiler metinle), durum
  * özeti ve bir dokunuşluk hızlı efektler. Eğitmenin gözü eğitim alanındayken tek bakışta
  * "duvarda şu an ne var" sorusunu yanıtlar.
  */
@@ -39,7 +39,7 @@ export function CanliSahne({
   figurler: Array<FigurKomutu & { id: string }>;
   senaryo: SenaryoDurumu | null;
   calistir: Calistir;
-  /** Oynatıcıdan gelen küçük duvar görüntüsü (yoksa kart pusulayla yetinir). */
+  /** Oynatıcıdan gelen küçük duvar görüntüsü (yoksa kart yön seçiciyle yetinir). */
   onizleme?: { veri: string; zaman: number; bilgi?: string } | null;
   /** Son sahne sıfırlamasının köprü saati: önizleme bundan eskiyse soluk ve "temizleniyor…". */
   sonSifirlamaZamani?: number;
@@ -55,7 +55,7 @@ export function CanliSahne({
   }, []);
 
   const hizli = durum.oda === "oda1" ? HIZLI_ODA1 : HIZLI_ODA2;
-  // Oda 1'in en önemli tek dokunuşu: pusulaya en yakın ayakta/diz çökmüş asker vurulur (6 tuşu)
+  // Oda 1'in en önemli tek dokunuşu: seçili yöne en yakın ayakta/diz çökmüş asker vurulur (6 tuşu)
   const vurulabilir = vurulabilirAskerler(figurler);
   const askerVuruldu = () => {
     const f = yoneEnYakin(vurulabilir, seciliYon);
@@ -138,7 +138,7 @@ export function CanliSahne({
             className={`efekt vuruldu ${sonTetik === "vuruldu" ? "tetiklendi" : ""}`}
             disabled={!vurulabilir.length}
             onClick={askerVuruldu}
-            title={vurulabilir.length ? "Pusulaya en yakın asker vurulur, yere düşer, yardım çağırır" : "Önce Figürler'den asker çağır"}
+            title={vurulabilir.length ? "Seçili yöne en yakın asker vurulur, yere düşer, yardım çağırır" : "Önce Figürler'den asker çağır"}
           >
             <span className="efekt-ad">Asker vuruldu</span>
             <kbd>6</kbd>
