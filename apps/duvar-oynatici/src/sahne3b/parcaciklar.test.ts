@@ -117,3 +117,52 @@ describe("rotorTozu", () => {
     expect(Math.abs(beton[0] - beton[2])).toBeLessThan(0.05);
   });
 });
+
+describe("toz bulutu (panel Toz / duman)", () => {
+  const yatayUzaklik = (s: ParcacikSistemi, m: THREE.Vector3) => {
+    const l = s.duman.parcaciklar;
+    return l.reduce((t, p) => t + Math.hypot(p.x - m.x, p.z - m.z), 0) / Math.max(1, l.length);
+  };
+  it("uzun ömürlü, kaynak birkaç saniye tüter, bulut ilk yarıçapın katlarına yayılır ve zemine yakın kalır", () => {
+    const s = sistem();
+    const m = new THREE.Vector3(0, ZEMIN, -15);
+    s.tozBulutu(m, 4.5, 1);
+    const ilk = s.duman.sayi;
+    expect(ilk).toBeGreaterThanOrEqual(24);
+    for (const p of s.duman.parcaciklar) expect(p.sure).toBeGreaterThanOrEqual(10);
+    const u0 = yatayUzaklik(s, m);
+    for (let t = 0; t < 3; t += DT) s.guncelle(DT);
+    expect(s.duman.sayi).toBeGreaterThan(ilk + 10); // kaynak tütmeye devam etti
+    for (let t = 0; t < 5; t += DT) s.guncelle(DT);
+    expect(s.duman.sayi).toBeGreaterThan(ilk); // 8 sn sonra hâlâ asılı (ömür 10–16)
+    const u8 = yatayUzaklik(s, m);
+    expect(u8).toBeGreaterThan(u0 * 2.5); // dışa yayıldı
+    const ort = s.duman.parcaciklar.reduce((t, p) => t + p.y - ZEMIN, 0) / s.duman.sayi;
+    expect(ort).toBeLessThan(6); // alçak kaldı (duvarın görüş alanında)
+    const buyuk = s.duman.parcaciklar.filter((p) => p.boyut > 4.5 * 1.5).length;
+    expect(buyuk).toBeGreaterThan(s.duman.sayi / 2); // topaklar büyüdü
+    for (let t = 0; t < 13; t += DT) s.guncelle(DT);
+    expect(s.duman.sayi).toBe(0); // kaynak 4 sn + ömür 16 sn: 21 sn'de dağıldı
+  });
+  it("rüzgâr toz bulutunu sürükler; şiddet kapasiteyle ölçeklenir", () => {
+    const s = sistem();
+    const m = new THREE.Vector3(0, ZEMIN, -15);
+    s.duman.ruzgar.set(3, 0, 0);
+    s.tozBulutu(m, 4.5, 1);
+    for (let t = 0; t < 6; t += DT) s.guncelle(DT);
+    const ortX = s.duman.parcaciklar.reduce((t, p) => t + p.x, 0) / s.duman.sayi;
+    expect(ortX).toBeGreaterThan(6);
+    const dusuk = new ParcacikSistemi(new THREE.Texture(), new THREE.Texture(), new THREE.Texture(), 0.5);
+    dusuk.tozBulutu(m, 4.5, 1);
+    expect(dusuk.duman.sayi).toBeLessThan(s.duman.sayi);
+  });
+  it("patlama dumanı alçak kalır ve toz eteği uzun ömürlü", () => {
+    const s = sistem();
+    const m = new THREE.Vector3(0, ZEMIN, -15);
+    s.patlama(m, 3.6);
+    for (let t = 0; t < 1.2; t += DT) s.guncelle(DT);
+    const yukseklikler = s.duman.parcaciklar.map((p) => p.y - ZEMIN);
+    expect(Math.max(...yukseklikler)).toBeLessThan(15); // en çok 10,8 m/sn × 1,2 sn + başlangıç; eskisi 25 m/sn ile 30 m
+    expect(s.duman.parcaciklar.filter((p) => p.sure >= 8).length).toBeGreaterThanOrEqual(30);
+  });
+});

@@ -284,7 +284,7 @@ Bu oturumun kalan düzeltmesi: "askerin vücudu zeminin altında" (kalça yükse
 
 **Yangın, duman, panel (3 Kasım gece):** efekt `yangin` / `yangin_sondur` (`sahne3b/yangin.ts`: alev + kor + kara duman +
 titreyen ışık, rüzgârla sürüklenir; senaryo adımı `efekt`), **yangın sesi** (4 Kasım: konumlu sentez uğultu + tıslama + çıtırtı, manifest `sesler.yangin` kaydı varsa döngü; docs "Yangın sesi"), duman topakları güneş yönüne göre gölgeli (parçacık
-gölgelendiricisi `golgeleme`/`isikYonu`), `Parcacik.renkSon`. Panel: manifest `grup`/`simge`/`eski`; eski Quaternius
+gölgelendiricisi `golgeleme`/`isikYonu`), `Parcacik.renkSon`. **4 Kasım duman/toz yenilemesi:** duman dokuları doğrusal (sRGB işareti bütün dumanı karartıyordu), 2×2 doku atlası (`kare`), parçacık başına `golge`, rüzgâra göre sürtünme (`surukle`), toz bulutu yoğun püskürme + tüten kaynak + 10–16 sn geniş yayılma, patlama sütunu alçak + toz eteği (docs "Duman ve toz yenilemesi"). Panel: manifest `grup`/`simge`/`eski`; eski Quaternius
 modeller gizli, hızlı düğmeler yeni Meshy modellerini kullanır. Kullanıcı kararı: **alan/yapı modülleri (meskûn mahal,
 hangar) listesi şimdilik çıkarılmayacak**; ortam panoramada kalır. Ayrıntı docs "Yangın ve duman aydınlatması", "Panel".
 

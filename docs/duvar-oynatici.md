@@ -765,3 +765,30 @@ geçiren tıslama (2,5 kHz) + rastgele çıtırtılar (15–55 ms yüksek geçir
 iner, listeden düşünce 0,6 sn'de söner; sahne sıfırlamasında (`efektleriSustur`) 0,15 sn. Başsız Chrome'da API ile iki
 yangın yakıp söndürülerek doğrulandı (kaynak sayısı 2 → 0, hata yok); seviye ve tını duvarda kulakla ayarlanmalı
 (`ses.ts` `yangin()`: 0.5 × seviye; çıtırtı sıklığı `olasilik`).
+
+## Duman ve toz yenilemesi (4 Kasım 2026)
+
+Kullanıcı: "duman efektleri çok dandik; toz duman yavaş yavaş dağılan, geniş alana yayılan olsun." Bulgular ve
+düzeltmeler (`sahne3b/parcaciklar.ts`, `dokular.ts`, `sahne3b.ts`):
+
+- **Kök neden (renk):** duman dokuları sRGB işaretliydi; GPU örneklerken doğrusala çeviriyor (gri 0,46 → 0,18), parçacık
+  gölgelendiricisi çıkışı sRGB'ye geri çevirmediğinden bütün duman/toz çamur gibi koyu çıkıyordu. Duman grubunun dokuları
+  artık **doğrusal veri** (`NoColorSpace`: atlas, yedek smoke_05, prosedürel `dumanDokusu`). Ateş/kıvılcım dokuları
+  katkılı karışımda, görsel ayarı yapılmış; dokunulmadı.
+- **Doku atlası:** Kenney smoke_01/03/05/07 tek 2×2 atlasta (`dumanAtlasi`), parçacık başına `kare` (0–3) → aynı
+  topak şeklinin tekrarı yok. Gölgelendirici `atlas` uniform'u ile kareyi seçer; `ek` özniteliği (kare, gölge).
+- **Parçacık başına gölge ağırlığı** (`golge` 0–1): toz 0,3–0,45 (ışığı saçan, saydam), is 1.
+- **Rüzgâr:** `ParcacikGrubu.ruzgar` (m/sn; sahne ortamdan her kare yazar, yangınla aynı vektör) ve `surukle` (rüzgâr
+  payı 0–1): sürtünme havaya göre uygulanır → durgun havada durur, rüzgârda onunla akar (önce mutlak hıza uygulanıyordu,
+  rüzgârla ilerleyemiyordu).
+- **Toz bulutu** (`tozBulutu`): ilk püskürme 40 topak (yoğun, 0,45–0,65 alfa, dışa 2,2–5 m/sn × yarıçap/3,5, sürtünme 0,38)
+  + 2,5–4 sn tüten kaynak (`tozKaynaklari`, saniyede 12·s, `guncelle` işler); ömür 10–16 sn; büyüme 0,28–0,5·r/sn
+  (ilk yarıçapın 3–4 katı); hafif çökme (yerçekimi 0,07) ile zemine yakın kalır (duvar dar şerit); açık güneşli toz
+  rengi (0,88/0,82/0,70 → 0,86/0,84/0,80). Panel şiddeti yarıçapı da büyütür (3,5–5 m). Eskisi: 40 topak, 3–6 sn,
+  koyu kahve, yerinde kayboluyordu.
+- **Patlama:** sütun dikey hızı 7–25 → 3,6–11 m/sn (eskisi 1 sn'de görüş alanından çıkıyordu), ömür 4–8 sn, tan →
+  açık geçiş; ek **toz eteği** (36 topak, zemine yapışık dışa yayılan, 8–14 sn). Tüten krater dumanı ve yangın dumanı
+  da kare/rüzgâr alır.
+- Testler (`parcaciklar.test.ts` "toz bulutu"): ömür ≥ 10 sn, kaynak tütmesi, yayılma ≥ 2,5×, alçak kalma, rüzgâr
+  sürüklemesi, kapasite ölçeği, patlama yüksekliği < 15 m. Başsız Chrome'da 1,3 / 3,5 / 9,5 sn karelerle bakıldı.
+  Kalan: dumanın zeminle kesişiminde sert kenar (yumuşak parçacık için derinlik dokusu gerekir), duvarda gözle seviye.

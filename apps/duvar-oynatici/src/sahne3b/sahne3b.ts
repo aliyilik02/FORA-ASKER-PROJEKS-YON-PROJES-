@@ -19,7 +19,7 @@ import * as THREE from "three";
 import { gunesKonumu, ufukSatiri, type Yerlesim } from "../projeksiyon";
 import type { CatismaAyarlari, HelikopterDurumu, IzliMermiAyarlari, OrtamAyarlari } from "../tipler";
 import { CatismaSistemi, type CatismaSesleri } from "./catisma";
-import { atesDokusu, dumanDokusu, kivilcimDokusu, kraterDokusu } from "./dokular";
+import { atesDokusu, dumanAtlasi, dumanDokusu, kivilcimDokusu, kraterDokusu } from "./dokular";
 import { DuvarKamerasi, sisUzakligiAyarla, uzaklikSisiGerekir } from "./duvarKamerasi";
 import { FigurKatmani, type FigurPozu, type FigurSecenekleri, type ModelTanimi } from "./figurler3b";
 import { panoramadanSahneAzimutu, type GunesTahmini } from "./gunes";
@@ -342,7 +342,17 @@ export class Sahne3B {
           coz(t);
         }, undefined, reddet);
       });
-    yukle("dokular/smoke_05.png").then((t) => this.parcaciklar.duman.dokuAyarla(t)).catch(() => undefined);
+    // Duman: dört Kenney topağı tek 2×2 atlasta (parçacık başına farklı kare → tekrar eden tek şekil yok).
+    // Doku DOĞRUSAL veri (NoColorSpace): parçacık gölgelendiricisi çıkışı sRGB'ye çevirmez; sRGB işaretli gri
+    // (0,46) doku örneklenince 0,18'e düşüyor, bütün duman çamur gibi koyu çıkıyordu (4 Kasım).
+    const dogrusal = (t: THREE.Texture) => {
+      t.colorSpace = THREE.NoColorSpace;
+      t.needsUpdate = true;
+      return t;
+    };
+    Promise.all(["smoke_01", "smoke_03", "smoke_05", "smoke_07"].map((ad) => yukle(`dokular/${ad}.png`)))
+      .then((dokular) => this.parcaciklar.duman.dokuAyarla(dumanAtlasi(dokular.map(dogrusal)), true))
+      .catch(() => yukle("dokular/smoke_05.png").then((t) => this.parcaciklar.duman.dokuAyarla(dogrusal(t))).catch(() => undefined));
     yukle("dokular/flame_01.png").then((t) => this.parcaciklar.ates.dokuAyarla(t)).catch(() => undefined);
     // Krater: yanık toprak rengi × Kenney scorch alfa maskesi
     Promise.all([yukle("dokular/yanik_toprak.jpg"), yukle("dokular/scorch_01.png"), yukle("dokular/scorch_02.png"), yukle("dokular/scorch_03.png")])
@@ -1208,7 +1218,7 @@ export class Sahne3B {
   tozDuman(azimut: number, siddet: number) {
     const secim = this.noktaSec(azimut, "toz", 9 + Math.random() * 9);
     const p = yerKonumu(secim.azimut, secim.mesafe);
-    this.parcaciklar.tozBulutu(p, 3.5, Math.max(0.2, siddet));
+    this.parcaciklar.tozBulutu(p, 3.5 + 1.5 * Math.min(1, siddet), Math.max(0.2, siddet));
   }
 
   /**
@@ -1345,6 +1355,7 @@ export class Sahne3B {
     this.catisma.guncelle(dt);
     // Rüzgâr (yangın dumanı sürüklenir) ve duman aydınlatması (güneş yönü) — parçacık güncellemesinden önce
     this.yanginlar.ruzgar.set(Math.sin(radyan(this.ruzgarYonu)), 0, -Math.cos(radyan(this.ruzgarYonu))).multiplyScalar(this.ruzgarSiddeti * 6);
+    this.parcaciklar.duman.ruzgar.copy(this.yanginlar.ruzgar); // toz ve duman topakları da sürüklenir (`surukle`)
     this.yanginlar.guncelle(dt);
     this.parcaciklar.duman.isikYonuAyarla(this.gunes.position.clone().sub(this.gunes.target.position));
     this.parcaciklar.guncelle(dt);

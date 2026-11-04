@@ -66,7 +66,7 @@ export function dumanDokusu(boyut = 128, tohum = 1): THREE.Texture {
   }
   ctx.putImageData(img, 0, 0);
   const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
+  t.colorSpace = THREE.NoColorSpace; // duman grubu dokuları doğrusal (parçacık gölgelendiricisi sRGB'ye çevirmez)
   return t;
 }
 
@@ -163,4 +163,18 @@ export function yumusakDaireDokusu(boyut = 128): THREE.Texture {
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, boyut, boyut);
   return new THREE.CanvasTexture(c);
+}
+
+/** Dört duman dokusunu 2×2 atlasa dizer (1024²; sol-alt 0, sağ-alt 1, sol-üst 2, sağ-üst 3; UV y yukarı). */
+export function dumanAtlasi(dokular: THREE.Texture[], kare = 512): THREE.Texture {
+  const [c, ctx] = tuval(kare * 2);
+  dokular.slice(0, 4).forEach((t, i) => {
+    const img = t.image as CanvasImageSource;
+    // Tuval y aşağı, doku UV y yukarı: kare 0 ve 1 alt satıra (tuvalde y = kare), 2 ve 3 üst satıra (y = 0)
+    ctx.drawImage(img, (i % 2) * kare, i < 2 ? kare : 0, kare, kare);
+  });
+  const atlas = new THREE.CanvasTexture(c);
+  atlas.colorSpace = THREE.NoColorSpace; // parçacık dokusu doğrusal veri (bkz. sahne3b.ts duman atlası)
+  atlas.flipY = true;
+  return atlas;
 }

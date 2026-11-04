@@ -13,14 +13,17 @@ attribute float boyut;
 attribute float alfa;
 attribute float aci;
 attribute vec3 renk;
+attribute vec2 ek; // x: atlas karesi (0–3), y: gölgeleme ağırlığı (0 düz – 1 tam)
 uniform vec3 isikYonu; // dünya uzayında güneşe/ışığa doğru birim vektör
 varying vec2 vUv;
 varying float vAlfa;
 varying vec3 vRenk;
 varying vec3 vIsik;
 varying float vAci;
+varying vec2 vEk;
 void main() {
   vUv = uv;
+  vEk = ek;
   vAlfa = alfa;
   vRenk = renk;
   vAci = aci;
@@ -36,15 +39,23 @@ const FRAGMENT = `
 uniform sampler2D doku;
 uniform float renkOlcek; // doku gri ise (Kenney ~0.42) rengi normalize eder
 uniform float golgeleme; // 0: düz (ateş/kıvılcım), 1: duman topağı küre gibi aydınlanır (güneş tarafı açık, arkası koyu)
+uniform float atlas; // 1: doku 2×2 kare atlası, parçacık kendi karesini (ek.x) kullanır
 varying vec2 vUv;
 varying float vAlfa;
 varying vec3 vRenk;
 varying vec3 vIsik;
 varying float vAci;
+varying vec2 vEk;
 void main() {
-  vec4 t = texture2D(doku, vUv);
+  vec2 uvDoku = vUv;
+  if (atlas > 0.5) {
+    float k = floor(vEk.x + 0.5);
+    uvDoku = vUv * 0.5 + vec2(mod(k, 2.0), floor(k / 2.0)) * 0.5;
+  }
+  vec4 t = texture2D(doku, uvDoku);
   vec3 renk = min(vec3(1.0), t.rgb * renkOlcek) * vRenk;
-  if (golgeleme > 0.0) {
+  float golge = golgeleme * vEk.y;
+  if (golge > 0.0) {
     // Topağın küre normali (kart düzleminde uv → sanal yarım küre; kart dönüşü geri alınır ki ışık yönü sabit kalsın)
     vec2 q = vUv * 2.0 - 1.0;
     float c = cos(-vAci); float s = sin(-vAci);
@@ -53,7 +64,7 @@ void main() {
     vec3 n = normalize(vec3(q, sqrt(max(0.0, 1.0 - r2 * 0.85))));
     float d = dot(n, vIsik);
     float aydinlik = 0.55 + 0.45 * max(0.0, d) - 0.18 * max(0.0, -d);
-    renk *= mix(1.0, aydinlik, golgeleme);
+    renk *= mix(1.0, aydinlik, golge);
   }
   gl_FragColor = vec4(renk, t.a * vAlfa);
   if (gl_FragColor.a < 0.004) discard;
@@ -79,6 +90,12 @@ export interface Parcacik {
   renkSon?: [number, number, number];
   yercekimi: number;
   surtunme: number;
+  /** Atlas karesi 0–3 (doku atlas ise; yoksa yok sayılır). Çeşitlilik: komşu topaklar farklı kare. */
+  kare?: number;
+  /** Gölgeleme ağırlığı 0–1 (varsayılan 1): toz ve seyrek duman daha saydam, ışığı daha az biçimlendirir. */
+  golge?: number;
+  /** Rüzgâr payı 0–1 (0 yok): sürtünme havaya göre uygulanır, topak zamanla grubun `ruzgar` hızının bu katına kapılır. */
+  surukle?: number;
 }
 
 export type Karisim = "normal" | "katki";
@@ -92,6 +109,9 @@ export class ParcacikGrubu {
   private readonly alfa: THREE.InstancedBufferAttribute;
   private readonly aci: THREE.InstancedBufferAttribute;
   private readonly renk: THREE.InstancedBufferAttribute;
+  private readonly ek: THREE.InstancedBufferAttribute;
+  /** Rüzgâr hızı (dünya, m/sn): `surukle` > 0 parçacıklar buna kapılır. Sahne her kare ortamdan yazar. */
+  readonly ruzgar = new THREE.Vector3();
   /** Örnek başına öznitelikler (canlı aralık yüklemesi için). */
   private readonly oznitelikler: THREE.InstancedBufferAttribute[];
   readonly parcaciklar: Parcacik[] = [];
@@ -116,16 +136,18 @@ export class ParcacikGrubu {
     this.alfa = new THREE.InstancedBufferAttribute(new Float32Array(kapasite), 1).setUsage(THREE.DynamicDrawUsage);
     this.aci = new THREE.InstancedBufferAttribute(new Float32Array(kapasite), 1).setUsage(THREE.DynamicDrawUsage);
     this.renk = new THREE.InstancedBufferAttribute(new Float32Array(kapasite * 3), 3).setUsage(THREE.DynamicDrawUsage);
+    this.ek = new THREE.InstancedBufferAttribute(new Float32Array(kapasite * 2), 2).setUsage(THREE.DynamicDrawUsage);
     g.setAttribute("konum", this.konum);
     g.setAttribute("boyut", this.boyut);
     g.setAttribute("alfa", this.alfa);
     g.setAttribute("aci", this.aci);
     g.setAttribute("renk", this.renk);
-    this.oznitelikler = [this.konum, this.boyut, this.alfa, this.aci, this.renk];
+    g.setAttribute("ek", this.ek);
+    this.oznitelikler = [this.konum, this.boyut, this.alfa, this.aci, this.renk, this.ek];
     g.instanceCount = 0;
     this.geometri = g;
     const m = new THREE.ShaderMaterial({
-      uniforms: { doku: { value: doku }, renkOlcek: { value: 1 }, isikYonu: { value: new THREE.Vector3(0.3, 0.9, 0.3) }, golgeleme: { value: isikliMi ? 1 : 0 } },
+      uniforms: { doku: { value: doku }, renkOlcek: { value: 1 }, isikYonu: { value: new THREE.Vector3(0.3, 0.9, 0.3) }, golgeleme: { value: isikliMi ? 1 : 0 }, atlas: { value: 0 } },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
       transparent: true,
@@ -151,7 +173,10 @@ export class ParcacikGrubu {
   al(): Parcacik {
     const p = this.havuz.pop();
     if (p) {
-      p.renkSon = undefined; // havuzdan dönen nesne önceki kullanımın renk geçişini taşımasın
+      p.renkSon = undefined; // havuzdan dönen nesne önceki kullanımın renk geçişini, karesini, gölgesini, rüzgârını taşımasın
+      p.kare = undefined;
+      p.golge = undefined;
+      p.surukle = undefined;
       return p;
     }
     return { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, boyut: 0, buyume: 0, alfa: 0, aci: 0, donus: 0, t: 0, sure: 1, renk: [1, 1, 1], yercekimi: 0, surtunme: 0 };
@@ -161,10 +186,14 @@ export class ParcacikGrubu {
     if (this.havuz.length < this.kapasite) this.havuz.push(p);
   }
 
-  /** Dokuyu değiştirir; görünür piksellerin ortalama parlaklığı ölçülüp renk ona göre normalize edilir. */
-  dokuAyarla(doku: THREE.Texture) {
+  /**
+   * Dokuyu değiştirir; görünür piksellerin ortalama parlaklığı ölçülüp renk ona göre normalize edilir.
+   * `atlas`: doku 2×2 kare atlası (dört farklı topak), parçacık `kare` alanıyla birini seçer.
+   */
+  dokuAyarla(doku: THREE.Texture, atlas = false) {
     const u = (this.mesh.material as THREE.ShaderMaterial).uniforms;
     u.doku.value = doku;
+    u.atlas.value = atlas ? 1 : 0;
     try {
       const img = doku.image as HTMLImageElement;
       const c = document.createElement("canvas");
@@ -204,8 +233,16 @@ export class ParcacikGrubu {
       }
       p.vy -= p.yercekimi * dt;
       const s = Math.max(0, 1 - p.surtunme * dt);
-      p.vx *= s;
-      p.vz *= s;
+      if (p.surukle) {
+        // Sürtünme havaya göre: hız rüzgâr hızına (× pay) doğru söner; durgun havada durur, rüzgârda onunla akar
+        const wx = this.ruzgar.x * p.surukle;
+        const wz = this.ruzgar.z * p.surukle;
+        p.vx = wx + (p.vx - wx) * s;
+        p.vz = wz + (p.vz - wz) * s;
+      } else {
+        p.vx *= s;
+        p.vz *= s;
+      }
       if (p.yercekimi === 0) p.vy *= s;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
@@ -220,12 +257,16 @@ export class ParcacikGrubu {
     const a = this.alfa.array as Float32Array;
     const c = this.aci.array as Float32Array;
     const r = this.renk.array as Float32Array;
+    const e = this.ek.array as Float32Array;
     const isik = this.isikliMi ? this.isik : 1;
     for (let i = 0; i < n; i++) {
       const p = canli[i];
+      e[i * 2] = p.kare ?? 0;
+      e[i * 2 + 1] = p.golge ?? 1;
       const u = p.t / p.sure;
-      // Hızlı belirme, yavaş sönme
-      const zarf = u < 0.12 ? u / 0.12 : 1 - (u - 0.12) / 0.88;
+      // Hızlı belirme (ömrün %12'si, en çok 0,35 sn: 10–16 sn yaşayan toz 1,6 sn'de değil hemen görünür), yavaş sönme
+      const giris = Math.min(0.12, 0.35 / p.sure);
+      const zarf = u < giris ? u / giris : 1 - (u - giris) / (1 - giris);
       k[i * 3] = p.x;
       k[i * 3 + 1] = p.y;
       k[i * 3 + 2] = p.z;
@@ -296,6 +337,8 @@ export class ParcacikSistemi {
   readonly ates: ParcacikGrubu;
   readonly kivilcim: ParcacikGrubu;
   readonly grup = new THREE.Group();
+  /** Süren toz kaynakları (`tozBulutu`): ilk patlamadan sonra birkaç saniye daha alçak toz yayar, sonra biter. */
+  private readonly tozKaynaklari: Array<{ p: THREE.Vector3; yaricap: number; siddet: number; t: number; sure: number; birikim: number }> = [];
 
   constructor(dumanDoku: THREE.Texture, atesDoku: THREE.Texture, kivilcimDoku: THREE.Texture, kapasiteCarpani = 1) {
     this.duman = new ParcacikGrubu(dumanDoku, Math.round(1200 * kapasiteCarpani), "normal", true);
@@ -309,12 +352,14 @@ export class ParcacikSistemi {
   }
 
   guncelle(dt: number) {
+    this.tozKaynaklariniIsle(dt);
     this.duman.guncelle(dt);
     this.ates.guncelle(dt);
     this.kivilcim.guncelle(dt);
   }
 
   temizle() {
+    this.tozKaynaklari.length = 0;
     this.duman.temizle();
     this.ates.temizle();
     this.kivilcim.temizle();
@@ -344,29 +389,62 @@ export class ParcacikSistemi {
         surtunme: 2,
       });
     }
-    // Toprak sütunu: kuru toprak rengi (tan) hızlı fışkıran topaklar + az miktarda koyu is;
-    // yarı saydam ve hızla seyrelen, gökyüzünde kara leke gibi asılı kalmayan
-    for (let i = 0; i < 70; i++) {
-      const yukari = rnd(4, 14) * r * 0.5;
+    // Toprak sütunu: kuru toprak rengi (tan) fışkıran topaklar + az miktarda koyu is; yarı saydam. Duvar dar bir
+    // şerit olduğundan sütun çok yükselmez (4 Kasım: eski 7–25 m/sn dikey hız 1 sn'de görüş alanından çıkıyordu),
+    // 4–8 sn asılı kalır, rüzgârla sürüklenir, büyüyüp seyrelir.
+    for (let i = 0; i < 60; i++) {
+      const yukari = rnd(2, 6) * r * 0.5;
       const isMi = i % 7 === 0;
       const t = rnd(0.8, 1);
       this.duman.ekle({
         x: p.x + rnd(-r * 0.4, r * 0.4),
         y: p.y + rnd(0, r * 0.3),
         z: p.z + rnd(-r * 0.4, r * 0.4),
-        vx: rnd(-1.5, 1.5) * r,
+        vx: rnd(-1.2, 1.2) * r,
         vy: yukari,
-        vz: rnd(-1.5, 1.5) * r,
+        vz: rnd(-1.2, 1.2) * r,
         boyut: r * rnd(0.6, 1.4),
-        buyume: r * rnd(0.8, 1.6),
-        alfa: rnd(0.25, 0.5),
+        buyume: r * rnd(0.5, 1.1),
+        alfa: rnd(0.22, 0.42),
         aci: rnd(0, 6.28),
-        donus: rnd(-0.8, 0.8),
+        donus: rnd(-0.6, 0.6),
         t: 0,
-        sure: rnd(2, 5),
+        sure: rnd(4, 8),
         renk: isMi ? [0.3 * t, 0.28 * t, 0.26 * t] : [0.66 * t, 0.56 * t, 0.42 * t],
-        yercekimi: rnd(0.5, 2.5),
+        renkSon: isMi ? [0.42, 0.4, 0.38] : [0.7 * t, 0.63 * t, 0.52 * t],
+        yercekimi: rnd(0.6, 1.8),
         surtunme: 0.9,
+        kare: i & 3,
+        golge: isMi ? 1 : 0.7,
+        surukle: 0.6,
+      });
+    }
+    // Toz eteği: zemine yapışık, dışa doğru yayılan geniş ve uzun ömürlü (8–14 sn) açık toz; patlamanın alçak kalan izi
+    for (let i = 0; i < 36; i++) {
+      const a = rnd(0, 6.283);
+      const h = rnd(3, 8) * r * 0.35;
+      const t = rnd(0.85, 1);
+      this.duman.ekle({
+        x: p.x + Math.cos(a) * r * 0.5,
+        y: p.y + rnd(0.1, 0.5),
+        z: p.z + Math.sin(a) * r * 0.5,
+        vx: Math.cos(a) * h,
+        vy: rnd(0.3, 1.0),
+        vz: Math.sin(a) * h,
+        boyut: r * rnd(0.8, 1.4),
+        buyume: r * rnd(0.45, 0.85),
+        alfa: rnd(0.16, 0.3),
+        aci: rnd(0, 6.28),
+        donus: rnd(-0.35, 0.35),
+        t: 0,
+        sure: rnd(8, 14),
+        renk: [0.86 * t, 0.8 * t, 0.68 * t],
+        renkSon: [0.84, 0.82, 0.78],
+        yercekimi: 0.06,
+        surtunme: 0.7,
+        kare: i & 3,
+        golge: 0.45,
+        surukle: 0.8,
       });
     }
     // Kıvılcım / moloz
@@ -497,6 +575,9 @@ export class ParcacikSistemi {
       }
       q.yercekimi = -0.25;
       q.surtunme = 0.35;
+      q.kare = Math.floor(Math.random() * 4);
+      q.golge = sonuyor ? 0.6 : 1;
+      q.surukle = 0.5;
       this.duman.ekle(q);
     }
   }
@@ -520,31 +601,77 @@ export class ParcacikSistemi {
       renk: [0.5, 0.47, 0.43],
       yercekimi: -0.15,
       surtunme: 0.3,
+      kare: Math.floor(Math.random() * 4),
+      golge: 0.8,
+      surukle: 0.7,
     });
   }
 
-  /** Toz bulutu (araç geçişi, yakın serpinti): açık kahverengi, yere yakın, yana yayılır. */
+  /**
+   * Toz bulutu (panel "Toz / duman", araç geçişi, plakalı patlama): alçak, açık kahverengi toz. İlk anda bir dalga
+   * dışa yayılır, sonra kaynak 2,5–4 sn daha tüter (`tozKaynaklariniIsle`); topaklar 10–16 sn yaşar, büyüyüp seyrelir
+   * ve ilk yarıçapın 3–4 katına yayılır, rüzgârla sürüklenir (4 Kasım: eskisi 40 topak, 3–6 sn, yerinde kayboluyordu).
+   * Yayım kalite kapasitesiyle ölçekli.
+   */
   tozBulutu(p: THREE.Vector3, yaricap: number, siddet: number) {
-    for (let i = 0; i < 40 * siddet; i++) {
-      this.duman.ekle({
-        x: p.x + rnd(-yaricap, yaricap),
-        y: p.y + rnd(0, yaricap * 0.3),
-        z: p.z + rnd(-yaricap, yaricap),
-        vx: rnd(-1, 1) * yaricap * 0.5,
-        vy: rnd(0.3, 1.5),
-        vz: rnd(-1, 1) * yaricap * 0.5,
-        boyut: yaricap * rnd(0.4, 0.9),
-        buyume: yaricap * rnd(0.3, 0.6),
-        alfa: rnd(0.25, 0.5) * siddet,
-        aci: rnd(0, 6.28),
-        donus: rnd(-0.5, 0.5),
-        t: 0,
-        sure: rnd(3, 6),
-        renk: [0.62, 0.55, 0.42],
-        yercekimi: 0,
-        surtunme: 0.7,
-      });
+    const s = Math.max(0.1, Math.min(1.5, siddet));
+    const kap = Math.min(1, this.duman.kapasite / 1200);
+    const n = Math.round(40 * Math.min(1, s) * kap);
+    for (let i = 0; i < n; i++) this.tozTopagi(p, yaricap, s, true, i & 3);
+    this.tozKaynaklari.push({ p: p.clone(), yaricap, siddet: s, t: 0, sure: 2.5 + 1.5 * Math.min(1, s), birikim: 0 });
+  }
+
+  /** Süren toz kaynakları: saniyede 9·s·kap topak (ilk dalgadan daha yavaş ve küçük), süresi dolan kaynak silinir. */
+  private tozKaynaklariniIsle(dt: number) {
+    if (this.tozKaynaklari.length === 0 || dt <= 0) return;
+    const kap = Math.min(1, this.duman.kapasite / 1200);
+    let n = 0;
+    for (const k of this.tozKaynaklari) {
+      k.t += dt;
+      if (k.t >= k.sure) continue;
+      k.birikim += 12 * Math.min(1, k.siddet) * kap * dt;
+      while (k.birikim >= 1) {
+        k.birikim -= 1;
+        this.tozTopagi(k.p, k.yaricap, k.siddet * (1 - k.t / k.sure), false, Math.floor(Math.random() * 4));
+      }
+      this.tozKaynaklari[n++] = k;
     }
+    this.tozKaynaklari.length = n;
+  }
+
+  /** Tek toz topağı: `dalga` ilk dışa akış (hızlı, alçak), değilse kaynaktan tüten (yavaş). Havuzdan. */
+  private tozTopagi(p: THREE.Vector3, yaricap: number, siddet: number, dalga: boolean, kare: number) {
+    const r = yaricap;
+    const a = Math.random() * 6.283;
+    const rr = (dalga ? Math.sqrt(Math.random()) * 0.6 : Math.random() * 0.35) * r;
+    const hiz = dalga ? rnd(2.2, 5) * (r / 3.5) : rnd(0.3, 1.0) * (r / 3.5);
+    const ton = rnd(0.86, 1);
+    const q = this.duman.al();
+    q.x = p.x + Math.cos(a) * rr;
+    q.y = p.y + rnd(0.4, dalga ? 1.4 : 1.6);
+    q.z = p.z + Math.sin(a) * rr;
+    q.vx = Math.cos(a) * hiz;
+    q.vy = dalga ? rnd(0.35, 1.1) : rnd(0.5, 1.3);
+    q.vz = Math.sin(a) * hiz;
+    q.boyut = r * rnd(dalga ? 0.6 : 0.45, 1);
+    q.buyume = r * rnd(0.28, 0.5);
+    // İlk püskürme yoğun (0,45–0,65), yayıldıkça zarf ve büyümeyle incelir; tütenler seyrek
+    q.alfa = (dalga ? rnd(0.45, 0.65) : rnd(0.16, 0.28)) * Math.min(1, siddet + 0.3);
+    q.aci = rnd(0, 6.28);
+    q.donus = rnd(-0.3, 0.3);
+    q.t = 0;
+    q.sure = rnd(10, 16);
+    // Güneşli toz zeminden açık okunur (ışığı saçar); zamanla daha da açık ve grimsi (incelir)
+    q.renk[0] = 0.88 * ton;
+    q.renk[1] = 0.82 * ton;
+    q.renk[2] = 0.7 * ton;
+    q.renkSon = [0.86, 0.84, 0.8];
+    q.yercekimi = 0.07; // hafif çökme: yükselme önce durur, sonra toz zemine yakın asılı kalır
+    q.surtunme = dalga ? 0.38 : 0.4;
+    q.kare = kare;
+    q.golge = 0.3;
+    q.surukle = 0.85;
+    this.duman.ekle(q);
   }
 
   /** Rotor tozu yayım birikimleri (saniyedeki oran kare hızından bağımsız, kesirli parçacık sonraki kareye kalır). */
