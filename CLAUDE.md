@@ -288,6 +288,10 @@ gölgelendiricisi `golgeleme`/`isikYonu`), `Parcacik.renkSon`. **4 Kasım duman/
 modeller gizli, hızlı düğmeler yeni Meshy modellerini kullanır. Kullanıcı kararı: **alan/yapı modülleri (meskûn mahal,
 hangar) listesi şimdilik çıkarılmayacak**; ortam panoramada kalır. Ayrıntı docs "Yangın ve duman aydınlatması", "Panel".
 
+**4 Kasım oturumu kapanış:** panel Tema A, açılış figür kuyruğu, eski klip eşlemesi, yangın sesi, duman/toz yenilemesi,
+patlama artığı yangın ve 6 varyant bitti (son commit ec42dbc). Duvarda gözle/kulakla bakılmadı: toz yoğunluğu, yangın
+sesi seviyesi, tablet paneli. Kredi bekleyen: T5/T9/T12 yeniden üretimi (kullanıcıya sor).
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 0. **Gösterim hazır (2 Kasım):** örnek senaryo "Gösterim – Güncel Durum (5 dk)" (`sn_gosterim_guncel`; akış
