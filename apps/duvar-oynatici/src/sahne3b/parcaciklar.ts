@@ -331,6 +331,27 @@ function tonla(hedef: [number, number, number], renk: [number, number, number], 
   hedef[2] = Math.min(1, renk[2] * k);
 }
 
+/** Patlama varyantı: küçük sapma çarpanları (bkz. ParcacikSistemi.PATLAMA_VARYANTLARI). */
+export interface PatlamaVaryanti {
+  ad: string;
+  /** Ateş topu boyut çarpanı. */
+  ates: number;
+  /** Sütun yükseklik (dikey hız) çarpanı. */
+  sutun: number;
+  /** Sütun eğimi 0–0,25 (yatay/dikey hız oranı); eteğin güçlü tarafı da bu yönde. */
+  egim: number;
+  /** Her kaçıncı sütun topağı is (küçük = daha isli). */
+  isOrani: number;
+  /** Toz eteği erim çarpanı. */
+  etek: number;
+  /** Kor/moloz sayısı çarpanı. */
+  kor: number;
+  /** Renk sıcaklığı çarpanları (r, g, b) ±%5. */
+  sicaklik: [number, number, number];
+  /** Artık yangın gücü çarpanı (sahne3b.patlama). */
+  yangin: number;
+}
+
 /** Üst düzey yayıcılar: patlama, duman sütunu, toz bulutu, rotor tozu, kıvılcım. */
 export class ParcacikSistemi {
   readonly duman: ParcacikGrubu;
@@ -365,9 +386,38 @@ export class ParcacikSistemi {
     this.kivilcim.temizle();
   }
 
-  /** Yer patlaması: ateş topu + toprak/duman sütunu + saçılan moloz. `yaricap` metre. */
-  patlama(p: THREE.Vector3, yaricap: number) {
+  /**
+   * Patlama varyantları (4 Kasım 2026; kullanıcı: "her patlama aynı olmasın, çok ufak değişikliklerle farklı
+   * varyantlar"): aynı görünüm, küçük sapmalar — ateş topu boyutu, sütun yüksekliği ve hafif eğimi, is oranı, toz
+   * eteğinin yönü/erimi, kor sayısı, renk sıcaklığı, artık yangının gücü. Arka arkaya aynı varyant gelmez.
+   */
+  static readonly PATLAMA_VARYANTLARI: readonly PatlamaVaryanti[] = [
+    { ad: "dengeli", ates: 1, sutun: 1, egim: 0, isOrani: 7, etek: 1, kor: 1, sicaklik: [1, 1, 1], yangin: 1 },
+    { ad: "yüksek", ates: 0.92, sutun: 1.22, egim: 0.08, isOrani: 6, etek: 0.85, kor: 0.9, sicaklik: [1, 0.98, 0.95], yangin: 0.9 },
+    { ad: "basık", ates: 1.1, sutun: 0.8, egim: 0.05, isOrani: 9, etek: 1.3, kor: 1.15, sicaklik: [1, 1, 1.03], yangin: 1.1 },
+    { ad: "isli", ates: 0.95, sutun: 1.05, egim: 0.18, isOrani: 4, etek: 1, kor: 0.8, sicaklik: [0.96, 0.95, 0.95], yangin: 1.25 },
+    { ad: "kuru toz", ates: 1.05, sutun: 0.95, egim: 0.12, isOrani: 11, etek: 1.2, kor: 1.3, sicaklik: [1.04, 1.02, 0.97], yangin: 0.75 },
+    { ad: "eğik", ates: 1, sutun: 1.1, egim: 0.25, isOrani: 7, etek: 0.95, kor: 1, sicaklik: [1, 0.99, 0.98], yangin: 1 },
+  ];
+  private sonVaryant = -1;
+
+  /** Rastgele varyant; bir öncekiyle aynı olmaz. */
+  patlamaVaryantiSec(): PatlamaVaryanti {
+    const n = ParcacikSistemi.PATLAMA_VARYANTLARI.length;
+    let i = Math.floor(Math.random() * (n - 1));
+    if (i >= this.sonVaryant) i++;
+    this.sonVaryant = i;
+    return ParcacikSistemi.PATLAMA_VARYANTLARI[i];
+  }
+
+  /** Yer patlaması: ateş topu + toprak/duman sütunu + saçılan moloz + toz eteği. `yaricap` metre; `v` varyant (yoksa seçilir). */
+  patlama(p: THREE.Vector3, yaricap: number, v: PatlamaVaryanti = this.patlamaVaryantiSec()) {
     const r = yaricap;
+    const [sr, sg, sb] = v.sicaklik;
+    // Sütunun hafif eğimi ve eteğin güçlü tarafı: patlama başına rastgele bir yön
+    const egimAci = Math.random() * 6.283;
+    const ex = Math.cos(egimAci) * v.egim;
+    const ez = Math.sin(egimAci) * v.egim;
     // Ateş topu: birkaç büyük katkılı alev, hızla büyür ve söner
     for (let i = 0; i < 10; i++) {
       this.ates.ekle({
@@ -377,14 +427,14 @@ export class ParcacikSistemi {
         vx: rnd(-1, 1) * r,
         vy: rnd(2, 6) * r * 0.6,
         vz: rnd(-1, 1) * r,
-        boyut: r * rnd(0.8, 1.6),
-        buyume: r * rnd(2, 4),
+        boyut: r * rnd(0.8, 1.6) * v.ates,
+        buyume: r * rnd(2, 4) * v.ates,
         alfa: rnd(0.7, 1),
         aci: rnd(0, 6.28),
         donus: rnd(-1.5, 1.5),
         t: 0,
         sure: rnd(0.35, 0.7),
-        renk: [1, rnd(0.75, 0.95), rnd(0.5, 0.8)],
+        renk: [1, rnd(0.75, 0.95) * sg, rnd(0.5, 0.8) * sb],
         yercekimi: 0,
         surtunme: 2,
       });
@@ -393,16 +443,16 @@ export class ParcacikSistemi {
     // şerit olduğundan sütun çok yükselmez (4 Kasım: eski 7–25 m/sn dikey hız 1 sn'de görüş alanından çıkıyordu),
     // 4–8 sn asılı kalır, rüzgârla sürüklenir, büyüyüp seyrelir.
     for (let i = 0; i < 60; i++) {
-      const yukari = rnd(2, 6) * r * 0.5;
-      const isMi = i % 7 === 0;
+      const yukari = rnd(2, 6) * r * 0.5 * v.sutun;
+      const isMi = i % v.isOrani === 0;
       const t = rnd(0.8, 1);
       this.duman.ekle({
         x: p.x + rnd(-r * 0.4, r * 0.4),
         y: p.y + rnd(0, r * 0.3),
         z: p.z + rnd(-r * 0.4, r * 0.4),
-        vx: rnd(-1.2, 1.2) * r,
+        vx: rnd(-1.2, 1.2) * r + ex * yukari,
         vy: yukari,
-        vz: rnd(-1.2, 1.2) * r,
+        vz: rnd(-1.2, 1.2) * r + ez * yukari,
         boyut: r * rnd(0.6, 1.4),
         buyume: r * rnd(0.5, 1.1),
         alfa: rnd(0.22, 0.42),
@@ -410,8 +460,8 @@ export class ParcacikSistemi {
         donus: rnd(-0.6, 0.6),
         t: 0,
         sure: rnd(4, 8),
-        renk: isMi ? [0.3 * t, 0.28 * t, 0.26 * t] : [0.66 * t, 0.56 * t, 0.42 * t],
-        renkSon: isMi ? [0.42, 0.4, 0.38] : [0.7 * t, 0.63 * t, 0.52 * t],
+        renk: isMi ? [0.3 * t, 0.28 * t, 0.26 * t] : [0.66 * t * sr, 0.56 * t * sg, 0.42 * t * sb],
+        renkSon: isMi ? [0.42, 0.4, 0.38] : [0.7 * t * sr, 0.63 * t * sg, 0.52 * t * sb],
         yercekimi: rnd(0.6, 1.8),
         surtunme: 0.9,
         kare: i & 3,
@@ -419,10 +469,12 @@ export class ParcacikSistemi {
         surukle: 0.6,
       });
     }
-    // Toz eteği: zemine yapışık, dışa doğru yayılan geniş ve uzun ömürlü (8–14 sn) açık toz; patlamanın alçak kalan izi
+    // Toz eteği: zemine yapışık, dışa doğru yayılan geniş ve uzun ömürlü (8–14 sn) açık toz; patlamanın alçak kalan izi.
+    // Eğim yönündeki taraf biraz daha uzağa gider (varyant)
     for (let i = 0; i < 36; i++) {
       const a = rnd(0, 6.283);
-      const h = rnd(3, 8) * r * 0.35;
+      const taraf = 1 + (Math.cos(a - egimAci) * v.egim) / 0.25 * 0.3;
+      const h = rnd(3, 8) * r * 0.35 * v.etek * taraf;
       const t = rnd(0.85, 1);
       this.duman.ekle({
         x: p.x + Math.cos(a) * r * 0.5,
@@ -438,7 +490,7 @@ export class ParcacikSistemi {
         donus: rnd(-0.35, 0.35),
         t: 0,
         sure: rnd(8, 14),
-        renk: [0.86 * t, 0.8 * t, 0.68 * t],
+        renk: [0.86 * t * sr, 0.8 * t * sg, 0.68 * t * sb],
         renkSon: [0.84, 0.82, 0.78],
         yercekimi: 0.06,
         surtunme: 0.7,
@@ -448,7 +500,8 @@ export class ParcacikSistemi {
       });
     }
     // Kıvılcım / moloz
-    for (let i = 0; i < 120; i++) {
+    const korSayisi = Math.round(120 * v.kor);
+    for (let i = 0; i < korSayisi; i++) {
       const a = rnd(0, 6.28);
       const h = rnd(6, 22) * r * 0.6;
       this.kivilcim.ekle({

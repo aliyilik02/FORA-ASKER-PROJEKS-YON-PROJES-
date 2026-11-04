@@ -801,3 +801,12 @@ eklendi; ömrü dolan yangın kendiliğinden `sonuyor` olur (alev 2,5 sn'de kıs
 Panelin "Yangın" efekti ömürsüz (kalıcı) kalır; aynı yere kalıcı yangın eklenirse ömürlü kalıcıya döner, ömürlü üstüne
 ömürlü ömrü uzatır. Işık ve yangın sesi kendiliğinden gelir/gider (ses kaynağı seviye = şiddet × güç). Test:
 `yangin.test.ts`.
+
+## Patlama varyantları (4 Kasım 2026)
+
+Kullanıcı: "her patlama aynı olmasın; çok ufak değişikliklerle aynı görsellikte varyantlar." `ParcacikSistemi.
+PATLAMA_VARYANTLARI` (6 kayıt: dengeli, yüksek, basık, isli, kuru toz, eğik) küçük çarpanlar taşır: ateş topu boyutu
+±%10, sütun yüksekliği ±%22, sütun eğimi 0–0,25 (yatay/dikey; eteğin güçlü tarafı aynı yönde, yön patlama başına
+rastgele), is oranı (her 4.–11. topak), toz eteği erimi ±%30, kor sayısı ±%30, renk sıcaklığı ±%5, artık yangın gücü
+±%25 ve süresi ±%15. `patlamaVaryantiSec()` bir öncekiyle aynı varyantı seçmez; `Sahne3B.patlama` varyantı seçip
+hem parçacıklara hem artık yangına uygular. Testler: ardışık seçim farklı, bütün varyantlarda sütun < 16 m.

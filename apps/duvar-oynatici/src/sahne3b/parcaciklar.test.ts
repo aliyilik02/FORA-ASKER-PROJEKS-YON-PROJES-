@@ -159,10 +159,43 @@ describe("toz bulutu (panel Toz / duman)", () => {
   it("patlama dumanı alçak kalır ve toz eteği uzun ömürlü", () => {
     const s = sistem();
     const m = new THREE.Vector3(0, ZEMIN, -15);
-    s.patlama(m, 3.6);
+    s.patlama(m, 3.6, ParcacikSistemi.PATLAMA_VARYANTLARI[0]); // dengeli varyant; "yüksek" %22 daha yüksek
     for (let t = 0; t < 1.2; t += DT) s.guncelle(DT);
     const yukseklikler = s.duman.parcaciklar.map((p) => p.y - ZEMIN);
     expect(Math.max(...yukseklikler)).toBeLessThan(15); // en çok 10,8 m/sn × 1,2 sn + başlangıç; eskisi 25 m/sn ile 30 m
     expect(s.duman.parcaciklar.filter((p) => p.sure >= 8).length).toBeGreaterThanOrEqual(30);
+  });
+});
+
+describe("patlama varyantları", () => {
+  it("arka arkaya aynı varyant gelmez; hepsi listeden", () => {
+    const s = sistem();
+    let onceki = s.patlamaVaryantiSec();
+    for (let i = 0; i < 40; i++) {
+      const v = s.patlamaVaryantiSec();
+      expect(v).not.toBe(onceki);
+      expect(ParcacikSistemi.PATLAMA_VARYANTLARI).toContain(v);
+      onceki = v;
+    }
+  });
+  it("varyantlar küçük sapmalar: sütun yüksekliği ±%25 içinde, kor sayısı ±%30, hepsi görüş alanında kalır", () => {
+    const m = new THREE.Vector3(0, ZEMIN, -15);
+    const yukseklikler: number[] = [];
+    const korlar: number[] = [];
+    for (const v of ParcacikSistemi.PATLAMA_VARYANTLARI) {
+      const s = sistem();
+      s.patlama(m, 3.6, v);
+      korlar.push(s.kivilcim.sayi);
+      for (let t = 0; t < 1.2; t += DT) s.guncelle(DT);
+      const tepe = Math.max(...s.duman.parcaciklar.map((p) => p.y - ZEMIN));
+      expect(tepe).toBeLessThan(16);
+      yukseklikler.push(tepe);
+      expect(v.sutun).toBeGreaterThanOrEqual(0.75);
+      expect(v.sutun).toBeLessThanOrEqual(1.25);
+      expect(v.egim).toBeLessThanOrEqual(0.25);
+    }
+    expect(Math.min(...korlar)).toBeGreaterThanOrEqual(90);
+    expect(Math.max(...korlar)).toBeLessThanOrEqual(160);
+    expect(new Set(korlar).size).toBeGreaterThan(1);
   });
 });

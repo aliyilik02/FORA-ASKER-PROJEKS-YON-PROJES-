@@ -1202,8 +1202,9 @@ export class Sahne3B {
     const secim = this.patlamaYeri(azimut, 30 - 16 * s);
     const p = yerKonumu(secim.azimut, secim.mesafe);
     const r = 1.2 + s * 2.4;
+    const varyant = this.parcaciklar.patlamaVaryantiSec();
     // Gerçek çekilmiş plaka 2B katmanda oynuyorsa 3B ateş topu çizilmez; krater, moloz ve ışık yine eklenir.
-    if (!plakaVar) this.parcaciklar.patlama(p, r);
+    if (!plakaVar) this.parcaciklar.patlama(p, r, varyant);
     else this.parcaciklar.tozBulutu(p, r, s * 0.6);
     // Önce arazi çukurlaşır, sonra moloz/duman yeni (alçak) zemine yerleşir
     if (this.arazi.aktif) {
@@ -1215,7 +1216,7 @@ export class Sahne3B {
     this.flasGuc = Math.max(this.flasGuc, s);
     // Patlama artığı: kraterde küçük bir yangın 2,5–3,5 sn yanar, sonra 2,5 sn'de söner (alev → seyrek duman);
     // ışığı ve sesi (yangın ses kaynağı) kendiliğinden gelir. Panelin "yangın" efekti ise kalıcıdır.
-    this.yanginlar?.ekle(p, 0.25 + 0.2 * Math.min(1, s), 2.5 + Math.min(1, s));
+    this.yanginlar?.ekle(p, (0.25 + 0.2 * Math.min(1, s)) * varyant.yangin, (2.5 + Math.min(1, s)) * (0.85 + 0.3 * Math.random()));
   }
 
   tozDuman(azimut: number, siddet: number) {
