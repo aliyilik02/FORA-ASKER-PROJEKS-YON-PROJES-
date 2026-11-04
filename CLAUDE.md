@@ -275,9 +275,11 @@ kum torbası duvarı (`sutre.ts` `torba_duvari`, Oda 2 operasyonel bölge). Ara�
 üretim/indirme, kaldığı yerden), **`araclar/model-sadelestir.mjs`** (meshoptimizer, dikiş korur; Blender Decimate
 `model-hazirla.py` UV'yi yırtıp "kırık porselen" görüntüsü verdi, kullanma), `araclar/helikopter-hazirla.py`,
 `araclar/glb-bilgi.mjs`. `mixamo-aktar.py`: kemik adı eşlemesi, 85° eşik, GLB girdi. Tuzaklar ve kalanlar
-`docs/duvar-oynatici.md` "Meshy üretim hattı". **Açık hata:** sahne sıfırla + figür yerleştirip hemen sonra açılan
-oynatıcı, bağlantıyla gelen figürleri bazen yüklemiyor (`figurler.aktifler` 0; aynı komutlar yeniden gönderilince
-yükleniyor; başsız Chrome'da 3840×720, yavaş açılışta görüldü) — `bekleyenFigurler` / `sahne/senkron` sırası incelenmeli.
+`docs/duvar-oynatici.md` "Meshy üretim hattı". **Düzeltildi (4 Kasım):** açılışta bağlantıyla gelen figürlerin
+kaybolması — WebSocket manifest isteğinden önce kurulunca `klipler.tanim()` boştu ve komut 2B yola düşüp atlanıyordu;
+artık manifest gelene dek kuyrukta (`figurYonlendirme.ts`, testli; Playwright'ta manifest 4 sn geciktirilerek doğrulandı).
+Ayrıca köprü eski klip adlarını (`asker_*`, `tank_eski` …) yenilerine çevirir (`figur.ts` ESKI_KLIPLER, günlüğe uyarı):
+eğitmenin kayıtlı senaryoları ve geri yüklenen durum eski adlarla boş sahne veriyordu.
 Bu oturumun kalan düzeltmesi: "askerin vücudu zeminin altında" (kalça yüksekliği, fb03730).
 
 **Yangın, duman, panel (3 Kasım gece):** efekt `yangin` / `yangin_sondur` (`sahne3b/yangin.ts`: alev + kor + kara duman +

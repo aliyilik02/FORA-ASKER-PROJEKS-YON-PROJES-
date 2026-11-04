@@ -14,6 +14,28 @@ type Dinleyici = (komut: AktifFigur, aktifler: AktifFigur[]) => void;
 
 const sinirla = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
+/**
+ * Kaldırılan eski model klipleri → yeni Meshy modelleri (3 Kasım 2026: Quaternius/SWAT askerler, eski tanklar silindi).
+ * Eğitmenin kaydettiği senaryolar ve açılışta geri yüklenen durum eski adları taşıyabilir; oynatıcı tanımsız klibi
+ * sessizce atlar ("figür sahneye gelmedi"). Manifestte bulunmayan ad burada çevrilir, günlüğe bir kez yazılır.
+ */
+export const ESKI_KLIPLER: Record<string, string> = {
+  asker_bekleyen: "komando_bekleyen",
+  asker_taktik: "komando_bere_bekleyen",
+  asker_yuruyen: "komando_yuruyen",
+  asker_kosan: "komando_kosan",
+  asker_diz_cokmus: "komando_diz_cokmus",
+  asker_yarali_3b: "komando_yarali",
+  asker_sihhiyeci: "komando_sihhiyeci",
+  asker_swat: "komando_bekleyen",
+  asker_kamuflaj: "komando_bekleyen",
+  asker_mixamo: "komando_bekleyen",
+  asker_test_ayakta: "komando_bekleyen",
+  tank_eski: "tank_altay",
+  tank_mbt: "tank_altay",
+  tank_quaternius: "tank_altay",
+};
+
 export class FigurYoneticisi {
   private aktifler = new Map<string, AktifFigur>();
   private dinleyiciler = new Set<Dinleyici>();
@@ -36,7 +58,19 @@ export class FigurYoneticisi {
   /** Açılışta kaydedilmiş figürleri geri yükler (yayın yok; bağlanan istemciler listeyi zaten alır). */
   yukle(liste: AktifFigur[]) {
     this.aktifler.clear();
-    for (const f of liste) if (f && typeof f.id === "string" && f.id && typeof f.klip === "string" && f.klip) this.aktifler.set(f.id, { ...f, islem: "oynat" });
+    for (const f of liste) if (f && typeof f.id === "string" && f.id && typeof f.klip === "string" && f.klip) this.aktifler.set(f.id, { ...f, islem: "oynat", klip: this.klipAdiCevir(f.klip) });
+  }
+
+  private cevrilenler = new Set<string>();
+  /** Manifestte olmayan eski klip adını yenisine çevirir (ESKI_KLIPLER); manifestte varsa ya da eşleme yoksa aynen döner. */
+  klipAdiCevir(ad: string): string {
+    const yeni = ESKI_KLIPLER[ad];
+    if (!yeni || this.manifestKlipleri()[ad]) return ad;
+    if (!this.cevrilenler.has(ad)) {
+      this.cevrilenler.add(ad);
+      this.gunluk.uyari(`Eski klip adı "${ad}" → "${yeni}" (senaryo/kayıt güncellenmeli)`);
+    }
+    return yeni;
   }
 
   /** Komutu doğrular, uygular ve yayınlar. Hatalı komutta Error fırlatır. `sessiz`: günlüğe yazmaz (sahne sıfırlaması). */
@@ -46,12 +80,13 @@ export class FigurYoneticisi {
     let k: AktifFigur;
     if (ham.islem === "oynat") {
       if (!ham.klip || typeof ham.klip !== "string") throw new Error("klip adı zorunlu");
-      // Manifestte başlangıç duruşu tanımlı klip (asker_yarali_3b → yarali): panel listesi de bilsin
-      const poz = ham.poz ?? this.klipPozu(ham.klip);
+      const klip = this.klipAdiCevir(ham.klip);
+      // Manifestte başlangıç duruşu tanımlı klip (komando_yarali → yarali): panel listesi de bilsin
+      const poz = ham.poz ?? this.klipPozu(klip);
       k = {
         islem: "oynat",
         id: ham.id ?? kimlikUret("fg"),
-        klip: ham.klip,
+        klip,
         azimut: ((Number(ham.azimut ?? 0) % 360) + 540) % 360 - 180,
         yukseklik: sinirla(Number(ham.yukseklik ?? -4), -45, 45),
         olcek: sinirla(Number(ham.olcek ?? 1), 0.1, 10),

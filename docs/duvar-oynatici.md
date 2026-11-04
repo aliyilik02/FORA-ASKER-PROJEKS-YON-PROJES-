@@ -739,3 +739,17 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
 - Çok kanallı ses (4 kanal / 5.1 / 7.1, LFE) yazılımda hazır ve birim testli; gerçek hoparlörlerle kulak testi yapılmadı
   (donanım yok). Sahada hoparlör açıları `?hoparlor=` ile girilmeli, T testiyle kanal eşlemesi doğrulanmalı.
 - Tarayıcı: Chrome/Edge (kiosk bayrakları). 5760×1080'de 60 fps için RTX 4060 sınıfı yeterli.
+
+## Açılışta figür teslimi ve eski klip adları (4 Kasım 2026)
+
+Köprü, bağlanan oynatıcıya önce `sahne/senkron`, sonra `figur temizle`, sonra aktif figürleri yollar. Oynatıcıda
+WebSocket bağlantısı manifest (`icerik/manifest.json`) isteğinden önce kurulabildiğinden bu figürler `klipler.tanim()`
+boşken gelebiliyordu; eski kod tanımsız klibi 2B yola düşürüp sessizce atlıyordu (duvarda "figür 0", aynı komut yeniden
+gönderilince yükleniyordu). Yönlendirme artık saf `figurYonlendirme.ts`'te: manifest gelmeden gelen her figür
+`bekleyenFigurler`'e alınır; manifest gelince 2B klipler hemen oynar, 3B modeller sahne hazır olunca (bölge geçişi
+takası dahil). Doğrulama: Playwright'ta manifest isteği 4 sn geciktirildi; sonuç gecikmesiz açılışla aynı.
+
+Köprü tarafı: kaldırılan modellerin klip adları (`asker_bekleyen`, `asker_taktik`, `asker_sihhiyeci`, `asker_yarali_3b`,
+`asker_kosan`, `tank_eski` …) `FigurYoneticisi.klipAdiCevir` ile yeni Meshy modellerine çevrilir (manifestte
+bulunmayanlar için; ESKI_KLIPLER tablosu). Eğitmenin kaydettiği eski senaryolar ve açılışta geri yüklenen durum böylece
+boş sahne vermez; günlüğe adı başına bir uyarı düşer ("senaryo/kayıt güncellenmeli").

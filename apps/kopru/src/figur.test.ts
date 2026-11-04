@@ -112,3 +112,18 @@ describe("figür yöneticisi", () => {
     expect(yayin).toBe(0);
   });
 });
+
+describe("eski klip adları", () => {
+  it("manifestte olmayan eski ad yenisine çevrilir, manifestte olan aynen kalır", () => {
+    const klasor = mkdtempSync(join(tmpdir(), "icerik-eski-"));
+    writeFileSync(join(klasor, "manifest.json"), JSON.stringify({ klipler: { komando_bekleyen: { tip: "model", dosya: "a.glb" }, asker_kosan: { tip: "model", dosya: "b.glb" } } }));
+    const g = new Gunluk();
+    const f = new FigurYoneticisi(g, [klasor]);
+    expect(f.komut({ islem: "oynat", klip: "asker_bekleyen" }).klip).toBe("komando_bekleyen"); // eski, manifestte yok → çevrilir
+    expect(f.komut({ islem: "oynat", klip: "asker_kosan" }).klip).toBe("asker_kosan"); // eski ad ama manifestte var → kalır
+    expect(f.komut({ islem: "oynat", klip: "nesne_sedye" }).klip).toBe("nesne_sedye"); // eşleme yok → kalır
+    f.yukle([{ islem: "oynat", id: "x", klip: "tank_eski" }]);
+    expect(f.aktifListe()[0].klip).toBe("tank_altay");
+    expect(g.sonKayitlar().filter((k) => k.seviye === "uyari")).toHaveLength(2); // asker_bekleyen ve tank_eski birer kez
+  });
+});

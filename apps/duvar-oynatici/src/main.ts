@@ -39,6 +39,7 @@ import { type Kalite, type PanoramaKaynagi, Sahne3B } from "./sahne3b/sahne3b";
 import type { AraziModu } from "./sahne3b/arazi";
 import { arkaPlanKarari } from "./sahne3b/panoramaGecisi";
 import { adimlariCalistir, hataOzeti, temelDurum } from "./sahneTemizligi";
+import { figurYolu } from "./figurYonlendirme";
 import { SesMotoru } from "./ses";
 import { sesAyariniCoz } from "./sesYerlesimi";
 import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type EfektIstegi, type FigurKomutu, type SimulasyonDurumu, varsayilanDurum } from "./tipler";
@@ -453,14 +454,16 @@ function figurKomutu(k: FigurKomutu & { id: string }) {
   }
   if (!k.klip) return;
   const tanim = klipler.tanim(k.klip);
-  if (tanim?.tip === "model" && sahne3b.hazir && !sahne3b.bolgeGecisiBekliyor) {
-    sahne3b.figurOynat(tanim, { id: k.id, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, yansit: k.yansit, dongu: k.dongu, poz: k.poz, yaninda: k.yaninda }, video.kok);
+  const yol = figurYolu({ manifestYuklendi, tip: tanim?.tip, ucAktifOlabilir, sahneHazir: sahne3b.hazir, gecisBekliyor: sahne3b.bolgeGecisiBekliyor });
+  if (yol === "manifest_bekle" || yol === "ucb_bekle") {
+    // Manifest henüz gelmedi (bağlantı manifest isteğinden önce kurulabilir) ya da 3B sahne hazır değil / bölge geçişi
+    // takas bekliyor: köprünün gönderdiği aktif figürler kaybolmasın; manifest gelince / sahne hazır olunca uygulanır
+    bekleyenFigurler.set(k.id, k);
     return;
   }
-  if (tanim?.tip === "model") {
-    // 3B sahne henüz hazır değil (ilk panorama yükleniyor / oynatıcı yeni açıldı) ya da bölge geçişi takas bekliyor:
-    // köprünün gönderdiği aktif figürler kaybolmasın, sahne hazır olunca (yeni bölgenin planıyla) uygulanır
-    if (ucAktifOlabilir) bekleyenFigurler.set(k.id, k);
+  if (yol === "yok") return;
+  if (yol === "ucb" && tanim) {
+    sahne3b.figurOynat(tanim, { id: k.id, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, yansit: k.yansit, dongu: k.dongu, poz: k.poz, yaninda: k.yaninda }, video.kok);
     return;
   }
   klipler.oynat({ id: k.id, klip: k.klip, azimut: k.azimut ?? 0, yukseklik: k.yukseklik, olcek: k.olcek, dongu: k.dongu, yansit: k.yansit });
@@ -656,6 +659,11 @@ void video.yukle().then((m) => {
   }
   klipler.ayarla(m.klipler, video.kok);
   manifestYuklendi = true;
+  // Manifest gelmeden kuyruğa alınan figürler (köprü bağlanır bağlanmaz yollar): 2B olanlar hemen oynar, 3B modeller
+  // sahne hazır olunca (figurKomutu yeniden kuyruğa alır)
+  const erkenGelenler = [...bekleyenFigurler.values()];
+  bekleyenFigurler.clear();
+  for (const k of erkenGelenler) figurKomutu(k);
   // 3B modeller: ön yükleme; "helikopter" adlı model Oda 2 helikopteri olur
   if (ucAktifOlabilir) {
     sahne3b.dokulariYukle(video.kok);
