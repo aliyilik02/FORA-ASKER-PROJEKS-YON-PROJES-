@@ -290,3 +290,37 @@ export function sesAyariniCoz(adres: { ses: string | null; hoparlor: string | nu
 
   return { duzen, hoparlor, uyarilar };
 }
+
+/** Yangın ses kaynağı (3B sahneden, her kare): sahne azimutu, yatay mesafe (m), seviye 0–1 (şiddet × alev gücü). */
+export interface YanginSesKaynagi {
+  azimut: number;
+  mesafe: number;
+  seviye: number;
+}
+
+/** Yangın sesi: bu mesafeye kadar (m) tam seviye, ötesinde 1/r; tabanın altına inmez. */
+export const YANGIN_REF_MESAFE = 18;
+export const YANGIN_TABAN = 0.1;
+
+/**
+ * Sahnedeki yangınlardan en çok `enCok` ses kaynağı: aynı yerdekiler (azimut ±6°, mesafe ±4 m) birleşir (seviyeler
+ * toplanır, 1'i aşmaz), duyulan seviyeye (mesafe zayıflamalı) göre en güçlüler seçilir. Anahtar: yuvarlanmış konum —
+ * yangın yerinden oynamadığından ses motoru aynı anahtara aynı kaynağı tutar.
+ */
+export function yanginKaynaklariSec(liste: readonly YanginSesKaynagi[], enCok = 3): Array<YanginSesKaynagi & { anahtar: string; duyulan: number }> {
+  const birlesik: Array<YanginSesKaynagi & { anahtar: string; duyulan: number }> = [];
+  for (const y of liste) {
+    if (!(y.seviye > 0.001)) continue;
+    const yakin = birlesik.find((b) => Math.abs((((b.azimut - y.azimut) % 360) + 540) % 360 - 180) <= 6 && Math.abs(b.mesafe - y.mesafe) <= 4);
+    if (yakin) {
+      yakin.seviye = Math.min(1, yakin.seviye + y.seviye);
+      continue;
+    }
+    const az = Math.round(y.azimut / 6) * 6;
+    const me = Math.round(y.mesafe / 4) * 4;
+    birlesik.push({ ...y, seviye: Math.min(1, y.seviye), anahtar: `${az}:${me}`, duyulan: 0 });
+  }
+  for (const b of birlesik) b.duyulan = b.seviye * Math.max(YANGIN_TABAN, Math.min(1, YANGIN_REF_MESAFE / Math.max(1, b.mesafe)));
+  birlesik.sort((a, b) => b.duyulan - a.duyulan);
+  return birlesik.slice(0, enCok);
+}

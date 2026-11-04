@@ -479,6 +479,7 @@ function hazirOluncaYenidenUygula() {
   oncekiHazirImzasi = imza;
   if (durumGeldi) durumUygula(durum);
 }
+const BOS_YANGINLAR: never[] = [];
 /** 3B sahne hazır olmadan gelen model figürleri (oynatıcı açılışında köprü aktif listeyi yollar). */
 const bekleyenFigurler = new Map<string, FigurKomutu & { id: string }>();
 function bekleyenFigurleriUygula() {
@@ -784,6 +785,8 @@ function kare(simdi: number) {
   // 3B helikopterde rotor sesi modelin konumundan gelir (yön, mesafe, Doppler); 2B siluette yönsüz (eski davranış)
   if (helikopter3B()) ses.helikopter(durum.oda === "oda2" ? durum.oda2.helikopter : "yok", sahne3b.helikopterTozu, sahne3b.helikopterSesKonumu);
   else ses.helikopter(heli.mevcutDurum, heli.tozSiddeti);
+  // Yangın sesleri 3B sahnedeki yangınlardan (yön, mesafe); yangın yokken çalanlar söner
+  ses.yangin(sahne3b.hazir ? sahne3b.yanginSesleri : BOS_YANGINLAR);
 
   // Çiz
   ctx.setTransform(1, 0, 0, 1, 0, 0);

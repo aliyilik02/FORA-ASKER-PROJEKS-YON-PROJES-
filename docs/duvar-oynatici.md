@@ -753,3 +753,15 @@ Köprü tarafı: kaldırılan modellerin klip adları (`asker_bekleyen`, `asker_
 `asker_kosan`, `tank_eski` …) `FigurYoneticisi.klipAdiCevir` ile yeni Meshy modellerine çevrilir (manifestte
 bulunmayanlar için; ESKI_KLIPLER tablosu). Eğitmenin kaydettiği eski senaryolar ve açılışta geri yüklenen durum böylece
 boş sahne vermez; günlüğe adı başına bir uyarı düşer ("senaryo/kayıt güncellenmeli").
+
+## Yangın sesi (4 Kasım 2026)
+
+`SesMotoru.yangin(liste)` her karede 3B sahnedeki yangınlarla (`Sahne3B.yanginSesleri`: azimut, yatay mesafe, seviye =
+şiddet × alev gücü) çağrılır. Saf `yanginKaynaklariSec` (sesYerlesimi.ts, testli) aynı yerdekileri birleştirir ve en güçlü
+3 kaynağı seçer; anahtar yuvarlanmış konumdur, ses kaynağı yangın boyunca aynı kalır. Her kaynak sahne yönünden gelir
+(`cikis`: stereo pan / çok kanal kazançları, 5.1–7.1'de bas kopyası LFE'ye), 18 m'ye kadar tam seviye, ötesi 1/r.
+Manifest `sesler.yangin` kaydı varsa döngülenir; yoksa sentez: alçak geçiren gürültü uğultusu (350 Hz) + titreyen bant
+geçiren tıslama (2,5 kHz) + rastgele çıtırtılar (15–55 ms yüksek geçiren vuruşlar, saniyede 2–8). Söndürmede alev gücüyle
+iner, listeden düşünce 0,6 sn'de söner; sahne sıfırlamasında (`efektleriSustur`) 0,15 sn. Başsız Chrome'da API ile iki
+yangın yakıp söndürülerek doğrulandı (kaynak sayısı 2 → 0, hata yok); seviye ve tını duvarda kulakla ayarlanmalı
+(`ses.ts` `yangin()`: 0.5 × seviye; çıtırtı sıklığı `olasilik`).

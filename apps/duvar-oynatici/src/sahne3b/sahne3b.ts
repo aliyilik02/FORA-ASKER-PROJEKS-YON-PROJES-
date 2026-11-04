@@ -1304,6 +1304,11 @@ export class Sahne3B {
     return this.heli.sesKonumu;
   }
 
+  /** Yangın ses kaynakları (her kare; yangın yoksa boş). */
+  get yanginSesleri() {
+    return this.yanginlar?.sesOzeti() ?? [];
+  }
+
   catismaSesleriAyarla(s: CatismaSesleri) {
     this.catismaSesleri = s;
   }

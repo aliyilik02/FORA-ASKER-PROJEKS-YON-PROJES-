@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  yanginKaynaklariSec,
   type AnahtarDeposu,
   duzenSec,
   hoparlorAyristir,
@@ -291,5 +292,25 @@ describe("?ses= / ?hoparlor= çözümü (adres > yerel kayıt > otomatik)", () =
     };
     expect(sesAyariniCoz({ ses: null, hoparlor: null }, bozuk).duzen).toBeNull();
     expect(sesAyariniCoz({ ses: "dortlu", hoparlor: null }, bozuk).duzen).toBe("dortlu");
+  });
+});
+
+describe("yanginKaynaklariSec", () => {
+  it("aynı yerdeki yangınlar birleşir, en güçlü en çok 3 kaynak kalır, anahtar sabit", () => {
+    const liste = [
+      { azimut: 10, mesafe: 20, seviye: 0.4 },
+      { azimut: 13, mesafe: 22, seviye: 0.5 }, // ilkine yakın → birleşir (0.9)
+      { azimut: -60, mesafe: 60, seviye: 1 }, // uzak: duyulan 18/60 = 0.3
+      { azimut: 90, mesafe: 15, seviye: 0.2 },
+      { azimut: 170, mesafe: 10, seviye: 0.05 },
+      { azimut: 40, mesafe: 30, seviye: 0 }, // sönmüş: yok sayılır
+    ];
+    const secim = yanginKaynaklariSec(liste);
+    expect(secim.map((s) => s.anahtar)).toEqual(["12:20", "-60:60", "90:16"]);
+    expect(secim[0].seviye).toBeCloseTo(0.9);
+    expect(secim[0].duyulan).toBeCloseTo(0.81); // 0.9 × 18/20
+    expect(secim[1].duyulan).toBeCloseTo(0.3);
+    // Anahtar aynı kaynakta kare kare değişmez (yangın yerinden oynamaz)
+    expect(yanginKaynaklariSec([{ azimut: 10.4, mesafe: 20.3, seviye: 0.9 }])[0].anahtar).toBe("12:20");
   });
 });

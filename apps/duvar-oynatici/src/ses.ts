@@ -20,6 +20,10 @@ import {
   ortamKazanclari,
   type SesAyari,
   stereoPan,
+  YANGIN_REF_MESAFE,
+  YANGIN_TABAN,
+  yanginKaynaklariSec,
+  type YanginSesKaynagi,
 } from "./sesYerlesimi";
 
 export interface SesManifesti {
@@ -32,8 +36,22 @@ export interface SesManifesti {
   /** Gök gürültüsü kayıtları (yoksa sentez: yakında çatırtı + uzun gürleme). */
   gok_gurultusu?: string[];
   helikopter_rotor?: string | null;
+  /** Yangın döngüsü (kayıt); yoksa sentez (alçak uğultu + tıslama + çıtırtı). */
+  yangin?: string | null;
   ortam?: Record<string, string>;
 }
+
+/** Çalan bir yangın sesi (konum sabit): uğultu + tıslama kaynakları, ortak kazanç, çıkış düğümü (çıtırtılar buna bağlanır). */
+interface YanginSesi {
+  kazanc: GainNode;
+  cikis: GainNode;
+  kaynaklar: AudioScheduledSourceNode[];
+  tislama: GainNode | null;
+  /** Sönmeye bırakıldıysa durma zamanı. */
+  bitis: number;
+  sonCitirti: number;
+}
+const YANGIN_EN_COK = 3;
 
 /** Rotor sesinin konumu (3B sahneden): sahne azimutu (derece), yatay mesafe ve zeminden irtifa (m). */
 export interface HelikopterSesKonumu {
@@ -125,6 +143,11 @@ export class SesMotoru {
   private readonly rotorKazanclari: number[] = [];
   /** Sönmekte olan rotorlar (durum "yok" oldu); sahne sıfırlaması bunları da hızla susturur. */
   private sonenRotorlar: SonenRotor[] = [];
+  /** Çalan yangın sesleri (anahtar: yuvarlanmış konum) ve sönmekte olanlar. */
+  private readonly yanginSesleri = new Map<string, YanginSesi>();
+  private sonenYanginlar: YanginSesi[] = [];
+  private yanginTampon: AudioBuffer | null | undefined;
+  private yanginSonGuncelleme = -1;
   /**
    * Çalan tek seferlik kaynaklar (patlama, atış, çarpma, bağırma, vızıltı) → kendi kazanç düğümü: sahne sıfırlamasında
    * hepsi söner ve durur (efektleriSustur). Kaynak bitince (onended, ortak tek işleyici) listeden çıkar; düğüm üretmez.
@@ -617,6 +640,9 @@ export class SesMotoru {
         durdur(kaynak, t + 0.2);
       }
       if (rotor) this.rotoruBirak(0.15, 1);
+      // Yangınlar sahneden kalktı: sesleri de hızla söner (bir sonraki karede yangin([]) zaten bırakırdı; tık yok)
+      for (const [, y] of this.yanginSesleri) this.yanginiBirak(y, 0.15, 1);
+      this.yanginSesleri.clear();
     }
     this.anliklar.clear();
     if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
@@ -781,6 +807,136 @@ export class SesMotoru {
     const seviye = 0.15 + tozSiddeti * 0.45 + (durum === "yerde" ? 0.1 : 0);
     // Tek kanallı sentez StereoPanner'da 3 dB kısılır (√2 telafi: konum yokken eski seviye aynen)
     this.rotor.kazanc.gain.setTargetAtTime(seviye * Math.SQRT2 * this.rotorZayiflama, c.currentTime, 0.8);
+  }
+
+  /**
+   * Yangın sesleri, her karede çağrılır (`liste`: 3B sahnedeki yangınlar; boşsa çalanlar söner). En çok 3 kaynak
+   * (aynı yerdekiler birleşir); her biri sahne yönünden, mesafeyle zayıflar (18 m'ye kadar tam), 5.1/7.1'de bas kopyası
+   * LFE'ye. Manifest `yangin` kaydı varsa döngülenir; yoksa sentez: alçak geçiren gürültü uğultusu (~350 Hz) + titreyen
+   * tıslama (bant 2,5 kHz) + rastgele çıtırtılar (kısa gürültü vuruşları, seviyeyle sıklaşır). 20 Hz'de güncellenir.
+   */
+  yangin(liste: readonly YanginSesKaynagi[]) {
+    if (!this.hazir || !this.gurultuTampon) return;
+    const c = this.ctx!;
+    const t = c.currentTime;
+    if (t - this.yanginSonGuncelleme < 0.05) return;
+    const dt = this.yanginSonGuncelleme < 0 ? 0.05 : t - this.yanginSonGuncelleme;
+    this.yanginSonGuncelleme = t;
+    if (this.sonenYanginlar.length) this.sonenYanginlar = this.sonenYanginlar.filter((y) => y.bitis > t);
+    const secim = liste.length ? yanginKaynaklariSec(liste, YANGIN_EN_COK) : [];
+    // Listeden düşenler (söndü, sahne sıfırlandı, bölge değişti) 1,5 sn'de söner
+    for (const [anahtar, y] of this.yanginSesleri) {
+      if (!secim.some((s) => s.anahtar === anahtar)) {
+        this.yanginSesleri.delete(anahtar);
+        this.yanginiBirak(y, 0.6, 2.5);
+      }
+    }
+    if (this.manifest.yangin && this.yanginTampon === undefined) {
+      this.yanginTampon = null;
+      void this.tampon(this.manifest.yangin).then((b) => {
+        this.yanginTampon = b;
+      });
+    }
+    for (const s of secim) {
+      let y = this.yanginSesleri.get(s.anahtar);
+      if (!y) {
+        y = this.yanginKur(s.azimut);
+        this.yanginSesleri.set(s.anahtar, y);
+      }
+      const zayiflama = Math.max(YANGIN_TABAN, Math.min(1, YANGIN_REF_MESAFE / Math.max(1, s.mesafe)));
+      const seviye = s.seviye * zayiflama;
+      y.kazanc.gain.setTargetAtTime(0.5 * seviye, t, 0.4);
+      // Tıslama titrer: her güncellemede rastgele hedef (alev dalgalanması)
+      y.tislama?.gain.setTargetAtTime(0.25 + 0.35 * Math.random(), t, 0.08);
+      // Çıtırtı: saniyede ~2–8 (seviyeyle), en az 60 ms arayla; kısa yüksek geçiren gürültü vuruşu
+      const olasilik = (2 + 6 * s.seviye) * dt;
+      if (t - y.sonCitirti > 0.06 && Math.random() < olasilik) {
+        y.sonCitirti = t;
+        const k = c.createBufferSource();
+        k.buffer = this.gurultuTampon;
+        k.loop = true;
+        k.loopStart = Math.random() * 1.5;
+        k.loopEnd = k.loopStart + 0.2;
+        const f = c.createBiquadFilter();
+        f.type = "highpass";
+        f.frequency.value = 1500 + Math.random() * 2500;
+        const g = c.createGain();
+        const sure = 0.015 + Math.random() * 0.04;
+        g.gain.setValueAtTime(0.5 + Math.random() * 0.8, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + sure);
+        k.connect(f).connect(g).connect(y.cikis);
+        k.start(t);
+        k.stop(t + sure + 0.01);
+      }
+    }
+  }
+
+  /** Bir yangın sesi kurar: konumlu çıkış (yön, LFE) + kayıt döngüsü ya da sentez (uğultu + tıslama). Çıtırtı `yangin`da. */
+  private yanginKur(azimut: number): YanginSesi {
+    const c = this.ctx!;
+    const cikis = this.cikis(azimut, 1, false, 0.35);
+    const kazanc = c.createGain();
+    kazanc.gain.value = 0;
+    kazanc.connect(cikis);
+    const kaynaklar: AudioScheduledSourceNode[] = [];
+    let tislama: GainNode | null = null;
+    if (this.yanginTampon) {
+      const k = c.createBufferSource();
+      k.buffer = this.yanginTampon;
+      k.loop = true;
+      k.loopStart = Math.random() * Math.max(0, this.yanginTampon.duration - 1);
+      const telafi = c.createGain();
+      telafi.gain.value = this.telafi(this.yanginTampon);
+      k.connect(telafi).connect(kazanc);
+      k.start();
+      kaynaklar.push(k);
+    } else {
+      // Uğultu: alçak geçiren gürültü; tıslama: bant geçiren gürültü, titreyen kazanç
+      const ugultu = c.createBufferSource();
+      ugultu.buffer = this.gurultuTampon;
+      ugultu.loop = true;
+      ugultu.loopStart = Math.random();
+      const f1 = c.createBiquadFilter();
+      f1.type = "lowpass";
+      f1.frequency.value = 350;
+      f1.Q.value = 0.8;
+      const g1 = c.createGain();
+      g1.gain.value = 1.4;
+      ugultu.connect(f1).connect(g1).connect(kazanc);
+      ugultu.start();
+      const tis = c.createBufferSource();
+      tis.buffer = this.gurultuTampon;
+      tis.loop = true;
+      tis.loopStart = Math.random();
+      const f2 = c.createBiquadFilter();
+      f2.type = "bandpass";
+      f2.frequency.value = 2500;
+      f2.Q.value = 0.7;
+      tislama = c.createGain();
+      tislama.gain.value = 0.3;
+      tis.connect(f2).connect(tislama).connect(kazanc);
+      tis.start();
+      kaynaklar.push(ugultu, tis);
+    }
+    return { kazanc, cikis, kaynaklar, tislama, bitis: Infinity, sonCitirti: 0 };
+  }
+
+  /** Yangın sesini `tau` ile söndürür, `durma` sn sonra kaynakları durdurur (sahne sıfırlaması 0,15/1, sönme 0,6/2,5). */
+  private yanginiBirak(y: YanginSesi, tau: number, durma: number) {
+    const c = this.ctx;
+    if (!c) return;
+    const t = c.currentTime;
+    const bitis = t + durma;
+    if (y.bitis <= bitis) return;
+    sondur(y.kazanc.gain, t, tau);
+    for (const k of y.kaynaklar) durdur(k, bitis);
+    y.bitis = bitis;
+    this.sonenYanginlar.push(y);
+  }
+
+  /** Çalan yangın sesi sayısı (tanı ve test). */
+  get yanginSesSayisi() {
+    return this.yanginSesleri.size;
   }
 
   /** Rotor sesinin kalıcı konum zinciri: mesafe filtresi → StereoPanner (stereo) / kanal kazançları (çok kanal). */

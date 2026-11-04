@@ -5,6 +5,7 @@
  */
 import * as THREE from "three";
 import type { ParcacikSistemi } from "./parcaciklar";
+import { konumAzimutu } from "./uzay";
 
 interface Yangin {
   konum: THREE.Vector3;
@@ -47,6 +48,11 @@ export class YanginKatmani {
     isik.position.copy(konum).add(new THREE.Vector3(0, 1.2 + s, 0));
     this.grup.add(isik);
     this.yanginlar.push({ konum: konum.clone(), yaricap: 1.2 + 2.2 * s, siddet: s, guc: 0, sonuyor: false, isik, faz: Math.random() * 100 });
+  }
+
+  /** Ses motoru için (her kare): yangın başına sahne azimutu, yatay mesafe, seviye = şiddet × alev gücü (sönerken iner). */
+  sesOzeti(): Array<{ azimut: number; mesafe: number; seviye: number }> {
+    return this.yanginlar.map((y) => ({ azimut: konumAzimutu(y.konum), mesafe: Math.hypot(y.konum.x, y.konum.z), seviye: y.siddet * y.guc }));
   }
 
   /** Hepsini söndür (alev kısılır, duman tüter, sonra kayıt silinir). */
