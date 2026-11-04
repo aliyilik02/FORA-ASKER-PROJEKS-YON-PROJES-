@@ -1,0 +1,19 @@
+Copyright (c) 2009 Vincent Sevedge
+
+Audio and Visual content is covered under the Creative Commons Attribution 3.0 Unported License
+http://creativecommons.org/licenses/by/3.0/
+
+---
+Silah sesleri - "Gunshot Sounds" (CZ-52 tabanca, Mosin-Nagant, SKS, pompalı tüfek)
+Kaynak: OpenGameArt, "Tabasco" hesabı: https://opengameart.org/content/gunshot-sounds
+Lisans: CC BY 3.0 (Atıf). CC0 DEĞİLDİR: dosya adı ve manifest notu önceden yanlışlıkla CC0 diyordu (2 Kasım 2026'da düzeltildi).
+
+Bu klasördeki dosyalar:
+  silah_mosin.ogg, silah_sks.ogg   özgün kayıtlar (çok atışlı, 14,7 / 15,5 sn)
+  silah_tek_1..4.ogg               Mosin-Nagant tek atış (1,05 sn)
+  silah_tek_5..8.ogg               SKS tek atış (1,4 sn)
+Değişiklik (CC BY gereği belirtilir): özgün kayıtlardan tek atışlara kesildi, başa 4 ms giriş, sona 0,3-0,45 sn
+sönüm eklendi, Vorbis q5 ile yeniden kodlandı (araclar/silah-tek-atis.mjs).
+
+Atıf (gösterim, sunum ve belgelerde):
+  Silah sesleri: Vincent Sevedge, "Gunshot Sounds" (OpenGameArt), CC BY 3.0, değiştirildi.

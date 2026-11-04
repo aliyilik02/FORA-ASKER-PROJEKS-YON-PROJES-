@@ -1,0 +1,87 @@
+# Gösterim rehberi (idareye sunum)
+
+Amaç: 5–10 dakikada, tek bilgisayarda, internet olmadan sistemin ne yaptığını göstermek.
+Bu rehber eğitmen/sunucu içindir; teknik ayrıntı `docs/duvar-oynatici.md`'de.
+
+## Hazırlık (sunumdan 15 dk önce)
+
+1. `demo.bat` çalıştır (ilk kez: kurulum + derleme, 2–3 dk). Köprü penceresi açık kalsın.
+2. Tarayıcıda **panel** `http://localhost:4000` ve **oynatıcı** (paneldeki "Oynatıcı" düğmesi)
+   açılır. Oynatıcı penceresini projeksiyon ekranına taşı, **F** ile tam ekran yap.
+3. **Tek oynatıcı penceresi** açık olsun: panel üst çubuğunda "Oynatıcı ×1" görünmeli. ×2/×3
+   görünüyorsa fazla sekmeleri kapat (hepsi aynı ekran kartını kullanır, görüntü yavaşlar).
+4. Kalite: panel **Sistem → Oynatıcı ayarları** varsayılanı **Otomatik**; oynatıcı ekran kartına bakar (dizüstü /
+   Intel entegre → Orta, saha makinesi RTX → Yüksek; HUD'da "kalite orta (otomatik: …)"). Takılırsa "Düşük" seç,
+   oynatıcıyı kapatıp "Oynatıcı" düğmesiyle yeniden aç.
+5. Ses: oynatıcı penceresine bir kez tıkla (tarayıcı sesi kullanıcı etkileşimi ister); **M** sessiz/açık.
+6. Oynatıcı HUD kapalı açılır (**H** açar/kapar; fps ve tanı bilgisi). Kalibrasyon ızgarası **K** kapalı olsun.
+
+Sunum öncesi, denemeler arasında ve gruplar arasında: panel **üst çubuğundaki Sıfırla** (lambaların solunda, her
+ekran genişliğinde görünür; iki dokunuş: ilk dokunuş "Temizlensin mi?" der, 3 sn içinde ikinci dokunuş) ya da klavyede
+**Esc, Esc** sahneyi temele döndürür: bütün figürler, patlama/duman/krater, uçuşan mermiler, çatışma, izli mermi,
+helikopter (iniş dizisi dahil), sesler ve oynayan senaryo (00:00'a döner) temizlenir; bölge, mevsim/saat/hava, ışık,
+Oda 2 güvenli alanı ve ayarlar aynen kalır. Düğmedeki sayı sahnedeki etkin öğe sayısıdır. Oynatıcı bilgisayarında
+**⇧0** aynı işi yapar. Canlı sahne kartının üstünde duvarın önizlemesi (en çok 5 sn'de bir) ve fps/kalite bilgisi
+görünür; kontrol odasından duvarı görmeden çalışılabilir.
+
+## Önerilen – Tek tuş: "Gösterim – Güncel Durum (5 dk)"
+
+Bugünkü hâliyle demo (2 Kasım). Yalnız yerleşim planı doğrulanmış panoramaları kullanır; dizüstünde (Iris Xe,
+otomatik "orta" kalite) baştan sona medyan 60 fps ölçüldü. Panel **Senaryo** → "Gösterim – Güncel Durum (5 dk)" → **Oynat**.
+Başlamadan ve bittikten sonra üst çubuktaki **Sıfırla** (ya da Esc, Esc).
+
+| Zaman | Duvarda ne olur | Anlatım notu |
+|---|---|---|
+| 0:00 | Kırsal açık arazi, yaz 10:30 | 360° panorama + üstünde 3B dünya (arazi, bitki, gölge) |
+| 0:05–0:15 | Üç asker mevzide (biri diz çökmüş), tank, koşan asker | Askerler hazır mevzi noktalarına kendiliğinden yerleşir; eğitmen yer seçmez |
+| 0:22–0:38 | Düşman ateşi, izli mermiler, askerler karşılık verir; iki patlama, **kalıcı krater** | Çatışma yönü/şiddeti panelden; hasar bölge değişene kadar kalır |
+| 0:42–0:54 | **Asker vurulur**, yardım çağırır; sıhhiyeci başına diz çöker | Oda 1 eğitimi: ateş altında bakım |
+| 1:20 | Akşam 19:30 – yumuşak geçiş (alacakaranlık çekimi) | Sahne değişirken görüntü donmaz, eski sahne yenisi hazır olana dek akar |
+| 1:37–2:10 | **Gece** (karartılmış gerçek gece çekimi, ay ışığı): yandan geçen izli mermiler, uzak ve yakın patlama | 3B ışık gece panoramasına eşlenir; izli mermi gece belirgin |
+| 2:16 | Kış sabahı | Aynı sahne, farklı mevsim |
+| 2:37–2:55 | **Ormanlık bölge**: asker ağaçların arasında, yürüyen asker, patlama | 5 bölge; bölge geçişi de kesintisiz |
+| 3:10–3:24 | **Oda 2**: üs bölgesi güvenli alanı (HESCO, kum torbası), yaralı + sıhhiyeci, uzak silah sesleri | Oda 2 eğitimi: taktik güvenli alan |
+| 3:30–4:45 | Helikopter sol duvardan yaklaşır, açık piste iner (rotor tozu, ses), bekler, arkaya doğru kalkar | Tahliye; helikopter iniş noktası panoramanın planından |
+| 4:51 | Oda 1, kırsal – bitiş | |
+
+Bilinen: gece bölümü projeksiyonda karanlık görünür (bilerek gerçekçi); karanlık salonda daha iyi okunur.
+
+## Seçenek A – Tek tuş: "Gösterim – Tam Tur (5 dk)"
+
+Panel **Senaryo** sekmesi → "Gösterim – Tam Tur (5 dk)" → **Oynat**. Akış:
+
+| Zaman | Duvarda ne olur | Anlatım notu |
+|---|---|---|
+| 0:00 | Kırsal açık arazi, yaz öğle (gerçek 360° çekim panoraması) | 5 bölge × mevsim × gece/gündüz; 23 gerçek çekim panorama |
+| 0:04–0:16 | Üç asker mevziye girer (biri diz çökmüş), tank gelir, koşan asker geçer | Figürler sahnenin ışığıyla aydınlanır, gölgeleri güneşe göre düşer |
+| 0:25 | Düşman ateşi başlar: izli mermiler, çarpma, askerler karşılık verir, tank top atar | Çatışma yönü/şiddeti panelden; dost ateşi |
+| 0:32 / 0:40 | Patlamalar: ateş topu, toprak, moloz, **kalıcı krater** ve tüten duman | Hasar kalıcıdır; bölge değişene kadar kalır |
+| 0:44 | **Asker vurulur**: yere düşer, nefes alır, kol kaldırıp yardım çağırır; 0:56 sıhhiyeci başına diz çöker | Oda 1 eğitimi: ateş altında bakım |
+| 1:40 → 2:25 | Akşam, yağmur, gece (ay ışığı), kış sabahı | Aynı sahne, farklı mevsim/saat/hava |
+| 3:30 | **Oda 2**: üs bölgesi güvenli alanı (HESCO, kum torbası), yaralı + sıhhiyeci | Oda 2 eğitimi: taktik güvenli alan |
+| 3:48 → 5:00 | Helikopter yaklaşır, iner (rotor tozu, ses), yerde bekler, kalkar; Oda 1'e dönüş | Tahliye |
+
+Senaryo sırasında paneldeki her şey kullanılabilir (ör. ek patlama tetikle); **Boşluk** duraklat/devam.
+
+## Seçenek B – Elle, 3 dakika
+
+1. **Sahne**: pusuladan yön seç; 1–5 tuşları hızlı efekt (1 patlama).
+2. **Figürler**: "Cephe kur" (3 asker + düşman yönü) → **Çatışma** kartında şiddeti artır.
+3. "Asker vuruldu!" → "Sıhhiyeci gönder".
+4. **Sahne** → Ortam: saati 22:00 yap (gece), yağış "Şiddetli yağmur".
+5. Üst çubuktan **Oda 2** → Güvenli alan "Operasyonel bölge" → Helikopter "Tam dizi".
+
+## Sorulara hazır cevaplar
+
+- **Gerçek çekim mi?** Panoramalar gerçek 360° çekim (CC0), figürler 3B model; kabul için yeşil perde
+  asker çekimi ve gerçek VFX plakaları eklenebilir (`docs/fotogercekci-icerik-hatti.md`).
+- **İnternet gerekir mi?** Hayır. Tüm içerik yerel klasörde (`icerik/`).
+- **Donanım?** Saha: RTX 4060+ ve 3 projektör (`docs/donanim-onerileri.md`). Bu dizüstünde (Iris Xe) otomatik "orta" kademeyle gösterim yapılabilir.
+- **Unreal?** İsteğe bağlı yol; mevcut sistem tarayıcı tabanlı, kurulum tek `demo.bat`.
+
+## Olası aksaklıklar
+
+- Görüntü takılıyor → fazla oynatıcı sekmelerini kapat; Sistem sekmesinde "Düşük"; HUD'da fps ve "çizim/duvar" bak.
+- Ses yok → oynatıcı penceresine tıkla, **M**'ye bas; Windows ses çıkışı projeksiyon/hoparlör mü kontrol et.
+- Oynatıcı "köprü bekleniyor" diyor → köprü penceresi kapanmış; `demo.bat yeniden`.
+- Figürler gelmiyor → panel üst çubuğunda "Oynatıcı" yeşil mi; oynatıcıyı yenile (F5), köprü aktif figürleri yeniden gönderir.

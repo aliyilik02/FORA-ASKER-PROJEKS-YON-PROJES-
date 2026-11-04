@@ -1,0 +1,103 @@
+{
+  "_aciklama": "Tek sahneyi 3 projektöre (3 duvar) yayan nDisplay yapılandırması. UE5'te Add > nDisplay > Config ile içe aktarılır veya bir nDisplay Config Asset'e kopyalanır. Değerler cm cinsindendir. Projektör çıkış çözünürlükleri ve duvar ölçüleri saha keşfi sonrası güncellenir.",
+  "nDisplay": {
+    "description": "Duvar Simulasyonu - 3 duvar / 3 projektor / tek render bilgisayari",
+    "version": "5.0",
+    "assetPath": "/Game/nDisplay/UcDuvar.UcDuvar",
+    "misc": {
+      "bFollowLocalPlayerCamera": false,
+      "bExitOnEsc": true
+    },
+    "scene": {
+      "xforms": {},
+      "cameras": {
+        "AnaKamera": {
+          "parentId": "",
+          "location": { "x": 0, "y": 0, "z": 170 },
+          "rotation": { "pitch": 0, "yaw": 0, "roll": 0 },
+          "interpupillaryDistance": 6.4,
+          "swapEyes": false,
+          "stereoOffset": "none"
+        }
+      },
+      "screens": {
+        "SolDuvar": {
+          "parentId": "",
+          "location": { "x": 212, "y": -300, "z": 170 },
+          "rotation": { "pitch": 0, "yaw": -90, "roll": 0 },
+          "size": { "width": 600, "height": 337.5 }
+        },
+        "OrtaDuvar": {
+          "parentId": "",
+          "location": { "x": 512, "y": 0, "z": 170 },
+          "rotation": { "pitch": 0, "yaw": 0, "roll": 0 },
+          "size": { "width": 600, "height": 337.5 }
+        },
+        "SagDuvar": {
+          "parentId": "",
+          "location": { "x": 212, "y": 300, "z": 170 },
+          "rotation": { "pitch": 0, "yaw": 90, "roll": 0 },
+          "size": { "width": 600, "height": 337.5 }
+        }
+      }
+    },
+    "cluster": {
+      "masterNode": {
+        "id": "Render1",
+        "port": { "ClusterSync": 41001, "RenderSync": 41002, "ClusterEventsJson": 41003, "ClusterEventsBinary": 41004 }
+      },
+      "sync": {
+        "renderSyncPolicy": { "type": "ethernet", "parameters": {} },
+        "inputSyncPolicy": { "type": "ReplicateMaster", "parameters": {} }
+      },
+      "network": {
+        "ConnectRetriesAmount": 300,
+        "ConnectRetryDelay": 1000,
+        "GameStartBarrierTimeout": 30000,
+        "FrameStartBarrierTimeout": 5000,
+        "FrameEndBarrierTimeout": 5000,
+        "RenderSyncBarrierTimeout": 5000
+      },
+      "nodes": {
+        "Render1": {
+          "host": "127.0.0.1",
+          "sound": true,
+          "fullScreen": true,
+          "window": { "x": 0, "y": 0, "w": 5760, "h": 1080 },
+          "postprocess": {},
+          "viewports": {
+            "VP_Sol": {
+              "camera": "AnaKamera",
+              "projectionPolicy": { "type": "simple", "parameters": { "screen": "SolDuvar" } },
+              "overlapOrder": 0,
+              "region": { "x": 0, "y": 0, "w": 1920, "h": 1080 },
+              "bufferRatio": 1.0,
+              "gpuIndex": -1,
+              "isShared": false
+            },
+            "VP_Orta": {
+              "camera": "AnaKamera",
+              "projectionPolicy": { "type": "simple", "parameters": { "screen": "OrtaDuvar" } },
+              "overlapOrder": 0,
+              "region": { "x": 1920, "y": 0, "w": 1920, "h": 1080 },
+              "bufferRatio": 1.0,
+              "gpuIndex": -1,
+              "isShared": false
+            },
+            "VP_Sag": {
+              "camera": "AnaKamera",
+              "projectionPolicy": { "type": "simple", "parameters": { "screen": "SagDuvar" } },
+              "overlapOrder": 0,
+              "region": { "x": 3840, "y": 0, "w": 1920, "h": 1080 },
+              "bufferRatio": 1.0,
+              "gpuIndex": -1,
+              "isShared": false
+            }
+          }
+        }
+      }
+    },
+    "customParameters": {},
+    "diagnostics": { "simulateLag": false, "minLagTime": 0.01, "maxLagTime": 0.3 }
+  }
+}

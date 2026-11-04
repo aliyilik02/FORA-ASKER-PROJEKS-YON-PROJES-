@@ -1,0 +1,98 @@
+SÜTRE / MEVZİ PROPLARI – LİSANS VE KAYNAK LİSTESİ
+İndirme tarihi: 2026-10-22
+Tüm dosyalar GLB (glTF 2.0 binary). CC0 = atıf şart değil; CC-BY 3.0 = yazar adı + lisans bağlantısı
+(https://creativecommons.org/licenses/by/3.0/) gösterilmeli (ör. panelde "Hakkında" sekmesi).
+
+--- Kum torbası (sandbag) ---
+kum_torbasi_duvari_eyring.glb
+  "sand bag wall 1" – Jeremy Eyring – CC-BY 3.0
+  https://poly.pizza/m/5JCK_lpTf4F  (GLB: https://static.poly.pizza/32e65fd3-e3ee-4cfd-bf1c-d6bfb6d86ed8.glb)
+kum_torbasi_siper_quaternius.glb
+  "Sack Trench" – Quaternius – CC0 / Public Domain
+  https://poly.pizza/m/LW3jwpPfiN  (GLB: https://static.poly.pizza/96654c1e-dbc8-4bbc-a1c0-0dfacd8e9d93.glb)
+kum_torbasi_siper_kucuk_quaternius.glb
+  "Sack Trench Small" – Quaternius – CC0 / Public Domain
+  https://poly.pizza/m/iHyRewQQcN  (GLB: https://static.poly.pizza/00e71997-0e9f-4083-9507-3935639996c7.glb)
+kum_torbasi_yigini_jtoastie.glb
+  "Sandbags" – J-Toastie – CC-BY 3.0
+  https://poly.pizza/m/xClPIEQJdX  (GLB: https://static.poly.pizza/017c49ec-7f02-4677-91aa-cb37dbdd1b6b.glb)
+kum_torbasi_tek_oga.glb
+  "Simple sandbags" (tek torba, OBJ'den obj2gltf ile çevrildi) – OpenGameArt – CC0
+  https://opengameart.org/sites/default/files/sandbag_model_1.zip
+mevzi_kum_torbasi_mg_kolosstudios.glb
+  "Barrier" (kum torbası mevzi + makineli tüfek + aydınlatma direği) – KolosStudios – CC-BY 3.0
+  https://poly.pizza/m/SCaRjzjzSk  (GLB: https://static.poly.pizza/a8e76166-1e31-4450-a3be-a612015cffc3.glb)
+
+--- Jersey beton bariyer ---
+jersey_bariyer_jtoastie.glb
+  "Concrete Barrier" – J-Toastie – CC-BY 3.0
+  https://poly.pizza/m/5Cg2oW7EFn  (GLB: https://static.poly.pizza/fab44bf8-f261-4c9b-81ee-0f9b0dd6ea88.glb)
+jersey_bariyer_dokulu_jtoastie.glb
+  "Concrete Barrier" (dokulu sürüm) – J-Toastie – CC-BY 3.0
+  https://poly.pizza/m/he10X5eGD0  (GLB: https://static.poly.pizza/cd3068d2-ebe7-4d2f-9da3-387fca14211e.glb)
+
+--- Kaya / kaya kümesi ---
+kaya_yuzeyi_polyhaven_rock_face_01_1k.glb
+  "rock_face_01" (1K dokulu fotoskan, .gltf+.bin+jpg'ler gltf-transform ile tek GLB'ye paketlendi) – Poly Haven – CC0
+  https://polyhaven.com/a/rock_face_01  (https://api.polyhaven.com/files/rock_face_01 → gltf/1k)
+kaya_google_poly.glb
+  "Boulder" – Poly by Google – CC-BY 3.0
+  https://poly.pizza/m/3jql0qtape-  (GLB: https://static.poly.pizza/f86184fd-43a0-409a-b7f6-f5115e85ef2e.glb)
+kaya_col_garland.glb
+  "Desert boulder" – Leigh Garland – CC-BY 3.0
+  https://poly.pizza/m/dJvxGOx16m0  (GLB: https://static.poly.pizza/4d784e40-7a11-4098-b798-7c3d4f9e801a.glb)
+kaya_buyuk_quaternius.glb
+  "Rock Large" – Quaternius – CC0 / Public Domain
+  https://poly.pizza/m/d2VWOdthtR  (GLB: https://static.poly.pizza/d7bc2b98-2c73-4e78-b0bd-e5e24d65734a.glb)
+kaya_kumesi_kaykit.glb
+  "Rocks" (4 parçalı küme) – Kay Lousberg (KayKit) – CC0 / Public Domain
+  https://poly.pizza/m/XVRCQ0j2AF  (GLB: https://static.poly.pizza/6f605576-856e-42c5-8e12-dc34ab305015.glb)
+kaya_kenney_rock_b.glb
+  "rock-b" – Kenney Survival Kit 2.0 – CC0
+  https://kenney.nl/assets/survival-kit  (zip: https://kenney.nl/media/pages/assets/survival-kit/4065a8185b-1712149243/kenney_survival-kit.zip)
+
+--- Sandık / mühimmat kutusu ---
+sandik_ahsap_quaternius.glb
+  "Crate" – Quaternius – CC0 / Public Domain
+  https://poly.pizza/m/3VGWnZPXmG  (GLB: https://static.poly.pizza/720097e2-63ed-4e5f-9b66-eb416942eea0.glb)
+muhimmat_sandigi_ww2_pelley.glb
+  "WW2 Ammo box" – Carwyn Pelley – CC-BY 3.0
+  https://poly.pizza/m/4QQwW16WZZT  (GLB: https://static.poly.pizza/6a7714da-606d-4a1a-89eb-dee8c66648ce.glb)
+muhimmat_kutusu_pichuliru.glb
+  "Ammo Can" – Pichuliru – CC0 / Public Domain
+  https://poly.pizza/m/9xeB2FkEYr  (GLB: https://static.poly.pizza/d7ce4f77-ddad-4056-bb3e-5712dfcecc8f.glb)
+sandik_kenney_box.glb
+  "box" – Kenney Survival Kit 2.0 – CC0
+  https://kenney.nl/assets/survival-kit
+
+--- Toprak yığını / tümsek (gerçek "foxhole" bulunamadı) ---
+toprak_yigini_kenney_detail_dirt_large.glb
+  "detail-dirt-large" – Kenney Tower Defense Kit 2.1 – CC0
+  https://kenney.nl/assets/tower-defense-kit  (zip: https://kenney.nl/media/pages/assets/tower-defense-kit/a402493eaa-1726471567/kenney_tower-defense-kit.zip)
+toprak_tepe_kenney_tile_hill.glb
+  "tile-hill" – Kenney Tower Defense Kit 2.1 – CC0
+  https://kenney.nl/assets/tower-defense-kit
+toprak_tumsek_apelab.glb
+  "Soil mount" – apelab – CC-BY 3.0
+  https://poly.pizza/m/0ycSG7vDLMm  (GLB: https://static.poly.pizza/a3128c90-3916-4714-afa8-f354995aca17.glb)
+
+--- Çadır ---
+askeri_cadir_kolosstudios.glb
+  "Military Tent" (iç mobilyalı) – KolosStudios – CC-BY 3.0
+  https://poly.pizza/m/vQANVbSE0v  (GLB: https://static.poly.pizza/da6b68f7-454d-44a3-8197-d7169340cf2d.glb)
+cadir_kenney_tent.glb
+  "tent" – Kenney Survival Kit 2.0 – CC0
+  https://kenney.nl/assets/survival-kit
+
+--- Diğer ---
+cit_tahkimli_kenney.glb
+  "Fence Fortified" – Kenney (poly.pizza aynası) – CC0 / Public Domain
+  https://poly.pizza/m/9FQPNr0sdJ  (GLB: https://static.poly.pizza/853cbd5c-2f05-45ef-a90c-cae124875fb8.glb)
+
+HESCO / gabion: Poly Pizza, Kenney ve Poly Haven'da giriş gerektirmeyen CC0/CC-BY HESCO modeli bulunamadı
+(bulunanlar Unity Asset Store / CGTrader ücretli). Poly Haven boulder_01 1K: 66.122 üçgen, bütçe (30k) üstü, alınmadı.
+
+Kenney lisans metni (üç kitte aynı): "License: (Creative Commons Zero, CC0) http://creativecommons.org/publicdomain/zero/1.0/
+You can use this content for personal, educational, and commercial purposes. Support by crediting 'Kenney' or www.kenney.nl (not a requirement)".
+
+Not: Kenney GLB dosyalari orijinalde harici Textures/colormap.png dosyasina basvuruyordu; gltf-transform ile doku gomulerek tek dosya yapildi (KHR_texture_transform kullanir, three.js GLTFLoader destekler).
