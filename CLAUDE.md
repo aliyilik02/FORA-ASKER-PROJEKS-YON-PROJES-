@@ -301,7 +301,7 @@ hangar) listesi şimdilik çıkarılmayacak**; ortam panoramada kalır. Ayrınt�
    **Kendi 3B modellerimiz:** A ve B listeleri bitti (3 Kasım; B: 17 model, tank `araclar/tank-ayir.py` ile
    gövde/kule/namlu'ya ayrıldı, kule ekseni oynatıcıda otomatik; ayrıntı docs "B listesi modelleri"). C listesi
    aynı hatla: plan.json'a satır → `meshy-uret.mjs --kod` → `model-hazirla.py` → manifest. Meshy bakiyesi ~190 kredi.
-   T5 açık çantada haç yerine kızılay, T9 silindir duman bombası için yeniden üretim (30 kredi/parça) isteğe bağlı.
+   Yeniden üretim bekleyenler (30 kredi/parça, kullanıcı onayı): T5 açık çanta (haç → kızılay; doku Meshy atlası parça parça, `araclar/glb-doku.mjs` ile bakıldı, düzenlenemez), T9 duman bombası (silindir), T12 gözetleme kulesi (kum torbaları kabinde değil ayak dibinde, tek ağ).
 2. HESCO artık prosedürel (`sutre.ts` `tip: "hesco"`, canvas doku: tel kafes + jeotekstil + kum; üs bölgesi
    diziliminde iki hat). Sıhhiyeci "Interact" klibiyle idare ediyor; gerçek
    müdahale animasyonu (turnike) için yeşil perde çekimi (docs §2.5). Yaralı taşıma (iki kişi) yok.
