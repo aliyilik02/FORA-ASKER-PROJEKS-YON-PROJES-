@@ -1213,6 +1213,9 @@ export class Sahne3B {
     this.hasar.krater(p, 1.6 + s * 2.6, s);
     this.flas.position.set(p.x, p.y + r, p.z);
     this.flasGuc = Math.max(this.flasGuc, s);
+    // Patlama artığı: kraterde küçük bir yangın 2,5–3,5 sn yanar, sonra 2,5 sn'de söner (alev → seyrek duman);
+    // ışığı ve sesi (yangın ses kaynağı) kendiliğinden gelir. Panelin "yangın" efekti ise kalıcıdır.
+    this.yanginlar?.ekle(p, 0.25 + 0.2 * Math.min(1, s), 2.5 + Math.min(1, s));
   }
 
   tozDuman(azimut: number, siddet: number) {

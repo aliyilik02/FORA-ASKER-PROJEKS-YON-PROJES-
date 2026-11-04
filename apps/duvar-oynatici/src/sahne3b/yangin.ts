@@ -19,6 +19,10 @@ interface Yangin {
   isik: THREE.PointLight;
   /** Titreme fazları. */
   faz: number;
+  /** Yaş (sn). */
+  yas: number;
+  /** Kendiliğinden sönme: bu yaşta sönmeye başlar (sn); null kalıcı (panel söndürene dek). Patlama artığı yangın 3–4 sn. */
+  omur: number | null;
 }
 
 export class YanginKatmani {
@@ -34,20 +38,25 @@ export class YanginKatmani {
     return this.yanginlar.length;
   }
 
-  ekle(konum: THREE.Vector3, siddet: number) {
+  /**
+   * Yangın ekler. `omur` (sn) verilirse o yaşta kendiliğinden sönmeye başlar (patlama artığı: 4 Kasım, kullanıcı
+   * "patlamadan sonra ufak bir yangın 3–4 sn sürüp sönsün"); verilmezse panel söndürene dek sürer.
+   */
+  ekle(konum: THREE.Vector3, siddet: number, omur?: number) {
     const s = Math.max(0.15, Math.min(1, siddet));
-    // Aynı noktaya ikinci yangın: büyüt
+    // Aynı noktaya ikinci yangın: büyüt; kalıcı olan kalıcı kalır, ömürlüyse ömrü uzar
     const yakin = this.yanginlar.find((y) => y.konum.distanceTo(konum) < 3);
     if (yakin) {
       yakin.siddet = Math.min(1, yakin.siddet + s * 0.5);
       yakin.yaricap = Math.min(6, yakin.yaricap + 0.8);
       yakin.sonuyor = false;
+      yakin.omur = omur === undefined ? null : yakin.omur === null ? null : Math.max(yakin.omur, yakin.yas + omur);
       return;
     }
     const isik = new THREE.PointLight(0xff8a2a, 0, 14 + 20 * s, 1.6);
     isik.position.copy(konum).add(new THREE.Vector3(0, 1.2 + s, 0));
     this.grup.add(isik);
-    this.yanginlar.push({ konum: konum.clone(), yaricap: 1.2 + 2.2 * s, siddet: s, guc: 0, sonuyor: false, isik, faz: Math.random() * 100 });
+    this.yanginlar.push({ konum: konum.clone(), yaricap: 1.2 + 2.2 * s, siddet: s, guc: 0, sonuyor: false, isik, faz: Math.random() * 100, yas: 0, omur: omur ?? null });
   }
 
   /** Ses motoru için (her kare): yangın başına sahne azimutu, yatay mesafe, seviye = şiddet × alev gücü (sönerken iner). */
@@ -70,6 +79,8 @@ export class YanginKatmani {
     for (let i = this.yanginlar.length - 1; i >= 0; i--) {
       const y = this.yanginlar[i];
       y.faz += dt;
+      y.yas += dt;
+      if (y.omur !== null && y.yas >= y.omur) y.sonuyor = true;
       if (y.sonuyor) {
         y.guc = Math.max(0, y.guc - dt / 2.5);
         if (y.guc <= 0) {

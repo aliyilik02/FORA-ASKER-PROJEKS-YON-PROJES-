@@ -792,3 +792,12 @@ düzeltmeler (`sahne3b/parcaciklar.ts`, `dokular.ts`, `sahne3b.ts`):
 - Testler (`parcaciklar.test.ts` "toz bulutu"): ömür ≥ 10 sn, kaynak tütmesi, yayılma ≥ 2,5×, alçak kalma, rüzgâr
   sürüklemesi, kapasite ölçeği, patlama yüksekliği < 15 m. Başsız Chrome'da 1,3 / 3,5 / 9,5 sn karelerle bakıldı.
   Kalan: dumanın zeminle kesişiminde sert kenar (yumuşak parçacık için derinlik dokusu gerekir), duvarda gözle seviye.
+
+## Patlama artığı yangın (4 Kasım 2026)
+
+Kullanıcı: "patlamadan sonra ufak bir yangın devam edip sönsün, 3–4 sn sürsün." `Sahne3B.patlama` (yakın patlama)
+kraterde küçük bir yangın bırakır: `YanginKatmani.ekle(p, 0,25–0,45, omur 2,5–3,5 sn)`. Yangın kaydına `yas` ve `omur`
+eklendi; ömrü dolan yangın kendiliğinden `sonuyor` olur (alev 2,5 sn'de kısılır, seyrek duman tüter, kayıt silinir).
+Panelin "Yangın" efekti ömürsüz (kalıcı) kalır; aynı yere kalıcı yangın eklenirse ömürlü kalıcıya döner, ömürlü üstüne
+ömürlü ömrü uzatır. Işık ve yangın sesi kendiliğinden gelir/gider (ses kaynağı seviye = şiddet × güç). Test:
+`yangin.test.ts`.
