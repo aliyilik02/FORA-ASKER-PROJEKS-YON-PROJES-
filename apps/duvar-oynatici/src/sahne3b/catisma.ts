@@ -48,8 +48,8 @@ const sesAzimutu = (p: THREE.Vector3) => konumAzimutu(p) as AzimutDerece;
 export interface CatismaSesleri {
   /** Yakına çarpan/vızıldayan mermi (çarpma noktasının azimutu). */
   carpma: (azimut: AzimutDerece) => void;
-  /** Tek atış sesi (atıcının azimutu); uzak = düşman tarafı. */
-  atis: (azimut: AzimutDerece, uzak: boolean) => void;
+  /** Tek atış sesi (atıcının azimutu); uzak = düşman tarafı; `mesafe` (m) verilirse namlu sesi mesafe/343 sn gecikir (crack–thump). */
+  atis: (azimut: AzimutDerece, uzak: boolean, mesafe?: number) => void;
   /** Ağır çatışmada düşman hattında rastgele uzak patlama (azimut, sahne). */
   uzakPatlama?: (azimut: AzimutDerece) => void;
   /** Tank top atışı sesi (tankın azimutu). */
@@ -280,7 +280,7 @@ export class CatismaSistemi {
     this.izEkle(kaynak, v, false);
     // Düşman hattında namlu parıltısı (uzak, kısa) ve uzak atış sesi
     if (Math.random() < 0.6) this.parcaciklar.parlama(kaynak, rnd(1.5, 2.5));
-    if (Math.random() < 0.35) this.sesler.atis(sesAzimutu(kaynak), true);
+    if (Math.random() < 0.35) this.sesler.atis(sesAzimutu(kaynak), true, Math.hypot(kaynak.x, kaynak.z));
   }
 
   /**
@@ -367,7 +367,7 @@ export class CatismaSistemi {
     this.izEkle(_kaynak, _hiz, false, false, true);
     // Kaynakta namlu parıltısı (uzak, kısa) ve uzak atış sesi
     if (Math.random() < 0.6) this.parcaciklar.parlama(_kaynak, rnd(1.5, 2.5));
-    if (Math.random() < 0.35) this.sesler.atis(sesAzimutu(_kaynak), true);
+    if (Math.random() < 0.35) this.sesler.atis(sesAzimutu(_kaynak), true, Math.hypot(_kaynak.x, _kaynak.z));
   }
 
   /**

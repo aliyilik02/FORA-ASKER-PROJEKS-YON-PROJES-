@@ -14,6 +14,7 @@ import { OrnekPaneli } from "./bilesenler/OrnekPaneli";
 import { OynaticiAyarlari } from "./bilesenler/OynaticiAyarlari";
 import { BolgePaneli, OrtamPaneli } from "./bilesenler/OrtamPaneli";
 import { SenaryoPaneli } from "./bilesenler/SenaryoPaneli";
+import { AarPaneli, AAR_NOT_OLAYI } from "./bilesenler/AarPaneli";
 import { SesDuzeniAyari } from "./bilesenler/SesDuzeniAyari";
 import { UnrealKomutlariPaneli } from "./bilesenler/UnrealKomutlariPaneli";
 import { UstCubuk } from "./bilesenler/UstCubuk";
@@ -37,7 +38,7 @@ export function Uygulama() {
 
 function Govde() {
   const kopru = useKopru();
-  const { durum, senaryo, senaryolar, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, sonSifirlama, soketAcik, hata, sifirlamaUygula } = kopru;
+  const { durum, senaryo, senaryolar, olaylar, tatbikat, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, sonSifirlama, soketAcik, hata, sifirlamaUygula } = kopru;
   const { sekme, setSekme, seciliYon, setSeciliYon, bildir } = useArayuz();
 
   // API çağrılarını sarar: hata olursa bildirim
@@ -151,6 +152,14 @@ function Govde() {
         if (f) void calistir(() => api.figur({ islem: "poz", id: f.id, poz: "yarali" })).then((r) => r && bildir({ tur: "hata", baslik: "Asker vuruldu" }));
         return;
       }
+      // M: tatbikat notu (AAR) — Senaryo sekmesine geç, not alanına odaklan
+      if (e.key === "m" || e.key === "M") {
+        if (e.repeat) return;
+        e.preventDefault();
+        setSekme("senaryo");
+        window.setTimeout(() => window.dispatchEvent(new CustomEvent(AAR_NOT_OLAYI)), 50);
+        return;
+      }
       if (e.key === "ArrowLeft") setSeciliYon(seciliYon - (e.shiftKey ? 15 : 5));
       if (e.key === "ArrowRight") setSeciliYon(seciliYon + (e.shiftKey ? 15 : 5));
       if (e.key === " " && senaryo?.senaryoId) {
@@ -217,6 +226,7 @@ function Govde() {
             {sekme === "senaryo" && (
               <>
                 <SenaryoPaneli senaryoDurumu={senaryo} senaryolar={senaryolar} simDurumu={durum} calistir={calistir} />
+                <AarPaneli olaylar={olaylar} tatbikat={tatbikat} calistir={calistir} />
                 <OnAyarPaneli calistir={calistir} />
               </>
             )}

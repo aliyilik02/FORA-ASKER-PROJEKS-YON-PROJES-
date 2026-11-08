@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import { heliDizisiIptal } from "./heliDizisi";
-import type { BaglantiDurumu, FigurKomutu, OrnekDurumu, Senaryo, SenaryoDurumu, SifirlamaKaynagi, SifirlamaOzeti, SifirlamaYaniti, SimulasyonDurumu, SunucuMesaji, UnrealIstekKaydi } from "./tipler";
+import type { BaglantiDurumu, FigurKomutu, Olay, OrnekDurumu, Senaryo, SenaryoDurumu, SifirlamaKaynagi, SifirlamaOzeti, SifirlamaYaniti, SimulasyonDurumu, SunucuMesaji, Tatbikat, UnrealIstekKaydi } from "./tipler";
 
 export interface GunlukSatiri {
   seviye: "bilgi" | "uyari" | "hata";
@@ -33,6 +33,9 @@ export function useKopru() {
   const [senaryo, setSenaryo] = useState<SenaryoDurumu | null>(null);
   /** Kayıtlı senaryolar: açılışta çekilir, köprünün `senaryolar` mesajıyla (bu ya da başka panel kaydedince/silince) yenilenir. */
   const [senaryolar, setSenaryolar] = useState<Senaryo[]>([]);
+  /** Tatbikat olay günlüğü (AAR): son 300 olay, canlı `olay` mesajıyla büyür; aktif tatbikat. */
+  const [olaylar, setOlaylar] = useState<Olay[]>([]);
+  const [tatbikat, setTatbikat] = useState<Tatbikat | null>(null);
   const [baglanti, setBaglanti] = useState<BaglantiDurumu | null>(null);
   const [gunluk, setGunluk] = useState<GunlukSatiri[]>([]);
   const [unrealIstekler, setUnrealIstekler] = useState<UnrealIstekKaydi[]>([]);
@@ -66,6 +69,8 @@ export function useKopru() {
           .catch(() => undefined);
         void api.figurler().then(setFigurler).catch(() => undefined);
         void api.senaryolar().then(setSenaryolar).catch(() => undefined);
+        void api.olaylar({ son: 300 }).then(setOlaylar).catch(() => undefined);
+        void api.olaylarGunler().then((g) => setTatbikat(g.aktif)).catch(() => undefined);
       };
       ws.onmessage = (olay) => {
         const mesaj = JSON.parse(olay.data) as SunucuMesaji;
@@ -78,6 +83,12 @@ export function useKopru() {
             break;
           case "senaryolar":
             setSenaryolar(mesaj.liste);
+            break;
+          case "olay":
+            setOlaylar((eski) => [...eski.slice(-299), mesaj.olay]);
+            break;
+          case "tatbikat":
+            setTatbikat(mesaj.tatbikat);
             break;
           case "baglanti":
             setBaglanti(mesaj.baglanti);
@@ -147,5 +158,5 @@ export function useKopru() {
     setSonSifirlama((eski) => (eski && eski.nesil >= y.nesil ? eski : { nesil: y.nesil, kaynak: y.kaynak, ozet: y.ozet, zaman: y.zaman }));
   }, []);
 
-  return { durum, senaryo, senaryolar, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, sonSifirlama, soketAcik, hata, calistir, sifirlamaUygula };
+  return { durum, senaryo, senaryolar, olaylar, tatbikat, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, sonSifirlama, soketAcik, hata, calistir, sifirlamaUygula };
 }

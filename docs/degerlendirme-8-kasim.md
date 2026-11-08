@@ -227,9 +227,16 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
     günlüğü uyarısı (§2-12); U odada yan duvar 16:9 sapması > %30 ise HUD uyarısı (reddedilmez; kısmi görüntü alanı desteği
     bekliyor), `?fov=` 120 ile sınırlı (§2-13).
 
-### C. Orta vade (3–6 hafta)
-16. **AAR:** olay günlüğü (JSONL) → zaman çizelgesi ekranı → tekrar oynatma → CSV/PDF; kursiyer işaretleme tuşu ve TCCC sayaçları.
-17. **Crack–thump ve mesafe ses modeli** (§1-4): kaynak mesafesinden gecikme + alçak geçiren kesim; silah sesi katmanları.
+### C. Orta vade (3–6 hafta) — 16 ve 17 ✓ 8 Kasım gece (AAR tekrar oynatma hariç)
+16. ✓ **AAR:** `kopru/olaylar.ts` — her anlamlı olay (durum farkı `durumFarki`, efekt, figür, senaryo durumu/adımı, sıfırlama,
+    eğitmen notu, oynatıcı hatası) `veri/olaylar/<gün>.jsonl`; tatbikat kimliği senaryo baştan oynatılınca ya da panelden
+    "Tatbikat başlat" ile; API `GET /olaylar`, `/olaylar/gunler`, `/olaylar/csv`, `POST /olay/not`, `/tatbikat/baslat|bitir`; WS `olay`,
+    `tatbikat`; panel Senaryo sekmesinde "Tatbikat günlüğü (AAR)" kartı (canlı liste, tatbikat süresine göre zaman, M tuşu not alanı,
+    CSV indir). Bekleyen: tekrar oynatma (komut akışını duvara yeniden gönderme), TCCC sayaçları (turnike süresi vb.), PDF.
+17. ✓ **Crack–thump ve mesafe ses modeli** (§1-4): `mesafeSesi.ts` (gecikme mesafe/343 ≤ 4 sn; kesim 300 m 6 kHz → 1 km 2 kHz →
+    2 km 800 Hz; kazanç −6 dB/2×, 150 m referans) — uzak düşman atışının namlu sesi parıltıdan gecikmeli, boğuk ve mesafeyle
+    kısık gelir (`CatismaSesleri.atis(azimut, uzak, mesafe)`, `SesMotoru.tekAtis`); yakın geçişin "çat"ı beklemez. Silah sesi
+    katmanları (mekanik/bas/kuyruk) bekliyor.
 18. **Telegraf evresi** (§1-7): havan ıslığı + uzak namlu flaşı; **aydınlatma fişeği** (paraşüt, salınımlı gölge, 20–35 sn); yağmur
     sıçraması/ıslak zemin; bitki sallanması (docs "Kalan").
 19. **Gece projeksiyon modu** (§1-8): gölge tabanı kaldırılmış ton eğrisi, sahada sabitlenir.

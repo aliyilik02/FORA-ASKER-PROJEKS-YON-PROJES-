@@ -9,6 +9,7 @@ import type { DurumDeposu } from "./durum.js";
 import type { FigurYoneticisi } from "./figur.js";
 import type { Gunluk } from "./gunluk.js";
 import type { OrnekBaslatici } from "./ornek.js";
+import { olaylarCsv, type OlayGunlugu } from "./olaylar.js";
 import { sifirlamaKaynagiCoz, type SahneYoneticisi } from "./sahne.js";
 import type { SenaryoMotoru } from "./senaryo.js";
 import type { BaglantiDurumu, OnAyar, Senaryo, SenaryoAdimi, SifirlamaYaniti } from "./tipler.js";
@@ -32,6 +33,8 @@ export interface ApiBagimliliklari {
   sahne?: SahneYoneticisi;
   /** Senaryo listesi değişince (kayıt/silme) çağrılır; köprü `senaryolar` mesajını yayınlar. */
   senaryolarDegisti?: (liste: Senaryo[]) => void;
+  /** Tatbikat olay günlüğü (AAR). */
+  olaylar?: OlayGunlugu;
 }
 
 export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici, oynaticiSayisi = 0, panelSayisi = 0): BaglantiDurumu {
@@ -208,6 +211,43 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
     const ozet = b.sahne.sifirla(kaynak);
     const yanit: SifirlamaYaniti = { tamam: true, nesil: b.sahne.nesil, kaynak, ozet, zaman: b.sahne.sonZaman, durum: b.depo.al(), senaryo: b.senaryo.al() };
     res.json(yanit);
+  });
+
+  // --- Tatbikat olay günlüğü (AAR) ---
+  const sorguMetni = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+  r.get("/olaylar", (req, res) => {
+    if (!b.olaylar) return res.status(501).json({ hata: "olay günlüğü yok" });
+    const son = Number(req.query.son);
+    res.json(b.olaylar.liste({ gun: sorguMetni(req.query.gun), tatbikat: sorguMetni(req.query.tatbikat), son: Number.isFinite(son) && son > 0 ? Math.min(2000, son) : 300 }));
+  });
+  r.get("/olaylar/gunler", (_req, res) => {
+    if (!b.olaylar) return res.status(501).json({ hata: "olay günlüğü yok" });
+    res.json({ gunler: b.olaylar.gunler(), tatbikatlar: b.olaylar.tatbikatListesi(), aktif: b.olaylar.aktifTatbikat });
+  });
+  r.get("/olaylar/csv", (req, res) => {
+    if (!b.olaylar) return res.status(501).json({ hata: "olay günlüğü yok" });
+    const gun = sorguMetni(req.query.gun);
+    const tatbikat = sorguMetni(req.query.tatbikat);
+    const liste = b.olaylar.liste({ gun, tatbikat, son: 5000 });
+    const ad = `tatbikat-${tatbikat ?? gun ?? "son"}.csv`;
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${ad}"`);
+    res.send(olaylarCsv(liste, b.olaylar.tatbikatListesi()));
+  });
+  r.post("/olay/not", (req, res) => {
+    if (!b.olaylar) return res.status(501).json({ hata: "olay günlüğü yok" });
+    const metin = typeof req.body?.metin === "string" ? req.body.metin.trim().slice(0, 500) : "";
+    if (!metin) return res.status(400).json({ hata: "metin zorunlu" });
+    res.json(b.olaylar.kaydet("not", metin));
+  });
+  r.post("/tatbikat/baslat", (req, res) => {
+    if (!b.olaylar) return res.status(501).json({ hata: "olay günlüğü yok" });
+    const ad = typeof req.body?.ad === "string" && req.body.ad.trim() ? req.body.ad.trim().slice(0, 120) : `Tatbikat ${new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`;
+    res.json(b.olaylar.tatbikatBaslat(ad));
+  });
+  r.post("/tatbikat/bitir", (_req, res) => {
+    if (!b.olaylar) return res.status(501).json({ hata: "olay günlüğü yok" });
+    res.json({ tatbikat: b.olaylar.tatbikatBitir() });
   });
 
   // --- Senaryolar ---

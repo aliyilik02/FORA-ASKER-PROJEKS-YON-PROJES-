@@ -1,5 +1,5 @@
 /** Köprü sunucusu HTTP istemcisi. */
-import type { BaglantiDurumu, Bolge, CatismaAyarlari, EfektIstegi, FigurKomutu, IzliMermiAyarlari, KlipOzeti, Oda, Oda2Ayarlari, OnAyar, OrnekDurumu, OrtamAyarlari, OrtamIsigi, Safha, Senaryo, SenaryoDurumu, SifirlamaKaynagi, SifirlamaYaniti, SimulasyonDurumu, UnrealIstekKaydi } from "./tipler";
+import type { BaglantiDurumu, Bolge, CatismaAyarlari, EfektIstegi, FigurKomutu, IzliMermiAyarlari, KlipOzeti, Oda, Oda2Ayarlari, Olay, OnAyar, OrnekDurumu, OrtamAyarlari, OrtamIsigi, Safha, Senaryo, SenaryoDurumu, SifirlamaKaynagi, SifirlamaYaniti, SimulasyonDurumu, Tatbikat, UnrealIstekKaydi } from "./tipler";
 
 async function istek<T>(yol: string, yontem: string, govde?: unknown): Promise<T> {
   const yanit = await fetch(`/api${yol}`, {
@@ -44,6 +44,19 @@ export const api = {
   senaryoDur: () => istek<SenaryoDurumu>("/senaryo/dur", "POST"),
   /** `bekle_onay` adımında bekleyen senaryoyu sürdürür. */
   senaryoDevam: () => istek<SenaryoDurumu>("/senaryo/devam", "POST"),
+  /** Tatbikat olay günlüğü (AAR). */
+  olaylar: (f: { gun?: string; tatbikat?: string; son?: number } = {}) => {
+    const q = new URLSearchParams();
+    if (f.gun) q.set("gun", f.gun);
+    if (f.tatbikat) q.set("tatbikat", f.tatbikat);
+    if (f.son) q.set("son", String(f.son));
+    const s = q.toString();
+    return istek<Olay[]>(`/olaylar${s ? `?${s}` : ""}`, "GET");
+  },
+  olaylarGunler: () => istek<{ gunler: string[]; tatbikatlar: Tatbikat[]; aktif: Tatbikat | null }>("/olaylar/gunler", "GET"),
+  olayNot: (metin: string) => istek<Olay>("/olay/not", "POST", { metin }),
+  tatbikatBaslat: (ad?: string) => istek<Tatbikat>("/tatbikat/baslat", "POST", { ad }),
+  tatbikatBitir: () => istek<{ tatbikat: Tatbikat | null }>("/tatbikat/bitir", "POST"),
   safha: (safha: Safha) => istek<SimulasyonDurumu>("/safha", "PUT", { safha }),
   /** `tamam: false` + `uyari`: adım uygulanamadı (ör. figür sahnede değil); eğitmene bildirim olarak gösterilir. */
   adimTetikle: (senaryoId: string, adimId: string) => istek<{ tamam: boolean; uyari?: string }>("/senaryo/adim-tetikle", "POST", { senaryoId, adimId }),

@@ -688,6 +688,16 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   (kendiliğinden)" bildirimi): eğitmenin elle çağırdığı figürler, efektler, çatışma, izli mermi, helikopter ve sesler
   gider; ortam, bölge ve ışık kalır (senaryonun kendi adımları isterse değiştirir). Duraklatılmıştan devam ederken ve
   "Adımı tetikle"de sıfırlama yok. Oynatıcı için ayrı bir şey yok: aynı `sahne/sifirla` mesajı gelir.
+- **Tatbikat olay günlüğü (AAR)** (8 Kasım, C-16): köprü `OlayGunlugu` (`kopru/olaylar.ts`) her anlamlı olayı
+  `veri/olaylar/<YYYY-MM-DD>.jsonl`e ekler (`{zaman, tatbikat, tur, ozet, ayrinti}`): durum farkları (`durumFarki`:
+  oda/bölge/safha/ortam/ışık/izli/helikopter/çatışma), efektler, figür komutları, senaryo durumu ve adımları, sahne
+  sıfırlaması, eğitmen notu, oynatıcı hatası. Tatbikat kimliği (36 tabanlı başlangıç damgası) senaryo baştan oynatılınca
+  açılır, senaryo bitince/durunca kapanır; panelden elle de (`POST /api/tatbikat/baslat|bitir`). `GET /api/olaylar?gun=&tatbikat=&son=`,
+  `/olaylar/gunler`, `/olaylar/csv` (noktalı virgül, BOM'lu UTF-8), `POST /api/olay/not {metin}`. WS: `olay`, `tatbikat`
+  (yalnız panellere). Panel: Senaryo sekmesi "Tatbikat günlüğü (AAR)" kartı; M tuşu not alanına odaklar.
+- **Crack–thump** (8 Kasım, C-17): uzak düşman atışında namlu sesi `mesafeSesi.ts` ile mesafe/343 sn gecikir (≤ 4 sn),
+  alçak geçiren kesim ve kazanç mesafeyle düşer (`CatismaSesleri.atis` üçüncü bağımsız değişken `mesafe`; `SesMotoru.tekAtis`);
+  yakın geçen merminin "çat"ı eskisi gibi anında. Sahne sıfırlaması bekleyen namlu seslerini iptal eder (efekt nesli).
 - **Panel API doğrulama ve senaryo sözleşmesi** (8 Kasım): PATCH `/ortam|/isik|/izli-mermi|/oda2|/catisma` ve POST `/efekt`
   gövdeleri `dogrulama.ts` şemalarıyla denetlenir (yanlış tip/seçenek → 400 `{hata}`; tanınmayan alan atılır); depo yine de
   NaN/geçersiz seçenekte eski değeri korur. POST `/senaryolar` adım kimliklerini tekilleştirir, işlemi olmayan adımı

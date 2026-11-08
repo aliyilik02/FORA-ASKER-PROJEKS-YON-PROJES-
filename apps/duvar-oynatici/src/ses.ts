@@ -9,6 +9,7 @@
  * (main.ts), T tuşu hoparlör testi.
  */
 import type { HelikopterDurumu, OrtamAyarlari } from "./tipler";
+import { mesafeGecikmesi, mesafeKazanci, mesafeKesimi } from "./mesafeSesi";
 import {
   duzenSec,
   type HoparlorDuzeni,
@@ -338,7 +339,7 @@ export class SesMotoru {
    * Çok kanal: kazanç → (uzak) → kanal kazançları → birleştirici; `lfe` > 0 ise 120 Hz altı kopya LFE kanalına
    * (düzende LFE varsa).
    */
-  private cikis(azimut: number, kazanc: number, uzak = false, lfe = 0): GainNode {
+  private cikis(azimut: number, kazanc: number, uzak = false, lfe = 0, kesim?: number): GainNode {
     const c = this.ctx!;
     // AudioParam'a NaN yazmak TypeError atar ve kare döngüsünü düşürürdü (NaN azimutlu çatışma/helikopter)
     if (!Number.isFinite(azimut)) azimut = 0;
@@ -347,9 +348,10 @@ export class SesMotoru {
     g.gain.value = kazanc;
     let son: AudioNode = g;
     if (uzak) {
+      // Uzak ses boğuk: kesim mesafeden (mesafeSesi.ts) ya da eski sabit 600 Hz
       const f = c.createBiquadFilter();
       f.type = "lowpass";
-      f.frequency.value = 600;
+      f.frequency.value = kesim && Number.isFinite(kesim) ? kesim : 600;
       son = g.connect(f);
     }
     const birlestirici = this.birlestirici;
@@ -536,7 +538,25 @@ export class SesMotoru {
    * Tek atış (çatışma): manifest kaydı varsa rastgele perde ile, yoksa kısa gürültü vuruşu. Kayıt TEK_ATIS_EN_UZUN'dan
    * uzunsa o noktada kısa sönümle kesilir (güvenlik ağı; asıl çözüm tek atışlık kesimler, bkz. araclar/silah-tek-atis.mjs).
    */
-  tekAtis(azimut: number, uzak = false) {
+  tekAtis(azimut: number, uzak = false, mesafe?: number) {
+    if (!this.hazir || !this.ctx) return;
+    // Crack–thump (C-17): uzak düşmanın namlu sesi parıltıdan mesafe/343 sn sonra gelir, mesafeyle −6 dB/2× ve boğuklaşır;
+    // yakın geçen merminin "çat"ı (catisma.ts) beklemez. Mesafe yoksa eski davranış (hemen, 600 Hz, 0,22).
+    const mesafeli = uzak && mesafe !== undefined && Number.isFinite(mesafe) && mesafe > 0;
+    const gecikme = mesafeli ? mesafeGecikmesi(mesafe!) : 0;
+    const kesim = mesafeli ? mesafeKesimi(mesafe!) : undefined;
+    const uzakKazanc = mesafeli ? Math.max(0.08, 0.55 * mesafeKazanci(mesafe!, 150)) : 0.22;
+    const nesil = this.efektNesli;
+    if (gecikme > 0.03) {
+      setTimeout(() => {
+        if (nesil === this.efektNesli && this.hazir) this.tekAtisCal(azimut, uzak, uzakKazanc, kesim);
+      }, gecikme * 1000);
+      return;
+    }
+    this.tekAtisCal(azimut, uzak, uzakKazanc, kesim);
+  }
+
+  private tekAtisCal(azimut: number, uzak: boolean, uzakKazanc: number, kesim?: number) {
     if (!this.hazir || !this.ctx) return;
     const liste = this.manifest.gurultu;
     if (liste?.length) {
@@ -548,8 +568,8 @@ export class SesMotoru {
         s.buffer = b;
         const hiz = 0.9 + Math.random() * 0.25;
         s.playbackRate.value = hiz;
-        const kazanc = (uzak ? 0.22 : 0.55) * this.telafi(b);
-        const g = this.cikis(azimut, kazanc, uzak);
+        const kazanc = (uzak ? uzakKazanc : 0.55) * this.telafi(b);
+        const g = this.cikis(azimut, kazanc, uzak, 0, kesim);
         s.connect(g);
         this.anlik(s, g);
         if (b.duration > TEK_ATIS_EN_UZUN) {
@@ -568,7 +588,7 @@ export class SesMotoru {
       }
       return;
     }
-    this.gurultuPatlamasi(azimut, uzak ? 0.2 : 0.5, 0.09, uzak ? 900 : 2500, uzak, "bandpass");
+    this.gurultuPatlamasi(azimut, uzak ? uzakKazanc * 0.9 : 0.5, 0.09, uzak ? Math.min(900, kesim ?? 900) : 2500, uzak, "bandpass");
   }
 
   /** Yakına çarpan mermi: kısa tok vuruş + vızıltı. */

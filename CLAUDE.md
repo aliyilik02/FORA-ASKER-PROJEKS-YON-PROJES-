@@ -305,9 +305,10 @@ hata bildirimleri, ping/pong, kopukluk şeridi, 44 px, taslak kaydı; figür bak
 klipleri; senaryo adımları `bekle_onay` (Devam/Boşluk) ve `safha`; TCCC safhası `durum.safha` → sıhhiyeci ateş altında siperde
 bekler, taktik sahada yaralıya yürür; canlı sahne kartında safha seçici). Kullanıcı kararı (8 Kasım): bakış önceliği düşman >
 yaralı > son patlama, sıhhiyeci her zaman yaralıya; safha davranışı aktif. **B-14/15 de bitti**: parçacık kartları göze dönük + sis + sıralama, alev dokusu doğrusal; `?dpr=cihaz` ve DPR uyarısı, yan
-duvar 16:9 uyarısı, fov ≤ 120. **B listesi tamam.** Bekleyen: C listesi (AAR olay günlüğü, crack-thump, telegraf/havan ıslığı,
-aydınlatma fişeği, gece projeksiyon modu, kaynak yöneticisi, performans), `rastgele_sure`/`beklenen` adım alanları, yan
-duvar için kısmi görüntü alanı. Duvarda gözle bakılmadı (bakış genliği, yürüyüş hızı, geçiş klipleri, sisli parçacık, köşe). Domain bilgisi için skill `askeri-simulasyon-tasarimi` (`.claude/skills/`; değerlendirme/öneri işinde yükle);
+duvar 16:9 uyarısı, fov ≤ 120. **B listesi tamam.** **C-16 AAR** (`kopru/olaylar.ts`, `veri/olaylar/<gün>.jsonl`, panel Senaryo sekmesi "Tatbikat günlüğü",
+M tuşu not, CSV) ve **C-17 crack–thump** (`mesafeSesi.ts`) bitti. Bekleyen: C-18 telegraf/havan ıslığı + aydınlatma fişeği,
+C-19 gece projeksiyon modu, C-20 kaynak yöneticisi/bütçe/sahne saati/tohum, C-21 performans; AAR tekrar oynatma ve TCCC sayaçları;
+`rastgele_sure`/`beklenen` adım alanları; yan duvar için kısmi görüntü alanı. Duvarda gözle bakılmadı (bakış genliği, yürüyüş hızı, geçiş klipleri, sisli parçacık, köşe). Domain bilgisi için skill `askeri-simulasyon-tasarimi` (`.claude/skills/`; değerlendirme/öneri işinde yükle);
 dış skill'ler: threejs-*, create-game-vfx, build-game-audio-feedback, game-audio, game-design-theory, game-development, game-ui-design.
 
 ## Sıradaki işler (öncelik sırasıyla)

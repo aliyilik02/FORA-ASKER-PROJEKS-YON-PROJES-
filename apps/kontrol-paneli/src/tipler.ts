@@ -198,6 +198,36 @@ export interface BaglantiDurumu {
   panel: { sayi: number };
 }
 
+/** Tatbikat olay günlüğü (AAR) kaydı; köprü `veri/olaylar/<gün>.jsonl`e yazar, panele `olay` mesajıyla akar. */
+export type OlayTuru = "durum" | "efekt" | "figur" | "senaryo" | "sahne" | "not" | "oynatici" | "tatbikat";
+export interface Olay {
+  /** Köprü saati (ms). */
+  zaman: number;
+  /** Tatbikat kimliği (başlangıç damgası, 36 tabanı) ya da null (serbest çalışma). */
+  tatbikat: string | null;
+  tur: OlayTuru;
+  /** Tek satır Türkçe özet (AAR listesi ve CSV). */
+  ozet: string;
+  /** Ham veri (komut, efekt, fark listesi). */
+  ayrinti?: unknown;
+}
+export interface Tatbikat {
+  id: string;
+  ad: string;
+  baslangic: number;
+  bitis?: number;
+}
+export const OLAY_TURU_ETIKETLERI: Record<OlayTuru, string> = {
+  durum: "Durum",
+  efekt: "Efekt",
+  figur: "Figür",
+  senaryo: "Senaryo",
+  sahne: "Sahne",
+  not: "Not",
+  oynatici: "Oynatıcı",
+  tatbikat: "Tatbikat",
+};
+
 /** İstemci → sunucu WebSocket mesajları. */
 export type IstemciMesaji =
   | { tip: "merhaba"; rol: "panel" | "oynatici"; ad?: string }
@@ -323,6 +353,10 @@ export type SunucuMesaji =
   | { tip: "senaryo"; senaryo: SenaryoDurumu }
   /** Senaryo listesi değişti (kayıt/silme, bu ya da başka panelden); paneller listeyi yeniler. */
   | { tip: "senaryolar"; liste: Senaryo[] }
+  /** Tatbikat olay günlüğüne yeni kayıt (AAR canlı akışı; yalnız panellere). */
+  | { tip: "olay"; olay: Olay }
+  /** Aktif tatbikat değişti (başladı / bitti). */
+  | { tip: "tatbikat"; tatbikat: Tatbikat | null }
   | { tip: "baglanti"; baglanti: BaglantiDurumu }
   | { tip: "gunluk"; seviye: "bilgi" | "uyari" | "hata"; mesaj: string; zaman: number }
   | { tip: "unreal"; istek: UnrealIstekKaydi }

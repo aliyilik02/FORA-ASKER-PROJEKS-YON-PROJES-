@@ -22,11 +22,12 @@ import { FirtinaZamanlayici } from "./firtina.js";
 import { DurumDeposu } from "./durum.js";
 import { FigurYoneticisi } from "./figur.js";
 import { Gunluk } from "./gunluk.js";
+import { OlayGunlugu, durumFarki } from "./olaylar.js";
 import { OrnekBaslatici, ornekKomutuOlustur } from "./ornek.js";
 import { ORNEK_SENARYOLAR } from "./ornekSenaryolar.js";
 import { SahneYoneticisi } from "./sahne.js";
 import { SenaryoMotoru } from "./senaryo.js";
-import type { IstemciMesaji, SunucuMesaji } from "./tipler.js";
+import { EFEKT_ETIKETLERI, SIFIRLAMA_KAYNAK_ETIKETLERI, sifirlamaOzetiMetni, type IstemciMesaji, type SunucuMesaji } from "./tipler.js";
 import { UnrealIstemci } from "./unreal.js";
 
 const envYuklendi = envDosyasiniYukle(varsayilanEnvYolu());
@@ -54,6 +55,9 @@ const senaryo = new SenaryoMotoru(depo, gunluk);
 const firtina = new FirtinaZamanlayici({ ortam: () => depo.al().ortam, simsek: (siddet) => void depo.efektTetikle({ tur: "simsek", siddet }) });
 setInterval(() => firtina.adim(Date.now()), 1000);
 const veri = new VeriDeposu(ayarlar.veriKlasoru, ORNEK_SENARYOLAR, (u) => gunluk.hata(`Veri deposu: ${u}`));
+// Tatbikat olay günlüğü (AAR): durum farkları, efektler, figürler, senaryo adımları, sıfırlama, eğitmen notları →
+// veri/olaylar/<gün>.jsonl; paneller canlı akışı `olay` mesajıyla alır
+const olaylar = new OlayGunlugu(ayarlar.veriKlasoru, undefined, (u) => gunluk.uyari(u));
 const ornek = new OrnekBaslatici(ornekKomutuOlustur(ayarlar.ornek), gunluk);
 
 /**
@@ -99,7 +103,20 @@ if (sonDurum) {
     .then(() => gunluk.bilgi(`Son durum geri yüklendi (${new Date(sonDurum.zaman).toLocaleTimeString("tr-TR")}, ${sonDurum.figurler.length} figür${kapananlar.length ? `; kapalı başlatıldı: ${kapananlar.join(", ")}` : ""})`));
 }
 // Sahne sıfırlaması (temel sahne): senaryo dur → figür temizle → tek durum yayını → `sahne/sifirla` → hemen kayıt
-const sahne = new SahneYoneticisi({ depo, senaryo, figur, gunluk, yayinla: (m) => herkeseGonder(m), kaydet: () => sonDurumuKaydet(true) }, sonDurum?.nesil);
+const sahne = new SahneYoneticisi(
+  {
+    depo,
+    senaryo,
+    figur,
+    gunluk,
+    yayinla: (m) => {
+      herkeseGonder(m);
+      if (m.tip === "sahne" && m.islem === "sifirla") olaylar.kaydet("sahne", `Sahne temele döndü (${SIFIRLAMA_KAYNAK_ETIKETLERI[m.kaynak]}): ${sifirlamaOzetiMetni(m.ozet)}`, m.ozet);
+    },
+    kaydet: () => sonDurumuKaydet(true),
+  },
+  sonDurum?.nesil,
+);
 // Senaryo baştan oynatılınca önce temel sahne (elle çağrılanlar gider), sonra senaryonun adımları
 senaryo.sahneBagla(sahne);
 let sonDurumZamanlayici: NodeJS.Timeout | null = null;
@@ -129,7 +146,7 @@ function sonDurumuYaz() {
 const uygulama = express();
 uygulama.use(
   "/api",
-  apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, panelSayisi, figur, sahne, senaryolarDegisti: (liste) => herkeseGonder({ tip: "senaryolar", liste }) }),
+  apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, panelSayisi, figur, sahne, olaylar, senaryolarDegisti: (liste) => herkeseGonder({ tip: "senaryolar", liste }) }),
 );
 for (const klasor of icerikAdaylari) {
   uygulama.use("/oynatici/icerik", express.static(klasor));
@@ -178,18 +195,59 @@ function herkeseGonder(mesaj: SunucuMesaji) {
 
 const baglantiYayinla = () => herkeseGonder({ tip: "baglanti", baglanti: baglantiDurumu(unreal, artnet, oynaticiSayisi(), panelSayisi()) });
 
+let oncekiDurum = depo.al();
 depo.dinle((durum) => {
   herkeseGonder({ tip: "durum", durum });
   sonDurumuKaydet();
+  const fark = durumFarki(oncekiDurum, durum);
+  oncekiDurum = durum;
+  if (fark.length) olaylar.kaydet("durum", fark.join("; "), fark);
 });
-depo.efektDinle((efekt) => herkeseGonder({ tip: "efekt", efekt }));
-senaryo.dinle((s) => herkeseGonder({ tip: "senaryo", senaryo: s }));
+depo.efektDinle((efekt) => {
+  herkeseGonder({ tip: "efekt", efekt });
+  const parcalar = [EFEKT_ETIKETLERI[efekt.tur] ?? efekt.tur, efekt.siddet !== undefined ? `%${Math.round(efekt.siddet * 100)}` : "", efekt.yon !== undefined ? `@ ${efekt.yon}°` : "", efekt.mesafe !== undefined ? `${efekt.mesafe} m` : ""];
+  olaylar.kaydet("efekt", parcalar.filter((p) => p).join(" "), efekt);
+});
+let oncekiSenaryo = senaryo.al();
+senaryo.dinle((s) => {
+  herkeseGonder({ tip: "senaryo", senaryo: s });
+  const o = oncekiSenaryo;
+  oncekiSenaryo = s;
+  const ad = s.ad ?? s.senaryoId ?? "senaryo";
+  if (s.durum !== o.durum || s.senaryoId !== o.senaryoId) {
+    // Baştan oynatma yeni tatbikat açar; bitince/durunca kapanır
+    if (s.durum === "oynuyor" && o.durum === "duruyor") olaylar.tatbikatBaslat(ad);
+    const bitti = s.durum === "duruyor" && s.toplamMs > 0 && s.konumMs >= s.toplamMs;
+    const etiket = s.durum === "oynuyor" ? (o.durum === "duruyor" ? "başladı" : "devam ediyor") : s.durum === "duraklatildi" ? "duraklatıldı" : s.durum === "bekliyor" ? `eğitmen onayı bekliyor${s.bekleme ? `: ${s.bekleme.mesaj}` : ""}` : bitti ? "tamamlandı" : o.durum === "duruyor" ? "yüklendi" : "durduruldu";
+    olaylar.kaydet("senaryo", `Senaryo "${ad}" ${etiket}`, { senaryoId: s.senaryoId, durum: s.durum, konumMs: s.konumMs });
+    if (s.durum === "duruyor" && o.durum !== "duruyor") olaylar.tatbikatBitir(bitti ? "senaryo tamamlandı" : "senaryo durduruldu");
+  } else if (s.senaryoId && s.senaryoId === o.senaryoId && s.tamamlanan.length > o.tamamlanan.length) {
+    const sn = veri.senaryoBul(s.senaryoId);
+    for (const id of s.tamamlanan.slice(o.tamamlanan.length)) {
+      const adim = sn?.adimlar.find((a) => a.id === id);
+      olaylar.kaydet("senaryo", `Adım: ${adim?.aciklama ?? id}`, { adimId: id, konumMs: s.konumMs });
+    }
+  }
+});
+olaylar.dinle((olay) => {
+  panellereGonder({ tip: "olay", olay });
+  if (olay.tur === "tatbikat") panellereGonder({ tip: "tatbikat", tatbikat: olaylar.aktifTatbikat });
+});
 gunluk.dinle((k) => herkeseGonder({ tip: "gunluk", seviye: k.seviye, mesaj: k.mesaj, zaman: k.zaman }));
 unreal.dinle((istek) => herkeseGonder({ tip: "unreal", istek }));
 ornek.dinle((o) => herkeseGonder({ tip: "ornek", ornek: o }));
 figur.dinle((komut, aktifler) => {
   herkeseGonder({ tip: "figur", komut, aktifler });
   sonDurumuKaydet();
+  const ozet =
+    komut.islem === "oynat"
+      ? `Figür: ${komut.klip} @ ${komut.azimut ?? 0}°${komut.poz && komut.poz !== "ayakta" ? ` (${komut.poz})` : ""}${komut.yaninda ? ` → ${komut.yaninda} yanına` : ""}`
+      : komut.islem === "poz"
+        ? `Figür duruş: ${komut.id} → ${komut.poz}`
+        : komut.islem === "durdur"
+          ? `Figür kaldırıldı: ${komut.id}`
+          : "Tüm figürler kaldırıldı";
+  olaylar.kaydet("figur", ozet, komut);
 });
 
 wss.on("connection", (ws: WebSocket) => {
@@ -229,8 +287,10 @@ wss.on("connection", (ws: WebSocket) => {
       if (simdi - son >= 500) {
         oynaticiGunlukZamani.set(ws, simdi);
         const metin = `Oynatıcı: ${mesaj.mesaj.slice(0, 300)}`;
-        if (mesaj.seviye === "hata") gunluk.hata(metin);
-        else gunluk.uyari(metin);
+        if (mesaj.seviye === "hata") {
+          gunluk.hata(metin);
+          olaylar.kaydet("oynatici", metin);
+        } else gunluk.uyari(metin);
       }
     }
   });

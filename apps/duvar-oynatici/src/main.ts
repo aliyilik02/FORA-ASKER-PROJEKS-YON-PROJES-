@@ -190,7 +190,7 @@ const ucAktifOlabilir = ucBoyut && sahne3b.destekli;
 // Çatışma sesleri sahne azimutuyla (derece) gelir; ses motoru stereo / çok kanala kendisi yerleştirir
 sahne3b.catismaSesleriAyarla({
   carpma: (azimut) => ses.carpma(azimut),
-  atis: (azimut, uzak) => ses.tekAtis(azimut, uzak),
+  atis: (azimut, uzak, mesafe) => ses.tekAtis(azimut, uzak, mesafe),
   uzakPatlama: (azimut) => void ses.patlama(azimut, 0.7, true, 600),
   topAtisi: (azimut) => void ses.patlama(azimut, 0.55),
 });
