@@ -88,6 +88,13 @@ let oda: OdaGeometrisi | null = null;
  * uyguluyor, "panorama basık" görünüyordu. Böyle geometri kaydedilmez ve uygulanmaz; HUD uyarır.
  */
 const geometriMakulMu = (g: OdaGeometrisi) => Math.abs(g.on / g.yukseklik / (16 / 9) - 1) <= 0.3;
+/**
+ * U odada yan projektör görüntüsü de 16:9'dur: yan duvar derinliği `yan` ≈ yükseklik × 16/9 olmalı; sapma %30'u aşarsa
+ * Kooima izdüşümü tam görüntü alanını `yan`a eşler ve köşede perspektif kırılır (§2-13). Uyarı verilir (reddedilmez:
+ * kısmi görüntü alanı desteği gelene dek eğitmen bilsin).
+ */
+const yanDuvarMakulMu = (g: OdaGeometrisi) => g.tip !== "u" || Math.abs(g.yan / g.yukseklik / (16 / 9) - 1) <= 0.3;
+const yanDuvarUyarisi = (g: OdaGeometrisi) => `yan duvar ${g.yan} m, 16:9 için ≈ ${(g.yukseklik * (16 / 9)).toFixed(2)} m olmalı: yan görüntüler köşede bozulur`;
 if (odaParam === "sifirla") localStorage.removeItem("oda");
 else if (odaParam) {
   oda = odaGeometrisiCoz(odaParam);
@@ -97,6 +104,7 @@ else if (odaParam) {
     localStorage.removeItem("oda");
   } else if (oda) localStorage.setItem("oda", odaGeometrisiYaz(oda));
   else odaUyarisi = `?oda=${odaParam} geçersiz; ölçüsüz yerleşim kullanılıyor`;
+  if (oda && !yanDuvarMakulMu(oda)) odaUyarisi = yanDuvarUyarisi(oda);
 } else {
   const kayitli = localStorage.getItem("oda");
   oda = odaGeometrisiCoz(kayitli);
@@ -105,9 +113,12 @@ else if (odaParam) {
     oda = null;
   }
   if (kayitli && !oda) localStorage.removeItem("oda");
+  if (oda && !yanDuvarMakulMu(oda)) odaUyarisi = yanDuvarUyarisi(oda);
 }
 if (odaUyarisi) console.warn(odaUyarisi);
-const duvarlar = oda ? odaDuvarlari(oda) : duvarlariOlustur(Number.isFinite(fov) && fov > 10 ? fov : 90);
+// `?fov=`: 10 < fov ≤ 120 (≥ 180 dejenere izdüşüm, 120–180 arası duvarlar arkada üst üste biner; §2-13)
+const duvarlar = oda ? odaDuvarlari(oda) : duvarlariOlustur(Number.isFinite(fov) && fov > 10 && fov <= 120 ? fov : 90);
+if (Number.isFinite(fov) && fov > 120 && !oda) odaUyarisi = `?fov=${fov} 120'yi aşıyor; 90 kullanılıyor`;
 /** HUD ve K ızgarası için geometri özeti (iki satır). */
 const duvarOzeti = geometriOzeti(oda, duvarlar);
 if (odaUyarisi) duvarOzeti[0] = `${odaUyarisi} · ${duvarOzeti[0]}`;
@@ -151,6 +162,15 @@ const kaliteSecimi = kaliteSec(params.get("kalite"), localStorage);
 const kalite: Kalite = kaliteSecimi.kalite;
 /** Patlama sarsıntısı kademesi (`?sarsinti=`; panel Sistem › Oynatıcı ayarları); varsayılan hafif (sarsintiSecimi.ts). */
 const sarsinti = sarsintiSec(params.get("sarsinti"), localStorage);
+/**
+ * Piksel oranı (§2-12): Windows ölçeği %125/%150 iken tuval CSS pikseliyle çizilip büyütülür, projeksiyonda bulanık.
+ * `?dpr=cihaz` 3B tuvali cihaz çözünürlüğünde çizer (Iris Xe'de kare maliyeti ×1,5–2,2); varsayılan 1 ve DPR ≠ 1 ise
+ * HUD/günlük uyarısı: projektör PC'de Windows ölçeği %100 olmalı.
+ */
+const dprParam = params.get("dpr");
+const cihazDpr = window.devicePixelRatio || 1;
+const pikselOrani = dprParam === "cihaz" ? cihazDpr : 1;
+const dprUyarisi = pikselOrani === 1 && Math.abs(cihazDpr - 1) > 0.01 ? `Windows ölçeği %${Math.round(cihazDpr * 100)}: görüntü %${Math.round(100 / cihazDpr)} çözünürlükte çiziliyor; ölçeği %100 yap ya da ?dpr=cihaz` : "";
 const kaliteBilgisi = kaliteSecimi.otomatikKart ? `${kalite} (otomatik: ${kaliteSecimi.otomatikKart})` : kalite;
 const sahne3b = new Sahne3B(tuval3b, params.get("gunes") === "1", kalite);
 /**
@@ -695,6 +715,11 @@ void video.yukle().then((m) => {
 kopru.baslat();
 // Oynatıcı uyarıları köprü günlüğüne (panelde görünür): model yüklenemedi, 3B katman hatası
 sahne3b.uyari = (mesaj) => kopru.gonder({ tip: "gunluk", seviye: "uyari", mesaj });
+sahne3b.pikselOraniAyarla(pikselOrani);
+if (dprUyarisi) {
+  console.warn(dprUyarisi);
+  kopru.gonder({ tip: "gunluk", seviye: "uyari", mesaj: dprUyarisi });
+}
 // Yürüyen/koşan figür duvarın ucundan çıktı: köprü listeden düşürsün (panel listesi şişmesin, yeniden bağlanınca baştan koşmasın)
 sahne3b.figurBittiAyarla((id) => kopru.gonder({ tip: "figur", islem: "bitti", id }));
 if (sahne3b.hata) kopru.gonder({ tip: "gunluk", seviye: "hata", mesaj: `3B katman açılamadı: ${sahne3b.hata}` });
@@ -930,7 +955,7 @@ function kare(simdi: number) {
         `bulut ${durum.ortam.bulut.toFixed(2)} · sis ${durum.ortam.sis.toFixed(2)} · yağış ${durum.ortam.yagis} · rüzgâr ${durum.ortam.ruzgarSiddeti.toFixed(2)} @ ${durum.ortam.ruzgarYonu}°`,
         `izli mermi ${durum.izliMermi.aktif ? `açık (duvar ${durum.izliMermi.cikisNoktasi}, ${durum.izliMermi.yon}°, ${durum.izliMermi.siklik}/sn)` : "kapalı"} · oda2 ${GUVENLI_ALAN_ETIKETLERI[durum.oda2.guvenliAlan]} · helikopter ${HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}`,
         `içerik: ${ucCizildi ? "3B sahne + panorama" : panorama.aktif ? `360° panorama (${panorama.kaynakAdi.split("/").pop()})` : video.aktif ? "video döngüsü" : arkaPlan === "siyah" ? "bekleniyor (siyah)" : "parametrik yer tutucu"}${panorama.hata ? ` · panorama hatası: ${panorama.hata}` : ""}${sahne3b.hata ? ` · 3B hatası: ${sahne3b.hata}` : ""} · aktif klip ${klipler.aktifSayisi} · duvar ${duvarAcilari} · H hud · K kalibrasyon · F tam ekran · M sessiz · T hoparlör testi · 1/2/3 test · ⇧0 sıfırla`,
-        `geometri: ${duvarOzeti[0]} | ${duvarOzeti[1]}`,
+        `geometri: ${duvarOzeti[0]} | ${duvarOzeti[1]}${dprUyarisi ? ` · ${dprUyarisi}` : pikselOrani !== 1 ? ` · dpr ${pikselOrani.toFixed(2)}` : ""}`,
         `3B: ${ucAktifOlabilir ? (sahne3b.hazir ? "açık" : "bekliyor") : ucBoyut ? "desteklenmiyor" : "kapalı (?uc=0)"} · kalite ${kaliteBilgisi} · arazi ${sahne3b.araziDurumu} · ${sahne3b.gunesBilgisi} · figür ${sahne3b.figurSayisi} · krater ${sahne3b.kraterSayisi} · parçacık ${sahne3b.parcacikSayisi} · çizim/duvar ${sahne3b.cizimCagrisi} · iz ${sahne3b.izSayisi} · çatışma ${durum.catisma?.aktif ? `%${Math.round(durum.catisma.siddet * 100)} @ ${durum.catisma.yon}°` : "kapalı"} · helikopter ${sahne3b.helikopterHazir ? `model, iniş ${sahne3b.helikopterAzimutu.toFixed(0)}°` : "siluet"}`,
         `${sahne3b.gecisBilgisi}${gecis.suruyor ? ` · örtü %${Math.round(gecis.opaklik * 100)}` : ""} · solma ${gecis.sureMs} ms (?gecis=)`,
       ],

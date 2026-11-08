@@ -1,8 +1,14 @@
 /**
  * Parçacık sistemi: duman, toz, ateş, kıvılcım/moloz.
  *
- * Her doku türü için tek bir instanced billboard mesh'i (tek çizim çağrısı). Kamera düzlemine
- * dönük kareler vertex shader'da üretilir; gl_PointSize sınırı yoktur, büyük yakın duman da çizilir.
+ * Her doku türü için tek bir instanced billboard mesh'i (tek çizim çağrısı). Kartlar vertex shader'da üretilir;
+ * gl_PointSize sınırı yoktur, büyük yakın duman da çizilir.
+ *
+ * 8 Kasım (B-14): kart kamera düzlemine değil GÖZE (cameraPosition; üç duvar kamerası aynı göz noktasını paylaşır)
+ * dünya uzayında dönüktür: köşeye denk gelen topak iki duvarda aynı kart olur (önceden görüş-uzayı kartı her kamerada
+ * başka yöne bakıyor, köşede kopukluk ve kayma görünüyordu). Sis: sahnenin doğrusal sisi parçacığa da uygulanır
+ * (normal karışımda renk sis rengine, katkı karışımında alfa sıfıra gider: ateş/kıvılcım sisin içinden parlamaz).
+ * Normal karışımlı gruplar (duman/toz) göze uzaklığa göre arkadan öne sıralanır.
  */
 import * as THREE from "three";
 import type { RotorTozuProfili } from "./rotorTozu";
@@ -21,6 +27,7 @@ varying vec3 vRenk;
 varying vec3 vIsik;
 varying float vAci;
 varying vec2 vEk;
+varying float vSisDerinlik;
 void main() {
   vUv = uv;
   vEk = ek;
@@ -28,10 +35,20 @@ void main() {
   vRenk = renk;
   vAci = aci;
   vIsik = normalize((viewMatrix * vec4(isikYonu, 0.0)).xyz);
-  vec4 mv = modelViewMatrix * vec4(konum, 1.0);
   float c = cos(aci); float s = sin(aci);
   vec2 p = vec2(position.x * c - position.y * s, position.x * s + position.y * c) * boyut;
-  mv.xy += p;
+  // Göze dönük kart (dünya uzayı): normal = göz − parçacık; sağ = yukarı × normal; yukarı = normal × sağ
+  vec3 merkez = (modelMatrix * vec4(konum, 1.0)).xyz;
+  vec3 n = merkez - cameraPosition;
+  float nUz = length(n);
+  n = nUz > 1e-4 ? n / nUz : vec3(0.0, 0.0, 1.0);
+  vec3 sag = cross(vec3(0.0, 1.0, 0.0), n);
+  float sUz = length(sag);
+  sag = sUz > 1e-4 ? sag / sUz : vec3(1.0, 0.0, 0.0);
+  vec3 yukari = cross(n, sag);
+  vec3 dunya = merkez + sag * p.x + yukari * p.y;
+  vec4 mv = viewMatrix * vec4(dunya, 1.0);
+  vSisDerinlik = -mv.z;
   gl_Position = projectionMatrix * mv;
 }
 `;
@@ -40,6 +57,11 @@ uniform sampler2D doku;
 uniform float renkOlcek; // doku gri ise (Kenney ~0.42) rengi normalize eder
 uniform float golgeleme; // 0: düz (ateş/kıvılcım), 1: duman topağı küre gibi aydınlanır (güneş tarafı açık, arkası koyu)
 uniform float atlas; // 1: doku 2×2 kare atlası, parçacık kendi karesini (ek.x) kullanır
+uniform float katki; // 1: katkı karışımı (ateş/kıvılcım): sis alfayı düşürür; 0: normal karışım: renk sis rengine gider
+uniform vec3 fogColor;
+uniform float fogNear;
+uniform float fogFar;
+varying float vSisDerinlik;
 varying vec2 vUv;
 varying float vAlfa;
 varying vec3 vRenk;
@@ -66,7 +88,11 @@ void main() {
     float aydinlik = 0.55 + 0.45 * max(0.0, d) - 0.18 * max(0.0, -d);
     renk *= mix(1.0, aydinlik, golge);
   }
-  gl_FragColor = vec4(renk, t.a * vAlfa);
+  float alfa = t.a * vAlfa;
+  float sis = smoothstep(fogNear, fogFar, vSisDerinlik);
+  if (katki > 0.5) alfa *= 1.0 - sis;
+  else renk = mix(renk, fogColor, sis);
+  gl_FragColor = vec4(renk, alfa);
   if (gl_FragColor.a < 0.004) discard;
 }
 `;
@@ -147,18 +173,31 @@ export class ParcacikGrubu {
     g.instanceCount = 0;
     this.geometri = g;
     const m = new THREE.ShaderMaterial({
-      uniforms: { doku: { value: doku }, renkOlcek: { value: 1 }, isikYonu: { value: new THREE.Vector3(0.3, 0.9, 0.3) }, golgeleme: { value: isikliMi ? 1 : 0 }, atlas: { value: 0 } },
+      uniforms: THREE.UniformsUtils.merge([
+        THREE.UniformsLib.fog,
+        { doku: { value: doku }, renkOlcek: { value: 1 }, isikYonu: { value: new THREE.Vector3(0.3, 0.9, 0.3) }, golgeleme: { value: isikliMi ? 1 : 0 }, atlas: { value: 0 }, katki: { value: karisim === "katki" ? 1 : 0 } },
+      ]),
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
       transparent: true,
       depthWrite: false,
       depthTest: true,
       blending: karisim === "katki" ? THREE.AdditiveBlending : THREE.NormalBlending,
+      fog: true, // sahne.fog (doğrusal) uniformları three tarafından yenilenir
     });
+    // UniformsUtils.merge dokuyu kopyalar (clone); gerçek doku nesnesi geri yazılır
+    (m.uniforms.doku as THREE.IUniform).value = doku;
+    // Sis yokken (uniform yenilenmeden önce) parçacık görünür kalsın
+    (m.uniforms.fogFar as THREE.IUniform).value = 1e6;
+    (m.uniforms.fogNear as THREE.IUniform).value = 1e5;
+    this.sirala = karisim !== "katki";
     this.mesh = new THREE.Mesh(g, m);
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = karisim === "katki" ? 30 : 20;
   }
+
+  /** Normal karışımlı grup: canlılar her karede göze uzaklığa göre arkadan öne sıralanır (yakın duman üstte). */
+  private sirala = false;
 
   ekle(p: Parcacik) {
     if (this.parcaciklar.length >= this.kapasite) this.havuzaVer(this.parcaciklar.shift()!);
@@ -252,6 +291,9 @@ export class ParcacikGrubu {
       canli[n++] = p;
     }
     canli.length = n;
+    // Arkadan öne (göz orijinde): normal karışımda çizim sırası alfa birleşimini belirler; önceden ekleme sırasıydı ve
+    // sonradan doğan uzak duman yakın dumanın üstüne çiziliyordu
+    if (this.sirala && n > 1) canli.sort((p, q) => q.x * q.x + q.y * q.y + q.z * q.z - (p.x * p.x + p.y * p.y + p.z * p.z));
     const k = this.konum.array as Float32Array;
     const b = this.boyut.array as Float32Array;
     const a = this.alfa.array as Float32Array;

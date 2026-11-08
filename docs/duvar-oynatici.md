@@ -695,6 +695,15 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   Senaryo durumu oynarken adım değişiminde + saniyede bir yayınlanır (`SenaryoDurumu.ad` yüklü senaryonun adı). Eğitmen
   "Durdur" dediğinde senaryonun açtığı çatışma/izli mermi/helikopter kapanır (`DurumDeposu.sureklileriKapat`). WS'de 10 sn
   ping/pong; pong vermeyen bağlantı kapatılır. Açılışta geri yüklenen durumda çatışma/izli/helikopter kapalı başlar.
+- **Parçacık kartları ve sis** (8 Kasım, B-14): kartlar görüş uzayında değil dünya uzayında göze (`cameraPosition`; üç
+  duvar kamerası aynı gözü paylaşır) dönük üretilir, köşeye denk gelen topak iki duvarda aynı karttır. Gölgelendirici
+  sahnenin doğrusal sisini (`UniformsLib.fog`, `fog: true`) uygular: normal karışımda renk sis rengine gider, katkı
+  karışımında (ateş/kıvılcım) alfa söner. Normal karışımlı gruplar (duman, toz) her karede göze uzaklığa göre arkadan
+  öne sıralanır. Alev dokusu da duman gibi doğrusal (NoColorSpace) yüklenir.
+- **Piksel oranı ve geometri uyarıları** (8 Kasım, B-15): `?dpr=cihaz` 3B tuvalin arka tamponunu `devicePixelRatio`
+  ile çizer (`Sahne3B.pikselOraniAyarla`; varsayılan 1, Iris Xe güç bütçesi); DPR ≠ 1 iken HUD geometri satırı ve
+  köprü günlüğü "Windows ölçeği %N" uyarısı verir (projektör PC'de ölçek %100 olmalı). U odada yan duvar derinliği
+  16:9'dan %30'dan çok saparsa HUD uyarısı ("yan görüntüler köşede bozulur"); `?fov=` 120'yi aşarsa 90 kullanılır.
 - **Figür davranışı** (8 Kasım, B-9): bakış (`sahne3b/bakis.ts` + `FigurKatmani.bakisiUygula`): karıştırıcı ve duruş
   ofsetlerinden sonra göğüs/baş kemiklerine dünya eksenli yaw/pitch; hedef önceliği yanındaki figür (sıhhiyeci → yaralı) >
   çatışmada düşman yönü (silahlı, yanında değilse) > 12 m içindeki yaralı > 4 sn içindeki son patlama (`patlamaOldu`);

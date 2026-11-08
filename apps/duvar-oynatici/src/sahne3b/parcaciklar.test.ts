@@ -199,3 +199,33 @@ describe("patlama varyantları", () => {
     expect(new Set(korlar).size).toBeGreaterThan(1);
   });
 });
+
+describe("parçacık sıralama ve sis (8 Kasım, B-14)", () => {
+  it("normal karışımlı grup canlıları göze uzaklığa göre arkadan öne yazar; katkı grubu ekleme sırasını korur", () => {
+    const yakinUzak = (g: ParcacikGrubu) => {
+      const yakin = g.al();
+      yakin.x = 0; yakin.y = 1; yakin.z = -5; yakin.sure = 10; yakin.boyut = 1; yakin.alfa = 1;
+      const uzak = g.al();
+      uzak.x = 0; uzak.y = 1; uzak.z = -40; uzak.sure = 10; uzak.boyut = 1; uzak.alfa = 1;
+      g.ekle(yakin);
+      g.ekle(uzak);
+      g.guncelle(1 / 60);
+      const k = (g as unknown as { konum: THREE.InstancedBufferAttribute }).konum.array as Float32Array;
+      return [k[2], k[5]]; // ilk ve ikinci örneğin z'si
+    };
+    const normal = new ParcacikGrubu(new THREE.Texture(), 8, "normal", true);
+    expect(yakinUzak(normal)[0]).toBeCloseTo(-40, 3); // uzak önce çizilir (arkada)
+    const katki = new ParcacikGrubu(new THREE.Texture(), 8, "katki", false);
+    expect(yakinUzak(katki)[0]).toBeCloseTo(-5, 3); // ekleme sırası
+  });
+  it("malzeme sahne sisini alır: fog açık, sis uniformları var, katkı grubunda katki=1", () => {
+    const normal = new ParcacikGrubu(new THREE.Texture(), 8, "normal", true);
+    const katki = new ParcacikGrubu(new THREE.Texture(), 8, "katki", false);
+    const m = (g: ParcacikGrubu) => (g as unknown as { mesh: THREE.Mesh }).mesh.material as THREE.ShaderMaterial;
+    expect(m(normal).fog).toBe(true);
+    expect(m(normal).uniforms.fogColor).toBeDefined();
+    expect(m(normal).uniforms.katki.value).toBe(0);
+    expect(m(katki).uniforms.katki.value).toBe(1);
+    expect(m(normal).vertexShader).toContain("cameraPosition");
+  });
+});

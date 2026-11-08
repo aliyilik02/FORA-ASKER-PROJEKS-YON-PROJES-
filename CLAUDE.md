@@ -304,8 +304,10 @@ yapılmalı. **A listesi 8 Kasım'da bitti**; **B listesinden 9–13 bitti** (AP
 hata bildirimleri, ping/pong, kopukluk şeridi, 44 px, taslak kaydı; figür bakışı `sahne3b/bakis.ts`, idle varyasyonu, Mixamo geçiş
 klipleri; senaryo adımları `bekle_onay` (Devam/Boşluk) ve `safha`; TCCC safhası `durum.safha` → sıhhiyeci ateş altında siperde
 bekler, taktik sahada yaralıya yürür; canlı sahne kartında safha seçici). Kullanıcı kararı (8 Kasım): bakış önceliği düşman >
-yaralı > son patlama, sıhhiyeci her zaman yaralıya; safha davranışı aktif. Bekleyen: B-14 köşe sürekliliği, B-15 DPR/yan duvar,
-`rastgele_sure`/`beklenen` adım alanları. Duvarda gözle bakılmadı (bakış genliği, yürüyüş hızı, geçiş klipleri). Domain bilgisi için skill `askeri-simulasyon-tasarimi` (`.claude/skills/`; değerlendirme/öneri işinde yükle);
+yaralı > son patlama, sıhhiyeci her zaman yaralıya; safha davranışı aktif. **B-14/15 de bitti**: parçacık kartları göze dönük + sis + sıralama, alev dokusu doğrusal; `?dpr=cihaz` ve DPR uyarısı, yan
+duvar 16:9 uyarısı, fov ≤ 120. **B listesi tamam.** Bekleyen: C listesi (AAR olay günlüğü, crack-thump, telegraf/havan ıslığı,
+aydınlatma fişeği, gece projeksiyon modu, kaynak yöneticisi, performans), `rastgele_sure`/`beklenen` adım alanları, yan
+duvar için kısmi görüntü alanı. Duvarda gözle bakılmadı (bakış genliği, yürüyüş hızı, geçiş klipleri, sisli parçacık, köşe). Domain bilgisi için skill `askeri-simulasyon-tasarimi` (`.claude/skills/`; değerlendirme/öneri işinde yükle);
 dış skill'ler: threejs-*, create-game-vfx, build-game-audio-feedback, game-audio, game-design-theory, game-development, game-ui-design.
 
 ## Sıradaki işler (öncelik sırasıyla)

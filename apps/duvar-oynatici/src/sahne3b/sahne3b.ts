@@ -273,7 +273,8 @@ export class Sahne3B {
     r.shadowMap.type = THREE.PCFShadowMap;
     // Gölge haritası yöne bağlı (güneş), kameraya değil: üç duvar için üç kez değil karede bir kez çizilir
     r.shadowMap.autoUpdate = false;
-    r.setPixelRatio(1);
+    // Varsayılan 1: Iris Xe'de güç bütçesi; `?dpr=cihaz` (pikselOraniAyarla) Windows ölçeğinde keskin görüntü için
+    r.setPixelRatio(this.pikselOrani);
     this.pmrem = new THREE.PMREMGenerator(r);
 
     // Güneş + gölge
@@ -353,7 +354,8 @@ export class Sahne3B {
     Promise.all(["smoke_01", "smoke_03", "smoke_05", "smoke_07"].map((ad) => yukle(`dokular/${ad}.png`)))
       .then((dokular) => this.parcaciklar.duman.dokuAyarla(dumanAtlasi(dokular.map(dogrusal)), true))
       .catch(() => yukle("dokular/smoke_05.png").then((t) => this.parcaciklar.duman.dokuAyarla(dogrusal(t))).catch(() => undefined));
-    yukle("dokular/flame_01.png").then((t) => this.parcaciklar.ates.dokuAyarla(t)).catch(() => undefined);
+    // Alev dokusu da doğrusal: duman gibi; sRGB işaretli alev gölgelendiricide çözülüp geri kodlanmadan ince ve koyu çıkıyordu (§2-11)
+    yukle("dokular/flame_01.png").then((t) => this.parcaciklar.ates.dokuAyarla(dogrusal(t))).catch(() => undefined);
     // Krater: yanık toprak rengi × Kenney scorch alfa maskesi
     Promise.all([yukle("dokular/yanik_toprak.jpg"), yukle("dokular/scorch_01.png"), yukle("dokular/scorch_02.png"), yukle("dokular/scorch_03.png")])
       .then(([renk, ...maskeler]) => {
@@ -425,11 +427,31 @@ export class Sahne3B {
     return orta ? ufukSatiri(orta, k) : (this.H * (1 + k)) / 2;
   }
 
+  /** Arka tampon piksel oranı (1 = CSS pikseli; devicePixelRatio = cihaz). Çizici kurulmadan önce de ayarlanabilir. */
+  private pikselOrani = 1;
+  pikselOraniAyarla(oran: number) {
+    this.pikselOrani = Number.isFinite(oran) && oran > 0 ? Math.min(3, oran) : 1;
+    if (this.renderer) {
+      this.renderer.setPixelRatio(this.pikselOrani);
+      this.renderer.setSize(this.W, this.H, false);
+      this.tuvalStiliniAyarla();
+    }
+  }
+
+  /** Tuval CSS boyutu hep W×H (CSS px): piksel oranı ≠ 1 iken arka tampon farklı; stil verilmezse tuval küçülürdü. */
+  private tuvalStiliniAyarla() {
+    const e = this.renderer?.domElement;
+    if (!e || !this.W) return;
+    e.style.width = `${this.W}px`;
+    e.style.height = `${this.H}px`;
+  }
+
   boyutlandir(W: number, H: number, yerlesimler: Yerlesim[]) {
     this.W = W;
     this.H = H;
     this.yerlesimler = yerlesimler;
     this.renderer?.setSize(W, H, false);
+    this.tuvalStiliniAyarla();
     this.yagis3b.boyutlandir(H);
     this.kameralar = yerlesimler.map(() => new DuvarKamerasi(0.1, 3000));
     // Ölçülmüş odada sis gerçek uzaklıkla (kaymış izleyicide köşede kırılmaz); ilk çizimden önce (duvarKamerasi.ts)
@@ -1399,9 +1421,12 @@ export class Sahne3B {
     const dokuHazir = this.araziBekleniyor && this.araziDokulariHazir();
     r.setScissorTest(true);
     r.shadowMap.needsUpdate = true; // ilk duvar çiziminde gölge geçişi, diğer ikisi aynı haritayı kullanır
+    // Piksel oranı ≠ 1 iken three görüş alanını cihaz pikseline yuvarlar (floor); komşu duvarlar arasında 1 px boş
+    // çizgi kalabiliyordu. Her duvar 1 cihaz pikseli taşar; sonraki duvar kendi alanını üstüne yazar.
+    const ek = this.pikselOrani === 1 ? 0 : 1 / this.pikselOrani;
     this.yerlesimler.forEach((y, i) => {
-      r.setViewport(y.x, 0, y.genislik, this.H);
-      r.setScissor(y.x, 0, y.genislik, this.H);
+      r.setViewport(y.x, 0, y.genislik + ek, this.H + ek);
+      r.setScissor(y.x, 0, y.genislik + ek, this.H + ek);
       r.render(this.sahne, this.kameralar[i]);
     });
     r.setScissorTest(false);

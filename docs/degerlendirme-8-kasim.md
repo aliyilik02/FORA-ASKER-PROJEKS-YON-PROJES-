@@ -194,7 +194,7 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
 7. ✓ **Sarsıntı anahtarı** (§1-2): `?sarsinti=kapali|hafif|tam` (`sarsintiSecimi.ts`, yerel kayıt, varsayılan hafif = genlik %35), panel Sistem › Oynatıcı ayarları.
 8. ✓ **"Ayakta" duruşunun saklanması** (§4-2: `figur.ts` poz her zaman saklanır) ve **yürüyen figürün `bitti` bildirimi** (§3-6/§4-6: oynatıcı `{tip:"figur", islem:"bitti", id}` → köprü `bittiBildir` → `durdur` yayını; `figurBitti.test.ts`).
 
-### B. Kısa vade (1–2 hafta) — 9–13 ✓ 8 Kasım; 14, 15 bekliyor
+### B. Kısa vade (1–2 hafta) — ✓ 8 Kasım, hepsi yapıldı (ayrıntı maddelerde)
 9. ✓ **Figür bakış/baş yönelimi** (§1-3: `sahne3b/bakis.ts` saf hesap + `FigurKatmani.bakisiUygula`; öncelik yanındaki/yaralı (sıhhiyeci)
    > düşman yönü > 12 m içindeki yaralı > 4 sn içindeki son patlama; göğüs %35 + baş %65 yaw, baş pitch; ±70°/±25°, 0,35 sn yumuşatma)
    + ✓ **idle faz/hız rastgeleliği** (§4-8: döngü klibinde rastgele `time`, ±%5 `timeScale`) + ✓ **duruş geçiş klipleri** (§4-4:
@@ -217,8 +217,12 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
 13. ✓ **Tablet ergonomisi:** `pointer: coarse`'ta 44 px dokunma hedefleri, yıkıcı düğme aralığı, iki aşamalı onayda 400 ms (§3-13,
     §3-22); editör açıkken canlı kısayollar kapalı, taslak yerel kayıtta sürer (§3-12); elle helikopter komutu diziyi iptal eder
     (§3-11; diziyi köprüye taşıma bekliyor); kaydırıcı sürüklerken gönderir (§3-20).
-14. **Köşe sürekliliği:** parçacık kartları göze dönük (§2-8), sisli parçacık + sıralama (§2-10), alev dokusu renk uzayı (§2-11).
-15. **Projeksiyon doğruluğu:** DPR (§2-12), yan duvar 16:9 denetimi ve fov sınırı (§2-13).
+14. ✓ **Köşe sürekliliği:** parçacık kartları dünya uzayında göze (`cameraPosition`) dönük, üç kamerada aynı kart (§2-8);
+    parçacık gölgelendiricisi sahnenin doğrusal sisini alır (normal karışımda renk sis rengine, katkıda alfa söner) ve
+    normal karışımlı gruplar arkadan öne sıralanır (§2-10); alev dokusu da doğrusal (§2-11). `parcaciklar.test.ts`.
+15. ✓ **Projeksiyon doğruluğu:** `?dpr=cihaz` 3B tuvali cihaz çözünürlüğünde çizer, varsayılan 1 ve DPR ≠ 1'de HUD + köprü
+    günlüğü uyarısı (§2-12); U odada yan duvar 16:9 sapması > %30 ise HUD uyarısı (reddedilmez; kısmi görüntü alanı desteği
+    bekliyor), `?fov=` 120 ile sınırlı (§2-13).
 
 ### C. Orta vade (3–6 hafta)
 16. **AAR:** olay günlüğü (JSONL) → zaman çizelgesi ekranı → tekrar oynatma → CSV/PDF; kursiyer işaretleme tuşu ve TCCC sayaçları.
