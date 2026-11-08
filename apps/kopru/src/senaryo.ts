@@ -6,7 +6,7 @@
 import type { DurumDeposu } from "./durum.js";
 import type { FigurYoneticisi } from "./figur.js";
 import type { Gunluk } from "./gunluk.js";
-import type { Senaryo, SenaryoAdimi, SenaryoDurumu } from "./tipler.js";
+import type { Senaryo, SenaryoAdimi, SenaryoDurumu, SifirlamaKaynagi } from "./tipler.js";
 
 export interface Zamanlayici {
   simdi(): number;
@@ -33,6 +33,13 @@ export class SenaryoMotoru {
   /** Figür adımları için; `figurBagla` ile verilir (isteğe bağlı, testlerde yok). */
   private figur: Pick<FigurYoneticisi, "komut"> | null = null;
   /**
+   * Sahne yöneticisi; `sahneBagla` ile verilir. Senaryo BAŞTAN oynatılırken (duruyor → oynuyor) önce sahne temele döner:
+   * eğitmenin elle çağırdığı figürler, efektler, çatışma, izli mermi, helikopter ve sesler gider, senaryo temiz sahnede
+   * başlar (kullanıcı kararı, 8 Kasım). Duraklatılmış senaryoya devam ederken sıfırlama yok. Ortam, bölge ve ışık
+   * sıfırlamada korunur; senaryonun kendi adımları bunları ister.
+   */
+  private sahne: { sifirla(kaynak: SifirlamaKaynagi): unknown } | null = null;
+  /**
    * Oynatma nesli: oynat, duraklat, dur ve yukle artırır. Bir adımı bekleyen (UE çağrısı, oda değişimi) tik ya da
    * oynat, await'ten dönünce nesil değiştiyse durur: durdurulan senaryo aynı tikteki sonraki adımları uygulamaz,
    * "tamamlandı" yazmaz (sahne sıfırlaması senaryoyu durdurup figürleri temizledikten sonra asker geri gelmez).
@@ -41,6 +48,10 @@ export class SenaryoMotoru {
 
   figurBagla(f: Pick<FigurYoneticisi, "komut">) {
     this.figur = f;
+  }
+
+  sahneBagla(s: { sifirla(kaynak: SifirlamaKaynagi): unknown }) {
+    this.sahne = s;
   }
 
   constructor(
@@ -86,9 +97,13 @@ export class SenaryoMotoru {
   async oynat() {
     if (!this.senaryo) throw new Error("Önce bir senaryo yükleyin");
     if (this.durum.durum === "oynuyor") return;
+    const bastan = this.durum.durum === "duruyor";
+    // Baştan başlarken önce temel sahne: elle çağrılmış her şey gider (await yok; sahne yöneticisi içeride `dur(true)`
+    // çağırıp nesli artırır, o yüzden nesil bundan SONRA alınır). Devam ederken (duraklatıldı) sahneye dokunulmaz.
+    if (bastan) this.sahne?.sifirla("senaryo");
     // Oda değişimini beklerken dur/yükle ya da ikinci bir oynat geldiyse bu çağrı bırakılır (çift zamanlayıcı kurulmaz)
     const nesil = ++this.nesil;
-    if (this.durum.durum === "duruyor") {
+    if (bastan) {
       this.durum.tamamlanan = [];
       this.duraklatmaKonumu = 0;
       await this.depo.odaSec(this.senaryo.oda);

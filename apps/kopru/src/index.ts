@@ -78,6 +78,8 @@ if (sonDurum) {
 }
 // Sahne sıfırlaması (temel sahne): senaryo dur → figür temizle → tek durum yayını → `sahne/sifirla` → hemen kayıt
 const sahne = new SahneYoneticisi({ depo, senaryo, figur, gunluk, yayinla: (m) => herkeseGonder(m), kaydet: () => sonDurumuKaydet(true) }, sonDurum?.nesil);
+// Senaryo baştan oynatılınca önce temel sahne (elle çağrılanlar gider), sonra senaryonun adımları
+senaryo.sahneBagla(sahne);
 let sonDurumZamanlayici: NodeJS.Timeout | null = null;
 /** `hemen`: bekleyen gecikmeli yazımı iptal edip şimdi yazar (sahne sıfırlaması). */
 function sonDurumuKaydet(hemen = false) {

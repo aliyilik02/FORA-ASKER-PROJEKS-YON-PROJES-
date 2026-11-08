@@ -111,6 +111,66 @@ afterEach(() => {
   for (const k of gecici.splice(0)) rmSync(k, { recursive: true, force: true });
 });
 
+describe("senaryo baştan oynatılınca temel sahne", () => {
+  it("Oynat: önce sıfırlama (figürler, çatışma, helikopter gider; ortam/bölge kalır), sonra senaryonun adımları", async () => {
+    const k = kur(7);
+    k.senaryo.sahneBagla(k.sahne);
+    // Eğitmenin elle kurduğu karışık sahne (senaryo oynatmadan)
+    await k.depo.bolgeSec("daglik");
+    await k.depo.ortamGuncelle({ saat: 7.5, sis: 0.25 });
+    await k.depo.catismaGuncelle({ aktif: true, siddet: 2, yon: 20 });
+    await k.depo.oda2Guncelle({ helikopter: "yerde" });
+    k.figur.komut({ islem: "oynat", id: "fg_elle", klip: "asker_yarali_3b", azimut: 15, poz: "yarali" });
+    k.figur.komut({ islem: "oynat", id: "fg_elle2", klip: "asker_swat", azimut: -20 });
+    k.senaryo.yukle(GOSTERIM);
+    const satirlar: string[] = [];
+    k.gunluk.dinle((s) => satirlar.push(s.mesaj));
+    k.olaylar.length = 0;
+
+    await k.senaryo.oynat();
+
+    // Sıra: sıfırlama yayınları önce, senaryo "oynuyor" ve ilk adımı (asker, 0 ms) sonra
+    expect(k.olaylar.slice(0, 4)).toEqual(["figur:temizle", "durum", "sahne:sifirla", "kaydet"]);
+    expect(k.olaylar.indexOf("senaryo:oynuyor")).toBeGreaterThan(k.olaylar.indexOf("sahne:sifirla"));
+    const mesaj = k.yayinlar.find((m) => m.tip === "sahne" && m.islem === "sifirla");
+    expect(mesaj && mesaj.tip === "sahne" && mesaj.islem === "sifirla" ? mesaj.kaynak : null).toBe("senaryo");
+    expect(mesaj && mesaj.tip === "sahne" && mesaj.islem === "sifirla" ? mesaj.ozet : null).toEqual({ figur: 2, senaryo: null, catisma: true, izliMermi: false, helikopter: true });
+    expect(k.sahne.nesil).toBe(8);
+    expect(satirlar.some((s) => s.includes("senaryo başlarken"))).toBe(true);
+    // Elle çağrılanlar gitti, senaryonun kendi figürü geldi; ortam ve bölge korundu
+    await k.ilerle(600);
+    expect(k.senaryo.al().durum).toBe("oynuyor");
+    expect(k.figur.aktifListe().map((f) => f.id)).toEqual(["senaryo_a2"]);
+    const d = k.depo.al();
+    // Çatışma elle 20°'de açılmıştı; sıfırlama kapattı, senaryonun kendi adımı 30°'de yeniden açtı
+    expect(d.catisma.aktif).toBe(true);
+    expect(d.catisma.yon).toBe(30);
+    expect(d.oda2.helikopter).toBe("yok");
+    expect(d.ortam.saat).toBe(7.5);
+    expect(d.ortam.sis).toBe(0.25);
+  });
+
+  it("duraklatılmıştan devam ederken sıfırlama yok; bitmiş senaryoyu yeniden oynatınca var", async () => {
+    const k = kur(0);
+    k.senaryo.sahneBagla(k.sahne);
+    k.senaryo.yukle(GOSTERIM);
+    await k.senaryo.oynat();
+    expect(k.sahne.nesil).toBe(1);
+    await k.ilerle(600);
+    k.senaryo.duraklat();
+    await k.senaryo.oynat();
+    expect(k.sahne.nesil).toBe(1);
+    expect(k.figur.aktifListe().map((f) => f.id)).toEqual(["senaryo_a2"]);
+    await k.ilerle(2000);
+    expect(k.senaryo.al().durum).toBe("duruyor");
+    expect(k.figur.aktifListe().length).toBe(2);
+    await k.senaryo.oynat();
+    expect(k.sahne.nesil).toBe(2);
+    expect(k.figur.aktifListe().map((f) => f.id)).toEqual(["senaryo_a2"]);
+    expect(k.senaryo.al().durum).toBe("oynuyor");
+  });
+});
+
 describe("SahneYoneticisi.sifirla", () => {
   it("sıra: senaryo dur → figür temizle → tek durum → sahne/sifirla → kayıt; korunanlar aynı, temizlenenler kapalı", async () => {
     const k = kur(41);

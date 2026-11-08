@@ -12,7 +12,8 @@
  * figür temizle (tek `figur` yayını) → tek `durum` yayını (çatışma/izli/helikopter kapalı; flaş kesik, temel ışık) →
  * nesil++ ve `sahne/sifirla` yayını → son durum hemen diske → tek günlük satırı. `sahne` mesajı en sonda gelir: oynatıcı
  * önce ateşin kapalı olduğu durumu alır, sonra temizler; arada çizilen karede yeni iz doğmaz. İkinci çağrı aynı sonucu
- * verir (idempotent), yalnız nesil artar.
+ * verir (idempotent), yalnız nesil artar. Senaryo baştan oynatılırken `SenaryoMotoru.oynat` da bunu çağırır
+ * (kaynak "senaryo"): eğitmenin elle çağırdıkları gider, senaryo temiz sahnede başlar; duraklatılmıştan devam ederken yok.
  */
 import type { TemeleDonenler } from "./durum.js";
 import type { Gunluk } from "./gunluk.js";

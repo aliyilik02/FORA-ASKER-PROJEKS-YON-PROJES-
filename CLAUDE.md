@@ -123,6 +123,9 @@ zaman, durum, senaryo}`). Köprü son durumu (sıfırlama nesli dahil) `apps/kop
 geri yükler (12 saat).
 
 **Temel sahne (Sıfırla, 2 Kasım):** panel üst çubuğundaki **Sıfırla** (iki dokunuş) / **Esc, Esc** / oynatıcıda **⇧0**.
+**8 Kasım:** senaryo **baştan** oynatılınca (duruyor → Oynat) köprü önce aynı sıfırlamayı kendiliğinden yapar (kaynak
+`senaryo`, `SenaryoMotoru.sahneBagla`): eğitmenin elle çağırdığı her şey gider, senaryo temiz sahnede başlar; duraklatılmıştan
+devam ederken sıfırlama yok (kullanıcı kararı; test `sahne.test.ts`).
 KALIR: oda, bölge, ortam (mevsim/saat/hava/sis), ışık, Oda 2 güvenli alanı ve sütre, ayar değerleri (çatışma şiddet/yön,
 izli mermi çıkış/sıklık, iniş yönü…), yüklü senaryo (durmuş, 00:00). GİDER: bütün figürler (yüklenmekte olanlar dahil),
 efektler (2B/3B patlama, ateş, duman, toz, moloz, flaş, sarsıntı, uçuştaki iz ve tank mermisi), krater, çatışma, izli

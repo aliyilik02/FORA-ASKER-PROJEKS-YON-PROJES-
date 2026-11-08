@@ -28,7 +28,8 @@ görünür; kontrol odasından duvarı görmeden çalışılabilir.
 
 Bugünkü hâliyle demo (2 Kasım). Yalnız yerleşim planı doğrulanmış panoramaları kullanır; dizüstünde (Iris Xe,
 otomatik "orta" kalite) baştan sona medyan 60 fps ölçüldü. Panel **Senaryo** → "Gösterim – Güncel Durum (5 dk)" → **Oynat**.
-Başlamadan ve bittikten sonra üst çubuktaki **Sıfırla** (ya da Esc, Esc).
+Oynat'a basınca sahne kendiliğinden temele döner (elle çağrılan figür/efekt kalmaz; 8 Kasım); bittikten sonra üst
+çubuktaki **Sıfırla** (ya da Esc, Esc).
 
 | Zaman | Duvarda ne olur | Anlatım notu |
 |---|---|---|

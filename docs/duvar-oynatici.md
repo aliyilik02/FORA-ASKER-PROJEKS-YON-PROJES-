@@ -683,6 +683,11 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   bir görüntüyü 5 sn gösterirdi), yeni panel bağlanınca ve sahne geçişi bitince. `bilgi`: fps, boyut, kalite
   ("otomatik" işaretiyle), 3B, figür/krater sayısı, geçiş sürerken geçiş durumu. **Günlük** (`gunluk`) ve **⇧0**
   sıfırlama isteği.
+- **Senaryo baştan oynatılınca** (`POST /api/senaryo/oynat`, durum "duruyor" iken) köprü önce aşağıdaki sahne
+  sıfırlamasını kendiliğinden yapar (`SenaryoMotoru.sahneBagla`, kaynak `senaryo`, panelde "senaryo başlarken
+  (kendiliğinden)" bildirimi): eğitmenin elle çağırdığı figürler, efektler, çatışma, izli mermi, helikopter ve sesler
+  gider; ortam, bölge ve ışık kalır (senaryonun kendi adımları isterse değiştirir). Duraklatılmıştan devam ederken ve
+  "Adımı tetikle"de sıfırlama yok. Oynatıcı için ayrı bir şey yok: aynı `sahne/sifirla` mesajı gelir.
 - **Sahne sıfırlaması** (`POST /api/sahne/sifirla {kaynak?}`, köprüde `SahneYoneticisi`): köprü sırayla senaryoyu
   durdurur (await yok; bekleyen adım dönünce uygulanmaz), `figur temizle` yayınlar, çatışma/izli mermi/helikopteri
   kapatan TEK `durum` yayınını yollar (UE çağrıları sonra, beklenmeden, 3 sn zaman aşımı; DMX flaşı kesilip temel ışık

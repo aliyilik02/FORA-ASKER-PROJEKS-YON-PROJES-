@@ -254,11 +254,13 @@ export interface KlipOzeti {
  * ayar değerleri ve yüklü senaryo (durmuş, 00:00) kalır; figürler, efektler, krater/duman, sesler, çatışma, izli
  * mermi, helikopter ve senaryo oynatımı temizlenir. İsteyen: panel düğmesi, panel kısayolu (Esc, Esc), oynatıcı (⇧0).
  */
-export type SifirlamaKaynagi = "panel" | "kisayol" | "oynatici";
+/** Sıfırlamayı kim istedi; `senaryo` = senaryo baştan oynatılırken köprünün kendiliğinden yaptığı temizlik. */
+export type SifirlamaKaynagi = "panel" | "kisayol" | "oynatici" | "senaryo";
 export const SIFIRLAMA_KAYNAK_ETIKETLERI: Record<SifirlamaKaynagi, string> = {
   panel: "panelden",
   kisayol: "panel kısayoluyla (Esc, Esc)",
   oynatici: "oynatıcıdan (⇧0)",
+  senaryo: "senaryo başlarken (kendiliğinden)",
 };
 
 /** Sıfırlamada kapananlar (bildirim ve günlük satırı): figür sayısı, durdurulan senaryonun adı, önceden açık olanlar. */
