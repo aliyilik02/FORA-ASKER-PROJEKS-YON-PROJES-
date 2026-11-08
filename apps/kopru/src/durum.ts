@@ -14,6 +14,8 @@ import {
   type OrtamAyarlari,
   type OrtamIsigi,
   type SimulasyonDurumu,
+  type Safha,
+  SAFHA_ETIKETLERI,
   durumuTamamla,
   varsayilanDurum,
 } from "./tipler.js";
@@ -225,6 +227,14 @@ export class DurumDeposu {
       this.unreal.oda2Ayarla(d.oda2, UE_SIFIRLAMA_ZAMAN_ASIMI_MS),
     ]);
     return onceki;
+  }
+
+  /** TCCC safhası (panel rozeti ya da senaryo adımı); oynatıcıya `durum` yayınıyla gider. UE çağrısı yok. */
+  safhaAyarla(safha: Safha) {
+    if (this.durum.safha === safha) return;
+    this.durum.safha = safha;
+    this.gunluk.bilgi(`Safha: ${SAFHA_ETIKETLERI[safha]}`);
+    this.yayinla();
   }
 
   /**

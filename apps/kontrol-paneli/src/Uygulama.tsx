@@ -156,7 +156,7 @@ function Govde() {
       if (e.key === " " && senaryo?.senaryoId) {
         e.preventDefault();
         if (e.repeat) return;
-        void calistir(() => (senaryo.durum === "oynuyor" ? api.senaryoDuraklat() : api.senaryoOynat()));
+        void calistir(() => (senaryo.durum === "oynuyor" ? api.senaryoDuraklat() : senaryo.durum === "bekliyor" ? api.senaryoDevam() : api.senaryoOynat()));
       }
     };
     window.addEventListener("keydown", dinle);

@@ -12,7 +12,7 @@ import type { OrnekBaslatici } from "./ornek.js";
 import { sifirlamaKaynagiCoz, type SahneYoneticisi } from "./sahne.js";
 import type { SenaryoMotoru } from "./senaryo.js";
 import type { BaglantiDurumu, OnAyar, Senaryo, SenaryoAdimi, SifirlamaYaniti } from "./tipler.js";
-import { CATISMA_SEMASI, EFEKT_SEMASI, ISIK_SEMASI, IZLI_MERMI_SEMASI, ODA2_SEMASI, ORTAM_SEMASI, kismiDogrula, senaryoAdimlariniDogrula } from "./dogrulama.js";
+import { CATISMA_SEMASI, EFEKT_SEMASI, ISIK_SEMASI, IZLI_MERMI_SEMASI, ODA2_SEMASI, ORTAM_SEMASI, SAFHALAR, kismiDogrula, senaryoAdimlariniDogrula } from "./dogrulama.js";
 import type { UnrealIstemci } from "./unreal.js";
 
 export interface ApiBagimliliklari {
@@ -161,6 +161,17 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
     }),
   );
 
+  // TCCC safhası (panel rozeti / canlı sahne kartı)
+  r.put(
+    "/safha",
+    sarmala((req, res) => {
+      const safha = req.body?.safha;
+      if (!SAFHALAR.includes(safha)) return res.status(400).json({ hata: `safha şunlardan biri olmalı: ${SAFHALAR.join(", ")}` });
+      b.depo.safhaAyarla(safha);
+      res.json(b.depo.al());
+    }),
+  );
+
   r.post(
     "/efekt",
     sarmala(async (req, res) => {
@@ -245,6 +256,11 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
   );
   r.post("/senaryo/duraklat", (_req, res) => {
     b.senaryo.duraklat();
+    res.json(b.senaryo.al());
+  });
+  // `bekle_onay` adımından sonra eğitmen onayı
+  r.post("/senaryo/devam", (_req, res) => {
+    b.senaryo.devamEt();
     res.json(b.senaryo.al());
   });
   r.post("/senaryo/dur", (_req, res) => {

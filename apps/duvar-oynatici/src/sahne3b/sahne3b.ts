@@ -17,7 +17,7 @@
  */
 import * as THREE from "three";
 import { gunesKonumu, ufukSatiri, type Yerlesim } from "../projeksiyon";
-import type { CatismaAyarlari, HelikopterDurumu, IzliMermiAyarlari, OrtamAyarlari } from "../tipler";
+import type { CatismaAyarlari, HelikopterDurumu, IzliMermiAyarlari, OrtamAyarlari, Safha } from "../tipler";
 import { CatismaSistemi, type CatismaSesleri } from "./catisma";
 import { atesDokusu, dumanAtlasi, dumanDokusu, kivilcimDokusu, kraterDokusu } from "./dokular";
 import { DuvarKamerasi, sisUzakligiAyarla, uzaklikSisiGerekir } from "./duvarKamerasi";
@@ -1214,6 +1214,7 @@ export class Sahne3B {
     this.hasar.krater(p, 1.6 + s * 2.6, s);
     this.flas.position.set(p.x, p.y + r, p.z);
     this.flasGuc = Math.max(this.flasGuc, s);
+    this.figurler.patlamaOldu(p); // figürler 4 sn oraya bakar (düşman/yaralı yoksa)
     // Patlama artığı: kraterde küçük bir yangın 2,5–3,5 sn yanar, sonra 2,5 sn'de söner (alev → seyrek duman);
     // ışığı ve sesi (yangın ses kaynağı) kendiliğinden gelir. Panelin "yangın" efekti ise kalıcıdır.
     this.yanginlar?.ekle(p, (0.25 + 0.2 * Math.min(1, s)) * varyant.yangin, (2.5 + Math.min(1, s)) * (0.85 + 0.3 * Math.random()));
@@ -1283,6 +1284,10 @@ export class Sahne3B {
   /** Figür ekrandan çıkınca (yürüyen/koşan, |azimut| > 165°) çağrılır; köprüye `figur bitti` gider. */
   figurBittiAyarla(f: (id: string) => void) {
     this.figurler.bittiOlayi = f;
+  }
+  /** TCCC safhası (durum.safha): sıhhiyeci davranışı (ateş altında siperde bekler, taktik sahada yaralıya yürür). */
+  safhaAyarla(safha: Safha) {
+    this.figurler.safhaAyarla(safha);
   }
   figurOnYukle(url: string) {
     this.figurler.onYukle(url);

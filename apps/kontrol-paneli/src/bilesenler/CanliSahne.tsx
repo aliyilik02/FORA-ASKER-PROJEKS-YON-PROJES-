@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useArayuz } from "../arayuz";
-import { BOLGE_ETIKETLERI, EFEKT_ETIKETLERI, HELIKOPTER_ETIKETLERI, MEVSIM_ETIKETLERI, YAGIS_ETIKETLERI, type EfektTuru, type FigurKomutu, type SenaryoDurumu, type SimulasyonDurumu } from "../tipler";
+import { BOLGE_ETIKETLERI, EFEKT_ETIKETLERI, HELIKOPTER_ETIKETLERI, MEVSIM_ETIKETLERI, YAGIS_ETIKETLERI, type EfektTuru, type FigurKomutu, type SenaryoDurumu, type SimulasyonDurumu, SAFHA_ETIKETLERI, type Safha } from "../tipler";
 import { vurulabilirAskerler, yoneEnYakin } from "../figurYardimcilari";
 import { Ikon, Rozet, saatBicimi, sureBicimi, yonMetni } from "./ortak";
 import { YonSecici } from "./YonSecici";
@@ -98,6 +98,7 @@ export function CanliSahne({
               <Ikon.helikopter /> {HELIKOPTER_ETIKETLERI[durum.oda2.helikopter]}
             </Rozet>
           )}
+          {durum.oda === "oda1" && <Rozet tur={durum.safha === "ates_altinda" ? "kotu" : "amber"}>{SAFHA_ETIKETLERI[durum.safha ?? "taktik_saha"]}</Rozet>}
           {figurler.length > 0 && <Rozet tur="iyi">{figurler.length} figür</Rozet>}
           {figurler.some((f) => f.poz === "yarali") && <Rozet tur="kotu">{figurler.filter((f) => f.poz === "yarali").length} yaralı</Rozet>}
           {senaryo?.senaryoId && senaryo.durum !== "duruyor" && (
@@ -124,6 +125,19 @@ export function CanliSahne({
         helikopterYonu={durum.oda2.helikopterYonu ?? 12}
         dusmanYonu={durum.catisma?.aktif ? durum.catisma.yon : null}
       />
+
+      {durum.oda === "oda1" && (
+        <div className="safha-secici" title="TCCC safhası: ateş altında sıhhiyeci yaralıya gitmez, siperde bekler; taktik saha bakımına geçince yürüyüp başına gider">
+          <span className="etiket">Safha</span>
+          <div className="secenek-grubu">
+            {(Object.keys(SAFHA_ETIKETLERI) as Safha[]).map((s) => (
+              <button key={s} type="button" className={(durum.safha ?? "taktik_saha") === s ? "secili" : ""} onClick={() => void calistir(() => api.safha(s))}>
+                {SAFHA_ETIKETLERI[s]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="hizli-efektler">
         {hizli.map((h) => (

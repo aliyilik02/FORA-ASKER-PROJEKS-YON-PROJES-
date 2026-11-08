@@ -18,6 +18,7 @@ export function SenaryoPaneli({ senaryoDurumu, senaryolar, simDurumu, calistir }
 
   const yuklu = senaryolar.find((s) => s.id === senaryoDurumu?.senaryoId);
   const durum = senaryoDurumu?.durum ?? "duruyor";
+  const bekliyor = durum === "bekliyor";
   const konum = senaryoDurumu?.konumMs ?? 0;
   const toplam = senaryoDurumu?.toplamMs ?? 0;
   const sonraki = yuklu?.adimlar.find((a) => !senaryoDurumu?.tamamlanan.includes(a.id) && a.gecikmeMs >= konum);
@@ -86,14 +87,21 @@ export function SenaryoPaneli({ senaryoDurumu, senaryolar, simDurumu, calistir }
           ikon={<Ikon.oynat />}
           sinif={durum === "oynuyor" ? "oynuyor" : ""}
           sag={
-            <span className={`rozet ${durum === "oynuyor" ? "iyi" : durum === "duraklatildi" ? "uyari" : "notr"}`}>
-              {durum === "oynuyor" ? "Oynatılıyor" : durum === "duraklatildi" ? "Duraklatıldı" : "Hazır"}
+            <span className={`rozet ${durum === "oynuyor" ? "iyi" : durum === "duraklatildi" || bekliyor ? "uyari" : "notr"}`}>
+              {durum === "oynuyor" ? "Oynatılıyor" : durum === "duraklatildi" ? "Duraklatıldı" : bekliyor ? "Onay bekliyor" : "Hazır"}
             </span>
           }
         >
+          {bekliyor && senaryoDurumu?.bekleme && (
+            <div className="bekleme-kutusu" role="status">
+              <strong>Eğitmen onayı bekleniyor</strong>
+              <span>{senaryoDurumu.bekleme.mesaj}</span>
+              <small>Kursiyer hazır olunca "Devam" (ya da Boşluk); sonraki adımlar bekleme süresi kadar kayar.</small>
+            </div>
+          )}
           <div className="oynatma">
-            <button type="button" className="birincil buyuk" disabled={durum === "oynuyor"} onClick={() => void calistir(() => api.senaryoOynat())}>
-              <Ikon.oynat /> {durum === "duraklatildi" ? "Devam" : "Oynat"}
+            <button type="button" className="birincil buyuk" disabled={durum === "oynuyor"} onClick={() => void calistir(() => (bekliyor ? api.senaryoDevam() : api.senaryoOynat()))}>
+              <Ikon.oynat /> {durum === "duraklatildi" || bekliyor ? "Devam" : "Oynat"}
             </button>
             <button type="button" className="buyuk" disabled={durum !== "oynuyor"} onClick={() => void calistir(() => api.senaryoDuraklat())}>
               <Ikon.duraklat /> Duraklat

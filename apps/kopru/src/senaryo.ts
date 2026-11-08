@@ -105,6 +105,10 @@ export class SenaryoMotoru {
   async oynat() {
     if (!this.senaryo) throw new Error("Önce bir senaryo yükleyin");
     if (this.durum.durum === "oynuyor") return;
+    if (this.durum.durum === "bekliyor") {
+      this.devamEt();
+      return;
+    }
     const bastan = this.durum.durum === "duruyor";
     // Baştan başlarken önce temel sahne: elle çağrılmış her şey gider (await yok; sahne yöneticisi içeride `dur(true)`
     // çağırıp nesli artırır, o yüzden nesil bundan SONRA alınır). Devam ederken (duraklatıldı) sahneye dokunulmaz.
@@ -124,6 +128,35 @@ export class SenaryoMotoru {
     this.durdur = this.zamanlayici.aralik(() => void this.tik(), this.tikMs);
     this.yayinla();
     await this.tik();
+  }
+
+  /**
+   * `bekle_onay` adımından sonra eğitmen "Devam" dedi: bekleme süresi kadar başlangıç kaydırılır, sonraki adımlar
+   * göreli zamanlarını korur (kursiyerin hızına göre ilerleme; crawl–walk–run). "bekliyor" değilse hiçbir şey yapmaz.
+   */
+  devamEt() {
+    if (this.durum.durum !== "bekliyor" || !this.senaryo) return;
+    this.nesil++;
+    this.baslangicZamani = this.zamanlayici.simdi() - this.duraklatmaKonumu;
+    this.durum.durum = "oynuyor";
+    delete this.durum.bekleme;
+    this.gunluk.bilgi("Senaryo devam ediyor (eğitmen onayı)");
+    this.durdur = this.zamanlayici.aralik(() => void this.tik(), this.tikMs);
+    this.yayinla();
+    void this.tik();
+  }
+
+  /** Senaryoyu "bekliyor"a alır (bekle_onay adımı): zamanlayıcı durur, konum saklanır, panel Devam gösterir. */
+  private bekle(adim: SenaryoAdimi, mesaj: string) {
+    this.nesil++;
+    this.duraklatmaKonumu = this.zamanlayici.simdi() - this.baslangicZamani;
+    this.durum.konumMs = this.duraklatmaKonumu;
+    this.durum.durum = "bekliyor";
+    this.durum.bekleme = { adimId: adim.id, mesaj };
+    this.durdur?.();
+    this.durdur = null;
+    this.gunluk.bilgi(`Senaryo eğitmen onayı bekliyor: ${mesaj}`);
+    this.yayinla();
   }
 
   duraklat() {
@@ -151,6 +184,7 @@ export class SenaryoMotoru {
     this.durum.durum = "duruyor";
     this.durum.konumMs = 0;
     this.durum.tamamlanan = [];
+    delete this.durum.bekleme;
     this.duraklatmaKonumu = 0;
     if (oynuyordu) {
       if (!sessiz) {
@@ -199,6 +233,12 @@ export class SenaryoMotoru {
       case "oda":
         await this.depo.odaSec(islem.oda);
         break;
+      case "safha":
+        this.depo.safhaAyarla(islem.safha);
+        break;
+      case "bekle_onay":
+        // Zaman çizelgesinde `tik` bekletir; elle "Şimdi" tetiklenirse bekleyecek bir şey yok
+        break;
       case "figur": {
         if (!this.figur) {
           this.gunluk.uyari("Senaryo figür adımı: figür yöneticisi bağlı değil");
@@ -230,6 +270,10 @@ export class SenaryoMotoru {
         if (adim.gecikmeMs <= konum && !this.durum.tamamlanan.includes(adim.id)) {
           this.durum.tamamlanan.push(adim.id);
           this.gunluk.bilgi(`Senaryo adımı: ${adim.aciklama}`);
+          if (adim.islem?.tip === "bekle_onay") {
+            this.bekle(adim, adim.islem.mesaj || adim.aciklama || "Eğitmen onayı");
+            return;
+          }
           // Bozuk/eksik adım (elle düzenlenmiş senaryolar.json) köprüyü düşürmesin: hata günlüğe, senaryo sürer
           try {
             await this.adimiTetikle(adim);

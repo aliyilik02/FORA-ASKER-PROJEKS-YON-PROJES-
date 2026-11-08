@@ -695,6 +695,18 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   Senaryo durumu oynarken adım değişiminde + saniyede bir yayınlanır (`SenaryoDurumu.ad` yüklü senaryonun adı). Eğitmen
   "Durdur" dediğinde senaryonun açtığı çatışma/izli mermi/helikopter kapanır (`DurumDeposu.sureklileriKapat`). WS'de 10 sn
   ping/pong; pong vermeyen bağlantı kapatılır. Açılışta geri yüklenen durumda çatışma/izli/helikopter kapalı başlar.
+- **Figür davranışı** (8 Kasım, B-9): bakış (`sahne3b/bakis.ts` + `FigurKatmani.bakisiUygula`): karıştırıcı ve duruş
+  ofsetlerinden sonra göğüs/baş kemiklerine dünya eksenli yaw/pitch; hedef önceliği yanındaki figür (sıhhiyeci → yaralı) >
+  çatışmada düşman yönü (silahlı, yanında değilse) > 12 m içindeki yaralı > 4 sn içindeki son patlama (`patlamaOldu`);
+  sınır ±70°/±25°, 0,35 sn yumuşatma; yaralı/düşerken/ağır silahta yok. Bekleme klibi rastgele fazda ±%5 hızla başlar.
+  Duruş geçişleri GLB'deki Mixamo klipleriyle (`GECIS_KLIPLERI`: Rifle Stand To Kneel, Rifle Kneel To Stand, Crouch To
+  Prone, Standing Up; LoopOnce, bitince hedef döngüye 0,25 sn çapraz geçiş; `Aktif.gecis`); klip yoksa eski 0,4 sn geçiş.
+- **TCCC safhası** (8 Kasım, B-10): `durum.safha` (`ates_altinda | taktik_saha | tahliye`, varsayılan taktik saha) →
+  `Sahne3B.safhaAyarla` → `FigurKatmani.safha`. "Ateş altında"da `yaninda` ile gelen sıhhiyeci yaralıya gitmez: yaralıdan
+  izleyiciye doğru en çok 4,5 m geride (izleyiciye ≥ 2,5 m) diz çöker (`comelmis` klibi), yaralıya dönük bekler
+  (`safhaBekliyor`, `yanindaHedef`); taktik sahaya geçince yürüyüş klibiyle (Rifle Crouch Walk / Rifle Walk, 1,5 m/s)
+  hedefe gider, varınca ona dönüp müdahale klibine döner (`yuruyus`). Köprü: senaryo adımları `safha` ve `bekle_onay`
+  (senaryo "bekliyor", `POST /senaryo/devam`), `PUT /safha`.
 - **Figür bitti** (8 Kasım): yürüyen/koşan 3B figür duvarın ucunu geçince (|azimut| > 165°) oynatıcı köprüye
   `{tip:"figur", islem:"bitti", id}` gönderir; köprü figürü listeden düşürür ve `durdur` yayınlar (panel listesi şişmez,
   yeniden bağlanan oynatıcıda asker baştan koşmaz). Sahnede yoksa yok sayılır. Kare döngüsü hataları (`kare` içindeki

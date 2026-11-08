@@ -1021,3 +1021,30 @@ body {
 .baglanti-seridi strong {
   margin-right: 6px;
 }
+
+/* Senaryo: eğitmen onayı bekleme kutusu */
+.bekleme-kutusu {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: rgba(255, 179, 71, 0.12);
+  border: 1px solid rgba(255, 179, 71, 0.45);
+}
+.bekleme-kutusu strong {
+  color: #ffb347;
+}
+.bekleme-kutusu small {
+  color: var(--murekkep-3);
+}
+/* Canlı sahne: TCCC safhası seçici */
+.safha-secici {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 4px;
+}
+.safha-secici .etiket {
+  font-size: 12px;
+  color: var(--murekkep-3);
+}

@@ -20,6 +20,8 @@ import {
   type SenaryoAdimi,
   type SimulasyonDurumu,
   type Yagis,
+  SAFHA_ETIKETLERI,
+  type Safha,
 } from "../tipler";
 import { saatBicimi, sureBicimi, yonMetni } from "./ortak";
 
@@ -63,6 +65,8 @@ const TIP_ETIKETLERI: Record<AdimTipi, string> = {
   catisma: "Çatışma (düşman ateşi)",
   figur: "Figür (asker / tank / vuruldu)",
   oda: "Oda değiştir (1 ↔ 2)",
+  bekle_onay: "Eğitmen onayı bekle (kursiyer hazır olunca Devam)",
+  safha: "TCCC safhası (ateş altında / taktik saha / tahliye)",
 };
 const FIGUR_ISLEM_ETIKETLERI = { oynat: "Sahneye koy", poz: "Duruş değiştir (vuruldu / diz çök / kalk)", temizle: "Hepsini kaldır" } as const;
 type FigurIslem = keyof typeof FIGUR_ISLEM_ETIKETLERI;
@@ -71,6 +75,8 @@ const FIGUR_MESAFELER: Record<string, number> = { "Yakın · 8 m": -12, "Orta ·
 interface YeniAdim {
   saniye: number;
   tip: AdimTipi;
+  beklemeMesaji: string;
+  safha: Safha;
   efektTur: EfektTuru;
   siddet: number;
   yon: number;
@@ -109,6 +115,8 @@ function varsayilanYeni(d: SimulasyonDurumu): YeniAdim {
   return {
     saniye: 0,
     tip: "efekt",
+    beklemeMesaji: "",
+    safha: "taktik_saha",
     efektTur: "patlama",
     siddet: 1,
     yon: 0,
@@ -197,6 +205,10 @@ function adimUret(y: YeniAdim, id: string): SenaryoAdimi {
         : { id, gecikmeMs, aciklama: "Çatışma durur", islem: { tip: "catisma", catisma: { aktif: false } } };
     case "oda":
       return { id, gecikmeMs, aciklama: y.adimOda === "oda2" ? "Oda 2'ye geç (güvenli alan / helikopter)" : "Oda 1'e geç", islem: { tip: "oda", oda: y.adimOda } };
+    case "bekle_onay":
+      return { id, gecikmeMs, aciklama: `Eğitmen onayı: ${y.beklemeMesaji.trim() || "kursiyer hazır olunca Devam"}`, islem: { tip: "bekle_onay", mesaj: y.beklemeMesaji.trim() || undefined } };
+    case "safha":
+      return { id, gecikmeMs, aciklama: `Safha: ${SAFHA_ETIKETLERI[y.safha]}`, islem: { tip: "safha", safha: y.safha } };
     case "figur":
       if (y.figurIslem === "temizle") return { id, gecikmeMs, aciklama: "Birlik geri çekilir (tüm figürler)", islem: { tip: "figur", figur: { islem: "temizle" } } };
       if (y.figurIslem === "poz")
@@ -399,6 +411,22 @@ export function SenaryoEditoru({
         {yeni.tip === "isik" && (
           <div className="alanlar">
             <Sayi etiket="Parlaklık (0–1)" deger={yeni.parlaklik} min={0} max={1} adim={0.05} onChange={(parlaklik) => g({ parlaklik })} />
+          </div>
+        )}
+        {yeni.tip === "bekle_onay" && (
+          <div className="alanlar">
+            <label className="alan genis">
+              <span>Eğitmene gösterilecek not</span>
+              <input type="text" value={yeni.beklemeMesaji} placeholder="ör. Turnike uygulanınca Devam" onChange={(e) => g({ beklemeMesaji: e.target.value })} />
+            </label>
+          </div>
+        )}
+        {yeni.tip === "safha" && (
+          <div className="alanlar">
+            <label className="alan">
+              <span>Safha</span>
+              <Secim deger={yeni.safha} secenekler={SAFHA_ETIKETLERI} onChange={(safha) => g({ safha })} />
+            </label>
           </div>
         )}
         {yeni.tip === "catisma" && (

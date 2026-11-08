@@ -1,25 +1,5 @@
 /** Köprü sunucusu HTTP istemcisi. */
-import type {
-  BaglantiDurumu,
-  Bolge,
-  CatismaAyarlari,
-  EfektIstegi,
-  FigurKomutu,
-  KlipOzeti,
-  IzliMermiAyarlari,
-  Oda,
-  Oda2Ayarlari,
-  OnAyar,
-  OrnekDurumu,
-  OrtamAyarlari,
-  OrtamIsigi,
-  Senaryo,
-  SenaryoDurumu,
-  SifirlamaKaynagi,
-  SifirlamaYaniti,
-  SimulasyonDurumu,
-  UnrealIstekKaydi,
-} from "./tipler";
+import type { BaglantiDurumu, Bolge, CatismaAyarlari, EfektIstegi, FigurKomutu, IzliMermiAyarlari, KlipOzeti, Oda, Oda2Ayarlari, OnAyar, OrnekDurumu, OrtamAyarlari, OrtamIsigi, Safha, Senaryo, SenaryoDurumu, SifirlamaKaynagi, SifirlamaYaniti, SimulasyonDurumu, UnrealIstekKaydi } from "./tipler";
 
 async function istek<T>(yol: string, yontem: string, govde?: unknown): Promise<T> {
   const yanit = await fetch(`/api${yol}`, {
@@ -62,6 +42,9 @@ export const api = {
   senaryoOynat: () => istek<SenaryoDurumu>("/senaryo/oynat", "POST"),
   senaryoDuraklat: () => istek<SenaryoDurumu>("/senaryo/duraklat", "POST"),
   senaryoDur: () => istek<SenaryoDurumu>("/senaryo/dur", "POST"),
+  /** `bekle_onay` adımında bekleyen senaryoyu sürdürür. */
+  senaryoDevam: () => istek<SenaryoDurumu>("/senaryo/devam", "POST"),
+  safha: (safha: Safha) => istek<SimulasyonDurumu>("/safha", "PUT", { safha }),
   /** `tamam: false` + `uyari`: adım uygulanamadı (ör. figür sahnede değil); eğitmene bildirim olarak gösterilir. */
   adimTetikle: (senaryoId: string, adimId: string) => istek<{ tamam: boolean; uyari?: string }>("/senaryo/adim-tetikle", "POST", { senaryoId, adimId }),
 

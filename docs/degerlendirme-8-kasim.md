@@ -194,9 +194,17 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
 7. ✓ **Sarsıntı anahtarı** (§1-2): `?sarsinti=kapali|hafif|tam` (`sarsintiSecimi.ts`, yerel kayıt, varsayılan hafif = genlik %35), panel Sistem › Oynatıcı ayarları.
 8. ✓ **"Ayakta" duruşunun saklanması** (§4-2: `figur.ts` poz her zaman saklanır) ve **yürüyen figürün `bitti` bildirimi** (§3-6/§4-6: oynatıcı `{tip:"figur", islem:"bitti", id}` → köprü `bittiBildir` → `durdur` yayını; `figurBitti.test.ts`).
 
-### B. Kısa vade (1–2 hafta) — 10–13 ✓ 8 Kasım (köprü + panel); 9, 14, 15 bekliyor
-9. **Figür bakış/baş yönelimi** (§1-3) + **idle faz/hız rastgeleliği** (§4-8) + **duruş geçiş klipleri** (§4-4) → tek "figür davranış" turu.
-10. **Senaryo adımları:** `bekle_onay`, `rastgele_sure`, `safha`, `beklenen` alanı (§1-5, §1-6) — bekliyor (kullanıcı kararı). ✓ Durdur
+### B. Kısa vade (1–2 hafta) — 9–13 ✓ 8 Kasım; 14, 15 bekliyor
+9. ✓ **Figür bakış/baş yönelimi** (§1-3: `sahne3b/bakis.ts` saf hesap + `FigurKatmani.bakisiUygula`; öncelik yanındaki/yaralı (sıhhiyeci)
+   > düşman yönü > 12 m içindeki yaralı > 4 sn içindeki son patlama; göğüs %35 + baş %65 yaw, baş pitch; ±70°/±25°, 0,35 sn yumuşatma)
+   + ✓ **idle faz/hız rastgeleliği** (§4-8: döngü klibinde rastgele `time`, ±%5 `timeScale`) + ✓ **duruş geçiş klipleri** (§4-4:
+   `GECIS_KLIPLERI` — Rifle Stand To Kneel / Kneel To Stand / Crouch To Prone / Standing Up; LoopOnce → bitince hedef döngüye
+   0,25 sn çapraz geçiş; yaralı→kalk "Standing Up"). Başsız tarayıcıda doğrulandı (diz çökme geçişi, bakış açıları).
+10. ✓ **Senaryo adımları:** `bekle_onay` (senaryo "bekliyor"a düşer, eğitmen Devam/Boşluk; sonraki adımlar bekleme kadar kayar,
+    `SenaryoMotoru.devamEt`, `POST /senaryo/devam`) ve `safha` (`durum.safha`: ateş altında / taktik saha / tahliye; `PUT /safha`;
+    canlı sahne kartında rozet + seçici; oynatıcıda sıhhiyeci "ateş altında"da yaralıdan ~4,5 m izleyici tarafında siperde diz çöker,
+    taktik sahaya geçince yürüyüp (Rifle Crouch Walk) yaralının başına gider). `rastgele_sure` ve `beklenen` alanı bekliyor.
+    Testler `senaryoBekle.test.ts`; başsız tarayıcıda sıhhiyeci siper→yürüyüş→müdahale doğrulandı. ✓ Durdur
     senaryonun açtığı çatışma/izli/helikopteri kapatır ve `tamamlanan` sıfırlanır (§3-17, `DurumDeposu.sureklileriKapat`);
     ✓ senaryo yayını adım değişiminde + 1 Hz (§3-14); ✓ liste değişimi `senaryolar` WS mesajıyla, `SenaryoDurumu.ad` (§3-15);
     ✓ adım kimlikleri kayıtta tekilleştirilir, işlem/gecikme denetimi (§3-16, `dogrulama.ts`).

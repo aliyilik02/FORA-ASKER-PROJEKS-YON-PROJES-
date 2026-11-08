@@ -106,9 +106,22 @@ export interface EfektIstegi {
   mesafe?: number;
 }
 
+/**
+ * TCCC/TMYB safhası (8 Kasım): oynatıcıda sıhhiyeci davranışını belirler — "ates_altinda"da sıhhiyeci yaralıya gitmez,
+ * izleyici tarafında siperde diz çöker; "taktik_saha"ya geçince yürüyüp yaralının başına gider. Panel rozeti ve senaryo
+ * adımı (`safha`) ile değişir. Eski kayıtlarda yok: taktik saha sayılır.
+ */
+export type Safha = "ates_altinda" | "taktik_saha" | "tahliye";
+export const SAFHA_ETIKETLERI: Record<Safha, string> = {
+  ates_altinda: "Ateş altında bakım",
+  taktik_saha: "Taktik saha bakımı",
+  tahliye: "Taktik tahliye",
+};
+
 export interface SimulasyonDurumu {
   oda: Oda;
   bolge: Bolge;
+  safha?: Safha;
   ortam: OrtamAyarlari;
   isik: OrtamIsigi;
   izliMermi: IzliMermiAyarlari;
@@ -134,6 +147,10 @@ export interface SenaryoAdimi {
     | { tip: "catisma"; catisma: Partial<CatismaAyarlari> }
     /** Figür komutu: asker/tank çağır, duruş değiştir (vuruldu), kaldır. */
     | { tip: "figur"; figur: FigurKomutu }
+    /** Senaryo durur ("bekliyor"), eğitmen Devam/Boşluk diyene dek bekler; sonraki adımlar bekleme süresi kadar kayar. */
+    | { tip: "bekle_onay"; mesaj?: string }
+    /** TCCC safhasını değiştirir (sıhhiyeci davranışı, panel rozeti). */
+    | { tip: "safha"; safha: Safha }
     /** Oda değiştir (Oda 1 ↔ Oda 2): gösterim senaryosu helikopter inişine geçebilsin. */
     | { tip: "oda"; oda: Oda };
 }
@@ -146,7 +163,7 @@ export interface Senaryo {
   adimlar: SenaryoAdimi[];
 }
 
-export type SenaryoOynatmaDurumu = "duruyor" | "oynuyor" | "duraklatildi";
+export type SenaryoOynatmaDurumu = "duruyor" | "oynuyor" | "duraklatildi" | "bekliyor";
 
 export interface SenaryoDurumu {
   senaryoId: string | null;
@@ -158,6 +175,8 @@ export interface SenaryoDurumu {
   toplamMs: number;
   /** Tamamlanan adım id'leri. */
   tamamlanan: string[];
+  /** "bekliyor" durumunda: hangi adım, eğitmene gösterilecek mesaj. */
+  bekleme?: { adimId: string; mesaj: string };
 }
 
 export interface OnAyar {
@@ -395,6 +414,7 @@ export function varsayilanDurum(): SimulasyonDurumu {
     izliMermi: { aktif: false, cikisNoktasi: 1, yon: 0, siklik: 3 },
     oda2: { guvenliAlan: "kaya_sutre_arkasi", helikopter: "yok", helikopterYonu: 12, uzakSesMesafesi: 800, uzakSesYonu: 45 },
     catisma: { aktif: false, siddet: 0.5, yon: 0, dostAtes: true },
+    safha: "taktik_saha",
     sonEfektler: [],
   };
 }

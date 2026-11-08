@@ -20,6 +20,7 @@ export const MEVSIMLER: readonly Mevsim[] = ["ilkbahar", "yaz", "sonbahar", "kis
 export const YAGISLAR: readonly Yagis[] = ["yok", "hafif_yagmur", "siddetli_yagmur", "kar"];
 export const GUVENLI_ALANLAR: readonly GuvenliAlanTipi[] = ["operasyonel_bolge", "meskun_mahal_ici", "kaya_sutre_arkasi", "cukur"];
 export const HELIKOPTER_DURUMLARI: readonly HelikopterDurumu[] = ["yok", "yaklasiyor", "iniyor", "yerde", "kalkiyor"];
+export const SAFHALAR = ["ates_altinda", "taktik_saha", "tahliye"] as const;
 export const EFEKT_TURLERI = ["patlama", "gurultu", "bagirma", "cagirma", "toz_duman", "uzak_patlama", "uzak_mermi_sesi", "simsek", "yangin", "yangin_sondur"] as const;
 
 /** Sonlu sayı: number ya da sayısal metin; aksi hâlde undefined. */

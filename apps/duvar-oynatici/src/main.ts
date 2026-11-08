@@ -424,6 +424,8 @@ function durumUygula(d: SimulasyonDurumu) {
   sahne3b.izliMermiAyarla(d.izliMermi, duvarlar.map((x) => x.yaw));
   const catisma = d.catisma ?? { aktif: false, siddet: 0.5, yon: 0, dostAtes: true };
   sahne3b.catismaAyarla(catisma, yonAzimut(catisma.yon));
+  // TCCC safhası: "ateş altında"da sıhhiyeci yaralıya gitmez, siperde diz çöker; taktik sahaya geçince yürür
+  sahne3b.safhaAyarla(d.safha ?? "taktik_saha");
   const heliDurumu = d.oda === "oda2" ? d.oda2.helikopter : "yok";
   const heliYon = yonAzimut(d.oda2.helikopterYonu ?? 12);
   // 3B model varsa helikopter 3B sahnede uçar (panorama yüklenirken de); yoksa 2B siluet

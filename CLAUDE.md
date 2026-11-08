@@ -300,9 +300,12 @@ sesi seviyesi, tablet paneli. Kredi bekleyen: T5/T9/T12 yeniden üretimi (kullan
 (A: gösterim öncesi onarımlar — "Asker vuruldu" düğmesi `komando_*` adlarıyla çalışmıyor, köprü bozuk senaryo adımında çöküyor,
 bozuk JSON eğitmen senaryolarını siliyor, çizim döngüsü hatada donuyor, her yangın yeni PointLight ile gölgelendirici yeniden
 derletiyor, ortam sesi yarışı, uzak patlama sesinde mesafe gecikmesi yok). Bu belge kapanmadan yeni özellik yerine A listesi
-yapılmalı. **A listesi 8 Kasım'da bitti**; **B listesinden 10–13 bitti** (API doğrulama `dogrulama.ts`, senaryo Durdur/1 Hz/`senaryolar` WS,
-hata bildirimleri, ping/pong, kopukluk şeridi, 44 px, taslak kaydı). Bekleyen: B-9 figür davranışı (bakış/idle/geçiş klipleri),
-B-10 koşullu adımlar (`bekle_onay`, `safha`), B-14 köşe sürekliliği, B-15 DPR/yan duvar. Duvarda gözle bakılmadı. Domain bilgisi için skill `askeri-simulasyon-tasarimi` (`.claude/skills/`; değerlendirme/öneri işinde yükle);
+yapılmalı. **A listesi 8 Kasım'da bitti**; **B listesinden 9–13 bitti** (API doğrulama `dogrulama.ts`, senaryo Durdur/1 Hz/`senaryolar` WS,
+hata bildirimleri, ping/pong, kopukluk şeridi, 44 px, taslak kaydı; figür bakışı `sahne3b/bakis.ts`, idle varyasyonu, Mixamo geçiş
+klipleri; senaryo adımları `bekle_onay` (Devam/Boşluk) ve `safha`; TCCC safhası `durum.safha` → sıhhiyeci ateş altında siperde
+bekler, taktik sahada yaralıya yürür; canlı sahne kartında safha seçici). Kullanıcı kararı (8 Kasım): bakış önceliği düşman >
+yaralı > son patlama, sıhhiyeci her zaman yaralıya; safha davranışı aktif. Bekleyen: B-14 köşe sürekliliği, B-15 DPR/yan duvar,
+`rastgele_sure`/`beklenen` adım alanları. Duvarda gözle bakılmadı (bakış genliği, yürüyüş hızı, geçiş klipleri). Domain bilgisi için skill `askeri-simulasyon-tasarimi` (`.claude/skills/`; değerlendirme/öneri işinde yükle);
 dış skill'ler: threejs-*, create-game-vfx, build-game-audio-feedback, game-audio, game-design-theory, game-development, game-ui-design.
 
 ## Sıradaki işler (öncelik sırasıyla)
