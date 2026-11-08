@@ -11,7 +11,8 @@ import type { Gunluk } from "./gunluk.js";
 import type { OrnekBaslatici } from "./ornek.js";
 import { sifirlamaKaynagiCoz, type SahneYoneticisi } from "./sahne.js";
 import type { SenaryoMotoru } from "./senaryo.js";
-import type { BaglantiDurumu, OnAyar, Senaryo, SifirlamaYaniti } from "./tipler.js";
+import type { BaglantiDurumu, OnAyar, Senaryo, SenaryoAdimi, SifirlamaYaniti } from "./tipler.js";
+import { CATISMA_SEMASI, EFEKT_SEMASI, ISIK_SEMASI, IZLI_MERMI_SEMASI, ODA2_SEMASI, ORTAM_SEMASI, kismiDogrula, senaryoAdimlariniDogrula } from "./dogrulama.js";
 import type { UnrealIstemci } from "./unreal.js";
 
 export interface ApiBagimliliklari {
@@ -29,6 +30,8 @@ export interface ApiBagimliliklari {
   figur?: FigurYoneticisi;
   /** Sahne sıfırlaması (temel sahne; senaryo, figür, durum, oynatıcı yayını tek yerde). */
   sahne?: SahneYoneticisi;
+  /** Senaryo listesi değişince (kayıt/silme) çağrılır; köprü `senaryolar` mesajını yayınlar. */
+  senaryolarDegisti?: (liste: Senaryo[]) => void;
 }
 
 export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici, oynaticiSayisi = 0, panelSayisi = 0): BaglantiDurumu {
@@ -98,10 +101,22 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
     }),
   );
 
+  // PATCH gövdeleri alan alan doğrulanır (dogrulama.ts): yanlış tip/seçenek 400 ve hata listesi; tanınmayan alan atılır
+  const dogrulaYaDaReddet = <T extends object>(req: Request, res: Response, sema: Parameters<typeof kismiDogrula>[1]): Partial<T> | null => {
+    const s = kismiDogrula<T>(req.body, sema);
+    if (s.hatalar.length) {
+      res.status(400).json({ hata: s.hatalar.join("; ") });
+      return null;
+    }
+    return s.deger;
+  };
+
   r.patch(
     "/ortam",
     sarmala(async (req, res) => {
-      await b.depo.ortamGuncelle(req.body ?? {});
+      const k = dogrulaYaDaReddet<Parameters<DurumDeposu["ortamGuncelle"]>[0]>(req, res, ORTAM_SEMASI);
+      if (!k) return;
+      await b.depo.ortamGuncelle(k);
       res.json(b.depo.al());
     }),
   );
@@ -109,7 +124,9 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
   r.patch(
     "/isik",
     sarmala((req, res) => {
-      b.depo.isikGuncelle(req.body ?? {});
+      const k = dogrulaYaDaReddet<Parameters<DurumDeposu["isikGuncelle"]>[0]>(req, res, ISIK_SEMASI);
+      if (!k) return;
+      b.depo.isikGuncelle(k);
       res.json(b.depo.al());
     }),
   );
@@ -117,7 +134,9 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
   r.patch(
     "/izli-mermi",
     sarmala(async (req, res) => {
-      await b.depo.izliMermiGuncelle(req.body ?? {});
+      const k = dogrulaYaDaReddet<Parameters<DurumDeposu["izliMermiGuncelle"]>[0]>(req, res, IZLI_MERMI_SEMASI);
+      if (!k) return;
+      await b.depo.izliMermiGuncelle(k);
       res.json(b.depo.al());
     }),
   );
@@ -125,7 +144,9 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
   r.patch(
     "/oda2",
     sarmala(async (req, res) => {
-      await b.depo.oda2Guncelle(req.body ?? {});
+      const k = dogrulaYaDaReddet<Parameters<DurumDeposu["oda2Guncelle"]>[0]>(req, res, ODA2_SEMASI);
+      if (!k) return;
+      await b.depo.oda2Guncelle(k);
       res.json(b.depo.al());
     }),
   );
@@ -133,7 +154,9 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
   r.patch(
     "/catisma",
     sarmala(async (req, res) => {
-      await b.depo.catismaGuncelle(req.body ?? {});
+      const k = dogrulaYaDaReddet<Parameters<DurumDeposu["catismaGuncelle"]>[0]>(req, res, CATISMA_SEMASI);
+      if (!k) return;
+      await b.depo.catismaGuncelle(k);
       res.json(b.depo.al());
     }),
   );
@@ -141,10 +164,10 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
   r.post(
     "/efekt",
     sarmala(async (req, res) => {
-      const tur = req.body?.tur;
-      const gecerli = ["patlama", "gurultu", "bagirma", "cagirma", "toz_duman", "uzak_patlama", "uzak_mermi_sesi", "simsek", "yangin", "yangin_sondur"];
-      if (!gecerli.includes(tur)) return res.status(400).json({ hata: `tur şunlardan biri olmalı: ${gecerli.join(", ")}` });
-      await b.depo.efektTetikle(req.body);
+      const k = dogrulaYaDaReddet<Parameters<DurumDeposu["efektTetikle"]>[0]>(req, res, EFEKT_SEMASI);
+      if (!k) return;
+      if (!k.tur) return res.status(400).json({ hata: "tur zorunlu" });
+      await b.depo.efektTetikle(k as Parameters<DurumDeposu["efektTetikle"]>[0]);
       res.json({ tamam: true });
     }),
   );
@@ -182,19 +205,25 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
 
   r.post("/senaryolar", (req, res) => {
     const govde = req.body as Partial<Senaryo>;
-    if (!govde?.ad || !Array.isArray(govde.adimlar)) return res.status(400).json({ hata: "ad ve adimlar zorunlu" });
+    if (!govde?.ad || typeof govde.ad !== "string" || !Array.isArray(govde.adimlar)) return res.status(400).json({ hata: "ad ve adimlar zorunlu" });
+    // Adımlar: işlem/gecikme denetimi, yinelenen kimlikler tekilleştirilir (aynı kimlik iki kez geçerse ikincisi hiç çalışmaz, senaryo bitmezdi)
+    const d = senaryoAdimlariniDogrula(govde.adimlar);
+    if (d.hatalar.length) return res.status(400).json({ hata: d.hatalar.join("; ") });
     const senaryo: Senaryo = {
-      id: govde.id ?? kimlikUret("sn"),
+      id: typeof govde.id === "string" && govde.id ? govde.id : kimlikUret("sn"),
       ad: govde.ad,
-      aciklama: govde.aciklama,
+      aciklama: typeof govde.aciklama === "string" ? govde.aciklama : undefined,
       oda: govde.oda === "oda2" ? "oda2" : "oda1",
-      adimlar: govde.adimlar.map((a, i) => ({ ...a, id: a.id ?? `adim_${i + 1}` })),
+      adimlar: d.adimlar as unknown as SenaryoAdimi[],
     };
-    res.json(b.veri.senaryoKaydet(senaryo));
+    const kayit = b.veri.senaryoKaydet(senaryo);
+    b.senaryolarDegisti?.(b.veri.senaryolar());
+    res.json(kayit);
   });
 
   r.delete("/senaryolar/:id", (req, res) => {
     const silindi = b.veri.senaryoSil(req.params.id);
+    if (silindi) b.senaryolarDegisti?.(b.veri.senaryolar());
     res.status(silindi ? 200 : 404).json({ tamam: silindi });
   });
 
@@ -228,8 +257,8 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
       const senaryo = b.veri.senaryoBul(req.body?.senaryoId);
       const adim = senaryo?.adimlar.find((a) => a.id === req.body?.adimId);
       if (!adim) return res.status(404).json({ hata: "adım bulunamadı" });
-      await b.senaryo.adimiTetikle(adim);
-      res.json({ tamam: true });
+      // Figür adımı uygulanamadıysa (asker sahnede yok) eğitmen bunu görsün: {tamam:false, uyari}
+      res.json(await b.senaryo.adimiTetikle(adim));
     }),
   );
 

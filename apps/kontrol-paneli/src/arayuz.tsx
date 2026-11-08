@@ -123,7 +123,8 @@ export function ArayuzSaglayici({ children }: { children: ReactNode }) {
     (b: Omit<Bildirim, "id">) => {
       const id = ++sayac.current;
       setBildirimler((eski) => [...eski.slice(-4), { ...b, id }]);
-      window.setTimeout(() => bildirimKapat(id), b.tur === "hata" ? 6000 : 3200);
+      // Hata bildirimi eğitmen kapatana dek kalır (gözü duvarda olan 6 sn'de kaçırırdı, §3-23); diğerleri 3,2 sn
+      if (b.tur !== "hata") window.setTimeout(() => bildirimKapat(id), 3200);
     },
     [bildirimKapat],
   );

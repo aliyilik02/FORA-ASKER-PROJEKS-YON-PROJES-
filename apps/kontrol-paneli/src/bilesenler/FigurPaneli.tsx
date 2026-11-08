@@ -76,7 +76,7 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
     const ad = yaralilar[0];
     if (!ad) return;
     // Oda 1: 8 m yakında; Oda 2: sütrenin içinde (3,5 m), kum torbası hattının arkasında kalmasın
-    void calistir(() => cagir(ad, 0, oda === "oda2" ? -26 : -12)).then(() => bildir({ tur: "basari", baslik: "Yaralı yerde", metin: `${yonMetni(seciliYon)} tarafı, ${oda === "oda2" ? "sütrenin içinde" : "yakın mesafe"} · yardım çağırıyor` }));
+    void calistir(() => cagir(ad, 0, oda === "oda2" ? -26 : -12)).then((r) => r && bildir({ tur: "basari", baslik: "Yaralı yerde", metin: `${yonMetni(seciliYon)} tarafı, ${oda === "oda2" ? "sütrenin içinde" : "yakın mesafe"} · yardım çağırıyor` }));
   };
   const pozDegistir = (f: FigurKomutu & { id: string }, poz: FigurPozu) =>
     void calistir(() => api.figur({ islem: "poz", id: f.id, poz })).then(
@@ -106,13 +106,13 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
     if (!askerler.length) return;
     const ad = askerler[sayac % askerler.length];
     setSayac((s) => s + 1);
-    void calistir(() => cagir(ad)).then(() => bildir({ tur: "basari", baslik: "Asker mevziye girdi", metin: `${baslik(ad)} · ${yonMetni(seciliYon)} tarafı` }));
+    void calistir(() => cagir(ad)).then((r) => r && bildir({ tur: "basari", baslik: "Asker mevziye girdi", metin: `${baslik(ad)} · ${yonMetni(seciliYon)} tarafı` }));
   };
   const tankCagir = () => {
     if (!tanklar.length) return;
     const ad = tanklar[sayac % tanklar.length];
     setSayac((s) => s + 1);
-    void calistir(() => cagir(ad, 0, -5)).then(() => bildir({ tur: "basari", baslik: "Tank geldi", metin: `${baslik(ad)} · ${yonMetni(seciliYon)} tarafı` }));
+    void calistir(() => cagir(ad, 0, -5)).then((r) => r && bildir({ tur: "basari", baslik: "Tank geldi", metin: `${baslik(ad)} · ${yonMetni(seciliYon)} tarafı` }));
   };
   const cepheKur = () =>
     void calistir(async () => {
@@ -135,7 +135,7 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
   const kosanGonder = (sola: boolean) => {
     const ad = kosanlar.find((k) => /kosan/.test(k)) ?? kosanlar[0];
     if (!ad) return;
-    void calistir(() => api.figur({ islem: "oynat", klip: ad, azimut: yonAzimut(seciliYon + (sola ? 40 : -40)), yukseklik: -6, olcek: 1, yansit: sola, dongu: true })).then(() =>
+    void calistir(() => api.figur({ islem: "oynat", klip: ad, azimut: yonAzimut(seciliYon + (sola ? 40 : -40)), yukseklik: -6, olcek: 1, yansit: sola, dongu: true })).then((r) => r &&
       bildir({ tur: "basari", baslik: sola ? "Asker sola koşuyor" : "Asker sağa koşuyor" }),
     );
   };

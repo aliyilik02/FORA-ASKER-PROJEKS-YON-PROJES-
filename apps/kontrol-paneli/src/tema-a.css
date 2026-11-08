@@ -18,7 +18,7 @@
   --murekkep: #ecebe6;
   --murekkep-2: #c4c3bd;
   --murekkep-3: #a3a39d;
-  --murekkep-silik: #6b6b67;
+  --murekkep-silik: #8c8c87; /* devre dışı metin #1f2124 üstünde ≥ 4,5:1 (eski #6b6b67 ≈ 3:1) */
   --kum: #d9c7a3;
   --amber: #e3b267;
   --amber-koyu: #c99a52;
@@ -989,4 +989,35 @@ body {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--cizgi-yumusak);
   border-radius: 8px;
+}
+
+/* Tablet (dokunmatik): dokunma hedefleri en az 44 px (WCAG 2.5.5); fare/kalemde kompakt kalır. */
+@media (pointer: coarse) {
+  button.kucuk,
+  .secenek-grubu button,
+  .hizli-zaman button {
+    min-height: 44px;
+  }
+  .bildirim-kapat {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Yıkıcı düğme (Vuruldu, Sil, Kaldır) komşularından uzak dursun */
+  button.tehlike,
+  .onay-bekliyor {
+    margin-left: 10px;
+  }
+}
+
+/* Bağlantı kopukluğu şeridi: tam genişlik, kırmızı, denetimlerin üstünde */
+.baglanti-seridi {
+  background: #7a1f1f;
+  color: #fff;
+  padding: 8px 16px;
+  font-size: 14px;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+.baglanti-seridi strong {
+  margin-right: 6px;
 }

@@ -8,7 +8,7 @@ export function Bildirimler() {
   return (
     <div className="bildirimler" aria-live="polite">
       {bildirimler.map((b) => (
-        <div key={b.id} className={`bildirim bildirim-${b.tur}`}>
+        <div key={b.id} className={`bildirim bildirim-${b.tur}`} role={b.tur === "hata" ? "alert" : undefined}>
           <span className="bildirim-cizgi" />
           <div className="bildirim-govde">
             <strong>{b.baslik}</strong>

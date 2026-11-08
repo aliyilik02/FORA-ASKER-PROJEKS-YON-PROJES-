@@ -23,6 +23,33 @@ import {
 } from "../tipler";
 import { saatBicimi, sureBicimi, yonMetni } from "./ortak";
 
+const TASLAK_ANAHTARI = "duvar.panel.senaryoTaslagi";
+interface Taslak {
+  ad: string;
+  aciklama: string;
+  oda: Oda;
+  adimlar: SenaryoAdimi[];
+  sayac: number;
+}
+function taslakOku(): Taslak | null {
+  try {
+    const ham = localStorage.getItem(TASLAK_ANAHTARI);
+    if (!ham) return null;
+    const t = JSON.parse(ham) as Taslak;
+    return t && Array.isArray(t.adimlar) ? t : null;
+  } catch {
+    return null;
+  }
+}
+function taslakYaz(t: Taslak | null) {
+  try {
+    if (t) localStorage.setItem(TASLAK_ANAHTARI, JSON.stringify(t));
+    else localStorage.removeItem(TASLAK_ANAHTARI);
+  } catch {
+    /* özel pencere */
+  }
+}
+
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 type AdimTipi = SenaryoAdimi["islem"]["tip"];
 
@@ -229,12 +256,18 @@ export function SenaryoEditoru({
   onKaydedildi: (senaryo: Senaryo) => void;
   onVazgec: () => void;
 }) {
-  const [ad, setAd] = useState("");
-  const [aciklama, setAciklama] = useState("");
-  const [oda, setOda] = useState<Oda>(durum.oda);
-  const [adimlar, setAdimlar] = useState<SenaryoAdimi[]>([]);
+  // Taslak yerel kayıtta sürer (§3-12): sekme değişince (F1–F5) ya da "Editörü kapat"ta kaydedilmemiş adımlar kaybolmasın;
+  // kaydedince silinir. Oynatıcıya gitmez, yalnız bu tarayıcıda.
+  const taslak = useState(() => taslakOku())[0];
+  const [ad, setAd] = useState(taslak?.ad ?? "");
+  const [aciklama, setAciklama] = useState(taslak?.aciklama ?? "");
+  const [oda, setOda] = useState<Oda>(taslak?.oda ?? durum.oda);
+  const [adimlar, setAdimlar] = useState<SenaryoAdimi[]>(taslak?.adimlar ?? []);
   const [yeni, setYeni] = useState<YeniAdim>(() => varsayilanYeni(durum));
-  const [sayac, setSayac] = useState(1);
+  const [sayac, setSayac] = useState(taslak?.sayac ?? 1);
+  useEffect(() => {
+    taslakYaz(ad || aciklama || adimlar.length ? { ad, aciklama, oda, adimlar, sayac } : null);
+  }, [ad, aciklama, oda, adimlar, sayac]);
   const [klipler, setKlipler] = useState<KlipOzeti[]>([]);
 
   const g = (k: Partial<YeniAdim>) => setYeni((e) => ({ ...e, ...k }));
@@ -266,6 +299,7 @@ export function SenaryoEditoru({
   const kaydet = () =>
     void calistir(async () => {
       const kayit = await api.senaryoKaydet({ ad: ad.trim(), aciklama: aciklama.trim() || undefined, oda, adimlar });
+      taslakYaz(null);
       onKaydedildi(kayit);
     });
 

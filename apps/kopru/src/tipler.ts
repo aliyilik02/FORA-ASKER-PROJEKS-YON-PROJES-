@@ -150,6 +150,8 @@ export type SenaryoOynatmaDurumu = "duruyor" | "oynuyor" | "duraklatildi";
 
 export interface SenaryoDurumu {
   senaryoId: string | null;
+  /** Yüklü senaryonun adı (panel listesi çekilmemiş olsa da denetimler görünsün). */
+  ad?: string;
   durum: SenaryoOynatmaDurumu;
   /** Senaryo içindeki konum (ms). */
   konumMs: number;
@@ -300,6 +302,8 @@ export function sifirlamaOzetiMetni(o: SifirlamaOzeti): string {
 export type SunucuMesaji =
   | { tip: "durum"; durum: SimulasyonDurumu }
   | { tip: "senaryo"; senaryo: SenaryoDurumu }
+  /** Senaryo listesi değişti (kayıt/silme, bu ya da başka panelden); paneller listeyi yeniler. */
+  | { tip: "senaryolar"; liste: Senaryo[] }
   | { tip: "baglanti"; baglanti: BaglantiDurumu }
   | { tip: "gunluk"; seviye: "bilgi" | "uyari" | "hata"; mesaj: string; zaman: number }
   | { tip: "unreal"; istek: UnrealIstekKaydi }

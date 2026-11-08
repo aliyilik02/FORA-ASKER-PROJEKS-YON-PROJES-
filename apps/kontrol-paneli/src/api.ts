@@ -62,7 +62,8 @@ export const api = {
   senaryoOynat: () => istek<SenaryoDurumu>("/senaryo/oynat", "POST"),
   senaryoDuraklat: () => istek<SenaryoDurumu>("/senaryo/duraklat", "POST"),
   senaryoDur: () => istek<SenaryoDurumu>("/senaryo/dur", "POST"),
-  adimTetikle: (senaryoId: string, adimId: string) => istek<{ tamam: boolean }>("/senaryo/adim-tetikle", "POST", { senaryoId, adimId }),
+  /** `tamam: false` + `uyari`: adım uygulanamadı (ör. figür sahnede değil); eğitmene bildirim olarak gösterilir. */
+  adimTetikle: (senaryoId: string, adimId: string) => istek<{ tamam: boolean; uyari?: string }>("/senaryo/adim-tetikle", "POST", { senaryoId, adimId }),
 
   onAyarlar: () => istek<OnAyar[]>("/on-ayarlar", "GET"),
   onAyarKaydet: (ad: string) => istek<OnAyar>("/on-ayarlar", "POST", { ad }),

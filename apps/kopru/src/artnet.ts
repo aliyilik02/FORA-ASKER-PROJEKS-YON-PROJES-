@@ -158,10 +158,24 @@ export class ArtNetGonderici {
     this.flasZamanlayici = setTimeout(() => this.flasiIptal(), sureMs);
   }
 
+  private ikinciFlasZamanlayici: NodeJS.Timeout | null = null;
+
+  /** Şimşek: iki flaş; ikincisi `gecikmeMs` sonra. `flasiIptal` (sahne sıfırlaması) ikinciyi de iptal eder (§3-25). */
+  ciftFlas(siddet: number, sureMs: number, gecikmeMs: number, ikinciSiddet: number, ikinciSureMs: number) {
+    this.patlamaFlasi(siddet, sureMs);
+    if (this.ikinciFlasZamanlayici) clearTimeout(this.ikinciFlasZamanlayici);
+    this.ikinciFlasZamanlayici = setTimeout(() => {
+      this.ikinciFlasZamanlayici = null;
+      this.patlamaFlasi(ikinciSiddet, ikinciSureMs);
+    }, gecikmeMs);
+  }
+
   /** Süren flaşı keser ve flaştan önceki ışığı geri yazar (flaş bitişi, sahne sıfırlaması); flaş yoksa bir şey yapmaz. */
   flasiIptal() {
     if (this.flasZamanlayici) clearTimeout(this.flasZamanlayici);
     this.flasZamanlayici = null;
+    if (this.ikinciFlasZamanlayici) clearTimeout(this.ikinciFlasZamanlayici);
+    this.ikinciFlasZamanlayici = null;
     const onceki = this.flasOncesi;
     this.flasOncesi = null;
     if (onceki) this.gonder(onceki);

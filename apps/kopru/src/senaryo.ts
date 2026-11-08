@@ -45,6 +45,11 @@ export class SenaryoMotoru {
    * "tamamlandı" yazmaz (sahne sıfırlaması senaryoyu durdurup figürleri temizledikten sonra asker geri gelmez).
    */
   private nesil = 0;
+  /** Son `senaryo` yayınının saati ve o andaki tamamlanan sayısı: oynarken yayın 1 Hz + adım değişiminde (§3-14; eskiden 50 ms'de bir). */
+  private sonYayinZamani = -Infinity;
+  private sonYayinTamamlanan = -1;
+  /** Bu oynatmada senaryonun açtığı sürekli efektler; "Durdur" bunları kapatır (§3-17). */
+  private acilanlar = { catisma: false, izliMermi: false, helikopter: false };
 
   figurBagla(f: Pick<FigurYoneticisi, "komut">) {
     this.figur = f;
@@ -76,6 +81,8 @@ export class SenaryoMotoru {
   }
 
   private yayinla() {
+    this.sonYayinZamani = this.zamanlayici.simdi();
+    this.sonYayinTamamlanan = this.durum.tamamlanan.length;
     const kopya = this.al();
     for (const d of this.dinleyiciler) d(kopya);
   }
@@ -85,6 +92,7 @@ export class SenaryoMotoru {
     this.senaryo = { ...senaryo, adimlar: [...senaryo.adimlar].sort((a, b) => a.gecikmeMs - b.gecikmeMs) };
     this.durum = {
       senaryoId: senaryo.id,
+      ad: senaryo.ad,
       durum: "duruyor",
       konumMs: 0,
       toplamMs: this.senaryo.adimlar.reduce((m, a) => Math.max(m, a.gecikmeMs), 0),
@@ -106,6 +114,7 @@ export class SenaryoMotoru {
     if (bastan) {
       this.durum.tamamlanan = [];
       this.duraklatmaKonumu = 0;
+      this.acilanlar = { catisma: false, izliMermi: false, helikopter: false };
       await this.depo.odaSec(this.senaryo.oda);
       if (nesil !== this.nesil) return;
     }
@@ -129,7 +138,11 @@ export class SenaryoMotoru {
     this.yayinla();
   }
 
-  /** Durdurur ve başa sarar (yüklü senaryo kalır). `sessiz`: günlüğe yazmaz (sahne sıfırlaması kendi satırını yazar). */
+  /**
+   * Durdurur ve başa sarar (yüklü senaryo kalır); tamamlanan adım işaretleri silinir (panel 00:00'da adımları "bitti"
+   * göstermesin). `sessiz`: günlüğe yazmaz ve sürekli efektlere dokunmaz (sahne sıfırlaması kendi başına kapatır).
+   * Eğitmen eliyle Durdur'da senaryonun bu oynatmada açtığı çatışma / izli mermi / helikopter de kapanır (§3-17).
+   */
   dur(sessiz = false) {
     const oynuyordu = this.durum.durum !== "duruyor";
     this.nesil++;
@@ -137,15 +150,25 @@ export class SenaryoMotoru {
     this.durdur = null;
     this.durum.durum = "duruyor";
     this.durum.konumMs = 0;
+    this.durum.tamamlanan = [];
     this.duraklatmaKonumu = 0;
     if (oynuyordu) {
-      if (!sessiz) this.gunluk.bilgi("Senaryo durduruldu");
+      if (!sessiz) {
+        this.gunluk.bilgi("Senaryo durduruldu");
+        const a = this.acilanlar;
+        if ((a.catisma || a.izliMermi || a.helikopter) && this.depo.sureklileriKapat(a)) this.gunluk.bilgi("Senaryonun açtığı sürekli efektler kapatıldı");
+      }
+      this.acilanlar = { catisma: false, izliMermi: false, helikopter: false };
       this.yayinla();
     }
   }
 
-  /** Belirli bir adımı anında, zaman çizelgesinden bağımsız tetikler (eğitmen müdahalesi). */
-  async adimiTetikle(adim: SenaryoAdimi) {
+  /**
+   * Belirli bir adımı anında, zaman çizelgesinden bağımsız tetikler (eğitmen müdahalesi). Dönüş: `{tamam, uyari}` —
+   * figür adımı uygulanamadıysa (asker sahnede yok vb.) `tamam: false` ve eğitmene gösterilecek uyarı (§3-9; eskiden
+   * yalnız günlüğe düşüyor, API `{tamam:true}` dönüyordu).
+   */
+  async adimiTetikle(adim: SenaryoAdimi): Promise<{ tamam: boolean; uyari?: string }> {
     const islem = adim.islem;
     if (!islem || typeof islem !== "object" || typeof islem.tip !== "string") throw new Error("adımın işlemi eksik ya da bozuk");
     switch (islem.tip) {
@@ -159,32 +182,39 @@ export class SenaryoMotoru {
         await this.depo.bolgeSec(islem.bolge);
         break;
       case "izli_mermi":
+        if (islem.izliMermi?.aktif) this.acilanlar.izliMermi = true;
         await this.depo.izliMermiGuncelle(islem.izliMermi);
         break;
       case "isik":
         this.depo.isikGuncelle(islem.isik);
         break;
       case "oda2":
+        if (islem.oda2?.helikopter && islem.oda2.helikopter !== "yok") this.acilanlar.helikopter = true;
         await this.depo.oda2Guncelle(islem.oda2);
         break;
       case "catisma":
+        if (islem.catisma?.aktif) this.acilanlar.catisma = true;
         await this.depo.catismaGuncelle(islem.catisma);
         break;
       case "oda":
         await this.depo.odaSec(islem.oda);
         break;
-      case "figur":
+      case "figur": {
         if (!this.figur) {
           this.gunluk.uyari("Senaryo figür adımı: figür yöneticisi bağlı değil");
-          break;
+          return { tamam: false, uyari: "figür yöneticisi bağlı değil" };
         }
         try {
           this.figur.komut(islem.figur);
         } catch (hata) {
-          this.gunluk.uyari(`Senaryo figür adımı uygulanamadı: ${hata instanceof Error ? hata.message : String(hata)}`);
+          const uyari = `Figür adımı uygulanamadı (${adim.aciklama}): ${hata instanceof Error ? hata.message : String(hata)}`;
+          this.gunluk.uyari(uyari);
+          return { tamam: false, uyari };
         }
         break;
+      }
     }
+    return { tamam: true };
   }
 
   private isleniyor = false;
@@ -216,8 +246,11 @@ export class SenaryoMotoru {
         this.durum.durum = "duruyor";
         this.durum.konumMs = this.durum.toplamMs;
         this.gunluk.bilgi(`Senaryo tamamlandı: ${this.senaryo.ad}`);
+        this.yayinla();
+        return;
       }
-      this.yayinla();
+      // Oynarken yayın: adım değiştiyse hemen, değilse saniyede bir (panel konumu kendisi de sayabilir)
+      if (this.durum.tamamlanan.length !== this.sonYayinTamamlanan || konum - (this.sonYayinZamani - this.baslangicZamani) >= 1000) this.yayinla();
     } finally {
       this.isleniyor = false;
     }

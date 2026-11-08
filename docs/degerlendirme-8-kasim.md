@@ -194,14 +194,21 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
 7. ✓ **Sarsıntı anahtarı** (§1-2): `?sarsinti=kapali|hafif|tam` (`sarsintiSecimi.ts`, yerel kayıt, varsayılan hafif = genlik %35), panel Sistem › Oynatıcı ayarları.
 8. ✓ **"Ayakta" duruşunun saklanması** (§4-2: `figur.ts` poz her zaman saklanır) ve **yürüyen figürün `bitti` bildirimi** (§3-6/§4-6: oynatıcı `{tip:"figur", islem:"bitti", id}` → köprü `bittiBildir` → `durdur` yayını; `figurBitti.test.ts`).
 
-### B. Kısa vade (1–2 hafta)
+### B. Kısa vade (1–2 hafta) — 10–13 ✓ 8 Kasım (köprü + panel); 9, 14, 15 bekliyor
 9. **Figür bakış/baş yönelimi** (§1-3) + **idle faz/hız rastgeleliği** (§4-8) + **duruş geçiş klipleri** (§4-4) → tek "figür davranış" turu.
-10. **Senaryo adımları:** `bekle_onay`, `rastgele_sure`, `safha`, `beklenen` alanı (§1-5, §1-6); Durdur sürekli efektleri kapatsın (§3-17);
-    senaryo yayını 1 Hz (§3-14); liste değişimi WS ile (§3-15); adım kimliği benzersiz (§3-16).
-11. **API/komut doğrulama** (§3-7, §3-8, §4-5) ve **hataların eğitmene görünmesi** (§3-9, §3-19, §3-23).
-12. **Bağlantı sağlamlığı:** WS ping/pong (§3-4), kopukluk şeridi (§3-24), geri yüklemede temel sahne (§3-5).
-13. **Tablet ergonomisi:** 44 px dokunma hedefleri, yıkıcı düğme ayrımı, iki aşamalı onayda 400 ms (§3-13, §3-22); editör açıkken
-    canlı kısayollar kapalı, taslak kaybı onayı (§3-12); helikopter dizisini köprüye makro olarak taşı (§3-11).
+10. **Senaryo adımları:** `bekle_onay`, `rastgele_sure`, `safha`, `beklenen` alanı (§1-5, §1-6) — bekliyor (kullanıcı kararı). ✓ Durdur
+    senaryonun açtığı çatışma/izli/helikopteri kapatır ve `tamamlanan` sıfırlanır (§3-17, `DurumDeposu.sureklileriKapat`);
+    ✓ senaryo yayını adım değişiminde + 1 Hz (§3-14); ✓ liste değişimi `senaryolar` WS mesajıyla, `SenaryoDurumu.ad` (§3-15);
+    ✓ adım kimlikleri kayıtta tekilleştirilir, işlem/gecikme denetimi (§3-16, `dogrulama.ts`).
+11. ✓ **API doğrulama** (§3-8: `dogrulama.ts` şemaları, PATCH/efekt 400 + hata listesi; depo NaN/seçenek koruması, eski değer kalır)
+    ve ✓ **hataların eğitmene görünmesi** (§3-9 `adim-tetikle` `{tamam:false, uyari}` → bildirim; köprü HATA satırları 3 sn'de bir
+    bildirim; §3-19 FigurPaneli başarısız istekte başarı bildirimi yok; §3-23 hata bildirimi kapatılana dek kalır, `role=alert`,
+    devre dışı metin karşıtlığı ≥ 4,5:1). Figür komutu doğrulaması (§3-7, §4-5) bekliyor.
+12. ✓ **Bağlantı sağlamlığı:** WS ping/pong 10 sn (§3-4), "BAĞLANTI YOK" şeridi (§3-24), geri yüklemede etkin çatışma/izli/
+    helikopter kapalı başlatılır + gelecek tarihli kayıt reddedilir (§3-5); şimşek ikinci flaşı iptal edilebilir (§3-25).
+13. ✓ **Tablet ergonomisi:** `pointer: coarse`'ta 44 px dokunma hedefleri, yıkıcı düğme aralığı, iki aşamalı onayda 400 ms (§3-13,
+    §3-22); editör açıkken canlı kısayollar kapalı, taslak yerel kayıtta sürer (§3-12); elle helikopter komutu diziyi iptal eder
+    (§3-11; diziyi köprüye taşıma bekliyor); kaydırıcı sürüklerken gönderir (§3-20).
 14. **Köşe sürekliliği:** parçacık kartları göze dönük (§2-8), sisli parçacık + sıralama (§2-10), alev dokusu renk uzayı (§2-11).
 15. **Projeksiyon doğruluğu:** DPR (§2-12), yan duvar 16:9 denetimi ve fov sınırı (§2-13).
 

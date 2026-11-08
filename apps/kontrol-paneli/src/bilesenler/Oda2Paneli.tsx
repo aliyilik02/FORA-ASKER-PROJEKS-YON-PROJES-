@@ -10,7 +10,12 @@ type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 export function Oda2Paneli({ durum, calistir }: { durum: SimulasyonDurumu; calistir: Calistir }) {
   const { seciliYon, bildir } = useArayuz();
   const o = durum.oda2;
-  const guncelle = (k: Partial<typeof o>) => void calistir(() => api.oda2(k));
+  const guncelle = (k: Partial<typeof o>) => {
+    // Elle helikopter komutu (Kalkış, "Elle" seçimi) süren iniş dizisini iptal eder: 10. sn'de Kalkış dendikten sonra dizi
+    // 20. sn'de "iniyor" gönderip helikopteri geri getiriyordu (§3-11)
+    if (k.helikopter !== undefined) heliDizisiIptal();
+    void calistir(() => api.oda2(k));
+  };
   // Dizi modül düzeyinde (heliDizisi.ts): sekme değişince sürer, sahne sıfırlaması iptal eder
   const diziBaslangic = useHeliDizisi();
   const [gecen, setGecen] = useState(0);

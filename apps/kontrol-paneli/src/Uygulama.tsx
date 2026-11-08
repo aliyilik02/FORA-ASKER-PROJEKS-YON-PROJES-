@@ -24,6 +24,8 @@ import { useKopru } from "./useKopru";
 
 /** Sıfırla düğmesinin kurulu (onay bekleyen) kalma süresi: ikinci dokunuş / Esc bu sürede gelmezse çözülür. */
 const SIFIRLAMA_ONAY_MS = 3000;
+/** İlk dokunuştan sonra ikincisinin sayılması için en kısa süre (çift dokunuş koruması). */
+const SIFIRLAMA_EN_KISA_MS = 400;
 
 export function Uygulama() {
   return (
@@ -35,7 +37,7 @@ export function Uygulama() {
 
 function Govde() {
   const kopru = useKopru();
-  const { durum, senaryo, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, sonSifirlama, soketAcik, hata, sifirlamaUygula } = kopru;
+  const { durum, senaryo, senaryolar, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, sonSifirlama, soketAcik, hata, sifirlamaUygula } = kopru;
   const { sekme, setSekme, seciliYon, setSeciliYon, bildir } = useArayuz();
 
   // API çağrılarını sarar: hata olursa bildirim
@@ -50,6 +52,23 @@ function Govde() {
     if (hata) bildir({ tur: "hata", baslik: "İşlem başarısız", metin: hata });
   }, [hata, bildir]);
 
+  // Köprü günlüğüne düşen HATA satırları (UE, DMX, oynatıcı, senaryo adımı) eğitmene bildirim olarak da gelsin: gözü
+  // duvarda olan eğitmen Sistem rozetini görmez (§3-9). Seyrekleştirme: 3 sn'de en çok bir bildirim, bağlantı anındaki
+  // geçmiş yığını atlanır (yalnız bu oturumda yeni gelenler).
+  const sonHataBildirimi = useRef({ zaman: 0, ilkYukleme: true });
+  useEffect(() => {
+    const son = gunluk[0];
+    if (!son) return;
+    if (sonHataBildirimi.current.ilkYukleme) {
+      sonHataBildirimi.current = { zaman: Date.now(), ilkYukleme: false };
+      return;
+    }
+    if (son.seviye !== "hata") return;
+    if (Date.now() - sonHataBildirimi.current.zaman < 3000) return;
+    sonHataBildirimi.current.zaman = Date.now();
+    bildir({ tur: "hata", baslik: "Köprü hatası", metin: son.mesaj.slice(0, 160) });
+  }, [gunluk, bildir]);
+
   /**
    * Sahneyi sıfırla, iki aşama (düğme ve klavye aynı durumu paylaşır): ilk dokunuş / Esc kurar, SIFIRLAMA_ONAY_MS
    * içinde ikincisi sıfırlar, süre dolunca çözülür. Ref mantığın kaynağı (iki hızlı Esc arasında yeniden çizim olmasa
@@ -57,13 +76,17 @@ function Govde() {
    */
   const [sifirlamaKurulu, setSifirlamaKurulu] = useState(false);
   const kuruluRef = useRef(false);
+  const kurulmaZamani = useRef(0);
   const sifirlaDokun = useCallback(
     (kaynak: SifirlamaKaynagi) => {
       if (!kuruluRef.current) {
         kuruluRef.current = true;
+        kurulmaZamani.current = Date.now();
         setSifirlamaKurulu(true);
         return;
       }
+      // Tablette çift dokunuş / dokunma sıçraması ya da basılı kalan Esc tek hamlede sıfırlamasın: ikinci dokunuş en az 400 ms sonra
+      if (Date.now() - kurulmaZamani.current < SIFIRLAMA_EN_KISA_MS) return;
       kuruluRef.current = false;
       setSifirlamaKurulu(false);
       void calistir(() => api.sahneSifirla(kaynak)).then((y) => y && sifirlamaUygula(y));
@@ -92,6 +115,9 @@ function Govde() {
       const hedef = e.target as HTMLElement | null;
       if (hedef && ["INPUT", "SELECT", "TEXTAREA"].includes(hedef.tagName)) return;
       if (!durum) return;
+      // Senaryo editörü açıkken canlı kısayollar (1–6, Boşluk, oklar) çalışmaz: "+ Adım ekle"den sonra odak düğmede kalır,
+      // "5" tuşu duvarda gerçek efekt tetiklerdi (§3-12). Esc ve sekme tuşları kalır.
+      const editorAcik = document.querySelector(".editor") !== null;
       // Esc, Esc: sahneyi sıfırla (iki aşamalı onayın klavye karşılığı). Basılı tutmak (tuş tekrarı) onaylamaz;
       // Ctrl/Alt/Meta/Shift ile gelen Esc yok sayılır (Shift+Esc Chrome'da görev yöneticisi).
       if (e.key === "Escape") {
@@ -106,6 +132,7 @@ function Govde() {
         setSekme(s);
         return;
       }
+      if (editorAcik) return;
       const efektler: EfektTuru[] = durum.oda === "oda1" ? ["patlama", "toz_duman", "gurultu", "bagirma", "cagirma"] : ["uzak_patlama", "uzak_mermi_sesi", "bagirma", "cagirma"];
       const n = Number(e.key);
       if (n >= 1 && n <= efektler.length) {
@@ -158,6 +185,11 @@ function Govde() {
 
   return (
     <div className="uygulama">
+      {!soketAcik && (
+        <div className="baglanti-seridi" role="alert">
+          <strong>BAĞLANTI YOK</strong> — köprüyle bağlantı koptu; görünen durum güncel olmayabilir. Yeniden bağlanılıyor…
+        </div>
+      )}
       <UstCubuk
         durum={durum}
         baglanti={baglanti}
@@ -184,7 +216,7 @@ function Govde() {
             {sekme === "figurler" && <FigurPaneli aktifler={figurler} calistir={calistir} oda={durum.oda} />}
             {sekme === "senaryo" && (
               <>
-                <SenaryoPaneli senaryoDurumu={senaryo} simDurumu={durum} calistir={calistir} />
+                <SenaryoPaneli senaryoDurumu={senaryo} senaryolar={senaryolar} simDurumu={durum} calistir={calistir} />
                 <OnAyarPaneli calistir={calistir} />
               </>
             )}

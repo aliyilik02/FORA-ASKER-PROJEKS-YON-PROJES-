@@ -61,6 +61,11 @@ const ornek = new OrnekBaslatici(ornekKomutuOlustur(ayarlar.ornek), gunluk);
  * sayıya girmez: bağlanırken giden ilk `baglanti` mesajında yeni oynatıcı kendini panel saymasın.
  */
 const istemciRolleri = new Map<WebSocket, "panel" | "oynatici">();
+/**
+ * Kalp atışı (§3-4): 10 sn'de bir ping; pong vermeyen yarı açık bağlantı (uyuyan tablet, çöken oynatıcı sekmesi)
+ * kapatılır. Yoksa `panel.sayi` düşmez, oynatıcılar 5 sn'de bir önizleme üretmeyi sürdürür ve lamba yeşil kalırdı.
+ */
+const canli = new Map<WebSocket, boolean>();
 const oynaticiGunlukZamani = new Map<WebSocket, number>();
 const oynaticiSayisi = () => [...istemciRolleri.values()].filter((r) => r === "oynatici").length;
 const panelSayisi = () => [...istemciRolleri.values()].filter((r) => r === "panel").length;
@@ -82,7 +87,16 @@ senaryo.figurBagla(figur);
 const sonDurum = veri.sonDurumOku();
 if (sonDurum) {
   figur.yukle(sonDurum.figurler);
-  void depo.durumuYukle(sonDurum.durum).then(() => gunluk.bilgi(`Son durum geri yüklendi (${new Date(sonDurum.zaman).toLocaleTimeString("tr-TR")}, ${sonDurum.figurler.length} figür)`));
+  // Temel sahne mantığı (§3-5): ortam/bölge/ışık/figürler geri gelir; etkin çatışma, izli mermi ve helikopter gelmez
+  // (çökme sonrası duvar senaryosuz ateş etmesin). Ayar değerleri korunur, yalnız "aktif" bayrakları kapalı.
+  const d = sonDurum.durum;
+  const kapananlar = [d.catisma?.aktif ? "çatışma" : "", d.izliMermi?.aktif ? "izli mermi" : "", d.oda2?.helikopter && d.oda2.helikopter !== "yok" ? "helikopter" : ""].filter((x) => x);
+  if (d.catisma) d.catisma = { ...d.catisma, aktif: false };
+  if (d.izliMermi) d.izliMermi = { ...d.izliMermi, aktif: false };
+  if (d.oda2) d.oda2 = { ...d.oda2, helikopter: "yok" };
+  void depo
+    .durumuYukle(d)
+    .then(() => gunluk.bilgi(`Son durum geri yüklendi (${new Date(sonDurum.zaman).toLocaleTimeString("tr-TR")}, ${sonDurum.figurler.length} figür${kapananlar.length ? `; kapalı başlatıldı: ${kapananlar.join(", ")}` : ""})`));
 }
 // Sahne sıfırlaması (temel sahne): senaryo dur → figür temizle → tek durum yayını → `sahne/sifirla` → hemen kayıt
 const sahne = new SahneYoneticisi({ depo, senaryo, figur, gunluk, yayinla: (m) => herkeseGonder(m), kaydet: () => sonDurumuKaydet(true) }, sonDurum?.nesil);
@@ -113,7 +127,10 @@ function sonDurumuYaz() {
 }
 
 const uygulama = express();
-uygulama.use("/api", apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, panelSayisi, figur, sahne }));
+uygulama.use(
+  "/api",
+  apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, panelSayisi, figur, sahne, senaryolarDegisti: (liste) => herkeseGonder({ tip: "senaryolar", liste }) }),
+);
 for (const klasor of icerikAdaylari) {
   uygulama.use("/oynatici/icerik", express.static(klasor));
 }
@@ -128,6 +145,21 @@ if (existsSync(panelKlasoru)) {
 
 const sunucu = createServer(uygulama);
 const wss = new WebSocketServer({ server: sunucu, path: "/ws" });
+// Kalp atışı: pong vermeyen bağlantı bir sonraki turda kapatılır (bkz. `canli`)
+setInterval(() => {
+  for (const istemci of wss.clients) {
+    if (canli.get(istemci) === false) {
+      istemci.terminate();
+      continue;
+    }
+    canli.set(istemci, false);
+    try {
+      istemci.ping();
+    } catch {
+      /* kapanmakta olan bağlantı */
+    }
+  }
+}, 10_000).unref();
 
 /** Yalnızca panellere (oynatıcılara değil) gönderir; önizleme görüntüsü için. */
 function panellereGonder(mesaj: SunucuMesaji) {
@@ -161,6 +193,7 @@ figur.dinle((komut, aktifler) => {
 });
 
 wss.on("connection", (ws: WebSocket) => {
+  canli.set(ws, true);
   ws.send(JSON.stringify({ tip: "durum", durum: depo.al() } satisfies SunucuMesaji));
   ws.send(JSON.stringify({ tip: "senaryo", senaryo: senaryo.al() } satisfies SunucuMesaji));
   ws.send(JSON.stringify({ tip: "baglanti", baglanti: baglantiDurumu(unreal, artnet, oynaticiSayisi(), panelSayisi()) } satisfies SunucuMesaji));
@@ -202,10 +235,13 @@ wss.on("connection", (ws: WebSocket) => {
     }
   });
 
+  ws.on("pong", () => canli.set(ws, true));
+
   ws.on("close", () => {
     const rol = istemciRolleri.get(ws);
     istemciRolleri.delete(ws);
     oynaticiGunlukZamani.delete(ws);
+    canli.delete(ws);
     if (rol === "oynatici") {
       gunluk.uyari(`Duvar Oynatıcı bağlantısı koptu; kalan ${oynaticiSayisi()}`);
       baglantiYayinla();

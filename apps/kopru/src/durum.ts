@@ -18,6 +18,7 @@ import {
   varsayilanDurum,
 } from "./tipler.js";
 import { UE_SIFIRLAMA_ZAMAN_ASIMI_MS, type UnrealIstemci } from "./unreal.js";
+import { GUVENLI_ALANLAR, HELIKOPTER_DURUMLARI, MEVSIMLER, YAGISLAR, boolYaDa, sayiYaDa, secenekYaDa } from "./dogrulama.js";
 
 type Dinleyici = (durum: SimulasyonDurumu) => void;
 
@@ -29,7 +30,8 @@ export interface TemeleDonenler {
 }
 type EfektDinleyici = (efekt: EfektIstegi & { zaman: number }) => void;
 
-const sinirla = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+/** Sonlu olmayan değer (NaN) alt sınıra değil, çağıranın verdiği `eski`ye düşer; o da yoksa alt sınır. */
+const sinirla = (v: number, min: number, max: number, eski?: number) => (Number.isFinite(v) ? Math.max(min, Math.min(max, v)) : (eski ?? min));
 
 export class DurumDeposu {
   private durum: SimulasyonDurumu = varsayilanDurum();
@@ -92,14 +94,14 @@ export class DurumDeposu {
   async ortamGuncelle(kismi: Partial<OrtamAyarlari>) {
     const o = this.durum.ortam;
     this.durum.ortam = {
-      mevsim: kismi.mevsim ?? o.mevsim,
-      saat: sinirla(kismi.saat ?? o.saat, 0, 24),
-      bulut: sinirla(kismi.bulut ?? o.bulut, 0, 1),
-      sis: sinirla(kismi.sis ?? o.sis, 0, 1),
-      yagis: kismi.yagis ?? o.yagis,
-      ruzgarSiddeti: sinirla(kismi.ruzgarSiddeti ?? o.ruzgarSiddeti, 0, 1),
-      ruzgarYonu: ((kismi.ruzgarYonu ?? o.ruzgarYonu) % 360 + 360) % 360,
-      simsek: kismi.simsek ?? o.simsek ?? false,
+      mevsim: secenekYaDa(kismi.mevsim, MEVSIMLER, o.mevsim),
+      saat: sinirla(sayiYaDa(kismi.saat, o.saat), 0, 24),
+      bulut: sinirla(sayiYaDa(kismi.bulut, o.bulut), 0, 1),
+      sis: sinirla(sayiYaDa(kismi.sis, o.sis), 0, 1),
+      yagis: secenekYaDa(kismi.yagis, YAGISLAR, o.yagis),
+      ruzgarSiddeti: sinirla(sayiYaDa(kismi.ruzgarSiddeti, o.ruzgarSiddeti), 0, 1),
+      ruzgarYonu: ((sayiYaDa(kismi.ruzgarYonu, o.ruzgarYonu) % 360) + 360) % 360,
+      simsek: boolYaDa(kismi.simsek, o.simsek ?? false),
     };
     await this.unreal.ortamAyarla(this.durum.ortam);
     if (this.durum.isik.senaryoyaBagli) {
@@ -113,11 +115,11 @@ export class DurumDeposu {
   isikGuncelle(kismi: Partial<OrtamIsigi>) {
     const i = this.durum.isik;
     this.durum.isik = {
-      parlaklik: sinirla(kismi.parlaklik ?? i.parlaklik, 0, 1),
-      r: sinirla(kismi.r ?? i.r, 0, 255),
-      g: sinirla(kismi.g ?? i.g, 0, 255),
-      b: sinirla(kismi.b ?? i.b, 0, 255),
-      senaryoyaBagli: kismi.senaryoyaBagli ?? i.senaryoyaBagli,
+      parlaklik: sinirla(sayiYaDa(kismi.parlaklik, i.parlaklik), 0, 1),
+      r: sinirla(sayiYaDa(kismi.r, i.r), 0, 255),
+      g: sinirla(sayiYaDa(kismi.g, i.g), 0, 255),
+      b: sinirla(sayiYaDa(kismi.b, i.b), 0, 255),
+      senaryoyaBagli: boolYaDa(kismi.senaryoyaBagli, i.senaryoyaBagli),
     };
     if (this.durum.isik.senaryoyaBagli && kismi.senaryoyaBagli === true) {
       const oneri = gunIsigiHesapla(this.durum.ortam.saat, this.durum.ortam.bulut);
@@ -130,10 +132,10 @@ export class DurumDeposu {
   async izliMermiGuncelle(kismi: Partial<IzliMermiAyarlari>) {
     const m = this.durum.izliMermi;
     this.durum.izliMermi = {
-      aktif: kismi.aktif ?? m.aktif,
-      cikisNoktasi: kismi.cikisNoktasi ?? m.cikisNoktasi,
-      yon: sinirla(kismi.yon ?? m.yon, -90, 90),
-      siklik: sinirla(kismi.siklik ?? m.siklik, 0.1, 30),
+      aktif: boolYaDa(kismi.aktif, m.aktif),
+      cikisNoktasi: secenekYaDa(kismi.cikisNoktasi, [0, 1, 2] as const, m.cikisNoktasi),
+      yon: sinirla(sayiYaDa(kismi.yon, m.yon), -90, 90),
+      siklik: sinirla(sayiYaDa(kismi.siklik, m.siklik), 0.1, 30),
     };
     await this.unreal.izliMermiAyarla(this.durum.izliMermi);
     this.yayinla();
@@ -142,11 +144,11 @@ export class DurumDeposu {
   async oda2Guncelle(kismi: Partial<Oda2Ayarlari>) {
     const o = this.durum.oda2;
     this.durum.oda2 = {
-      guvenliAlan: kismi.guvenliAlan ?? o.guvenliAlan,
-      helikopter: kismi.helikopter ?? o.helikopter,
-      helikopterYonu: ((Math.round(kismi.helikopterYonu ?? o.helikopterYonu ?? 12) % 360) + 360) % 360,
-      uzakSesMesafesi: sinirla(kismi.uzakSesMesafesi ?? o.uzakSesMesafesi, 0, 10000),
-      uzakSesYonu: ((kismi.uzakSesYonu ?? o.uzakSesYonu) % 360 + 360) % 360,
+      guvenliAlan: secenekYaDa(kismi.guvenliAlan, GUVENLI_ALANLAR, o.guvenliAlan),
+      helikopter: secenekYaDa(kismi.helikopter, HELIKOPTER_DURUMLARI, o.helikopter),
+      helikopterYonu: ((Math.round(sayiYaDa(kismi.helikopterYonu, o.helikopterYonu ?? 12)) % 360) + 360) % 360,
+      uzakSesMesafesi: sinirla(sayiYaDa(kismi.uzakSesMesafesi, o.uzakSesMesafesi), 0, 10000),
+      uzakSesYonu: ((sayiYaDa(kismi.uzakSesYonu, o.uzakSesYonu) % 360) + 360) % 360,
     };
     await this.unreal.oda2Ayarla(this.durum.oda2);
     this.yayinla();
@@ -155,10 +157,10 @@ export class DurumDeposu {
   async catismaGuncelle(kismi: Partial<CatismaAyarlari>) {
     const c = this.durum.catisma ?? varsayilanDurum().catisma;
     this.durum.catisma = {
-      aktif: kismi.aktif ?? c.aktif,
-      siddet: sinirla(kismi.siddet ?? c.siddet, 0, 1),
-      yon: ((Math.round(kismi.yon ?? c.yon) % 360) + 360) % 360,
-      dostAtes: kismi.dostAtes ?? c.dostAtes,
+      aktif: boolYaDa(kismi.aktif, c.aktif),
+      siddet: sinirla(sayiYaDa(kismi.siddet, c.siddet), 0, 1),
+      yon: ((Math.round(sayiYaDa(kismi.yon, c.yon)) % 360) + 360) % 360,
+      dostAtes: boolYaDa(kismi.dostAtes, c.dostAtes),
     };
     await this.unreal.catismaAyarla(this.durum.catisma);
     this.gunluk.bilgi(this.durum.catisma.aktif ? `Çatışma: %${Math.round(this.durum.catisma.siddet * 100)}, yön ${this.durum.catisma.yon}°` : "Çatışma durdu");
@@ -168,9 +170,9 @@ export class DurumDeposu {
   async efektTetikle(efekt: EfektIstegi) {
     const istek: EfektIstegi = {
       tur: efekt.tur,
-      siddet: sinirla(efekt.siddet ?? 1, 0, 1),
-      yon: efekt.yon,
-      mesafe: efekt.mesafe,
+      siddet: sinirla(sayiYaDa(efekt.siddet, 1), 0, 1),
+      yon: efekt.yon === undefined ? undefined : sayiYaDa(efekt.yon, 0),
+      mesafe: efekt.mesafe === undefined ? undefined : sayiYaDa(efekt.mesafe, 0),
     };
     // Oda 2'deki uzak sesler panelde ayarlanan mesafe/yöne göre zayıflatılır (§9).
     // Şimşek: yön ve mesafe verilmezse rastgele (yakın çakma seyrek: mesafe 0,5–7,5 km, karesel dağılım)
@@ -190,8 +192,7 @@ export class DurumDeposu {
     // Şimşek odada da çakar: kısa çift flaş (uzak şimşek sönük)
     if (istek.tur === "simsek" && this.durum.isik.senaryoyaBagli) {
       const g = (istek.siddet ?? 1) * Math.max(0.35, 1 - (istek.mesafe ?? 2000) / 9000);
-      this.artnet.patlamaFlasi(g, 90);
-      setTimeout(() => this.artnet.patlamaFlasi(g * 0.6, 70), 170);
+      this.artnet.ciftFlas(g, 90, 170, g * 0.6, 70);
     }
     const olay = { ...istek, zaman: Date.now() };
     this.durum.sonEfektler.unshift(olay);
@@ -224,6 +225,32 @@ export class DurumDeposu {
       this.unreal.oda2Ayarla(d.oda2, UE_SIFIRLAMA_ZAMAN_ASIMI_MS),
     ]);
     return onceki;
+  }
+
+  /**
+   * Senaryo "Durdur" (eğitmen eliyle): senaryonun açtığı sürekli efektler kapanır (§3-17; önceden çatışma/izli/helikopter
+   * durdurulan senaryodan sonra da sürüyordu). Yalnız istenen alanlar; ayar değerleri korunur, UE çağrıları beklenmez.
+   */
+  sureklileriKapat(k: { catisma?: boolean; izliMermi?: boolean; helikopter?: boolean }) {
+    const d = this.durum;
+    let degisti = false;
+    if (k.catisma && d.catisma?.aktif) {
+      d.catisma = { ...d.catisma, aktif: false };
+      degisti = true;
+      void this.unreal.catismaAyarla(d.catisma, UE_SIFIRLAMA_ZAMAN_ASIMI_MS);
+    }
+    if (k.izliMermi && d.izliMermi.aktif) {
+      d.izliMermi = { ...d.izliMermi, aktif: false };
+      degisti = true;
+      void this.unreal.izliMermiAyarla(d.izliMermi, UE_SIFIRLAMA_ZAMAN_ASIMI_MS);
+    }
+    if (k.helikopter && d.oda2.helikopter !== "yok") {
+      d.oda2 = { ...d.oda2, helikopter: "yok" };
+      degisti = true;
+      void this.unreal.oda2Ayarla(d.oda2, UE_SIFIRLAMA_ZAMAN_ASIMI_MS);
+    }
+    if (degisti) this.yayinla();
+    return degisti;
   }
 
   /** Ön ayar yüklerken tüm durumu tek seferde uygular. */

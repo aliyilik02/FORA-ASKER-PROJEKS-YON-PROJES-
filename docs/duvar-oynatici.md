@@ -688,6 +688,13 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   (kendiliğinden)" bildirimi): eğitmenin elle çağırdığı figürler, efektler, çatışma, izli mermi, helikopter ve sesler
   gider; ortam, bölge ve ışık kalır (senaryonun kendi adımları isterse değiştirir). Duraklatılmıştan devam ederken ve
   "Adımı tetikle"de sıfırlama yok. Oynatıcı için ayrı bir şey yok: aynı `sahne/sifirla` mesajı gelir.
+- **Panel API doğrulama ve senaryo sözleşmesi** (8 Kasım): PATCH `/ortam|/isik|/izli-mermi|/oda2|/catisma` ve POST `/efekt`
+  gövdeleri `dogrulama.ts` şemalarıyla denetlenir (yanlış tip/seçenek → 400 `{hata}`; tanınmayan alan atılır); depo yine de
+  NaN/geçersiz seçenekte eski değeri korur. POST `/senaryolar` adım kimliklerini tekilleştirir, işlemi olmayan adımı
+  reddeder; kayıt/silme sonrası herkese `{tip:"senaryolar", liste}` gider. `/senaryo/adim-tetikle` `{tamam, uyari?}` döner.
+  Senaryo durumu oynarken adım değişiminde + saniyede bir yayınlanır (`SenaryoDurumu.ad` yüklü senaryonun adı). Eğitmen
+  "Durdur" dediğinde senaryonun açtığı çatışma/izli mermi/helikopter kapanır (`DurumDeposu.sureklileriKapat`). WS'de 10 sn
+  ping/pong; pong vermeyen bağlantı kapatılır. Açılışta geri yüklenen durumda çatışma/izli/helikopter kapalı başlar.
 - **Figür bitti** (8 Kasım): yürüyen/koşan 3B figür duvarın ucunu geçince (|azimut| > 165°) oynatıcı köprüye
   `{tip:"figur", islem:"bitti", id}` gönderir; köprü figürü listeden düşürür ve `durdur` yayınlar (panel listesi şişmez,
   yeniden bağlanan oynatıcıda asker baştan koşmaz). Sahnede yoksa yok sayılır. Kare döngüsü hataları (`kare` içindeki

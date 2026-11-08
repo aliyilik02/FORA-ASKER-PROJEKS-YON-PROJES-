@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "../api";
 import { useArayuz } from "../arayuz";
 import type { Senaryo, SenaryoDurumu, SimulasyonDurumu } from "../tipler";
@@ -7,13 +7,14 @@ import { SenaryoEditoru } from "./SenaryoEditoru";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 
-export function SenaryoPaneli({ senaryoDurumu, simDurumu, calistir }: { senaryoDurumu: SenaryoDurumu | null; simDurumu: SimulasyonDurumu; calistir: Calistir }) {
+/**
+ * Liste `senaryolar` üstten gelir (useKopru: açılışta çekilir, köprünün `senaryolar` mesajıyla yenilenir): başka panel
+ * senaryo kaydedince/silince burası da güncellenir; eskiden yalnız açılışta çekiliyor, yüklü senaryo listede yoksa
+ * Oynat/Duraklat denetimleri kayboluyordu (§3-15).
+ */
+export function SenaryoPaneli({ senaryoDurumu, senaryolar, simDurumu, calistir }: { senaryoDurumu: SenaryoDurumu | null; senaryolar: Senaryo[]; simDurumu: SimulasyonDurumu; calistir: Calistir }) {
   const { bildir } = useArayuz();
-  const [senaryolar, setSenaryolar] = useState<Senaryo[]>([]);
   const [editorAcik, setEditorAcik] = useState(false);
-
-  const listeyiYenile = () => void calistir(() => api.senaryolar()).then((s) => s && setSenaryolar(s));
-  useEffect(listeyiYenile, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const yuklu = senaryolar.find((s) => s.id === senaryoDurumu?.senaryoId);
   const durum = senaryoDurumu?.durum ?? "duruyor";
@@ -40,7 +41,6 @@ export function SenaryoPaneli({ senaryoDurumu, simDurumu, calistir }: { senaryoD
             onVazgec={() => setEditorAcik(false)}
             onKaydedildi={(s) => {
               setEditorAcik(false);
-              listeyiYenile();
               void calistir(() => api.senaryoYukle(s.id));
               bildir({ tur: "basari", baslik: `"${s.ad}" kaydedildi ve yüklendi` });
             }}
@@ -69,7 +69,7 @@ export function SenaryoPaneli({ senaryoDurumu, simDurumu, calistir }: { senaryoD
                       Yükle
                     </button>
                   )}
-                  <OnayliDugme sinif="kucuk ikincil" onay="Silinsin mi?" onClick={() => void calistir(() => api.senaryoSil(s.id)).then(listeyiYenile)}>
+                  <OnayliDugme sinif="kucuk ikincil" onay="Silinsin mi?" onClick={() => void calistir(() => api.senaryoSil(s.id))}>
                     Sil
                   </OnayliDugme>
                 </li>
@@ -126,7 +126,15 @@ export function SenaryoPaneli({ senaryoDurumu, simDurumu, calistir }: { senaryoD
                 <li key={a.id} className={`${tamam ? "tamam" : ""} ${sonraki?.id === a.id ? "sirada" : ""}`}>
                   <span className="adim-zaman mono">{sureBicimi(a.gecikmeMs)}</span>
                   <span className="adim-aciklama">{a.aciklama}</span>
-                  <button type="button" className="kucuk ikincil" onClick={() => void calistir(() => api.adimTetikle(yuklu.id, a.id))}>
+                  <button
+                    type="button"
+                    className="kucuk ikincil"
+                    onClick={() =>
+                      void calistir(() => api.adimTetikle(yuklu.id, a.id)).then((r) => {
+                        if (r && !r.tamam) bildir({ tur: "hata", baslik: "Adım uygulanamadı", metin: r.uyari ?? a.aciklama });
+                      })
+                    }
+                  >
                     Şimdi
                   </button>
                 </li>

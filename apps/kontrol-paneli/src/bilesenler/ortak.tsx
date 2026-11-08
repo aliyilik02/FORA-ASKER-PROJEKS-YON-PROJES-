@@ -49,16 +49,29 @@ export function Kaydirici({
   const [yerel, setYerel] = useState(deger);
   const zamanlayici = useRef<number | null>(null);
   const sonDokunma = useRef(0);
+  const sonGonderim = useRef(0);
 
   useEffect(() => {
     if (Date.now() - sonDokunma.current > 500) setYerel(deger);
   }, [deger]);
 
+  /**
+   * Sürüklerken duvar canlı izlesin: en çok `gecikmeMs`'de bir (öncü) hemen gönderilir, son değer bırakınca kesin gider
+   * (§3-20; eskiden yalnız bekleme süresi dolunca gidiyor, sürükleme boyunca duvar değişmiyordu).
+   */
   const degistir = (v: number) => {
     sonDokunma.current = Date.now();
     setYerel(v);
     if (zamanlayici.current) window.clearTimeout(zamanlayici.current);
-    zamanlayici.current = window.setTimeout(() => onChange(v), gecikmeMs);
+    if (Date.now() - sonGonderim.current >= gecikmeMs) {
+      sonGonderim.current = Date.now();
+      onChange(v);
+      return;
+    }
+    zamanlayici.current = window.setTimeout(() => {
+      sonGonderim.current = Date.now();
+      onChange(v);
+    }, gecikmeMs);
   };
   const oran = max > min ? ((yerel - min) / (max - min)) * 100 : 0;
   return (
@@ -134,6 +147,7 @@ export function Led({ durum, etiket, title }: { durum: "iyi" | "kotu" | "bekliyo
 /** İki aşamalı tehlikeli işlem: ilk tık "Emin misin?", ikinci tık uygular; 3 sn içinde tıklanmazsa geri döner. */
 export function OnayliDugme({ children, onay = "Emin misin?", onClick, sinif = "" }: { children: ReactNode; onay?: string; onClick: () => void; sinif?: string }) {
   const [bekliyor, setBekliyor] = useState(false);
+  const kurulma = useRef(0);
   useEffect(() => {
     if (!bekliyor) return;
     const t = window.setTimeout(() => setBekliyor(false), 3000);
@@ -145,9 +159,14 @@ export function OnayliDugme({ children, onay = "Emin misin?", onClick, sinif = "
       className={`${sinif} ${bekliyor ? "onay-bekliyor" : ""}`}
       onClick={() => {
         if (bekliyor) {
+          // Çift dokunuş / dokunma sıçraması tek hamlede uygulamasın: ikinci dokunuş en az 400 ms sonra
+          if (Date.now() - kurulma.current < 400) return;
           setBekliyor(false);
           onClick();
-        } else setBekliyor(true);
+        } else {
+          kurulma.current = Date.now();
+          setBekliyor(true);
+        }
       }}
     >
       {bekliyor ? onay : children}

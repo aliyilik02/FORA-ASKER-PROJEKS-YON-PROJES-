@@ -86,7 +86,8 @@ export class VeriDeposu {
   sonDurumOku(enCokYasMs = 12 * 3600 * 1000): SonDurum | null {
     const d = dosyaOku<SonDurum | null>(this.sonDurumDosyasi, null, (u) => this.uyari?.(u));
     if (!d || typeof d.zaman !== "number" || !d.durum) return null;
-    if (Date.now() - d.zaman > enCokYasMs) return null;
+    // Gelecekten gelen kayıt (sistem saati geri alındı) da yok sayılır: 12 saat kuralı aksi hâlde işlemezdi
+    if (Date.now() - d.zaman > enCokYasMs || d.zaman > Date.now() + 60_000) return null;
     return { zaman: d.zaman, durum: d.durum, figurler: Array.isArray(d.figurler) ? d.figurler : [], ...(typeof d.nesil === "number" ? { nesil: d.nesil } : {}) };
   }
 
