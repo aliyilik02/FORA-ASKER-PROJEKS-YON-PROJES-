@@ -703,7 +703,9 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
 - **Piksel oranı ve geometri uyarıları** (8 Kasım, B-15): `?dpr=cihaz` 3B tuvalin arka tamponunu `devicePixelRatio`
   ile çizer (`Sahne3B.pikselOraniAyarla`; varsayılan 1, Iris Xe güç bütçesi); DPR ≠ 1 iken HUD geometri satırı ve
   köprü günlüğü "Windows ölçeği %N" uyarısı verir (projektör PC'de ölçek %100 olmalı). U odada yan duvar derinliği
-  16:9'dan %30'dan çok saparsa HUD uyarısı ("yan görüntüler köşede bozulur"); `?fov=` 120'yi aşarsa 90 kullanılır.
+  16:9'dan %30'dan çok saparsa HUD uyarısı ("yan görüntüler köşede bozulur"); `?fov=` 120'yi aşarsa 90 kullanılır. Piksel oranı ≠ 1 iken
+  tuvalin CSS boyutu W×H olarak verilir (yoksa tuval küçülür) ve her duvarın görüş alanı 1 cihaz pikseli taşırılır
+  (three'nin floor yuvarlaması komşu duvarlar arasında 1 px koyu dikiş bırakıyordu).
 - **Figür davranışı** (8 Kasım, B-9): bakış (`sahne3b/bakis.ts` + `FigurKatmani.bakisiUygula`): karıştırıcı ve duruş
   ofsetlerinden sonra göğüs/baş kemiklerine dünya eksenli yaw/pitch; hedef önceliği yanındaki figür (sıhhiyeci → yaralı) >
   çatışmada düşman yönü (silahlı, yanında değilse) > 12 m içindeki yaralı > 4 sn içindeki son patlama (`patlamaOldu`);
