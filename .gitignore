@@ -37,3 +37,6 @@ meshy_output/
 
 # Panel tasarım taslakları (artifact kaynakları)
 tasarim-taslak/
+
+# Skill kurulumunun ham kopyası (.claude/skills altındaki bağlantılar git'te dosya olarak zaten var)
+.agents/

@@ -295,6 +295,14 @@ hangar) listesi şimdilik çıkarılmayacak**; ortam panoramada kalır. Ayrınt�
 patlama artığı yangın ve 6 varyant bitti (son commit ec42dbc). Duvarda gözle/kulakla bakılmadı: toz yoğunluğu, yangın
 sesi seviyesi, tablet paneli. Kredi bekleyen: T5/T9/T12 yeniden üretimi (kullanıcıya sor).
 
+**Genel değerlendirme (8 Kasım):** `docs/degerlendirme-8-kasim.md` — oyun geliştirici + TCCC eğitim gözüyle 3 bağımsız inceleme
+(oynatıcı 25, köprü/panel 25, figür/içerik 20 bulgu) + bizzat doğrulanan 8 bulgu, eksik sistemler ve öncelikli öneri listesi
+(A: gösterim öncesi onarımlar — "Asker vuruldu" düğmesi `komando_*` adlarıyla çalışmıyor, köprü bozuk senaryo adımında çöküyor,
+bozuk JSON eğitmen senaryolarını siliyor, çizim döngüsü hatada donuyor, her yangın yeni PointLight ile gölgelendirici yeniden
+derletiyor, ortam sesi yarışı, uzak patlama sesinde mesafe gecikmesi yok). Bu belge kapanmadan yeni özellik yerine A listesi
+yapılmalı. Domain bilgisi için skill `askeri-simulasyon-tasarimi` (`.claude/skills/`; değerlendirme/öneri işinde yükle);
+dış skill'ler: threejs-*, create-game-vfx, build-game-audio-feedback, game-audio, game-design-theory, game-development, game-ui-design.
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 0. **Gösterim hazır (2 Kasım):** örnek senaryo "Gösterim – Güncel Durum (5 dk)" (`sn_gosterim_guncel`; akış
