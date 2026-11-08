@@ -309,8 +309,18 @@ Kullanıcı duvarda denerken bildirdi; başsız tarayıcıda ölçülerek doğru
   görünce hattan içe/dışa 1,4 m çıkar, geçince hatta döner (`kacinmaSapmasi`; sıhhiyecinin yürüyüşü de dolanır). Koşan ve
   yürüyen artık mevzi noktasına değil eğitmenin seçtiği yöne doğar (plan noktası onu başka yere atıyordu). Ölçüm: koşan ve
   yürüyen duran askerin 1,41 m yanından geçti.
-- **Öngörülen benzer varyantlar (kontrol edildi / açık):** yaralı aynı halkaya düşerse boş yere kayar (✓ aynı yol); tank
-  askerlerin üstüne doğarsa kayar (✓ kod, ölçülmedi); sıhhiyeci "yanında" aday noktaları zaten engel denetimli (✓);
-  helikopter iniş noktasının altında asker varsa kaçmıyor (**açık**: iniş noktası figürlerden 6 m içindeyse kenara kaydırılmalı);
-  iki koşan birbirine doğru gelirse ikisi de içe kaçabilir (**açık**: karşılıklıysa biri dışa alınmalı); Oda 2'de koşan
-  sütre hattının içinden doğarsa (yükseklik −26) kaçınma yalnız önündeki engele bakar (**açık**).
+- **Öngörülen benzer varyantlar:** yaralı aynı halkaya düşerse boş yere kayar (✓ aynı yol); tank askerlerin üstüne doğarsa
+  kayar (✓ 3,5 m yarıçap, 2,5 kat adım; ölçülmedi); sıhhiyeci "yanında" aday noktaları engel denetimli (✓); helikopter iniş
+  noktasının 6 m içinde figür/sütre varsa nokta 7 m adımlarla yana kayar (✓ kod; askerler ≤ 7 m, iniş 38 m olduğundan
+  bugünkü içerikte oluşmaz); karşılıklı gelen iki hareketli aynı hattaysa kimliğe göre biri içe öbürü dışa (✓ ölçüldü 1,4 m);
+  Oda 2'de sütre hattının içinden doğan koşan boş yere kayar (`doluMuHaric` sütreyi de dolu sayar).
+- **Kaçınma kutupsal (3. düzeltme):** halka üzerinde koşanda teğet doğruya göre bakmak aynı halkadaki duranları "içeride"
+  gösteriyordu; koşan hep dışa kaçıp 8,7 m'deki durana 0,1 m yaklaştı (ölçüldü). Artık `halkaKacinmasi`: ileri = yay
+  uzunluğu, yanal = yarıçap farkı; hat yarıçapı sabit (`hatYaricapi`), konum her kare yarıçap + sapma; yolu boş olan yan
+  seçilir (±1,4, gerekirse ±2,8 m), sapmışsa aynı yanda kalır; ileri bakış hızla orantılı (koşan ~7 m). Ölçüm (test senaryosu,
+  3 hareketli × 9 duran): hareketli–duran en yakın 1,38 m, hareketli–hareketli 1,40 m, yarıçap 5,6–7,0 m.
+- **Test senaryosu:** "Test – Figür Davranışları (4 dk)" (`sn_figur_davranis_testi`, 34 adım, 6 eğitmen onayı): iki cephe
+  aynı yöne → irkilme → kademeli nişan → koşan/yürüyen hattı geçer ve karşılaşır → dağlık eğim → Oda 2 sütre içinden koşan +
+  helikopter. Eski test gösterimleri silindi (Tam Tur, Kendi Komandomuz, Yeni Modeller, B Listesi); kalanlar: TCCC, Dağlık
+  Gece Pusu, Meskûn Mahal, Oda 2 Tahliye, Gösterim – Güncel Durum. Manifestte hareketli askerlere `silah: true` (yürürken
+  nişan katmanı ve kaçınma için).

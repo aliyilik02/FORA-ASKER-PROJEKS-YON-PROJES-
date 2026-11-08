@@ -37,7 +37,7 @@ import type { CozumSecenekleri, CozulmusPanorama } from "./panoramaCozucu";
 import { EquirectYukleyici, KupDonusturucu, pmremUret } from "./panoramaDokulari";
 import { ADIM_ADLARI, PanoramaGecisi, kupYuzuSec, solmaBaslayabilir, yuklemeGenisligi } from "./panoramaGecisi";
 import { cozmeBaslat, type CozmeIsi } from "./panoramaIsi";
-import { GOZ_YUKSEKLIGI, ZEMIN_Y, azimutYon, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu, zeminY } from "./uzay";
+import { GOZ_YUKSEKLIGI, ZEMIN_Y, azimutYon, derece, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu, zeminY } from "./uzay";
 import { aciNormalize, birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 import { YanginKatmani } from "./yangin";
 import { FisekKatmani } from "./fisek";
@@ -1403,7 +1403,20 @@ export class Sahne3B {
    */
   private heliInisiniSec() {
     const secim = this.noktaSec(this.heliYonu, "helikopter", 38, 180);
-    this.heli.inisNoktasi(secim.azimut, secim.mesafe);
+    // İniş noktasının 6 m içinde figür/sütre varsa (plan noktası yakın ya da tank orada) yana kaydır: 7 m adımlarla sağ/sol
+    let azimut = secim.azimut;
+    // (testte kurucusuz nesne: katmanlar yok → denetim atlanır)
+    const dolu = (az: number) => Boolean((typeof this.figurler?.doluMu === "function" && this.figurler.doluMu(yerKonumu(az, secim.mesafe), 6)) || (typeof this.sutre?.doluMu === "function" && this.sutre.doluMu(yerKonumu(az, secim.mesafe), 3)));
+    if (dolu(azimut)) {
+      const adimAci = derece(Math.atan2(7, secim.mesafe));
+      for (const kat of [1, -1, 2, -2, 3, -3]) {
+        if (!dolu(secim.azimut + kat * adimAci)) {
+          azimut = secim.azimut + kat * adimAci;
+          break;
+        }
+      }
+    }
+    this.heli.inisNoktasi(azimut, secim.mesafe);
   }
   get helikopterAzimutu() {
     return this.heli.inisAzimutu;

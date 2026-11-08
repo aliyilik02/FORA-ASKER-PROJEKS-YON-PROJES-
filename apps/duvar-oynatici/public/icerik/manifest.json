@@ -4279,6 +4279,7 @@
     "komando_kosan": {
       "dosya": "modeller/asker_komando.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -4332,6 +4333,7 @@
     "komando_yuruyen": {
       "dosya": "modeller/asker_komando.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -4385,6 +4387,7 @@
     "komando_comelerek": {
       "dosya": "modeller/asker_komando.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -4438,6 +4441,7 @@
     "komando_surunen": {
       "dosya": "modeller/asker_komando.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -5040,6 +5044,7 @@
     "komando_bere_kosan": {
       "dosya": "modeller/asker_komando_bere.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -5093,6 +5098,7 @@
     "komando_bere_yuruyen": {
       "dosya": "modeller/asker_komando_bere.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -5220,6 +5226,7 @@
     "komando_bere_comelerek": {
       "dosya": "modeller/asker_komando_bere.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -5419,6 +5426,7 @@
     "telsizci_yuruyen": {
       "dosya": "modeller/asker_telsizci.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -5472,6 +5480,7 @@
     "telsizci_kosan": {
       "dosya": "modeller/asker_telsizci.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -6117,6 +6126,7 @@
     "komando_kis_kosan": {
       "dosya": "modeller/asker_kis.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -6170,6 +6180,7 @@
     "komando_kis_yuruyen": {
       "dosya": "modeller/asker_kis.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -6223,6 +6234,7 @@
     "komando_kis_surunen": {
       "dosya": "modeller/asker_kis.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -6463,6 +6475,7 @@
     "komando_agir_yuruyen": {
       "dosya": "modeller/asker_agir_yuk.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",
@@ -6608,6 +6621,7 @@
     "komando_agir_kosan": {
       "dosya": "modeller/asker_agir_yuk.glb",
       "tip": "model",
+      "silah": true,
       "kategori": "figur",
       "animasyonlar": {
         "ates": "Firing Rifle",

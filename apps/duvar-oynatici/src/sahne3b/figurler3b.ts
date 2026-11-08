@@ -6,7 +6,7 @@
 import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as iskeletKopyala } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { izleyiciyeDonus, konumAzimutu, radyan, yanaDonus, yerKonumu, yukseklikMesafe, zeminY } from "./uzay";
+import { azimutYon, derece, izleyiciyeDonus, konumAzimutu, radyan, yanaDonus, yerKonumu, yukseklikMesafe, zeminY } from "./uzay";
 import { bakisAcilari, yumusat } from "./bakis";
 import { rastgele } from "../rastgele";
 import type { Safha } from "../tipler";
@@ -275,6 +275,8 @@ export interface Aktif {
   /** Kaçınma: hareket hattından o anki sapma (m, izleyiciden dışa +) ve hedeflenen sapma. */
   kacinma: number;
   kacinmaHedef: number;
+  /** Yana koşan/yürüyen figürün halka yarıçapı (m; doğduğu yer). Konum her kare bu yarıçap + sapma olarak kurulur. */
+  hatYaricapi: number;
 }
 
 /** Klip adı tam ("CharacterArmature|Idle_Gun") ya da kısa ("Idle_Gun") eşleşir. */
@@ -422,25 +424,40 @@ export class FigurKatmani {
   }
 
   /**
-   * Hareket hâlindeki figür için kaçınma (8 Kasım): yolun 3,5 m önünde, hatta 1,2 m yakınında duran figür ya da sütre
-   * varsa yoldan yana (izleyiciye göre içe/dışa) çıkılır; engel geçilince eski hatta dönülür. Dönüş: hattan sapma (m);
-   * `yon` birim hareket yönü, `disari` izleyiciden dışa birim vektör.
+   * Hareket hâlindeki figür için kaçınma (8 Kasım): hızla orantılı ileri bakışta (≥ 3,5 m; koşanda ~7 m) özgün hat üzerinde
+   * (o anki sapma düşülmüş) 1,2 m yakınında duran figür ya da sütre varsa hattan yana (izleyiciye göre içe/dışa) 1,4 m
+   * çıkılır; sapma zaten varsa aynı yanda kalınır (sık cephe hattında iki duran arasında hatta dönüp sonrakine çarpmasın),
+   * hat boşalınca döner. `yon` birim hareket yönü, `disari` izleyiciden dışa birim vektör. Dönüş: istenen sapma (m) ya da 0.
    */
   private kacinmaSapmasi(a: Aktif, yon: THREE.Vector3, disari: THREE.Vector3): number {
     const p = a.nesne.position;
-    let enYakin: { ileri: number; yan: number } | null = null;
+    const onBakis = Math.max(3.5, a.hiz * 1.6);
+    // İleri bakıştaki figürler, özgün hatta göre yanal konumlarıyla (o anki sapma düşülmüş)
+    const engeller: Array<{ ileri: number; yanHat: number; b: Aktif }> = [];
     for (const b of this.aktifler) {
       if (b === a || b.id === a.yanindaId) continue;
       const d = b.nesne.position.clone().sub(p);
       const ileri = d.dot(yon);
-      const yan = d.dot(disari);
-      if (ileri < -0.3 || ileri > 3.5 || Math.abs(yan) > 1.2) continue;
-      if (!enYakin || ileri < enYakin.ileri) enYakin = { ileri, yan };
+      if (ileri < -0.3 || ileri > onBakis) continue;
+      engeller.push({ ileri, yanHat: d.dot(disari) + a.kacinma, b });
     }
-    if (enYakin) return enYakin.yan >= 0 ? -1.4 : 1.4; // engel dışarıdaysa içten, içerideyse dıştan geç
+    const hatta = engeller.filter((e) => Math.abs(e.yanHat) <= 1.2).sort((x, y) => x.ileri - y.ileri)[0];
+    if (hatta) {
+      // Aday sapma yolunda da figür olmamalı (sapmış yoldaki duran askere çarpmasın): önce tercih edilen yan, sonra öbürü,
+      // sonra daha geniş dolanma
+      const yolBos = (sapma: number) => !engeller.some((e) => Math.abs(e.yanHat - sapma) < 1.2);
+      let tercih: number;
+      if (Math.abs(a.kacinma) > 0.2) tercih = Math.sign(a.kacinma); // zaten sapmış: aynı yanda kal
+      // Karşılıklı gelen iki hareketli aynı hattaysa (yan ≈ 0) ikisi de içe kaçıp çarpışırdı: kimliğe göre biri içe, öbürü dışa
+      else if (hatta.b.hiz > 0 && Math.abs(hatta.yanHat) < 0.4) tercih = a.id < hatta.b.id ? -1 : 1;
+      else tercih = hatta.yanHat >= 0 ? -1 : 1; // engel dışarıdaysa içten, içerideyse dıştan geç
+      for (const sapma of [tercih * 1.4, -tercih * 1.4, tercih * 2.8, -tercih * 2.8]) if (yolBos(sapma)) return sapma;
+      return tercih * 1.4;
+    }
     // Sütre eşyası (Oda 2 kum torbası, kaya): önde duruyorsa boş olan yandan
-    const on = p.clone().addScaledVector(yon, 1.6);
+    const on = p.clone().addScaledVector(yon, 1.6).addScaledVector(disari, -a.kacinma);
     if (this.engel(on)) {
+      if (Math.abs(a.kacinma) > 0.2 && !this.engel(on.clone().addScaledVector(disari, a.kacinma))) return Math.sign(a.kacinma) * 1.5;
       if (!this.engel(on.clone().addScaledVector(disari, -1.5))) return -1.5;
       if (!this.engel(on.clone().addScaledVector(disari, 1.5))) return 1.5;
     }
@@ -810,6 +827,7 @@ export class FigurKatmani {
       egimZ: 0,
       kacinma: 0,
       kacinmaHedef: 0,
+      hatYaricapi: Math.hypot(sarmal.position.x, sarmal.position.z),
     };
     // Tek seferlik klipler bitince sonraki aşama: vurulma → düşme → yerde
     karistirici?.addEventListener("finished", (olay) => {
@@ -1222,6 +1240,62 @@ export class FigurKatmani {
     }
   }
 
+  /**
+   * Halka kaçınması (yana koşan/yürüyen): hareket izleyici etrafında halka üzerinde olduğundan engeller kutupsal bakılır —
+   * ileri = yay uzunluğu (hat yarıçapı × açı farkı, hareket yönünde), yanal = engelin yarıçapı − hat yarıçapı. Teğet doğru
+   * üzerinde bakmak aynı halkadaki duranları "içeride" gösteriyor, koşan hep dışa kaçıp dıştaki durana çarpıyordu.
+   * Hat üzerinde (|yanal| ≤ 1,2) engel varsa yolu boş olan yana ±1,4 (gerekirse 2,8) m; sapmışsa aynı yanda kalır.
+   */
+  private halkaKacinmasi(a: Aktif): number {
+    const r0 = a.hatYaricapi;
+    if (r0 < 1) return 0;
+    const p = a.nesne.position;
+    const aci0 = Math.atan2(p.x, -p.z);
+    const yonIsaret = a.sola ? -1 : 1; // sağa koşan azimutu artırır
+    const onBakis = Math.max(3.5, a.hiz * 1.6);
+    const engeller: Array<{ ileri: number; yanHat: number; b: Aktif }> = [];
+    for (const b of this.aktifler) {
+      if (b === a || b.id === a.yanindaId) continue;
+      let fark = (Math.atan2(b.nesne.position.x, -b.nesne.position.z) - aci0) * yonIsaret;
+      fark = Math.atan2(Math.sin(fark), Math.cos(fark));
+      const ileri = fark * r0;
+      if (ileri < -0.5 || ileri > onBakis) continue;
+      engeller.push({ ileri, yanHat: Math.hypot(b.nesne.position.x, b.nesne.position.z) - r0, b });
+    }
+    const hatta = engeller.filter((e) => Math.abs(e.yanHat) <= 1.2).sort((x, y) => x.ileri - y.ileri)[0];
+    if (hatta) {
+      const yolBos = (sapma: number) => !engeller.some((e) => Math.abs(e.yanHat - sapma) < 1.2) && r0 + sapma > 2.5;
+      let tercih: number;
+      if (Math.abs(a.kacinma) > 0.2) tercih = Math.sign(a.kacinma);
+      else if (hatta.b.hiz > 0 && Math.abs(hatta.yanHat) < 0.4) tercih = a.id < hatta.b.id ? -1 : 1; // karşılıklı: biri içe, öbürü dışa
+      else tercih = hatta.yanHat >= 0 ? -1 : 1;
+      for (const sapma of [tercih * 1.4, -tercih * 1.4, tercih * 2.8, -tercih * 2.8]) if (yolBos(sapma)) return sapma;
+      return tercih * 1.4;
+    }
+    // Sütre eşyası (Oda 2 kaya/kum torbası/HESCO hattı): yolun yarıçapında ileri bakış boyunca ilk engel kaç m sonra?
+    // Yakınsa aday yarıçaplardan (±1,5 / ±3 / ±4,5 m; önce dışa — sütre halkası izleyici tarafındadır) ilk engeli en uzak olan
+    // seçilir; her kare yeniden değerlendirilir (bütün yolun boş olmasını istemek halka boyunca dizili kayalarda hepsini
+    // kapalı gösteriyor, koşan içinden geçiyordu).
+    const ilkEngel = (yaricap: number) => {
+      if (yaricap < 2) return 0;
+      for (let s = 0.4; s <= onBakis; s += 0.8) if (this.engel(yerKonumu(derece(aci0 + (yonIsaret * s) / r0), yaricap))) return s;
+      return Infinity;
+    };
+    const simdiki = ilkEngel(r0 + a.kacinma);
+    if (simdiki < Math.min(onBakis, 4)) {
+      const tercih = Math.abs(a.kacinma) > 0.2 ? Math.sign(a.kacinma) : 1;
+      let enIyi = { sapma: a.kacinma, uzaklik: simdiki };
+      for (const sapma of [tercih * 1.5, -tercih * 1.5, tercih * 3, -tercih * 3, tercih * 4.5, -tercih * 4.5, tercih * 6, -tercih * 6]) {
+        const u = ilkEngel(r0 + sapma);
+        if (u > enIyi.uzaklik + 0.5) enIyi = { sapma, uzaklik: u };
+      }
+      return enIyi.sapma;
+    }
+    if (Math.abs(a.kacinma) > 0.2 && simdiki === Infinity && ilkEngel(r0) === Infinity) return 0; // hat boşaldı: dön
+    if (Math.abs(a.kacinma) > 0.2) return a.kacinma; // hatta dönüş henüz kapalı: sapmayı koru
+    return 0;
+  }
+
   /** Çatışma durumuna göre bekleme ↔ ateş klipleri arasında yumuşak geçiş. */
   private pozuGuncelle(a: Aktif) {
     if (!a.eylemAtes || !a.eylemBekle || a.poz === "yarali" || a.aktifPoz || a.gecis || a.yuruyus) return;
@@ -1312,17 +1386,15 @@ export class FigurKatmani {
         const tegets = new THREE.Vector3(Math.cos(radyan(az)), 0, Math.sin(radyan(az)));
         if (a.sola) tegets.negate();
         a.nesne.position.addScaledVector(tegets, a.hiz * dt);
-        // Kaçınma: önde duran figür/sütre varsa hattan içe ya da dışa çıkar (en çok 1,4 m), geçince hatta döner.
-        // Sapma izleyiciden dışa doğru radyal eksende; hızın %70'iyle, ani sıçrama yok.
-        const disari = new THREE.Vector3(a.nesne.position.x, 0, a.nesne.position.z).normalize();
-        const sapma = this.kacinmaSapmasi(a, tegets, disari);
-        if (sapma !== 0) a.kacinmaHedef = sapma;
-        else if (Math.abs(a.kacinma) < 0.05) a.kacinmaHedef = 0;
-        else if (a.kacinmaHedef !== 0 && !this.aktifler.some((b) => b !== a && b.nesne.position.distanceTo(a.nesne.position) < 2.2)) a.kacinmaHedef = 0;
-        const adim = Math.min(Math.abs(a.kacinmaHedef - a.kacinma), a.hiz * 0.7 * dt) * Math.sign(a.kacinmaHedef - a.kacinma);
-        if (adim !== 0) {
-          a.kacinma += adim;
-          a.nesne.position.addScaledVector(disari, adim);
+        // Kaçınma (halka): önde duran figür/sütre varsa hattan içe ya da dışa çıkar (1,4 m, gerekirse 2,8), hat boşalınca
+        // döner; yanal hız hareket hızının %90'ı. Konum her kare hat yarıçapı + sapma olarak kurulur (teğet adımın
+        // yarıçapı büyütmesi de böyle sıfırlanır).
+        a.kacinmaHedef = this.halkaKacinmasi(a);
+        const adim = Math.min(Math.abs(a.kacinmaHedef - a.kacinma), a.hiz * 0.9 * dt) * Math.sign(a.kacinmaHedef - a.kacinma);
+        if (adim !== 0) a.kacinma += adim;
+        if (a.hatYaricapi >= 1) {
+          const yeniAz = konumAzimutu(a.nesne.position);
+          a.nesne.position.copy(azimutYon(yeniAz).multiplyScalar(a.hatYaricapi + a.kacinma));
         }
         a.nesne.position.y = zeminY(a.nesne.position.x, a.nesne.position.z);
         a.nesne.rotation.y = yanaDonus(konumAzimutu(a.nesne.position), a.sola);
