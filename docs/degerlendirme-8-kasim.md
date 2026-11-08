@@ -219,7 +219,10 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
     (§3-11; diziyi köprüye taşıma bekliyor); kaydırıcı sürüklerken gönderir (§3-20).
 14. ✓ **Köşe sürekliliği:** parçacık kartları dünya uzayında göze (`cameraPosition`) dönük, üç kamerada aynı kart (§2-8);
     parçacık gölgelendiricisi sahnenin doğrusal sisini alır (normal karışımda renk sis rengine, katkıda alfa söner) ve
-    normal karışımlı gruplar arkadan öne sıralanır (§2-10); alev dokusu da doğrusal (§2-11). `parcaciklar.test.ts`.
+    normal karışımlı gruplar arkadan öne sıralanır (§2-10); alev dokusu da doğrusal (§2-11). `parcaciklar.test.ts`. **Gerileme ve düzeltme (8 Kasım gece):** ilk
+    sürümde kart normali gözden uzağa çıkıyor, FrontSide ayıklaması bütün parçacıkları yutuyordu (kullanıcı: "dumanları
+    kaldırmışsın"); normal göz − merkez, malzeme DoubleSide, `parcacikKart.test.ts`. Canlı A/B: eski görüş-uzayı kartıyla toz
+    yoğunluğu aynı, yani başka gerileme yok.
 15. ✓ **Projeksiyon doğruluğu:** `?dpr=cihaz` 3B tuvali cihaz çözünürlüğünde çizer, varsayılan 1 ve DPR ≠ 1'de HUD + köprü
     günlüğü uyarısı (§2-12); U odada yan duvar 16:9 sapması > %30 ise HUD uyarısı (reddedilmez; kısmi görüntü alanı desteği
     bekliyor), `?fov=` 120 ile sınırlı (§2-13).
