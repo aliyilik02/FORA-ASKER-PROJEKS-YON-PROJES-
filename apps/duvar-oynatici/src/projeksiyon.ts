@@ -96,6 +96,11 @@ export interface OdaGeometrisi {
   on: number;
   /** U: yan duvar uzunluğu, ön köşelerden izleyiciye doğru. Düz duvarda kullanılmaz (0). */
   yan: number;
+  /**
+   * U: yan duvara yansıtılan görüntünün genişliği, ön köşeden (16:9 projektör yan duvarın tamamını kaplamıyorsa; görüntü
+   * ön köşeye dayalı, gerisi karanlık). Yok/0 = yan duvar boyu.
+   */
+  yanGoruntu?: number;
   /** Yansıtılan görüntünün yüksekliği. */
   yukseklik: number;
   /** Görüntü alt kenarının yerden yüksekliği. */
@@ -177,7 +182,8 @@ export function odaDuvarlari(g: OdaGeometrisi): Duvar[] {
       return izdusumdenDuvar(ad, kooimaIzdusumu([x0, altY, onZ], [x1, altY, onZ], [x0, ustY, onZ]));
     });
   }
-  const arkaZ = onZ + g.yan; // yan duvarların izleyici tarafındaki ucu
+  // Yan duvarların izleyici tarafındaki ucu: görüntü yan duvarın tamamını kaplamıyorsa görüntünün ucu (ön köşeden)
+  const arkaZ = onZ + (g.yanGoruntu && g.yanGoruntu > 0 ? Math.min(g.yan, g.yanGoruntu) : g.yan);
   return [
     izdusumdenDuvar("sol", kooimaIzdusumu([solX, altY, arkaZ], [solX, altY, onZ], [solX, ustY, arkaZ])),
     izdusumdenDuvar("orta", kooimaIzdusumu([solX, altY, onZ], [sagX, altY, onZ], [solX, ustY, onZ])),
@@ -194,6 +200,7 @@ export function odaGecerliMi(g: OdaGeometrisi): boolean {
   if (g.izleyiciZ < 0.2 || g.izleyiciZ > 60) return false;
   if (g.tip === "u") {
     if (g.yan < 0.2 || g.yan > 60) return false;
+    if (g.yanGoruntu !== undefined && !(g.yanGoruntu >= 0.2 && g.yanGoruntu <= g.yan)) return false;
     // Yan duvarlar görünsün: izleyici iki yan duvar düzleminin arasında (en az 10 cm içeride)
     return Math.abs(g.izleyiciX) <= g.on / 2 - 0.1;
   }
@@ -201,9 +208,10 @@ export function odaGecerliMi(g: OdaGeometrisi): boolean {
 }
 
 /** `?oda=` anahtarları → alanlar. */
-const ODA_ANAHTARLARI: Record<string, "on" | "yan" | "yukseklik" | "alt" | "izleyiciX" | "izleyiciZ" | "goz"> = {
+const ODA_ANAHTARLARI: Record<string, "on" | "yan" | "yanGoruntu" | "yukseklik" | "alt" | "izleyiciX" | "izleyiciZ" | "goz"> = {
   on: "on",
   yan: "yan",
+  yang: "yanGoruntu",
   yuk: "yukseklik",
   alt: "alt",
   x: "izleyiciX",
@@ -248,6 +256,7 @@ export function odaGeometrisiCoz(metin: string | null | undefined): OdaGeometris
     izleyiciZ: d.izleyiciZ,
     goz: d.goz ?? 1.7,
   };
+  if (tip === "u" && d.yanGoruntu !== undefined) g.yanGoruntu = d.yanGoruntu;
   return odaGecerliMi(g) ? g : null;
 }
 
@@ -258,7 +267,10 @@ function olcuMetni(v: number): string {
 /** Geometri → `?oda=` metni (milimetreye yuvarlı; `odaGeometrisiCoz` ile geri okunur). */
 export function odaGeometrisiYaz(g: OdaGeometrisi): string {
   const p = [g.tip, `on=${olcuMetni(g.on)}`];
-  if (g.tip === "u") p.push(`yan=${olcuMetni(g.yan)}`);
+  if (g.tip === "u") {
+    p.push(`yan=${olcuMetni(g.yan)}`);
+    if (g.yanGoruntu && g.yanGoruntu > 0) p.push(`yang=${olcuMetni(g.yanGoruntu)}`);
+  }
   p.push(`yuk=${olcuMetni(g.yukseklik)}`, `alt=${olcuMetni(g.alt)}`, `x=${olcuMetni(g.izleyiciX)}`, `z=${olcuMetni(g.izleyiciZ)}`, `goz=${olcuMetni(g.goz)}`);
   return p.join(",");
 }
@@ -272,7 +284,7 @@ export function geometriOzeti(oda: OdaGeometrisi | null, duvarlar: Duvar[]): [st
   const m = (v: number) => `${trSayi(v, 2)} m`;
   const geometri = !oda
     ? `Ölçüsüz yerleşim: her duvar ${trSayi(duvarlar[0]?.fov ?? 90)}° (ölçüler ?oda= ya da panel Sistem › Duvar geometrisi ile girilir)`
-    : `${oda.tip === "u" ? `U oda · ön ${m(oda.on)} · yan ${m(oda.yan)}` : `Düz duvar · genişlik ${m(oda.on)} (3 × ${m(oda.on / 3)})`} · görüntü ${m(oda.yukseklik)}, alt kenar ${m(oda.alt)} · izleyici: duvara ${m(oda.izleyiciZ)}, yanal ${m(oda.izleyiciX)}, göz ${m(oda.goz)}`;
+    : `${oda.tip === "u" ? `U oda · ön ${m(oda.on)} · yan ${m(oda.yan)}${oda.yanGoruntu ? ` (görüntü ${m(oda.yanGoruntu)})` : ""}` : `Düz duvar · genişlik ${m(oda.on)} (3 × ${m(oda.on / 3)})`} · görüntü ${m(oda.yukseklik)}, alt kenar ${m(oda.alt)} · izleyici: duvara ${m(oda.izleyiciZ)}, yanal ${m(oda.izleyiciX)}, göz ${m(oda.goz)}`;
   const AD: Record<Duvar["ad"], string> = { sol: "sol", orta: "orta", sag: "sağ" };
   const acilar = duvarlar.map((d) => `${AD[d.ad]} ${trSayi(d.fov)}° (${trSayi(d.solAzimut)}° … ${trSayi(d.solAzimut + d.fov)}°)`).join(" · ");
   return [geometri, acilar];

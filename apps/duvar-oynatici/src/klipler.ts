@@ -62,6 +62,8 @@ export function klipParcasi(azimut: number, acisalGenislik: number, altAci: numb
 
 export interface KlipTanimi {
   dosya: string;
+  /** Eski yer tutucu model (panelde gizli): açılışta önden yüklenmez, ilk komutta gelir (main.ts tembel GLB). */
+  eski?: boolean;
   kategori?: "efekt" | "figur" | "hava" | "diger";
   ad?: string;
   /** video / sprite: 2B klip katmanı; model: glTF, 3B sahne katmanı (sahne3b/figurler3b.ts). */

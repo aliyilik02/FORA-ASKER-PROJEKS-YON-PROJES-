@@ -10,6 +10,7 @@
  * (normal karışımda renk sis rengine, katkı karışımında alfa sıfıra gider: ateş/kıvılcım sisin içinden parlamaz).
  * Normal karışımlı gruplar (duman/toz) göze uzaklığa göre arkadan öne sıralanır.
  */
+import { rastgele } from "../rastgele";
 import * as THREE from "three";
 import type { RotorTozuProfili } from "./rotorTozu";
 
@@ -346,14 +347,14 @@ export class ParcacikGrubu {
   }
 }
 
-const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+const rnd = (a: number, b: number) => a + rastgele() * (b - a);
 
 /**
  * Rotor tozu için havuzdan radyal parçacık: merkezin çevresinde rastgele açıda, `r0` uzakta ve `y0` yukarıda;
  * yatay hız dışa doğru `hiz` (eksi: içe), dikey `vy`. Kalan alanları çağıran yazar, sonra grubun `ekle`si.
  */
 function radyalParcacik(g: ParcacikGrubu, m: THREE.Vector3, r0: number, y0: number, hiz: number, vy: number): Parcacik {
-  const a = Math.random() * 6.283;
+  const a = rastgele() * 6.283;
   const c = Math.cos(a);
   const sn = Math.sin(a);
   const p = g.al();
@@ -448,7 +449,7 @@ export class ParcacikSistemi {
   /** Rastgele varyant; bir öncekiyle aynı olmaz. */
   patlamaVaryantiSec(): PatlamaVaryanti {
     const n = ParcacikSistemi.PATLAMA_VARYANTLARI.length;
-    let i = Math.floor(Math.random() * (n - 1));
+    let i = Math.floor(rastgele() * (n - 1));
     if (i >= this.sonVaryant) i++;
     this.sonVaryant = i;
     return ParcacikSistemi.PATLAMA_VARYANTLARI[i];
@@ -459,7 +460,7 @@ export class ParcacikSistemi {
     const r = yaricap;
     const [sr, sg, sb] = v.sicaklik;
     // Sütunun hafif eğimi ve eteğin güçlü tarafı: patlama başına rastgele bir yön
-    const egimAci = Math.random() * 6.283;
+    const egimAci = rastgele() * 6.283;
     const ex = Math.cos(egimAci) * v.egim;
     const ez = Math.sin(egimAci) * v.egim;
     // Ateş topu: birkaç büyük katkılı alev, hızla büyür ve söner
@@ -587,8 +588,8 @@ export class ParcacikSistemi {
     b.alev += (sonuyor ? 0 : 55 * s * r * Math.min(1, kap)) * dt;
     while (b.alev >= 1) {
       b.alev -= 1;
-      const a = Math.random() * 6.283;
-      const rr = Math.sqrt(Math.random()) * r * 0.75;
+      const a = rastgele() * 6.283;
+      const rr = Math.sqrt(rastgele()) * r * 0.75;
       const q = this.ates.al();
       q.x = p.x + Math.cos(a) * rr;
       q.y = p.y + rnd(0, 0.25);
@@ -615,7 +616,7 @@ export class ParcacikSistemi {
     b.kor += (sonuyor ? 2 : 14 * s * r) * dt;
     while (b.kor >= 1) {
       b.kor -= 1;
-      const a = Math.random() * 6.283;
+      const a = rastgele() * 6.283;
       const q = this.kivilcim.al();
       q.x = p.x + Math.cos(a) * r * 0.5;
       q.y = p.y + rnd(0.2, 0.8);
@@ -642,8 +643,8 @@ export class ParcacikSistemi {
     b.duman += (sonuyor ? 4 : 9 * (0.5 + 0.5 * s)) * r * Math.min(1, kap) * dt;
     while (b.duman >= 1) {
       b.duman -= 1;
-      const a = Math.random() * 6.283;
-      const rr = Math.sqrt(Math.random()) * r * 0.6;
+      const a = rastgele() * 6.283;
+      const rr = Math.sqrt(rastgele()) * r * 0.6;
       const q = this.duman.al();
       q.x = p.x + Math.cos(a) * rr;
       q.y = p.y + rnd(0.8, 1.6) * r * 0.5;
@@ -672,7 +673,7 @@ export class ParcacikSistemi {
       }
       q.yercekimi = -0.25;
       q.surtunme = 0.35;
-      q.kare = Math.floor(Math.random() * 4);
+      q.kare = Math.floor(rastgele() * 4);
       q.golge = sonuyor ? 0.6 : 1;
       q.surukle = 0.5;
       this.duman.ekle(q);
@@ -698,7 +699,7 @@ export class ParcacikSistemi {
       renk: [0.5, 0.47, 0.43],
       yercekimi: -0.15,
       surtunme: 0.3,
-      kare: Math.floor(Math.random() * 4),
+      kare: Math.floor(rastgele() * 4),
       golge: 0.8,
       surukle: 0.7,
     });
@@ -729,7 +730,7 @@ export class ParcacikSistemi {
       k.birikim += 12 * Math.min(1, k.siddet) * kap * dt;
       while (k.birikim >= 1) {
         k.birikim -= 1;
-        this.tozTopagi(k.p, k.yaricap, k.siddet * (1 - k.t / k.sure), false, Math.floor(Math.random() * 4));
+        this.tozTopagi(k.p, k.yaricap, k.siddet * (1 - k.t / k.sure), false, Math.floor(rastgele() * 4));
       }
       this.tozKaynaklari[n++] = k;
     }
@@ -739,8 +740,8 @@ export class ParcacikSistemi {
   /** Tek toz topağı: `dalga` ilk dışa akış (hızlı, alçak), değilse kaynaktan tüten (yavaş). Havuzdan. */
   private tozTopagi(p: THREE.Vector3, yaricap: number, siddet: number, dalga: boolean, kare: number) {
     const r = yaricap;
-    const a = Math.random() * 6.283;
-    const rr = (dalga ? Math.sqrt(Math.random()) * 0.6 : Math.random() * 0.35) * r;
+    const a = rastgele() * 6.283;
+    const rr = (dalga ? Math.sqrt(rastgele()) * 0.6 : rastgele() * 0.35) * r;
     const hiz = dalga ? rnd(2.2, 5) * (r / 3.5) : rnd(0.3, 1.0) * (r / 3.5);
     const ton = rnd(0.86, 1);
     const q = this.duman.al();
@@ -812,7 +813,7 @@ export class ParcacikSistemi {
     while (b.halka >= 1) {
       b.halka -= 1;
       const p =
-        Math.random() < 0.3
+        rastgele() < 0.3
           ? radyalParcacik(this.duman, merkez, R * rnd(1.6, 3), rnd(1.5, 3.5), -rnd(1, 2.5), rnd(0.8, 2) * profil.kaldirma)
           : radyalParcacik(this.duman, merkez, R * rnd(2, 4), rnd(0.2, 1.2), rnd(1.5, 4), rnd(0.6, 1.8) * profil.kaldirma);
       p.boyut = R * rnd(0.3, 0.55) * profil.boyut;
@@ -835,7 +836,7 @@ export class ParcacikSistemi {
         b.kirinti -= 1;
         const vy = rnd(1.5, 5.5);
         const p = radyalParcacik(this.duman, merkez, R * rnd(0.2, 0.9), rnd(0.05, 0.3), rnd(9, 20) * (0.5 + 0.5 * s), vy);
-        const k = profil.kirinti[(Math.random() * profil.kirinti.length) | 0];
+        const k = profil.kirinti[(rastgele() * profil.kirinti.length) | 0];
         p.boyut = rnd(0.05, 0.12) * (hafif ? 1.4 : 1);
         p.buyume = 0;
         p.alfa = rnd(0.75, 1);

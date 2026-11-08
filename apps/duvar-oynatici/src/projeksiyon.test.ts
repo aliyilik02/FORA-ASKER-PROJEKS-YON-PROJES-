@@ -357,6 +357,17 @@ describe("ters izdüşüm", () => {
 describe("?oda= ayrıştırma", () => {
   it("geçerli U ve düz duvar; eksik isteğe bağlı alanlar varsayılanla", () => {
     expect(odaGeometrisiCoz("u,on=6,yan=4,yuk=3,alt=0.2,x=0,z=3,goz=1.7")).toEqual({ tip: "u", on: 6, yan: 4, yukseklik: 3, alt: 0.2, izleyiciX: 0, izleyiciZ: 3, goz: 1.7 });
+    // Yan duvarda kısmi görüntü (yang): ön köşeden görüntü genişliği; yan duvar boyunu aşamaz, 0,2'den küçük olamaz
+    const kismi = odaGeometrisiCoz("u,on=6,yan=4,yang=3,yuk=3,alt=0.2,x=0,z=3,goz=1.7")!;
+    expect(kismi.yanGoruntu).toBe(3);
+    expect(odaGeometrisiYaz(kismi)).toBe("u,on=6,yan=4,yang=3,yuk=3,alt=0.2,x=0,z=3,goz=1.7");
+    expect(odaGeometrisiCoz("u,on=6,yan=4,yang=5,yuk=3,z=3")).toBeNull();
+    expect(odaGeometrisiCoz("u,on=6,yan=4,yang=0.1,yuk=3,z=3")).toBeNull();
+    // Kısmi görüntüde yan duvarın açı aralığı daralır (arka uç ön köşeden yang kadar)
+    const tam = odaDuvarlari(odaGeometrisiCoz("u,on=6,yan=4,yuk=3,z=3")!);
+    const dar = odaDuvarlari(kismi);
+    expect(dar[0].fov).toBeLessThan(tam[0].fov);
+    expect(dar[1].fov).toBeCloseTo(tam[1].fov, 6);
     expect(odaGeometrisiCoz("duz,on=9,yuk=2.5,alt=0.3,z=4,goz=1.7")).toEqual({ tip: "duz", on: 9, yan: 0, yukseklik: 2.5, alt: 0.3, izleyiciX: 0, izleyiciZ: 4, goz: 1.7 });
     expect(odaGeometrisiCoz(" U, on=6 ,yan=4,yuk=3,z=3,")).toEqual({ tip: "u", on: 6, yan: 4, yukseklik: 3, alt: 0, izleyiciX: 0, izleyiciZ: 3, goz: 1.7 });
     expect(odaGeometrisiCoz("u,on=6,yan=4,yuk=3,z=3,x=-2.5")?.izleyiciX).toBe(-2.5);

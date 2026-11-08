@@ -309,9 +309,11 @@ duvar 16:9 uyarısı, fov ≤ 120. **B listesi tamam.** **C-16 AAR** (`kopru/ola
 M tuşu not, CSV) ve **C-17 crack–thump** (`mesafeSesi.ts`) bitti. **C-18 havan** (efekt `havan`: ıslık 1,4 sn → patlama + gecikmeli DMX flaşı) ve **C-19 gece projeksiyon modu** (`geceModu.ts`,
 `?gece=projeksiyon`) bitti. **Aydınlatma fişeği** (efekt `fisek`, `sahne3b/fisek.ts`) bitti. **C-20/21 kısmen**: figür/HESCO kaynak bırakma, iskeletli ağ ayıklaması (sınır küresi ×2,5),
 matris güncellemesi karede bir, krater birikim sınırı. **AAR tekrar oynatma** (`kopru/tekrar.ts`), **TCCC sayaçları**, **makrolar** (`kopru/makro.ts`; helikopter dizisi
-de köprüde), **kilit kipi**, `rastgele_bekle` + `beklenen` adım alanları bitti. Bekleyen: uzak namlu flaşı telegrafı, merkezî
-dispose/`renderer.info` izleme, WebGL bağlam kaybı, efekt kotası, tek sahne saati, oturum tohumu, tembel GLB + KTX2, animasyon
-kanal ayıklama/LOD, panorama küçültülmüş çözme; AAR tekrar oynatma ve TCCC sayaçları;
+de köprüde), **kilit kipi**, `rastgele_bekle` + `beklenen` adım alanları bitti. **Oynatıcı turu (8 Kasım gece):** namlu flaşı telegrafı, kaynak sayaçları (HUD), WebGL bağlam kaybı, efekt
+kotası, olay kuyruğu/sahne saati, `?tohum=`, tembel GLB, panorama küçültülmüş çözme, bitki sallanması, zemin eğimi, irkilme,
+kademeli nişan, üst/alt gövde katmanı, dinamik kalite, `yang` yan görüntü genişliği bitti (başsız tarayıcıda hatasız; duvarda
+gözle bakılmadı). Kod dışı/atlanan: VFX plakaları, yeşil perde, Türkçe kayıtlar; KTX2, animasyon kanal ayıklama/LOD, GPU zaman
+sorgusu, kontrol sahipliği, ayak IK/ragdoll, ekipman sallanması. Bekleyen kalan: animasyon kanal ayıklama/LOD; AAR tekrar oynatma ve TCCC sayaçları;
 `rastgele_sure`/`beklenen` adım alanları; yan duvar için kısmi görüntü alanı. Duvarda gözle bakılmadı (bakış genliği, yürüyüş hızı, geçiş klipleri, sisli parçacık, köşe). Domain bilgisi için skill `askeri-simulasyon-tasarimi` (`.claude/skills/`; değerlendirme/öneri işinde yükle);
 dış skill'ler: threejs-*, create-game-vfx, build-game-audio-feedback, game-audio, game-design-theory, game-development, game-ui-design.
 

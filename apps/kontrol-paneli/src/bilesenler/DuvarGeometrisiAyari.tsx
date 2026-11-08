@@ -12,7 +12,7 @@ import { Bolum, Rozet, SecenekGrubu } from "./ortak";
 
 type Secim = "varsayilan" | "u" | "duz";
 type OdaTipi = "u" | "duz";
-type Alan = "on" | "yan" | "yuk" | "alt" | "z" | "x" | "goz";
+type Alan = "on" | "yan" | "yang" | "yuk" | "alt" | "z" | "x" | "goz";
 type Olculer = Record<Alan, number>;
 
 const SECIM_ETIKETLERI: Record<Secim, string> = { varsayilan: "Varsayılan (her duvar 90°)", u: "U duvar", duz: "Düz duvar (3 projektör)" };
@@ -22,6 +22,7 @@ const ALANLAR: Record<OdaTipi, Array<{ alan: Alan; etiket: string }>> = {
   u: [
     { alan: "on", etiket: "Ön duvar genişliği" },
     { alan: "yan", etiket: "Yan duvar boyu, ön köşeden" },
+    { alan: "yang", etiket: "Yan duvarda görüntü genişliği, ön köşeden (0 = duvar boyu)" },
     { alan: "yuk", etiket: "Görüntü yüksekliği" },
     { alan: "alt", etiket: "Görüntü alt kenarı, yerden" },
     { alan: "z", etiket: "İzleyicinin ön duvara uzaklığı" },
@@ -39,10 +40,10 @@ const ALANLAR: Record<OdaTipi, Array<{ alan: Alan; etiket: string }>> = {
 };
 
 const VARSAYILAN_OLCULER: Record<OdaTipi, Olculer> = {
-  u: { on: 6, yan: 4, yuk: 3, alt: 0.3, z: 3, x: 0, goz: 1.7 },
-  duz: { on: 9, yan: 0, yuk: 2.5, alt: 0.3, z: 4, x: 0, goz: 1.7 },
+  u: { on: 6, yan: 4, yang: 0, yuk: 3, alt: 0.3, z: 3, x: 0, goz: 1.7 },
+  duz: { on: 9, yan: 0, yang: 0, yuk: 2.5, alt: 0.3, z: 4, x: 0, goz: 1.7 },
 };
-const ANAHTARLAR: Alan[] = ["on", "yan", "yuk", "alt", "x", "z", "goz"];
+const ANAHTARLAR: Alan[] = ["on", "yan", "yang", "yuk", "alt", "x", "z", "goz"];
 
 /** Kayıtlı `oda` parametresini forma geri okur (oynatıcının biçimi; eksik isteğe bağlı alanlar oynatıcıdaki gibi). */
 function cozumle(metin: string | undefined): { tip: OdaTipi; olculer: Olculer } | null {
@@ -50,7 +51,7 @@ function cozumle(metin: string | undefined): { tip: OdaTipi; olculer: Olculer } 
   const [tipHam, ...parcalar] = metin.trim().toLowerCase().split(",");
   const tip = tipHam.trim();
   if (tip !== "u" && tip !== "duz") return null;
-  const olculer: Olculer = { ...VARSAYILAN_OLCULER[tip], alt: 0, x: 0, goz: 1.7 };
+  const olculer: Olculer = { ...VARSAYILAN_OLCULER[tip], yang: 0, alt: 0, x: 0, goz: 1.7 };
   for (const p of parcalar) {
     const [a, d] = p.split("=").map((s) => s.trim());
     const deger = Number(d);
@@ -63,7 +64,10 @@ function cozumle(metin: string | undefined): { tip: OdaTipi; olculer: Olculer } 
 function odaMetni(tip: OdaTipi, o: Olculer): string {
   const m = (v: number) => String(Math.round(v * 1000) / 1000);
   const p = [tip, `on=${m(o.on)}`];
-  if (tip === "u") p.push(`yan=${m(o.yan)}`);
+  if (tip === "u") {
+    p.push(`yan=${m(o.yan)}`);
+    if (o.yang > 0) p.push(`yang=${m(o.yang)}`);
+  }
   p.push(`yuk=${m(o.yuk)}`, `alt=${m(o.alt)}`, `x=${m(o.x)}`, `z=${m(o.z)}`, `goz=${m(o.goz)}`);
   return p.join(",");
 }
@@ -82,6 +86,8 @@ function hatalar(tip: OdaTipi, o: Olculer): Partial<Record<Alan, string>> {
   const h: Partial<Record<Alan, string>> = {};
   if (!(o.on >= 0.5 && o.on <= 60)) h.on = "Genişlik 0,5–60 m olmalı.";
   if (tip === "u" && !(o.yan >= 0.2 && o.yan <= 60)) h.yan = "Yan duvar 0,2–60 m olmalı.";
+  // Yan duvardaki görüntü (16:9 projektör duvarın tamamını kaplamıyorsa): 0 = duvar boyu; yoksa 0,2 m – yan duvar boyu
+  if (tip === "u" && o.yang !== 0 && !(o.yang >= 0.2 && o.yang <= o.yan)) h.yang = "Yan görüntü 0 (duvar boyu) ya da 0,2 m – yan duvar boyu arasında olmalı.";
   if (!(o.yuk >= 0.2 && o.yuk <= 20)) h.yuk = "Görüntü yüksekliği 0,2–20 m olmalı.";
   else {
     // Projektör görüntüsü 16:9 (düz duvarda 3 projektör yan yana: 48:9). Yükseklik duvarın değil görüntünün yüksekliğidir;
@@ -116,7 +122,8 @@ function duvarAcilari(tip: OdaTipi, o: Olculer): DuvarAcisi[] {
     const ucte = o.on / 3;
     return ["Sol", "Orta", "Sağ"].map((ad, i) => ({ ad, sol: az(solX + i * ucte, o.z), sag: az(solX + (i + 1) * ucte, o.z) }));
   }
-  const arka = o.z - o.yan; // yan duvarın izleyici tarafındaki ucu (negatifse izleyicinin arkasında)
+  const yanEtkin = o.yang > 0 ? Math.min(o.yan, o.yang) : o.yan; // görüntü yan duvarın bir kısmını kaplıyorsa onun ucu
+  const arka = o.z - yanEtkin; // yan görüntünün izleyici tarafındaki ucu (negatifse izleyicinin arkasında)
   return [
     { ad: "Sol", sol: az(solX, arka), sag: az(solX, o.z) },
     { ad: "Orta", sol: az(solX, o.z), sag: az(sagX, o.z) },

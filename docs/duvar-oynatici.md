@@ -688,6 +688,18 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   (kendiliğinden)" bildirimi): eğitmenin elle çağırdığı figürler, efektler, çatışma, izli mermi, helikopter ve sesler
   gider; ortam, bölge ve ışık kalır (senaryonun kendi adımları isterse değiştirir). Duraklatılmıştan devam ederken ve
   "Adımı tetikle"de sıfırlama yok. Oynatıcı için ayrı bir şey yok: aynı `sahne/sifirla` mesajı gelir.
+- **Sorgu ekleri (8 Kasım gece):** `?tohum=1234` oturum tohumu (`rastgele.ts`: parçacık, çatışma ve figür rastgeleliği
+  yeniden üretilebilir; HUD'da `tohum`), `?dinamik=0` dinamik kaliteyi kapatır (varsayılan açık: saniyelik fps 3 sn < 40 →
+  3B arka tampon ölçeği ×0,85 → ×0,7; 15 sn > 57 → geri; köprü günlüğüne satır), `?onyukle=hepsi` bütün GLB'leri açılışta
+  yükler (varsayılan: manifest sırasıyla ilk 8 güncel model, `eski` olanlar ve gerisi ilk komutta), `?oda=…,yang=3` yan
+  duvarda görüntü genişliği (ön köşeden; 16:9 projektör yan duvarın tamamını kaplamıyorsa; panel Duvar geometrisi alanı).
+  Gecikmeli efektler `olayKuyrugu.ts` sahne saatinde (havan patlaması; sıfırlama kuyruğu boşaltır). Efekt kotası
+  (`main.ts EFEKT_KOTALARI`). WebGL bağlam kaybında çizim durur, geri gelince `Sahne3B.panoramaYenile()` etkin panoramayı
+  baştan hazırlar. HUD geometri satırında GPU kaynak sayaçları (`kaynakBilgisi`). Panorama işçisi boyutu dosya başlığından
+  okuyup (`goruntuBoyutu.ts`) doğrudan hedef genişlikte çözer. Figürler: zemin eğimine hizalanır (`egimeHizala`, ≤ 12°),
+  yakın patlamada irkilir (`tepki`), çatışma başlayınca 0–0,9 sn kademeli nişana geçer, yana yürüyen silahlı figür düşman
+  varken alt gövde yürüyüş + üst gövde ateş klibiyle oynar (`ustGovdeKlibi/altGovdeKlibi`, Mixamo kemik adları). Düşman
+  salvosu telegraflı: parıltı → 0,25–0,45 sn → ilk iz → mesafe gecikmeli ses. Çalı/ot yaprakları rüzgârda sallanır.
 - **Makro ve tekrar oynatma** (8 Kasım): `kopru/makro.ts` `MakroCalistirici` — senaryo adımı listesi köprüde zamanlanır
   (`POST /api/makro {ad, adimlar}`, `DELETE /api/makro`; WS `makro`), yüklü senaryodan bağımsız; sahne sıfırlaması ve
   yeni makro süreni keser. Helikopter iniş dizisi (yaklaşıyor 0 sn → iniyor 20 sn → yerde 35 sn) panelden bu yolla gider

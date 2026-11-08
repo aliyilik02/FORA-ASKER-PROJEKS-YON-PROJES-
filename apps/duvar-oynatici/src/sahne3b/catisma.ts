@@ -17,6 +17,7 @@
 import * as THREE from "three";
 import { AraziUfku, VARSAYILAN_PIKSEL_ACISI, izKalinligi, izUzunlukCarpani, izliKaynakYuksekligi, izliYolu, sirtaTasi, yakinGecis, type IzliYol } from "./izliYol";
 import type { ParcacikSistemi } from "./parcaciklar";
+import { rastgele } from "../rastgele";
 import { ZEMIN_Y, azimutYon, derece, konumAzimutu, radyan, zeminY } from "./uzay";
 
 interface Iz {
@@ -82,7 +83,7 @@ export interface IzliAyari {
   siklik: number;
 }
 
-const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+const rnd = (a: number, b: number) => a + rastgele() * (b - a);
 
 /**
  * Örneklenmiş iz mesh'inin yalnız ilk `n` örneğini yükler (matris 16, renk 3 öğe); karede bir çağrılır, bekleyen
@@ -247,18 +248,28 @@ export class CatismaSistemi {
   }
 
   /** Düşman tarafından bir atış: uzak kaynaktan hedefe doğru. */
-  private dusmanAtis(kaynakAzimut: number, hedefAzimutYayilim: number) {
+  /** Düşman ateş kaynağı: seçilen yönün ±10°'sinde, 150–260 m'de, zeminin 0,8–4 m üstünde. */
+  private dusmanKaynagi(kaynakAzimut: number): THREE.Vector3 {
     const kaynakYon = azimutYon(kaynakAzimut + rnd(-10, 10));
     const kaynak = kaynakYon.clone().multiplyScalar(rnd(150, 260));
     kaynak.y = Math.max(ZEMIN_Y, zeminY(kaynak.x, kaynak.z)) + rnd(0.8, 4);
+    return kaynak;
+  }
+
+  /** Salvo telegrafında belirlenen kaynak: ilk iz oradan çıkar (parıltıyla aynı yer). */
+  private salvoKaynak: THREE.Vector3 | null = null;
+
+  private dusmanAtis(kaynakAzimut: number, hedefAzimutYayilim: number) {
+    const kaynak = this.salvoKaynak ?? this.dusmanKaynagi(kaynakAzimut);
+    this.salvoKaynak = null;
     // Hedef: dost figürlerin yakını (%50, figür varsa), izleyici önündeki zemin; %15'i üstten/yandan geçer
     const dostlar = this.dostlar();
     let hedef: THREE.Vector3;
-    const r = Math.random();
+    const r = rastgele();
     if (dostlar.length && r < 0.5) {
-      const d = dostlar[Math.floor(Math.random() * dostlar.length)];
+      const d = dostlar[Math.floor(rastgele() * dostlar.length)];
       hedef = new THREE.Vector3(d.x + rnd(-3, 3), 0, d.z + rnd(-3, 3));
-      hedef.y = zeminY(hedef.x, hedef.z) + (Math.random() < 0.6 ? 0 : rnd(0.3, 1.6));
+      hedef.y = zeminY(hedef.x, hedef.z) + (rastgele() < 0.6 ? 0 : rnd(0.3, 1.6));
     } else if (r < 0.85) {
       const az = kaynakAzimut + rnd(-hedefAzimutYayilim, hedefAzimutYayilim);
       const yon = azimutYon(az);
@@ -279,8 +290,8 @@ export class CatismaSistemi {
     const v = hedef.clone().sub(kaynak).normalize().multiplyScalar(rnd(140, 190));
     this.izEkle(kaynak, v, false);
     // Düşman hattında namlu parıltısı (uzak, kısa) ve uzak atış sesi
-    if (Math.random() < 0.6) this.parcaciklar.parlama(kaynak, rnd(1.5, 2.5));
-    if (Math.random() < 0.35) this.sesler.atis(sesAzimutu(kaynak), true, Math.hypot(kaynak.x, kaynak.z));
+    if (rastgele() < 0.6) this.parcaciklar.parlama(kaynak, rnd(1.5, 2.5));
+    if (rastgele() < 0.35) this.sesler.atis(sesAzimutu(kaynak), true, Math.hypot(kaynak.x, kaynak.z));
   }
 
   /**
@@ -329,13 +340,13 @@ export class CatismaSistemi {
     y.sz = -Math.cos(a) * r;
     // Hedefin yatay konumu ve zeminden yüksekliği (zemin döndürmeden sonra eklenir)
     const dostlar = this.dostlar();
-    let secim = Math.random();
+    let secim = rastgele();
     if (dostlar.length) {
       if (secim < 0.5) {
-        const d = dostlar[Math.floor(Math.random() * dostlar.length)];
+        const d = dostlar[Math.floor(rastgele() * dostlar.length)];
         y.hx = d.x + rnd(-3, 3);
         y.hz = d.z + rnd(-3, 3);
-        y.hy = Math.random() < 0.6 ? 0 : rnd(0.3, 1.6);
+        y.hy = rastgele() < 0.6 ? 0 : rnd(0.3, 1.6);
         secim = -1;
       } else secim -= 0.5;
     }
@@ -350,7 +361,7 @@ export class CatismaSistemi {
       y.hy = arka ? rnd(1.5, 6) : 0;
     }
     y.hy += (Math.min(90, Math.abs(yon)) / 90) * rnd(1.2, 4.5);
-    if (yon !== 0) izliYolu(y, yon, 10 + 25 * (Math.random() + Math.random()));
+    if (yon !== 0) izliYolu(y, yon, 10 + 25 * (rastgele() + rastgele()));
     y.hy += zeminY(y.hx, y.hz);
     y.sy = Math.max(ZEMIN_Y, zeminY(y.sx, y.sz)) + rnd(0.8, 4);
     y.sy = izliKaynakYuksekligi(y, zeminY, this.ufuk.tanjant(derece(Math.atan2(y.sx, -y.sz)), zeminY));
@@ -366,8 +377,8 @@ export class CatismaSistemi {
     _hiz.y += 0.5 * IZ_DUSUSU * (mesafe / hiz);
     this.izEkle(_kaynak, _hiz, false, false, true);
     // Kaynakta namlu parıltısı (uzak, kısa) ve uzak atış sesi
-    if (Math.random() < 0.6) this.parcaciklar.parlama(_kaynak, rnd(1.5, 2.5));
-    if (Math.random() < 0.35) this.sesler.atis(sesAzimutu(_kaynak), true, Math.hypot(_kaynak.x, _kaynak.z));
+    if (rastgele() < 0.6) this.parcaciklar.parlama(_kaynak, rnd(1.5, 2.5));
+    if (rastgele() < 0.35) this.sesler.atis(sesAzimutu(_kaynak), true, Math.hypot(_kaynak.x, _kaynak.z));
   }
 
   /**
@@ -461,7 +472,7 @@ export class CatismaSistemi {
       }
       // Ses: izli akışta saniyede en çok ~1,5 (toz, kıvılcım ve sekme her çarpmada)
       if (this.sesCalabilir(iz)) this.sesler.carpma(sesAzimutu(p));
-      if (!iz.sekti && Math.random() < 0.3) {
+      if (!iz.sekti && rastgele() < 0.3) {
         const v = _sekmeHiz.copy(iz.v);
         v.y = Math.abs(v.y) * rnd(0.4, 1.2) + rnd(10, 40);
         v.x += rnd(-40, 40);
@@ -498,6 +509,13 @@ export class CatismaSistemi {
         if (this.dusmanSalvoSayac <= 0) {
           this.dusmanSalvoKalan = Math.round(rnd(3, 5 + s * 6));
           this.dusmanSalvoSayac = rnd(0.4, 3.2) * (1.3 - s);
+          // Telegraf (C-18): salvo kaynağı önce belirlenir, namlu parıltısı hemen görünür, ilk iz 0,25–0,45 sn sonra çıkar,
+          // atış sesi mesafe gecikmesiyle gelir (crack–thump) → ışık → iz → ses sırası; eğitmen "önce parıltıyı gör" öğretir
+          const kaynak = this.dusmanKaynagi(this.ayar.azimut);
+          this.salvoKaynak = kaynak;
+          this.parcaciklar.parlama(kaynak, rnd(2.8, 3.8));
+          this.sesler.atis(sesAzimutu(kaynak), true, Math.hypot(kaynak.x, kaynak.z));
+          this.dusmanAtisSayac = rnd(0.25, 0.45);
         }
       }
       // --- Tank top atışları (7–16 sn arayla, şiddete göre) ---

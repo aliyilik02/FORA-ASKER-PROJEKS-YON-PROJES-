@@ -1335,6 +1335,39 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
     return sonuc;
   }
 
+  /**
+   * Çalı/ot malzemesine rüzgâr (gölgelendiricide): tabandan yüksekliğe göre (kare) yanal kayma, örnek konumuna göre faz;
+   * çimenle aynı saat (`cimenZaman`). Modelin kendi `onBeforeCompile`'ı varsa önce o çalışır.
+   */
+  private ruzgarEkle(m: THREE.MeshStandardMaterial, taban: number, yukseklik: number) {
+    const onceki = m.onBeforeCompile;
+    m.onBeforeCompile = (shader, r) => {
+      onceki?.(shader, r);
+      shader.uniforms.zaman = this.cimenZaman;
+      shader.uniforms.bitkiTaban = { value: taban };
+      shader.uniforms.bitkiYukseklik = { value: Math.max(0.05, yukseklik) };
+      shader.vertexShader = shader.vertexShader
+        .replace("#include <common>", "#include <common>\nuniform float zaman;\nuniform float bitkiTaban;\nuniform float bitkiYukseklik;")
+        .replace(
+          "#include <begin_vertex>",
+          `#include <begin_vertex>
+{
+  float ust = clamp((position.y - bitkiTaban) / bitkiYukseklik, 0.0, 1.0);
+  ust *= ust;
+  vec3 dk = vec3(0.0);
+  #ifdef USE_INSTANCING
+  dk = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+  #endif
+  float faz = dk.x * 0.31 + dk.z * 0.23;
+  float sal = sin(zaman * 1.4 + faz) * 0.6 + sin(zaman * 2.6 + faz * 1.9) * 0.3;
+  transformed.x += sal * 0.045 * ust;
+  transformed.z += sal * 0.03 * ust;
+}`,
+        );
+    };
+    m.customProgramCacheKey = () => "arazi-bitki-ruzgar-v1";
+  }
+
   private async bitkileriYukle(nesil: number) {
     const liste = BITKI_SETLERI[this.profil.bitkiler] ?? BITKI_SETLERI.bozkir;
     // Yerleşim yarıçapı: görünür yarıçapın %93'ü (en çok 148 m); kenar sisine çok yakın kaya yarım görünmez
@@ -1395,6 +1428,11 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
           // Yaprak/sap kartları iki yüzlü görünsün (fotogrametri modellerinde tek yüz)
           const std = mal as THREE.MeshStandardMaterial;
           if (bitkiMi && (std.alphaTest > 0 || std.transparent || b.klasor.startsWith("cimen"))) std.side = THREE.DoubleSide;
+          // Rüzgâr salınımı (C-18): çalı/ot yaprakları yükseklikle artan genlikte sallanır (malzeme paylaşımlı, bir kez)
+          if (bitkiMi && !std.userData.ruzgar) {
+            std.userData.ruzgar = true;
+            this.ruzgarEkle(std, taban, boyut.y);
+          }
           // Saydam + iki yüzlü: three arka ve ön yüzü iki ayrı çizimle çizerdi (ot ve çalı yaprağında kare başına
           // ~1 M üçgen); tek geçişte çizilir. Yapraklar derinlik yazmaz, sıralama farkı bu ölçekte görünmüyor.
           if (std.transparent && std.side === THREE.DoubleSide) std.forceSinglePass = true;

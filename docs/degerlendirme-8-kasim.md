@@ -246,24 +246,37 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
     varsa o), sonra aynı yönde patlama ve DMX flaşı (`ArtNetGonderici.gecikmeliFlas`; sıfırlama iptal eder); panel Efektler
     listesinde ve senaryo adımı olarak. ✓ **aydınlatma fişeği** (efekt `fisek`, `sahne3b/fisek.ts`: ~150 m ileride 170 m'de tutuşur, 2,5 m/s iner, 28 sn,
     sarkaç salınımı, 2 ışıklık sabit havuz ~70 bin cd, katkı parlaması + duman izi; atış "pat" + tutuşma "fıs"; testli).
-    Bekleyen: uzak namlu flaşı telegrafı, yağmur sıçraması/ıslak zemin, bitki sallanması.
+    ✓ Uzak namlu flaşı telegrafı (`catisma.ts`: salvo kaynağı önce belirlenir, parıltı hemen, ilk iz 0,25–0,45 sn sonra, ses
+    mesafe gecikmesiyle → ışık → iz → ses). ✓ Yağmur sıçraması/ıslak zemin (`yagis3b.ts` sıçrama örnekleri, arazi `islaklik`
+    uniform'u — hava turunda yapılmıştı, burada doğrulandı). ✓ Bitki sallanması (`arazi.ts ruzgarEkle`: çalı/ot yaprakları
+    yükseklikle artan genlikte, çimenle aynı saat).
 19. ✓ **Gece projeksiyon modu** (§1-8): `geceModu.ts` — `?gece=projeksiyon` (panel Sistem › Oynatıcı ayarları) gece
     sahnesinde (ortam ışığı < 0,45) 3B tuvale CSS filtre: parlaklık ×1,0–1,3, kontrast ×1,0–0,88 karanlıkla orantılı; gündüz
     etkisiz. Katsayılar sahada ölçülerek ayarlanır.
 20. **Kaynak yöneticisi + ışık/efekt bütçesi + tek sahne saati + oturum tohumu** (§5): ✓ figür kaldırılınca karıştırıcı
     bağları, iskelet (kemik dokusu) ve boya kopya malzemeleri bırakılır (`figuruBirak`); ✓ prosedürel HESCO geometri/malzemesi
-    dizilim değişiminde bırakılır; ✓ ışık havuzları (yangın 3, fişek 2). Bekleyen: merkezî `dispose` yardımcısı ve
+    dizilim değişiminde bırakılır; ✓ ışık havuzları (yangın 3, fişek 2). ✓ Kaynak sayaçları HUD/önizlemede (`Sahne3B.kaynakBilgisi`: geo/doku/program). ✓ WebGL bağlam kaybı: kayıpta
+    çizim durur, geri gelince etkin panorama yeniden hazırlanır (`panoramaYenile`), köprü günlüğüne satır. ✓ Efekt kotası
+    (`main.ts efektKotasi`: patlama 5/2 sn, havan 4/2 sn, toz 4/2 sn, yangın 4/3 sn, fişek 3/5 sn; aşan atlanır, günlüğe).
+    ✓ Tek sahne saati + iptal edilebilir olay kuyruğu (`olayKuyrugu.ts`; havan patlaması buradan, sıfırlama boşaltır).
+    ✓ Oturum tohumu (`rastgele.ts`, `?tohum=`; parçacık, çatışma ve figür rastgeleliği). Bekleyen: merkezî `dispose` yardımcısı ve
     `renderer.info` izleme, WebGL bağlam kaybı, efekt kotası, tek sahne saati, oturum tohumu.
 21. **Performans:** ✓ iskeletli figür ağları bind-poz sınır küresi ×2,5 ile ayıklanır (§2-9; sabit ağlar three küresiyle);
     ✓ dünya matrisleri karede bir kez, üç duvar çiziminde otomatik güncelleme kapalı (§2-18); ✓ arazi krater birikimi:
-    yakın kratere yeni çukur kazılmaz, liste ≤ 60 (§2-17). Bekleyen: tembel GLB yükleme + KTX2 (§4-14), animasyon kanal ayıklama
+    yakın kratere yeni çukur kazılmaz, liste ≤ 60 (§2-17). ✓ Tembel GLB (ilk 8 güncel model önden, gerisi ilk komutta; `?onyukle=hepsi`). ✓ Panorama küçültülmüş çözme
+    (`goruntuBoyutu.ts` başlıktan boyut → `createImageBitmap(blob, {resizeWidth})`; 8K orman çözme 0,5 sn, küçültme 0).
+    Bekleyen: KTX2 (araç zinciri; atlandı), animasyon kanal ayıklama
     ve LOD (§4-15), panorama küçültülmüş çözme (§2-25).
 
 ### D. Uzun vade (gelecek sürüm) — 24'ten kilit kipi ve makrolar ✓ 8 Kasım gece
-22. Üst/alt gövde katmanlama, ayak IK ve zemin normaline hizalama, tepki animasyonları/ragdoll karışımı, grup davranışı (ateş ve
+22. ✓ Üst/alt gövde katmanlama (`figurler3b.ts ustGovdeKlibi/altGovdeKlibi`: yana yürüyen silahlı figür düşman varken alt
+    gövde yürüyüş + üst gövde ateş; testli), ✓ zemin eğimine hizalama (`egimeHizala`: pitch/roll ≤ 12°, sarmal YXZ), ✓ tepki
+    (yakın patlamada irkilme, 30 m, 1,1 sn), ✓ grup davranışı (kademeli nişan 0–0,9 sn). Ayak IK ve ragdoll bekliyor.
+    Önceki madde metni: üst/alt gövde katmanlama, ayak IK ve zemin normaline hizalama, tepki animasyonları/ragdoll karışımı, grup davranışı (ateş ve
     hareket, el işaretleri), ikincil hareket; etkileşim soketleri (sıhhiyeci–yaralı).
 23. Gerçek VFX plakaları ve yeşil perde klipleri, Türkçe bağırma/inleme kayıtları (docs §2.5, icerik-ihtiyac-listesi).
-24. Dinamik kalite, GPU zaman sorgusu, metrik kanalı; ✓ **kilit kipi** (üst çubukta Kilit: içerik alanındaki denetimler pasif,
+24. ✓ Dinamik kalite (`main.ts dinamikKaliteyiGuncelle`: fps < 40 → 3 sn sonra arka tampon ×0,85/×0,7, > 57 → 15 sn sonra
+    geri; `?dinamik=0`), GPU zaman sorgusu (atlandı), metrik kanalı (kaynak sayaçları önizlemede); ✓ **kilit kipi** (üst çubukta Kilit: içerik alanındaki denetimler pasif,
     yalnız senaryo oynat/duraklat/devam/durdur, Sıfırla ve Boşluk/Esc çalışır; yerel kayıtta); kontrol sahipliği bekliyor;
     ✓ **makro düğmeleri** (`kopru/makro.ts`: köprüde zamanlanan eğitmen dizileri; Efektler sekmesinde Pusu, Havan baskını,
     Gece aydınlatma, Temas kes; helikopter iniş dizisi de artık köprü makrosu — panel sekmesi kapansa da sürer); önizleme/prova

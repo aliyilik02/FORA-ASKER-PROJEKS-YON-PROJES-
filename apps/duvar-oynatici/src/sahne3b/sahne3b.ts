@@ -234,6 +234,11 @@ export class Sahne3B {
   /** Ekranda bir panorama var (ilk takastan sonra; geçişler sırasında da açık kalır). */
   hazir = false;
   hata = "";
+  /** WebGL bağlamı kayıp (sürücü sıfırlaması): geri gelene dek çizilmez; main.ts HUD'da gösterir. */
+  baglamKayip = false;
+  baglamOlayi: ((durum: "kayip" | "geri") => void) | null = null;
+  /** Son panorama isteğinin yedek adayları (bağlam geri gelince yeniden istek için). */
+  private sonYedekler: PanoramaKaynagi[] = [];
 
   /** Kalite kademesi (`?kalite=`): gölge haritası, kenar yumuşatma ve parçacık kapasitesi. */
   readonly kalite: Kalite;
@@ -271,6 +276,18 @@ export class Sahne3B {
     this.catisma.agirSilahlar = () => this.figurler.agirSilahlar();
     if (!r) return;
     this.renderer = r;
+    // Bağlam kaybı/geri gelişi (C-20): kayıpta çizim durur (three kendi durumunu sıfırlar, dokular kaynaktan geri gelir);
+    // panorama küpü ve PMREM render hedefidir, three yeniden üretmez → etkin kaynak yeniden hazırlanır
+    tuval.addEventListener("webglcontextlost", (e) => {
+      e.preventDefault();
+      this.baglamKayip = true;
+      this.baglamOlayi?.("kayip");
+    });
+    tuval.addEventListener("webglcontextrestored", () => {
+      this.baglamKayip = false;
+      this.panoramaYenile();
+      this.baglamOlayi?.("geri");
+    });
     r.outputColorSpace = THREE.SRGBColorSpace;
     r.toneMapping = THREE.NoToneMapping;
     r.shadowMap.enabled = true;
@@ -327,6 +344,12 @@ export class Sahne3B {
   /** Son duvar çiziminin çağrı sayısı (HUD; performans tanısı). */
   get cizimCagrisi(): number {
     return this.renderer?.info.render.calls ?? 0;
+  }
+  /** GPU kaynak sayaçları (C-20, HUD/önizleme; sızıntı izleme): geometri, doku, program. */
+  get kaynakBilgisi(): string {
+    const i = this.renderer?.info;
+    if (!i) return "kaynak —";
+    return `geo ${i.memory.geometries} · doku ${i.memory.textures} · program ${i.programs?.length ?? 0}`;
   }
   get gunesBilgisi(): string {
     if (!this.gunesTahmini) return "güneş: saatten";
@@ -477,7 +500,19 @@ export class Sahne3B {
    */
   panoramaAyarla(kaynak: PanoramaKaynagi | null, yedekler: PanoramaKaynagi[] = []) {
     if (!this.renderer) return;
+    this.sonYedekler = yedekler;
     if (this.gecis.iste(kaynak, yedekler) === "hatali" && kaynak && !this.gecis.etkin) this.hata = `panorama yüklenemedi: ${kaynak.url}`;
+  }
+
+  /** Ekrandaki panoramayı baştan hazırlar (WebGL bağlamı geri gelince: küp ve PMREM kayboldu). Ekranda yoksa bir şey yapmaz. */
+  panoramaYenile() {
+    const g = this._gecis;
+    const etkin = g?.etkin;
+    if (!g || !etkin || !this.renderer) return;
+    const kaynak = etkin.kaynak;
+    this.verilerBirak(etkin.veri);
+    g.etkin = null;
+    g.iste(kaynak, this.sonYedekler);
   }
 
   /** 3B katmanı kapat (video panorama 2B yolda): takasta panorama kalkar, örtü 2B görüntüye solar. */
@@ -1430,7 +1465,7 @@ export class Sahne3B {
   ciz(): boolean {
     const r = this.renderer;
     this.buKareCizildi = false;
-    if (!r || !this.hazir || this.kameralar.length === 0) return false;
+    if (!r || this.baglamKayip || !this.hazir || this.kameralar.length === 0) return false;
     if (this.derlemeBekleniyor) {
       if (performance.now() < this.derlemeSiniri) return true;
       this.derlemeBekleniyor = false;

@@ -10,6 +10,7 @@
  * texture.flipY yok sayıldığından GPU'ya bu düzende gider ve three'nin equirect örneklemesiyle (eski flipY=true
  * yüklemeyle) aynı yön çıkar. Analiz kopyası yeniden çevrilir (dik: üst satır gök), gunes.ts bunu bekler.
  */
+import { goruntuBoyutu } from "../goruntuBoyutu";
 import { gokMaskesiHesapla, type GokMaskesi } from "./gokMaskesi";
 import { ANALIZ_GENISLIGI, ANALIZ_YUKSEKLIGI, panoramaAnalizEt, type PanoramaAnalizi } from "./panoramaAnalizi";
 
@@ -44,13 +45,27 @@ export async function panoramaCoz(url: string, secenek: CozumSecenekleri, sinyal
   if (!yanit.ok) throw new Error(`HTTP ${yanit.status}`);
   const blob = await yanit.blob();
   const t1 = performance.now();
-  let tam = await createImageBitmap(blob, { imageOrientation: "flipY", premultiplyAlpha: "none", colorSpaceConversion: "default" });
-  const kaynakGenisligi = tam.width;
-  const kaynakYuksekligi = tam.height;
+  // Küçültülmüş çözme (C-21, §2-25): boyut dosya başlığından okunur (JPEG SOF / PNG IHDR); kaynak hedeften genişse
+  // doğrudan hedef genişlikte çözülür (12K×6K tam RGBA ≈ 288 MB tepe yerine ≈ 100 MB; Chrome JPEG'i ölçekli çözer).
+  // Başlık tanınmazsa eski yol: tam çöz, sonra küçült.
+  const baslik = goruntuBoyutu(new Uint8Array(await blob.slice(0, 65536).arrayBuffer()));
+  const dogrudanKucult = baslik !== null && secenek.enGenis > 0 && baslik.genislik > secenek.enGenis;
+  let tam = dogrudanKucult
+    ? await createImageBitmap(blob, {
+        imageOrientation: "flipY",
+        premultiplyAlpha: "none",
+        colorSpaceConversion: "default",
+        resizeWidth: secenek.enGenis,
+        resizeHeight: Math.max(1, Math.round((secenek.enGenis * baslik.yukseklik) / baslik.genislik)),
+        resizeQuality: baslik.genislik === 2 * secenek.enGenis ? "low" : "medium",
+      })
+    : await createImageBitmap(blob, { imageOrientation: "flipY", premultiplyAlpha: "none", colorSpaceConversion: "default" });
+  const kaynakGenisligi = baslik?.genislik ?? tam.width;
+  const kaynakYuksekligi = baslik?.yukseklik ?? tam.height;
   const t2 = performance.now();
   // Küçük kopya tam çözümden ("high": analiz eski tuval yoluyla karşılaştırılıp bu ayarla doğrulandı; "low" güneşi kaydırıyordu)
   const kucuk = await createImageBitmap(tam, { resizeWidth: PMREM_GIRDI_GENISLIGI, resizeHeight: PMREM_GIRDI_GENISLIGI / 2, resizeQuality: "high" });
-  if (secenek.enGenis > 0 && tam.width > secenek.enGenis) {
+  if (!dogrudanKucult && secenek.enGenis > 0 && tam.width > secenek.enGenis) {
     // Tam tam 2× küçültmede çift doğrusal örnekleme 2×2 kutu ortalamasıdır (hızlı, kayıpsız sayılır); diğer oranlarda mipmap'li
     const kalite: ResizeQuality = tam.width === 2 * secenek.enGenis ? "low" : "medium";
     const k = await createImageBitmap(tam, { resizeWidth: secenek.enGenis, resizeHeight: Math.max(1, Math.round((secenek.enGenis * tam.height) / tam.width)), resizeQuality: kalite });
