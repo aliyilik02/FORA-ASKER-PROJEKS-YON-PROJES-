@@ -32,6 +32,14 @@ import { UnrealIstemci } from "./unreal.js";
 const envYuklendi = envDosyasiniYukle(varsayilanEnvYolu());
 const ayarlar = ayarlariOku();
 const gunluk = new Gunluk();
+// Yakalanmayan hata köprüyü (ve DMX'i, oynatıcıları) düşürmesin: eğitim odasında kiosk gibi çalışır, hata günlüğe düşer.
+// Node 15+ varsayılanı unhandledRejection'da süreci kapatmaktır.
+process.on("unhandledRejection", (neden) => {
+  gunluk.hata(`Yakalanmayan söz hatası: ${neden instanceof Error ? (neden.stack ?? neden.message) : String(neden)}`);
+});
+process.on("uncaughtException", (hata) => {
+  gunluk.hata(`Yakalanmayan hata: ${hata.stack ?? hata.message}`);
+});
 if (envYuklendi) gunluk.bilgi(`Ayarlar .env dosyasından okundu: ${varsayilanEnvYolu()}`);
 
 const unreal = new UnrealIstemci({ adres: ayarlar.unrealAdres, preset: ayarlar.unrealPreset, mod: ayarlar.unrealMod }, gunluk);
@@ -45,7 +53,7 @@ const depo = new DurumDeposu(unreal, artnet, gunluk);
 const senaryo = new SenaryoMotoru(depo, gunluk);
 const firtina = new FirtinaZamanlayici({ ortam: () => depo.al().ortam, simsek: (siddet) => void depo.efektTetikle({ tur: "simsek", siddet }) });
 setInterval(() => firtina.adim(Date.now()), 1000);
-const veri = new VeriDeposu(ayarlar.veriKlasoru, ORNEK_SENARYOLAR);
+const veri = new VeriDeposu(ayarlar.veriKlasoru, ORNEK_SENARYOLAR, (u) => gunluk.hata(`Veri deposu: ${u}`));
 const ornek = new OrnekBaslatici(ornekKomutuOlustur(ayarlar.ornek), gunluk);
 
 /**
@@ -179,6 +187,8 @@ wss.on("connection", (ws: WebSocket) => {
       baglantiYayinla();
     } else if (mesaj?.tip === "onizleme" && istemciRolleri.get(ws) === "oynatici" && typeof mesaj.veri === "string" && mesaj.veri.startsWith("data:image/") && mesaj.veri.length < 300000) {
       panellereGonder({ tip: "onizleme", veri: mesaj.veri, zaman: Date.now(), bilgi: typeof mesaj.bilgi === "string" ? mesaj.bilgi.slice(0, 200) : undefined });
+    } else if (mesaj?.tip === "figur" && mesaj.islem === "bitti" && istemciRolleri.get(ws) === "oynatici" && typeof mesaj.id === "string") {
+      figur.bittiBildir(mesaj.id);
     } else if (mesaj?.tip === "gunluk" && istemciRolleri.get(ws) === "oynatici" && typeof mesaj.mesaj === "string") {
       // Oynatıcı günlüğü: saniyede en çok 2 satır (hata döngüsü köprüyü boğmasın)
       const simdi = Date.now();

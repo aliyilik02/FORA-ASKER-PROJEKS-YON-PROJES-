@@ -67,7 +67,7 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
   const yaraliAktifler = aktifler.filter((f) => f.poz === "yarali");
   const baslik = (ad: string) => klipler.find((k) => k.ad === ad)?.baslik ?? ad;
   /** Vurulabilecek (ayakta/diz çökmüş, 3B asker) figürler. */
-  const vurulabilir = vurulabilirAskerler(aktifler);
+  const vurulabilir = vurulabilirAskerler(aktifler, klipler);
 
   const cagir = async (ad: string, sapma = 0, yuk = -7) => {
     await api.figur({ islem: "oynat", klip: ad, azimut: yonAzimut(seciliYon + sapma), yukseklik: yuk, olcek: 1, yansit: false, dongu: true });

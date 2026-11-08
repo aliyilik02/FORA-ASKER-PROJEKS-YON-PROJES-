@@ -1,7 +1,7 @@
 /**
  * Ön ayar ve senaryo kalıcılığı – yerel diskte JSON dosyaları (§10: internet gerektirmez).
  */
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync, existsSync, renameSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import type { FigurKomutu, OnAyar, Senaryo, SimulasyonDurumu } from "./tipler.js";
 
@@ -14,17 +14,38 @@ export interface SonDurum {
   nesil?: number;
 }
 
-function dosyaOku<T>(yol: string, varsayilan: T): T {
+/** Bozuk dosya yedeğinin adı: `<dosya>.bozuk-<zaman>.json` (aynı klasörde; eğitmen elle kurtarabilir). */
+export function bozukYedekYolu(yol: string, zaman = Date.now()): string {
+  return `${yol.replace(/\.json$/, "")}.bozuk-${new Date(zaman).toISOString().replace(/[:.]/g, "-")}.json`;
+}
+
+/**
+ * JSON okur. Dosya bozuksa (elle düzenlerken virgül unutulmuş vb.) sessizce boş sayıp bir sonraki kayıtta üstüne
+ * yazmak eğitmenin bütün senaryolarını götürürdü: bozuk dosya yedeğe kopyalanır (`bozukYedekYolu`), `uyari` çağrılır,
+ * varsayılan döner. Yedek alınamazsa dosya olduğu gibi bırakılır.
+ */
+function dosyaOku<T>(yol: string, varsayilan: T, uyari?: (mesaj: string) => void): T {
   if (!existsSync(yol)) return varsayilan;
   try {
     return JSON.parse(readFileSync(yol, "utf8")) as T;
-  } catch {
+  } catch (hata) {
+    let yedek = "";
+    try {
+      yedek = bozukYedekYolu(yol);
+      copyFileSync(yol, yedek);
+    } catch {
+      yedek = "";
+    }
+    uyari?.(`${yol} okunamadı (${hata instanceof Error ? hata.message : String(hata)}); ${yedek ? `yedeği: ${yedek}` : "yedek alınamadı"}; varsayılanla sürülüyor`);
     return varsayilan;
   }
 }
 
+/** Atomik yazım: önce `.tmp`, sonra yeniden adlandırma; yarım kalan yazım (elektrik kesintisi) dosyayı bozmaz. */
 function dosyaYaz(yol: string, veri: unknown) {
-  writeFileSync(yol, JSON.stringify(veri, null, 2), "utf8");
+  const gecici = `${yol}.tmp`;
+  writeFileSync(gecici, JSON.stringify(veri, null, 2), "utf8");
+  renameSync(gecici, yol);
 }
 
 export function kimlikUret(onek: string): string {
@@ -36,7 +57,11 @@ export class VeriDeposu {
   private readonly senaryoDosyasi: string;
   private readonly sonDurumDosyasi: string;
 
-  constructor(klasor: string, varsayilanSenaryolar: Senaryo[] = []) {
+  /** Bozuk dosya uyarısı (köprü günlüğüne); testlerde yakalanır. */
+  uyari: ((mesaj: string) => void) | null = null;
+
+  constructor(klasor: string, varsayilanSenaryolar: Senaryo[] = [], uyari?: (mesaj: string) => void) {
+    this.uyari = uyari ?? null;
     mkdirSync(klasor, { recursive: true });
     this.onAyarDosyasi = join(klasor, "on-ayarlar.json");
     this.senaryoDosyasi = join(klasor, "senaryolar.json");
@@ -46,7 +71,7 @@ export class VeriDeposu {
     } else if (varsayilanSenaryolar.length) {
       // Sürüm güncellemesiyle gelen yeni örnekler mevcut kuruluma da eklenir; eğitmenin kendi senaryoları ve
       // düzenlediği (aynı kimlikli) örnekler olduğu gibi kalır.
-      const mevcut = dosyaOku<Senaryo[]>(this.senaryoDosyasi, []);
+      const mevcut = dosyaOku<Senaryo[]>(this.senaryoDosyasi, [], (u) => this.uyari?.(u));
       const eksik = varsayilanSenaryolar.filter((v) => !mevcut.some((m) => m.id === v.id));
       if (eksik.length) dosyaYaz(this.senaryoDosyasi, [...mevcut, ...eksik]);
     }
@@ -59,14 +84,14 @@ export class VeriDeposu {
 
   /** Son durumu okur; `enCokYasMs`'den eskiyse (varsayılan 12 saat) yok sayar: dünkü gece sahnesi sabah açılışta gelmesin. */
   sonDurumOku(enCokYasMs = 12 * 3600 * 1000): SonDurum | null {
-    const d = dosyaOku<SonDurum | null>(this.sonDurumDosyasi, null);
+    const d = dosyaOku<SonDurum | null>(this.sonDurumDosyasi, null, (u) => this.uyari?.(u));
     if (!d || typeof d.zaman !== "number" || !d.durum) return null;
     if (Date.now() - d.zaman > enCokYasMs) return null;
     return { zaman: d.zaman, durum: d.durum, figurler: Array.isArray(d.figurler) ? d.figurler : [], ...(typeof d.nesil === "number" ? { nesil: d.nesil } : {}) };
   }
 
   onAyarlar(): OnAyar[] {
-    return dosyaOku<OnAyar[]>(this.onAyarDosyasi, []);
+    return dosyaOku<OnAyar[]>(this.onAyarDosyasi, [], (u) => this.uyari?.(u));
   }
 
   onAyarKaydet(onAyar: OnAyar): OnAyar {
@@ -84,7 +109,7 @@ export class VeriDeposu {
   }
 
   senaryolar(): Senaryo[] {
-    return dosyaOku<Senaryo[]>(this.senaryoDosyasi, []);
+    return dosyaOku<Senaryo[]>(this.senaryoDosyasi, [], (u) => this.uyari?.(u));
   }
 
   senaryoBul(id: string): Senaryo | undefined {

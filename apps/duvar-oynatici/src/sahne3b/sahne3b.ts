@@ -1280,6 +1280,10 @@ export class Sahne3B {
   figurTemizle() {
     this.figurler.temizle();
   }
+  /** Figür ekrandan çıkınca (yürüyen/koşan, |azimut| > 165°) çağrılır; köprüye `figur bitti` gider. */
+  figurBittiAyarla(f: (id: string) => void) {
+    this.figurler.bittiOlayi = f;
+  }
   figurOnYukle(url: string) {
     this.figurler.onYukle(url);
   }

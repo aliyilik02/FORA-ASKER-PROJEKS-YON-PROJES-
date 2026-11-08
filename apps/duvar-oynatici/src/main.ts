@@ -27,6 +27,7 @@ import { IzliMermiSistemi } from "./efektler/izliMermi";
 import { GecisKatmani, gecisSuresiCoz } from "./gecis";
 import { hudCiz, kalibrasyonCiz, uyariCiz } from "./hud";
 import { kaliteSec } from "./kaliteSecimi";
+import { SARSINTI_CARPANI, sarsintiSec } from "./sarsintiSecimi";
 import { KlipKatmani } from "./klipler";
 import { silahHizala } from "./sahne3b/silahHizalama";
 import { duvarYerlesimleri, duvarlariOlustur, geometriOzeti, odaDuvarlari, odaGeometrisiCoz, odaGeometrisiYaz, type OdaGeometrisi, ufukSatiri, type Yerlesim, xAzimut, yonAzimut, zamanDilimi, type ZamanDilimi } from "./projeksiyon";
@@ -148,6 +149,8 @@ const klipler = new KlipKatmani();
  */
 const kaliteSecimi = kaliteSec(params.get("kalite"), localStorage);
 const kalite: Kalite = kaliteSecimi.kalite;
+/** Patlama sarsıntısı kademesi (`?sarsinti=`; panel Sistem › Oynatıcı ayarları); varsayılan hafif (sarsintiSecimi.ts). */
+const sarsinti = sarsintiSec(params.get("sarsinti"), localStorage);
 const kaliteBilgisi = kaliteSecimi.otomatikKart ? `${kalite} (otomatik: ${kaliteSecimi.otomatikKart})` : kalite;
 const sahne3b = new Sahne3B(tuval3b, params.get("gunes") === "1", kalite);
 /**
@@ -301,12 +304,20 @@ function bekleyenEfektleriUygula() {
   if (!sahne3b.hazir || sahne3b.bolgeGecisiBekliyor || bekleyenEfektler.length === 0) return;
   const simdi = performance.now();
   const liste = bekleyenEfektler.splice(0);
-  for (const b of liste) if (simdi - b.zaman < 10000) efektUygula(b.e);
+  // Ses kuyruğa alınırken çalındı; görüntü şimdi
+  for (const b of liste) if (simdi - b.zaman < 10000) efektUygula(b.e, true);
 }
 
-function efektUygula(e: EfektIstegi) {
+/** `sesCalindi`: kuyruktan gelen efekt; sesi kuyruğa alınırken çalınmıştı, yeniden çalma. */
+function efektUygula(e: EfektIstegi, sesCalindi = false) {
   if (ucAktifOlabilir && (!sahne3b.hazir || sahne3b.bolgeGecisiBekliyor) && (e.tur === "patlama" || e.tur === "toz_duman" || e.tur === "uzak_patlama" || e.tur === "yangin")) {
+    // Görüntü 3B sahne hazır olunca (yeni bölgenin planıyla); ses beklemez — eğitmen düğmeye bastı, duvar sessiz kalmasın
     bekleyenEfektler.push({ e, zaman: performance.now() });
+    if (!sesCalindi) {
+      const az = yonAzimut(e.yon ?? 0);
+      if (e.tur === "patlama") void ses.patlama(az, e.siddet ?? 1);
+      else if (e.tur === "uzak_patlama") void ses.patlama(az, e.siddet ?? 1, true, e.mesafe ?? 800);
+    }
     return;
   }
   const azimut = yonAzimut(e.yon ?? 0);
@@ -332,7 +343,7 @@ function efektUygula(e: EfektIstegi) {
         efektler.flasVeSarsinti(siddet);
       } else if (plakaVar) efektler.flasVeSarsinti(siddet);
       else efektler.patlama(azimut, siddet, yerlesimler, ufuk(), H);
-      void ses.patlama(azimut, siddet);
+      if (!sesCalindi) void ses.patlama(azimut, siddet);
       break;
     }
     case "toz_duman":
@@ -355,7 +366,7 @@ function efektUygula(e: EfektIstegi) {
         efektler.flasVeSarsinti(siddet * 0.2);
       } else if (plakaVar) efektler.flasVeSarsinti(siddet * 0.2);
       else efektler.uzakPatlama(azimut, siddet, yerlesimler, ufuk(), H);
-      void ses.patlama(azimut, siddet, true, e.mesafe ?? 800);
+      if (!sesCalindi) void ses.patlama(azimut, siddet, true, e.mesafe ?? 800);
       break;
     }
     case "uzak_mermi_sesi":
@@ -682,6 +693,8 @@ void video.yukle().then((m) => {
 kopru.baslat();
 // Oynatıcı uyarıları köprü günlüğüne (panelde görünür): model yüklenemedi, 3B katman hatası
 sahne3b.uyari = (mesaj) => kopru.gonder({ tip: "gunluk", seviye: "uyari", mesaj });
+// Yürüyen/koşan figür duvarın ucundan çıktı: köprü listeden düşürsün (panel listesi şişmesin, yeniden bağlanınca baştan koşmasın)
+sahne3b.figurBittiAyarla((id) => kopru.gonder({ tip: "figur", islem: "bitti", id }));
 if (sahne3b.hata) kopru.gonder({ tip: "gunluk", seviye: "hata", mesaj: `3B katman açılamadı: ${sahne3b.hata}` });
 /**
  * Otomatik kalite seçimi köprü günlüğüne bir kez: bağlandıktan bir yoklama sonra (köprü oynatıcı günlüğünü 500 ms'de
@@ -760,8 +773,23 @@ let sonZaman = performance.now();
 let fpsSayac = 0;
 let fpsZaman = 0;
 
+/**
+ * Kare döngüsündeki hata (NaN azimutla ses düğümü, bozuk mesajla gelen durum...) duvarı kalıcı dondurmasın: bir sonraki
+ * kare her zaman istenir, güncelleme ve çizim ayrı ayrı korunur, hata en çok 10 sn'de bir köprü günlüğüne gider.
+ */
+const kareHatalari = new Map<string, number>();
+function kareHatasi(bolum: string, hata: unknown) {
+  const mesaj = `${bolum}: ${hata instanceof Error ? hata.message : String(hata)}`;
+  const simdi = performance.now();
+  if (simdi - (kareHatalari.get(mesaj) ?? -Infinity) < 10000) return;
+  kareHatalari.set(mesaj, simdi);
+  console.error("Kare hatası", bolum, hata);
+  kopru.gonder({ tip: "gunluk", seviye: "hata", mesaj: `Kare döngüsü (${mesaj.slice(0, 200)})` });
+}
+
 function kare(simdi: number) {
-  const dt = Math.min(0.1, (simdi - sonZaman) / 1000);
+  requestAnimationFrame(kare);
+  const dt = Math.max(0, Math.min(0.1, (simdi - sonZaman) / 1000));
   sonZaman = simdi;
   fpsSayac++;
   fpsZaman += dt;
@@ -773,6 +801,7 @@ function kare(simdi: number) {
 
   // Güncelle
   const ufukYy = ufuk();
+  try {
   gokyuzuGuncelle(dt, durum.ortam);
   araziGuncelle(dt);
   hava.guncelle(dt, durum.ortam);
@@ -787,10 +816,14 @@ function kare(simdi: number) {
   else ses.helikopter(heli.mevcutDurum, heli.tozSiddeti);
   // Yangın sesleri 3B sahnedeki yangınlardan (yön, mesafe); yangın yokken çalanlar söner
   ses.yangin(sahne3b.hazir ? sahne3b.yanginSesleri : BOS_YANGINLAR);
+  } catch (hata) {
+    kareHatasi("güncelle", hata);
+  }
 
   // Çiz
+  try {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  const s = efektler.sallantiMiktari * (H / 1080);
+  const s = efektler.sallantiMiktari * (H / 1080) * SARSINTI_CARPANI[sarsinti];
   const sx = s > 0.5 ? (Math.random() - 0.5) * s : 0;
   const sy = s > 0.5 ? (Math.random() - 0.5) * s : 0;
   if (s > 0.5) ctx.translate(sx, sy);
@@ -902,6 +935,8 @@ function kare(simdi: number) {
       H,
     );
   }
-  requestAnimationFrame(kare);
+  } catch (hata) {
+    kareHatasi("çiz", hata);
+  }
 }
 requestAnimationFrame(kare);

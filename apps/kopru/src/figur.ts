@@ -92,7 +92,9 @@ export class FigurYoneticisi {
         olcek: sinirla(Number(ham.olcek ?? 1), 0.1, 10),
         dongu: ham.dongu,
         yansit: Boolean(ham.yansit),
-        ...(poz && poz !== "ayakta" ? { poz } : {}),
+        // "ayakta" da saklanır: manifest duruşu diz çökmüş/yaralı olan klip "Kalk" dedikten sonra yeniden bağlanan
+        // oynatıcıda eski duruşa dönmesin (8 Kasım değerlendirmesi §4-2)
+        ...(poz ? { poz } : {}),
         ...(typeof ham.yaninda === "string" && this.aktifler.has(ham.yaninda) ? { yaninda: ham.yaninda } : {}),
       };
       // Yanına yerleşen figür paneldeki listede aynı yönde görünsün
@@ -105,8 +107,7 @@ export class FigurYoneticisi {
       const mevcut = this.aktifler.get(ham.id);
       if (!mevcut) throw new Error("figür sahnede değil");
       // Aktif listede duruş güncellenir; oynatıcıya yalnızca poz komutu gider
-      if (ham.poz === "ayakta") delete mevcut.poz;
-      else mevcut.poz = ham.poz;
+      mevcut.poz = ham.poz;
       k = { islem: "poz", id: ham.id, poz: ham.poz };
       if (!sessiz) this.gunluk.bilgi(`Figür duruş: ${mevcut.klip} → ${ham.poz} (${ham.id})`);
     } else if (ham.islem === "durdur") {
@@ -129,8 +130,19 @@ export class FigurYoneticisi {
     for (const [id, f] of this.aktifler) {
       const tanim = f.klip ? klipTanimlari[f.klip] : undefined;
       const dongu = f.dongu ?? tanim?.dongu ?? false;
-      if (!dongu && !f.poz) this.aktifler.delete(id);
+      if (!dongu && (!f.poz || f.poz === "ayakta")) this.aktifler.delete(id);
     }
+  }
+
+  /**
+   * Oynatıcı bildirdi: figür ekrandan çıktı (yürüyen/koşan asker duvarın ucunu geçti). Listeden düşer ve `durdur`
+   * yayını gider (öteki oynatıcılar ve panel listesi). Sahnede yoksa (zaten durdurulmuş) hiçbir şey yapmaz; false.
+   */
+  bittiBildir(id: string): boolean {
+    if (!this.aktifler.has(id)) return false;
+    this.komut({ islem: "durdur", id }, true);
+    this.gunluk.bilgi(`Figür ekrandan çıktı: ${id}`);
+    return true;
   }
 
   /** Manifestte klibe tanımlı başlangıç duruşu (`poz`), yoksa undefined. */

@@ -56,7 +56,7 @@ describe("figür yöneticisi", () => {
     const f2 = new FigurYoneticisi(new Gunluk(), [var1]);
     expect(f2.komut({ islem: "oynat", klip: "yarali" }).poz).toBe("yarali");
     expect(f2.komut({ islem: "oynat", klip: "duz" }).poz).toBeUndefined();
-    expect(f2.komut({ islem: "oynat", klip: "yarali", poz: "ayakta" }).poz).toBeUndefined();
+    expect(f2.komut({ islem: "oynat", klip: "yarali", poz: "ayakta" }).poz).toBe("ayakta"); // açık ayakta saklanır (8 Kasım)
   });
 
   it("poz komutu aktif figürün duruşunu günceller ve doğrular", () => {
@@ -72,7 +72,7 @@ describe("figür yöneticisi", () => {
     expect(p).toEqual({ islem: "poz", id: a.id, poz: "yarali" });
     expect(f.aktifListe().find((x) => x.id === a.id)?.poz).toBe("yarali");
     f.komut({ islem: "poz", id: a.id, poz: "ayakta" });
-    expect(f.aktifListe().find((x) => x.id === a.id)?.poz).toBeUndefined();
+    expect(f.aktifListe().find((x) => x.id === a.id)?.poz).toBe("ayakta"); // Kalk saklanır: yeniden bağlanan oynatıcı manifest duruşuna dönmesin
 
     // Duruşlu figür tek seferlik sayılıp silinmez
     f.komut({ islem: "poz", id: a.id, poz: "comelmis" });

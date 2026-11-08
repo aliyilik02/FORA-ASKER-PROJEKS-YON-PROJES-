@@ -158,6 +158,8 @@ export class SesMotoru {
   };
   /** Sahne sıfırlamasında artar: zamanlanmış atış dizileri (setTimeout) ve tampon bekleyen çalmalar eski nesildeyse çalmaz. */
   private efektNesli = 0;
+  /** `ortamDongusu` yarış koruması (bkz. oradaki açıklama). */
+  private ortamNesli = 0;
   private test: { baslangic: number; etiketler: string[]; kaynaklar: AudioBufferSourceNode[] } | null = null;
   private uyariDinleyici: ((mesaj: string) => void) | null = null;
   private readonly bekleyenUyarilar: string[];
@@ -338,6 +340,9 @@ export class SesMotoru {
    */
   private cikis(azimut: number, kazanc: number, uzak = false, lfe = 0): GainNode {
     const c = this.ctx!;
+    // AudioParam'a NaN yazmak TypeError atar ve kare döngüsünü düşürürdü (NaN azimutlu çatışma/helikopter)
+    if (!Number.isFinite(azimut)) azimut = 0;
+    if (!Number.isFinite(kazanc)) kazanc = 0;
     const g = c.createGain();
     g.gain.value = kazanc;
     let son: AudioNode = g;
@@ -420,9 +425,20 @@ export class SesMotoru {
     s.stop(c.currentTime + sure + 0.05);
   }
 
-  /** Patlama (`azimut` sahne derecesi); 5.1/7.1'de bas kopyası LFE'ye (uzakta bas baskın). Tank topu da bunu kullanır. */
+  /**
+   * Patlama (`azimut` sahne derecesi); 5.1/7.1'de bas kopyası LFE'ye (uzakta bas baskın). Tank topu da bunu kullanır.
+   * Uzak patlamada ses ışıktan `mesafe/343` sn sonra gelir (flash-to-bang; 800 m ≈ 2,3 sn, en çok 6 sn): önceden
+   * görüntüyle aynı anda çalıyordu, uzaklık hissi ölüyordu (8 Kasım değerlendirmesi §1-1). Sahne sıfırlanırsa bekleyen
+   * gürültü çalmaz.
+   */
   async patlama(azimut: number, siddet: number, uzak = false, mesafe = 0) {
     if (!this.hazir) return;
+    const gecikme = uzak && Number.isFinite(mesafe) ? Math.min(6, Math.max(0, mesafe) / SES_HIZI) : 0;
+    if (gecikme > 0.05) {
+      const nesil = this.efektNesli;
+      await new Promise<void>((coz) => setTimeout(coz, gecikme * 1000));
+      if (nesil !== this.efektNesli || !this.hazir) return;
+    }
     const zayiflama = uzak ? Math.max(0.08, 1 - mesafe / 5000) : 1;
     const lfe = uzak ? 0.6 : 0.5;
     if (await this.dosyaCal(uzak ? this.manifest.uzak_patlama : this.manifest.patlama, azimut, siddet * zayiflama, uzak, lfe)) return;
@@ -713,6 +729,9 @@ export class SesMotoru {
     const c = this.ctx!;
     const dosya = anahtar ? this.manifest.ortam?.[anahtar] : undefined;
     if (this.ortamDosya && this.ortamDosya.anahtar === anahtar) return;
+    // Yarış koruması: dosya çözülürken aynı (ya da başka) anahtarla ikinci çağrı gelirse yalnız sonuncusu kaynak kurar
+    // (önceden açılışta manifest + durum + sesiAc çağrıları üst üste 2–3 döngü başlatıyor, ortam sesi katlanıyordu)
+    const nesil = ++this.ortamNesli;
     if (this.ortamDosya) {
       const eski = this.ortamDosya;
       this.ortamDosya = null;
@@ -721,7 +740,7 @@ export class SesMotoru {
     }
     if (!dosya || !anahtar) return;
     const b = await this.tampon(dosya);
-    if (!b || this.ortamAnahtar !== anahtar || !this.ctx) return;
+    if (!b || this.ortamAnahtar !== anahtar || !this.ctx || nesil !== this.ortamNesli || this.ortamDosya) return;
     const kaynak = c.createBufferSource();
     kaynak.buffer = b;
     kaynak.loop = true;
@@ -1003,7 +1022,7 @@ export class SesMotoru {
       this.rotorDoppler = 1;
     }
     z.filtre.frequency.setTargetAtTime(kesim, simdi, 0.3);
-    if (z.pan) z.pan.pan.setTargetAtTime(konum ? stereoPan(konum.azimut) : 0, simdi, 0.15);
+    if (z.pan) z.pan.pan.setTargetAtTime(konum && Number.isFinite(konum.azimut) ? stereoPan(konum.azimut) : 0, simdi, 0.15);
     else if (this.yerlesim) {
       // Konum yokken dağınık (her hoparlörde eşit), varken yönlü
       const g = kanalKazanclari(this.yerlesim, konum?.azimut ?? 0, konum ? 0 : 1, this.rotorKazanclari);

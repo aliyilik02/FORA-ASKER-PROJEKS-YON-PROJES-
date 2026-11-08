@@ -688,6 +688,10 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   (kendiliğinden)" bildirimi): eğitmenin elle çağırdığı figürler, efektler, çatışma, izli mermi, helikopter ve sesler
   gider; ortam, bölge ve ışık kalır (senaryonun kendi adımları isterse değiştirir). Duraklatılmıştan devam ederken ve
   "Adımı tetikle"de sıfırlama yok. Oynatıcı için ayrı bir şey yok: aynı `sahne/sifirla` mesajı gelir.
+- **Figür bitti** (8 Kasım): yürüyen/koşan 3B figür duvarın ucunu geçince (|azimut| > 165°) oynatıcı köprüye
+  `{tip:"figur", islem:"bitti", id}` gönderir; köprü figürü listeden düşürür ve `durdur` yayınlar (panel listesi şişmez,
+  yeniden bağlanan oynatıcıda asker baştan koşmaz). Sahnede yoksa yok sayılır. Kare döngüsü hataları (`kare` içindeki
+  güncelle/çiz blokları) 10 sn'de bir `gunluk` hatası olarak gider; döngü durmaz.
 - **Sahne sıfırlaması** (`POST /api/sahne/sifirla {kaynak?}`, köprüde `SahneYoneticisi`): köprü sırayla senaryoyu
   durdurur (await yok; bekleyen adım dönünce uygulanmaz), `figur temizle` yayınlar, çatışma/izli mermi/helikopteri
   kapatan TEK `durum` yayınını yollar (UE çağrıları sonra, beklenmeden, 3 sn zaman aşımı; DMX flaşı kesilip temel ışık

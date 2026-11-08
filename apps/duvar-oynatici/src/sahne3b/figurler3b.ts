@@ -223,6 +223,8 @@ export class FigurKatmani {
 
   /** Ses olayları (yaralanma çığlığı, yardım çağrısı); main.ts ses motoruna bağlar. */
   sesOlayi: ((tur: "vuruldu" | "yardim", azimut: number) => void) | null = null;
+  /** Figür ekrandan çıktı (yürüyen/koşan duvarın ucunu geçti); kimlik köprüye bildirilir. */
+  bittiOlayi: ((id: string) => void) | null = null;
 
   /** Hafif silahlı (tüfekli), ateş edebilir durumdaki figürlerin dünya konumları (ayak hizası); yaralılar ve ağır silahlar hariç. */
   silahliKonumlar(): THREE.Vector3[] {
@@ -843,7 +845,11 @@ export class FigurKatmani {
         if (Math.abs(konumAzimutu(a.nesne.position)) > 165) a.bitti = true;
       }
     }
-    for (const a of this.aktifler) if (a.bitti) this.grup.remove(a.nesne);
+    for (const a of this.aktifler) {
+      if (!a.bitti) continue;
+      this.grup.remove(a.nesne);
+      this.bittiOlayi?.(a.id);
+    }
     this.aktifler = this.aktifler.filter((a) => !a.bitti);
   }
 }

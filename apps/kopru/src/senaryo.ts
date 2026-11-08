@@ -147,6 +147,7 @@ export class SenaryoMotoru {
   /** Belirli bir adımı anında, zaman çizelgesinden bağımsız tetikler (eğitmen müdahalesi). */
   async adimiTetikle(adim: SenaryoAdimi) {
     const islem = adim.islem;
+    if (!islem || typeof islem !== "object" || typeof islem.tip !== "string") throw new Error("adımın işlemi eksik ya da bozuk");
     switch (islem.tip) {
       case "efekt":
         await this.depo.efektTetikle(islem.efekt);
@@ -199,7 +200,12 @@ export class SenaryoMotoru {
         if (adim.gecikmeMs <= konum && !this.durum.tamamlanan.includes(adim.id)) {
           this.durum.tamamlanan.push(adim.id);
           this.gunluk.bilgi(`Senaryo adımı: ${adim.aciklama}`);
-          await this.adimiTetikle(adim);
+          // Bozuk/eksik adım (elle düzenlenmiş senaryolar.json) köprüyü düşürmesin: hata günlüğe, senaryo sürer
+          try {
+            await this.adimiTetikle(adim);
+          } catch (hata) {
+            this.gunluk.hata(`Senaryo adımı uygulanamadı (${adim.aciklama ?? adim.id}): ${hata instanceof Error ? hata.message : String(hata)}`);
+          }
           // Adımı beklerken durduruldu / duraklatıldı / yenisi yüklendi: kalan adımlar uygulanmaz, "tamamlandı" yazılmaz
           if (nesil !== this.nesil || this.durum.durum !== "oynuyor") return;
         }

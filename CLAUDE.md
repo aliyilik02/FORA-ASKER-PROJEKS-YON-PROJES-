@@ -300,7 +300,7 @@ sesi seviyesi, tablet paneli. Kredi bekleyen: T5/T9/T12 yeniden üretimi (kullan
 (A: gösterim öncesi onarımlar — "Asker vuruldu" düğmesi `komando_*` adlarıyla çalışmıyor, köprü bozuk senaryo adımında çöküyor,
 bozuk JSON eğitmen senaryolarını siliyor, çizim döngüsü hatada donuyor, her yangın yeni PointLight ile gölgelendirici yeniden
 derletiyor, ortam sesi yarışı, uzak patlama sesinde mesafe gecikmesi yok). Bu belge kapanmadan yeni özellik yerine A listesi
-yapılmalı. Domain bilgisi için skill `askeri-simulasyon-tasarimi` (`.claude/skills/`; değerlendirme/öneri işinde yükle);
+yapılmalı. **A listesi 8 Kasım'da bitti** (commit: bkz. git; duvarda gözle bakılmadı: sarsıntı hafif, uzak patlama gecikmesi, yangın ışığı). Domain bilgisi için skill `askeri-simulasyon-tasarimi` (`.claude/skills/`; değerlendirme/öneri işinde yükle);
 dış skill'ler: threejs-*, create-game-vfx, build-game-audio-feedback, game-audio, game-design-theory, game-development, game-ui-design.
 
 ## Sıradaki işler (öncelik sırasıyla)

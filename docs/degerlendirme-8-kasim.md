@@ -184,15 +184,15 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
 
 ## 6. Geliştirme önerileri (öncelik sırasıyla)
 
-### A. Gösterim öncesi (1–3 gün; küçük, yüksek etkili)
-1. **"Asker vuruldu" düğmesini onar** (§4-1): manifest `grup` tabanlı süzgeç + test. Gösterimin ana anı.
-2. **Köprüyü çökmez yap** (§3-1, §3-2): `tik` adım başına try/catch, `unhandledRejection` günlükçüsü, bozuk JSON'u kenara al + atomik yazım.
-3. **Çizim döngüsünü koru** (§2-1): rAF başa, alt sistemler try/catch, NaN korumaları.
-4. **Yangın ışık havuzu** (§2-2): 3 sabit `PointLight`; artık yangın takılmasını bitirir.
-5. **Ortam sesi yarışı** (§2-3) ve **3B hazır değilken ses kuyruğu** (§2-4).
-6. **Uzak patlama/top sesine mesafe gecikmesi** (§1-1): `mesafe/343` sn; flash-to-bang hissi tek satırla gelir.
-7. **Sarsıntı anahtarı** (§1-2): panel Sistem'de kapalı/hafif/tam; varsayılan hafif ve kısa.
-8. **"Ayakta" duruşunun saklanması** (§4-2), **yürüyen figürün `bitti` bildirimi** (§3-6/§4-6).
+### A. Gösterim öncesi (1–3 gün; küçük, yüksek etkili) — ✓ 8 Kasım, hepsi yapıldı (ayrıntı aşağıdaki maddelerde)
+1. ✓ **"Asker vuruldu" düğmesini onar** (§4-1): `figurYardimcilari.ts` manifest `grup` tabanlı süzgeç (liste yoksa `komando_*`/`telsizci_*` adları), hareketli klipler hariç.
+2. ✓ **Köprüyü çökmez yap** (§3-1, §3-2): `senaryo.ts` adım başına try/catch + bozuk işlem denetimi, `index.ts` `unhandledRejection`/`uncaughtException` günlüğe, `depo.ts` bozuk JSON `.bozuk-<zaman>.json` yedeği + uyarı, `.tmp` + rename atomik yazım (testler `senaryoHata.test.ts`, `depoBozuk.test.ts`).
+3. ✓ **Çizim döngüsünü koru** (§2-1): `main.ts` rAF başta, güncelle/çiz ayrı try/catch, hata 10 sn'de bir köprü günlüğüne; `ses.ts` `cikis` ve rotor pan'da NaN koruması; `dt ≥ 0`.
+4. ✓ **Yangın ışık havuzu** (§2-2): `yangin.ts` 3 sabit `PointLight` (boşta görünmez), en güçlü/yakın yangınlara atanır (`yanginIsik.test.ts`).
+5. ✓ **Ortam sesi yarışı** (§2-3: `ortamNesli`, tek kaynak) ve **3B hazır değilken ses hemen** (§2-4: kuyruğa alınan patlama/uzak patlamanın sesi beklemez, görüntü sonra; `efektUygula(e, sesCalindi)`).
+6. ✓ **Uzak patlama sesine mesafe gecikmesi** (§1-1): `ses.patlama` uzakta `mesafe/343` sn (≤ 6 sn) bekler, sıfırlamada iptal.
+7. ✓ **Sarsıntı anahtarı** (§1-2): `?sarsinti=kapali|hafif|tam` (`sarsintiSecimi.ts`, yerel kayıt, varsayılan hafif = genlik %35), panel Sistem › Oynatıcı ayarları.
+8. ✓ **"Ayakta" duruşunun saklanması** (§4-2: `figur.ts` poz her zaman saklanır) ve **yürüyen figürün `bitti` bildirimi** (§3-6/§4-6: oynatıcı `{tip:"figur", islem:"bitti", id}` → köprü `bittiBildir` → `durdur` yayını; `figurBitti.test.ts`).
 
 ### B. Kısa vade (1–2 hafta)
 9. **Figür bakış/baş yönelimi** (§1-3) + **idle faz/hız rastgeleliği** (§4-8) + **duruş geçiş klipleri** (§4-4) → tek "figür davranış" turu.

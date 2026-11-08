@@ -183,7 +183,9 @@ export type IstemciMesaji =
   /** Oynatıcıdan küçük JPEG önizleme (data URL, en çok 5 sn'de bir, yalnız panel bağlıyken); köprü yalnızca panellere iletir. */
   | { tip: "onizleme"; veri: string; bilgi?: string }
   /** Oynatıcıdan uyarı/hata (model yüklenemedi, WebGL yok...); köprü günlüğüne "Oynatıcı:" önekiyle düşer. */
-  | { tip: "gunluk"; seviye: "uyari" | "hata"; mesaj: string };
+  | { tip: "gunluk"; seviye: "uyari" | "hata"; mesaj: string }
+  /** Oynatıcıdan: yürüyen/koşan figür duvarın ucundan çıktı; köprü listeden düşürür, `durdur` yayınlar. */
+  | { tip: "figur"; islem: "bitti"; id: string };
 
 /** Köprünün Unreal Engine'e gönderdiği bir Remote Control çağrısının kaydı (panelde canlı izlenir). */
 export interface UnrealIstekKaydi {
