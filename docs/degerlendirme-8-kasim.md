@@ -289,3 +289,28 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
    `safha`nın oynatıcıya etkisi (sıhhiyeci ateş altında bekler mi?) netleştirilmeli.
 3. C-16 (AAR) için önce veri modeli: hangi olaylar, hangi alanlar, nereye yazılır (`apps/kopru/veri/olaylar/<tarih>.jsonl`).
 4. Bu belgedeki her bulgu kapanınca satırı "✓ (commit)" ile işaretle; CLAUDE.md "Sıradaki işler" bu belgeye işaret eder.
+
+
+## Kullanıcı gözlemleri (8 Kasım gece) ve düzeltmeler
+
+Kullanıcı duvarda denerken bildirdi; başsız tarayıcıda ölçülerek doğrulandı (`window.duvar.figurler()` tanı kancası):
+
+- **Havan / fişek / makro "İşlem başarısız":** köprü süreci 16:59'da başlamış eski koddu, panel 20:23'te yeniden derlenmişti;
+  eski köprü `havan`/`fisek` türünü ve `/api/makro` yolunu tanımıyordu. Kök neden köprünün yeniden başlatılmaması. Kalıcı
+  önlem: `SOZLESME_SURUMU` (tipler.ts) köprünün `baglanti` mesajında gelir, panel kendi değeriyle karşılaştırır, uyuşmazlıkta
+  üstte **KÖPRÜ ESKİ SÜRÜM** şeridi (nasıl yeniden başlatılacağı yazar); 404'te hata metni "köprü eski sürümde olabilir" der.
+  API/mesaj sözleşmesi değişince sayı artırılmalı.
+- **İç içe asker ("birden fazla cephe kur"):** plansız panoramada ya da planın noktaları dolunca yerleşim aynı noktaya
+  düşüyordu. Artık her figür dolu noktadan en yakın boş noktaya kayar (`FigurKatmani.bosYereKaydir`: cephe hattı boyunca
+  ±1,4/2,8/4,2 m, derinlikte ±1,6 m; tank 3,5 m yarıçap, 2,5 kat adım). Ayrıca istenen duvardaki plan noktaları doluysa
+  asker **başka duvara atlamıyor** (eskiden "cephe kur" deyince asker arkada beliriyordu); en yakın noktanın yanına dizilir
+  (`birlikNoktasiSec`, test güncellendi). Ölçüm: aynı yöne iki "Cephe kur" → 6 asker −30°…58° arasında, en yakın ikili 1,4 m.
+- **Koşan asker duranların içinden geçiyor:** hareketli figür yolunun 3,5 m önünde, 1,2 m yakınında duran figür ya da sütre
+  görünce hattan içe/dışa 1,4 m çıkar, geçince hatta döner (`kacinmaSapmasi`; sıhhiyecinin yürüyüşü de dolanır). Koşan ve
+  yürüyen artık mevzi noktasına değil eğitmenin seçtiği yöne doğar (plan noktası onu başka yere atıyordu). Ölçüm: koşan ve
+  yürüyen duran askerin 1,41 m yanından geçti.
+- **Öngörülen benzer varyantlar (kontrol edildi / açık):** yaralı aynı halkaya düşerse boş yere kayar (✓ aynı yol); tank
+  askerlerin üstüne doğarsa kayar (✓ kod, ölçülmedi); sıhhiyeci "yanında" aday noktaları zaten engel denetimli (✓);
+  helikopter iniş noktasının altında asker varsa kaçmıyor (**açık**: iniş noktası figürlerden 6 m içindeyse kenara kaydırılmalı);
+  iki koşan birbirine doğru gelirse ikisi de içe kaçabilir (**açık**: karşılıklıysa biri dışa alınmalı); Oda 2'de koşan
+  sütre hattının içinden doğarsa (yükseklik −26) kaçınma yalnız önündeki engele bakar (**açık**).

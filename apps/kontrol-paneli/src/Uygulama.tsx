@@ -19,7 +19,7 @@ import { SesDuzeniAyari } from "./bilesenler/SesDuzeniAyari";
 import { UnrealKomutlariPaneli } from "./bilesenler/UnrealKomutlariPaneli";
 import { UstCubuk } from "./bilesenler/UstCubuk";
 import { SEKME_KISAYOLLARI, YanMenu } from "./bilesenler/YanMenu";
-import { EFEKT_ETIKETLERI, SIFIRLAMA_KAYNAK_ETIKETLERI, sifirlamaOzetiMetni, type EfektTuru, type SifirlamaKaynagi } from "./tipler";
+import { EFEKT_ETIKETLERI, SIFIRLAMA_KAYNAK_ETIKETLERI, SOZLESME_SURUMU, sifirlamaOzetiMetni, type EfektTuru, type SifirlamaKaynagi } from "./tipler";
 import { vurulabilirAskerler, yoneEnYakin } from "./figurYardimcilari";
 import { useKopru } from "./useKopru";
 
@@ -199,6 +199,12 @@ function Govde() {
       {!soketAcik && (
         <div className="baglanti-seridi" role="alert">
           <strong>BAĞLANTI YOK</strong> — köprüyle bağlantı koptu; görünen durum güncel olmayabilir. Yeniden bağlanılıyor…
+        </div>
+      )}
+      {soketAcik && baglanti && (baglanti.sozlesme ?? 0) !== SOZLESME_SURUMU && (
+        <div className="baglanti-seridi" role="alert">
+          <strong>KÖPRÜ ESKİ SÜRÜM</strong> — panel yeniden derlendi ama köprü eski kodla çalışıyor (köprü {baglanti.sozlesme ?? "sürümsüz"}, panel {SOZLESME_SURUMU}); yeni
+          düğmeler "İşlem başarısız" verir. Köprüyü yeniden başlat: <span className="mono">demo.bat yeniden</span> ya da köprü penceresinde Ctrl+C → <span className="mono">npm start</span>.
         </div>
       )}
       <UstCubuk

@@ -8,7 +8,12 @@ async function istek<T>(yol: string, yontem: string, govde?: unknown): Promise<T
     body: govde !== undefined ? JSON.stringify(govde) : undefined,
   });
   const veri = await yanit.json().catch(() => ({}));
-  if (!yanit.ok) throw new Error((veri as { hata?: string }).hata ?? `HTTP ${yanit.status}`);
+  if (!yanit.ok) {
+    const hata = (veri as { hata?: string }).hata;
+    // 404: köprü bu yolu tanımıyor → neredeyse her zaman eski köprü süreci (panel yeni derlendi, köprü yeniden başlatılmadı)
+    if (yanit.status === 404) throw new Error(`Köprü bu komutu tanımıyor (${yol}); köprü eski sürümde çalışıyor olabilir, yeniden başlat (demo.bat yeniden)`);
+    throw new Error(hata ?? `HTTP ${yanit.status}`);
+  }
   return veri as T;
 }
 

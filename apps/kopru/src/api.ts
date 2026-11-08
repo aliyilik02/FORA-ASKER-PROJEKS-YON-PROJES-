@@ -15,7 +15,7 @@ import type { TekrarOynatici } from "./tekrar.js";
 import { senaryoAdimlariniDogrula as makroAdimlariniDogrula } from "./dogrulama.js";
 import { sifirlamaKaynagiCoz, type SahneYoneticisi } from "./sahne.js";
 import type { SenaryoMotoru } from "./senaryo.js";
-import type { BaglantiDurumu, OnAyar, Senaryo, SenaryoAdimi, SifirlamaYaniti } from "./tipler.js";
+import { SOZLESME_SURUMU, type BaglantiDurumu, type OnAyar, type Senaryo, type SenaryoAdimi, type SifirlamaYaniti } from "./tipler.js";
 import { CATISMA_SEMASI, EFEKT_SEMASI, ISIK_SEMASI, IZLI_MERMI_SEMASI, ODA2_SEMASI, ORTAM_SEMASI, SAFHALAR, kismiDogrula, senaryoAdimlariniDogrula } from "./dogrulama.js";
 import type { UnrealIstemci } from "./unreal.js";
 
@@ -44,6 +44,7 @@ export interface ApiBagimliliklari {
 
 export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici, oynaticiSayisi = 0, panelSayisi = 0): BaglantiDurumu {
   return {
+    sozlesme: SOZLESME_SURUMU,
     unreal: { mod: unreal.mod, bagli: unreal.bagli, adres: unreal.adres, sonHata: unreal.sonHata },
     artnet: {
       aktif: artnet.aktif,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aralikta, birlikNoktasiSec, noktaSec, yasakMi, yasaktanKacin, type YerlesimPlani } from "./yerlesim";
+import { aciNormalize, aralikta, birlikNoktasiSec, noktaSec, yasakMi, yasaktanKacin, type YerlesimPlani } from "./yerlesim";
 
 const plan: YerlesimPlani = {
   noktalar: [
@@ -106,7 +106,15 @@ describe("birlikNoktasiSec", () => {
   it("yakın tolerans: aynı duvardaki figür noktası başka duvardaki asker noktasından önce", () => {
     expect(birlikNoktasiSec(q, 0, ["asker", "figur"], 20, ortaDolu).nokta?.ad).toBe("sol mevzi");
     expect(birlikNoktasiSec(q, 0, ["asker", "figur"], 20, ortaDolu, 50).nokta?.ad).toBe("orta yuruyus");
-    // Tolerans içinde boş nokta yoksa uzaktaki boş noktaya düşer
-    expect(birlikNoktasiSec(q, 0, ["asker", "figur"], 20, (az) => Math.abs(az) < 0.5 || Math.abs(az - 30) < 0.5, 50).nokta?.ad).toBe("sol mevzi");
+    // Tolerans içinde boş nokta yoksa başka duvara atlamaz (8 Kasım): en yakın noktanın yanına dizilir
+    const dizilen = birlikNoktasiSec(q, 0, ["asker", "figur"], 20, (az) => Math.abs(az) < 0.5 || Math.abs(az - 30) < 0.5, 50);
+    expect(dizilen.nokta?.ad).toBe("orta mevzi");
+    expect(Math.abs(dizilen.azimut)).toBeGreaterThan(5);
+    expect(Math.abs(dizilen.azimut)).toBeLessThan(30);
+    // Tolerans içinde hiç nokta yoksa istenen yön serbest kalır (varsayılan mesafe)
+    const serbest = birlikNoktasiSec(q, 180, ["asker", "figur"], 20, () => false, 50);
+    expect(serbest.nokta).toBeUndefined();
+    expect(serbest.mesafe).toBe(20);
+    expect(Math.abs(aciNormalize(serbest.azimut - 180))).toBeLessThan(0.5);
   });
 });

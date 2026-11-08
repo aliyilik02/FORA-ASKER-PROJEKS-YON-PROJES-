@@ -197,7 +197,16 @@ export interface OnAyar {
   durum: Omit<SimulasyonDurumu, "sonEfektler">;
 }
 
+/**
+ * Köprü ↔ panel ↔ oynatıcı sözleşme sürümü (8 Kasım): API/mesaj sözleşmesi değişince artır. Köprü `baglanti`
+ * mesajında gönderir; panel kendi değeriyle karşılaştırır, uyuşmazlıkta "köprü eski sürüm, yeniden başlat" şeridi gösterir
+ * (yeni derlenmiş panel + eski çalışan köprü = her yeni düğme "İşlem başarısız").
+ */
+export const SOZLESME_SURUMU = 3;
+
 export interface BaglantiDurumu {
+  /** Köprünün sözleşme sürümü (SOZLESME_SURUMU); eski köprüde alan yok. */
+  sozlesme?: number;
   unreal: { mod: "gercek" | "simulasyon"; bagli: boolean; adres: string; sonHata?: string };
   artnet: { aktif: boolean; hedef: string; evren: number; sonGonderim?: number };
   /** Bağlı Duvar Oynatıcı sayısı (hibrit yol: görüntüyü tarayıcı tabanlı oynatıcı üretir). */

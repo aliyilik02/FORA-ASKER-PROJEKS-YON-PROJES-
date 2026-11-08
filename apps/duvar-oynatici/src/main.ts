@@ -228,6 +228,8 @@ sahne3b.figurSesleriAyarla((tur, azimut) => {
   THREE,
   gecis,
   arkaPlan: () => sonArkaPlan,
+  // Yerleşim/çarpışma denetimi: window.duvar.figurler() → [{id, x, z, hiz, poz}]
+  figurler: () => sahne3b.figurKonumlari(),
   // Silah soketi ölçümü: await window.duvar.silahHizala("<figür id>", ["Rifle Idle", "Rifle Walk"], 0.95) → manifest konum/donus
   silahHizala: (id: string, klipler: string[], boy?: number) => {
     const a = sahne3b.figurAktifBul(id);

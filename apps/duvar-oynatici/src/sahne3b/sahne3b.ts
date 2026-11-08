@@ -1327,6 +1327,14 @@ export class Sahne3B {
       void this.figurler.oynat(tanim, { ...s, azimut: az, mesafe: Math.min(ASKER_EN_UZAK, varsayilan) }, kok).then((ok) => ok || this.uyari?.(`Figür yüklenemedi: ${tanim.dosya}`));
       return;
     }
+    if ((tanim.hiz ?? 0) > 0) {
+      // Koşan/yürüyen (8 Kasım): mevzi noktasına değil, eğitmenin seçtiği yönden başlar (eskiden plan noktası onu başka
+      // yere atıyordu); askerlerle aynı mesafe bandında koşar, yolundaki figürlerden kaçınır (figurler3b kacinmaSapmasi)
+      const az = panoramadanSahneAzimutu(yasaktanKacin(s.azimut + k, this.kaynak?.plan?.yasak), k);
+      const mesafe = tanim.yerlesim?.includes("tank") ? varsayilan : Math.min(ASKER_EN_UZAK, Math.max(ASKER_EN_YAKIN, varsayilan));
+      void this.figurler.oynat(tanim, { ...s, azimut: az, mesafe }, kok).then((ok) => ok || this.uyari?.(`Figür yüklenemedi: ${tanim.dosya}`));
+      return;
+    }
     const turler = tanim.yerlesim ?? ["asker", "figur"];
     // Asker/figür: plan noktasının yönü korunur, mesafe ASKER_EN_YAKIN–ASKER_EN_UZAK aralığına çekilir (duvarda net
     // okunsun); tank ve araçlar plandaki mesafede kalır. Doluluk da kısaltılmış mesafede denetlenir.
@@ -1368,6 +1376,10 @@ export class Sahne3B {
   }
 
   /** Tanı/hizalama: kimliğe göre aktif figür kaydı (silahHizalama.ts). */
+  /** Tanı/test: figür konumları (window.duvar.figurler()). */
+  figurKonumlari() {
+    return this.figurler.konumlar();
+  }
   figurAktifBul(id: string) {
     return this.figurler.aktifBul(id);
   }

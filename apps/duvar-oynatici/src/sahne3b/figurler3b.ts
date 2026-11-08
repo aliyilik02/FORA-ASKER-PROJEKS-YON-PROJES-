@@ -272,6 +272,9 @@ export interface Aktif {
   /** Zemin eğimine hizalama: yumuşatılmış pitch/roll (radyan; sarmal Euler sırası YXZ). */
   egimX: number;
   egimZ: number;
+  /** Kaçınma: hareket hattından o anki sapma (m, izleyiciden dışa +) ve hedeflenen sapma. */
+  kacinma: number;
+  kacinmaHedef: number;
 }
 
 /** Klip adı tam ("CharacterArmature|Idle_Gun") ya da kısa ("Idle_Gun") eşleşir. */
@@ -381,6 +384,67 @@ export class FigurKatmani {
     if (this.aktifler.some((a) => a.nesne.position.distanceTo(konum) < yaricap)) return true;
     for (const r of this.rezerveler.values()) if (r.distanceTo(konum) < yaricap) return true;
     return false;
+  }
+
+  /** `doluMu` gibi; kendi kimliğinin rezervasyonu ve kaydı sayılmaz, sütre eşyası (`engel`) da dolu sayılır. */
+  private doluMuHaric(konum: THREE.Vector3, yaricap: number, haricId: string): boolean {
+    if (this.aktifler.some((a) => a.id !== haricId && a.nesne.position.distanceTo(konum) < yaricap)) return true;
+    for (const [id, r] of this.rezerveler) if (id !== haricId && r.distanceTo(konum) < yaricap) return true;
+    return this.engel(konum);
+  }
+
+  /**
+   * Konum doluysa en yakın boş noktaya kaydırır (yerinde): önce cephe hattı boyunca (izleyiciye teğet) ±1,4/±2,8/±4,2 m,
+   * sonra derinlikte ±1,6 m ile birleşimleri; hiçbiri boş değilse olduğu gibi kalır. Yükseklik zemine oturtulur.
+   */
+  private bosYereKaydir(konum: THREE.Vector3, haricId: string, yaricap: number, olcek = 1) {
+    if (!this.doluMuHaric(konum, yaricap, haricId)) return;
+    const disari = new THREE.Vector3(konum.x, 0, konum.z).normalize();
+    const teget = new THREE.Vector3(-disari.z, 0, disari.x);
+    const adaylar: Array<[number, number]> = [];
+    for (const derin of [0, 1.6, -1.6]) for (const yan of [1.4, -1.4, 2.8, -2.8, 4.2, -4.2]) adaylar.push([yan, derin]);
+    for (const derin of [1.6, -1.6, 3.2]) adaylar.push([0, derin]);
+    for (const [yan, derin] of adaylar) {
+      // `olcek`: tank gibi büyük figürlerde adımlar 2,5 kat (gövde 3,5 m yarıçap)
+      const p = konum.clone().addScaledVector(teget, yan * olcek).addScaledVector(disari, derin * olcek);
+      if (p.lengthSq() < 2.5 * 2.5) continue; // izleyicinin dibine değil
+      p.y = zeminY(p.x, p.z);
+      if (!this.doluMuHaric(p, yaricap, haricId)) {
+        konum.copy(p);
+        return;
+      }
+    }
+  }
+
+  /** Tanı/test: sahnedeki figürlerin kimlik, konum ve hızı (window.duvar.figurler()). */
+  konumlar(): Array<{ id: string; x: number; z: number; hiz: number; poz: FigurPozu }> {
+    return this.aktifler.map((a) => ({ id: a.id, x: a.nesne.position.x, z: a.nesne.position.z, hiz: a.hiz, poz: a.poz }));
+  }
+
+  /**
+   * Hareket hâlindeki figür için kaçınma (8 Kasım): yolun 3,5 m önünde, hatta 1,2 m yakınında duran figür ya da sütre
+   * varsa yoldan yana (izleyiciye göre içe/dışa) çıkılır; engel geçilince eski hatta dönülür. Dönüş: hattan sapma (m);
+   * `yon` birim hareket yönü, `disari` izleyiciden dışa birim vektör.
+   */
+  private kacinmaSapmasi(a: Aktif, yon: THREE.Vector3, disari: THREE.Vector3): number {
+    const p = a.nesne.position;
+    let enYakin: { ileri: number; yan: number } | null = null;
+    for (const b of this.aktifler) {
+      if (b === a || b.id === a.yanindaId) continue;
+      const d = b.nesne.position.clone().sub(p);
+      const ileri = d.dot(yon);
+      const yan = d.dot(disari);
+      if (ileri < -0.3 || ileri > 3.5 || Math.abs(yan) > 1.2) continue;
+      if (!enYakin || ileri < enYakin.ileri) enYakin = { ileri, yan };
+    }
+    if (enYakin) return enYakin.yan >= 0 ? -1.4 : 1.4; // engel dışarıdaysa içten, içerideyse dıştan geç
+    // Sütre eşyası (Oda 2 kum torbası, kaya): önde duruyorsa boş olan yandan
+    const on = p.clone().addScaledVector(yon, 1.6);
+    if (this.engel(on)) {
+      if (!this.engel(on.clone().addScaledVector(disari, -1.5))) return -1.5;
+      if (!this.engel(on.clone().addScaledVector(disari, 1.5))) return 1.5;
+    }
+    return 0;
   }
 
   /** Ağır silahlar (tank): namlu ucu ve yönü ile. Kule yoksa yön = düşman azimutu. */
@@ -541,6 +605,9 @@ export class FigurKatmani {
     sarmal.position.copy(yerKonumu(s.azimut, mesafe));
     const hiz = tanim.hiz ?? 0;
     const sola = Boolean(s.yansit);
+    // Boş yer (8 Kasım): aynı yöne ikinci "Cephe kur" / art arda "Asker çağır" plansız panoramada aynı noktaya düşüyordu
+    // (iç içe askerler). Nokta doluysa yana (cephe hattı boyunca) ve derinliğe en yakın boş noktaya kaydırılır.
+    if (!s.yaninda) this.bosYereKaydir(sarmal.position, s.id, tanim.agirSilah ? 3.5 : 1.3, tanim.agirSilah ? 2.5 : 1);
     sarmal.rotation.y = hiz > 0 ? yanaDonus(s.azimut, sola) : izleyiciyeDonus(s.azimut);
     // Başka figürün yanına: ona 1,1 m mesafede, izleyici tarafında durur ve ona dönük (+z yüzü ona bakar)
     // Hedef figür henüz yükleniyor olabilir (açılışta köprü aktif listeyi art arda yollar): en çok 4 sn bekle
@@ -741,6 +808,8 @@ export class FigurKatmani {
       katmanAktif: false,
       egimX: 0,
       egimZ: 0,
+      kacinma: 0,
+      kacinmaHedef: 0,
     };
     // Tek seferlik klipler bitince sonraki aşama: vurulma → düşme → yerde
     karistirici?.addEventListener("finished", (olay) => {
@@ -822,6 +891,10 @@ export class FigurKatmani {
     }
     const adim = Math.min(uzaklik, YURUYUS_HIZI * dt);
     d.normalize();
+    // Yolda başka figür/sütre varsa yana dolanır (hedefin kendisi hariç; yanındaId hedef figürdür)
+    const yanEksen = new THREE.Vector3(-d.z, 0, d.x);
+    const sapma = uzaklik > 1.2 ? this.kacinmaSapmasi(a, d, yanEksen) : 0;
+    if (sapma !== 0) d.addScaledVector(yanEksen, sapma * 0.6).normalize();
     a.nesne.position.addScaledVector(d, adim);
     a.nesne.position.y = zeminY(a.nesne.position.x, a.nesne.position.z);
     const hedefYaw = Math.atan2(d.x, d.z);
@@ -1239,6 +1312,18 @@ export class FigurKatmani {
         const tegets = new THREE.Vector3(Math.cos(radyan(az)), 0, Math.sin(radyan(az)));
         if (a.sola) tegets.negate();
         a.nesne.position.addScaledVector(tegets, a.hiz * dt);
+        // Kaçınma: önde duran figür/sütre varsa hattan içe ya da dışa çıkar (en çok 1,4 m), geçince hatta döner.
+        // Sapma izleyiciden dışa doğru radyal eksende; hızın %70'iyle, ani sıçrama yok.
+        const disari = new THREE.Vector3(a.nesne.position.x, 0, a.nesne.position.z).normalize();
+        const sapma = this.kacinmaSapmasi(a, tegets, disari);
+        if (sapma !== 0) a.kacinmaHedef = sapma;
+        else if (Math.abs(a.kacinma) < 0.05) a.kacinmaHedef = 0;
+        else if (a.kacinmaHedef !== 0 && !this.aktifler.some((b) => b !== a && b.nesne.position.distanceTo(a.nesne.position) < 2.2)) a.kacinmaHedef = 0;
+        const adim = Math.min(Math.abs(a.kacinmaHedef - a.kacinma), a.hiz * 0.7 * dt) * Math.sign(a.kacinmaHedef - a.kacinma);
+        if (adim !== 0) {
+          a.kacinma += adim;
+          a.nesne.position.addScaledVector(disari, adim);
+        }
         a.nesne.position.y = zeminY(a.nesne.position.x, a.nesne.position.z);
         a.nesne.rotation.y = yanaDonus(konumAzimutu(a.nesne.position), a.sola);
         if (Math.abs(konumAzimutu(a.nesne.position)) > 165) a.bitti = true;
