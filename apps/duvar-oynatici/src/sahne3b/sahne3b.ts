@@ -40,6 +40,7 @@ import { cozmeBaslat, type CozmeIsi } from "./panoramaIsi";
 import { GOZ_YUKSEKLIGI, ZEMIN_Y, azimutYon, radyan, yerKonumu, yukseklikMesafe, zeminFonksiyonu, zeminY } from "./uzay";
 import { aciNormalize, birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 import { YanginKatmani } from "./yangin";
+import { FisekKatmani } from "./fisek";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
 /** Kalite kademeleri: dizüstü/entegre GPU'da "dusuk", sahadaki RTX sınıfı makinede "yuksek". */
@@ -198,6 +199,8 @@ export class Sahne3B {
   private saat = 12;
   private isik = 1;
   private readonly parcaciklar: ParcacikSistemi;
+  /** Aydınlatma fişekleri (efekt `fisek`). */
+  private readonly fisekler: FisekKatmani;
   /** Kalıcı yangınlar (efekt `yangin` / `yangin_sondur`). */
   private readonly yanginlar: YanginKatmani;
   private readonly hasar: HasarKatmani;
@@ -251,6 +254,7 @@ export class Sahne3B {
     this.parcaciklar = new ParcacikSistemi(dumanDokusu(128, 1), atesDokusu(128, 7), kivilcimDokusu(32), k.parcacikCarpani);
     this.hasar = new HasarKatmani([kraterDokusu(256, 3), kraterDokusu(256, 9), kraterDokusu(256, 21)], this.parcaciklar, Math.round(320 * k.parcacikCarpani));
     this.yanginlar = new YanginKatmani(this.parcaciklar);
+    this.fisekler = new FisekKatmani(this.parcaciklar);
     this.heli = new Helikopter3B(this.parcaciklar);
     // Ses geri çağrıları sahne azimutuyla (derece, AzimutDerece): pan değil, ses motoru yerleştirir
     this.catisma = new CatismaSistemi(this.parcaciklar, {
@@ -290,7 +294,7 @@ export class Sahne3B {
     this.gunes.shadow.bias = -0.0004;
     this.gunes.shadow.normalBias = 0.03;
     this.gunes.target.position.set(0, ZEMIN_Y, 0);
-    this.sahne.add(this.gunes, this.gunes.target, this.dolgu, this.flas, this.yanginlar.grup);
+    this.sahne.add(this.gunes, this.gunes.target, this.dolgu, this.flas, this.yanginlar.grup, this.fisekler.grup);
 
     // Zemin: yalnızca gölge alır (panoramanın zemini görünür kalır)
     const zemin = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), new THREE.ShadowMaterial({ opacity: 0.55, transparent: true }));
@@ -821,6 +825,7 @@ export class Sahne3B {
   temeleDondur() {
     this.figurler.temizle();
     this.yanginlar?.temizle(); // testler Sahne3B'yi kısmi kurar
+    this.fisekler?.temizle();
     this.sahneyiSifirla();
   }
 
@@ -835,6 +840,18 @@ export class Sahne3B {
 
   yanginSondur() {
     this.yanginlar.sondur();
+  }
+
+  /** Aydınlatma fişeği: seçilen yönde ~150 m ileride, 170 m yükseklikte tutuşur; 2,5 m/s iner, ~28 sn yanar. */
+  fisek(azimut: number, siddet: number) {
+    const mesafe = 130 + 40 * Math.random();
+    const p = yerKonumu(azimut, mesafe);
+    p.y = 170 + 20 * Math.random();
+    this.fisekler.ekle(p, siddet);
+  }
+
+  get fisekSayisi() {
+    return this.fisekler.sayi;
   }
 
   get yanginSayisi() {
@@ -1392,6 +1409,7 @@ export class Sahne3B {
     this.yanginlar.ruzgar.set(Math.sin(radyan(this.ruzgarYonu)), 0, -Math.cos(radyan(this.ruzgarYonu))).multiplyScalar(this.ruzgarSiddeti * 6);
     this.parcaciklar.duman.ruzgar.copy(this.yanginlar.ruzgar); // toz ve duman topakları da sürüklenir (`surukle`)
     this.yanginlar.guncelle(dt);
+    this.fisekler.guncelle(dt);
     this.parcaciklar.duman.isikYonuAyarla(this.gunes.position.clone().sub(this.gunes.target.position));
     this.parcaciklar.guncelle(dt);
     this.hasar.guncelle(dt);

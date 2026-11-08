@@ -227,7 +227,7 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
     günlüğü uyarısı (§2-12); U odada yan duvar 16:9 sapması > %30 ise HUD uyarısı (reddedilmez; kısmi görüntü alanı desteği
     bekliyor), `?fov=` 120 ile sınırlı (§2-13).
 
-### C. Orta vade (3–6 hafta) — 16, 17, 19 ✓ ve 18 kısmen ✓ 8 Kasım gece
+### C. Orta vade (3–6 hafta) — 16, 17, 18 (fişek dahil), 19 ✓ 8 Kasım gece; 20, 21 bekliyor
 16. ✓ **AAR:** `kopru/olaylar.ts` — her anlamlı olay (durum farkı `durumFarki`, efekt, figür, senaryo durumu/adımı, sıfırlama,
     eğitmen notu, oynatıcı hatası) `veri/olaylar/<gün>.jsonl`; tatbikat kimliği senaryo baştan oynatılınca ya da panelden
     "Tatbikat başlat" ile; API `GET /olaylar`, `/olaylar/gunler`, `/olaylar/csv`, `POST /olay/not`, `/tatbikat/baslat|bitir`; WS `olay`,
@@ -239,8 +239,9 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
     katmanları (mekanik/bas/kuyruk) bekliyor.
 18. **Telegraf evresi** (§1-7): ✓ efekt `havan` — düşen ıslık 1,4 sn (`SesMotoru.havanIsligi`, manifest `havan_islik` kaydı
     varsa o), sonra aynı yönde patlama ve DMX flaşı (`ArtNetGonderici.gecikmeliFlas`; sıfırlama iptal eder); panel Efektler
-    listesinde ve senaryo adımı olarak. Bekleyen: uzak namlu flaşı telegrafı, **aydınlatma fişeği**, yağmur sıçraması/ıslak
-    zemin, bitki sallanması.
+    listesinde ve senaryo adımı olarak. ✓ **aydınlatma fişeği** (efekt `fisek`, `sahne3b/fisek.ts`: ~150 m ileride 170 m'de tutuşur, 2,5 m/s iner, 28 sn,
+    sarkaç salınımı, 2 ışıklık sabit havuz ~70 bin cd, katkı parlaması + duman izi; atış "pat" + tutuşma "fıs"; testli).
+    Bekleyen: uzak namlu flaşı telegrafı, yağmur sıçraması/ıslak zemin, bitki sallanması.
 19. ✓ **Gece projeksiyon modu** (§1-8): `geceModu.ts` — `?gece=projeksiyon` (panel Sistem › Oynatıcı ayarları) gece
     sahnesinde (ortam ışığı < 0,45) 3B tuvale CSS filtre: parlaklık ×1,0–1,3, kontrast ×1,0–0,88 karanlıkla orantılı; gündüz
     etkisiz. Katsayılar sahada ölçülerek ayarlanır.

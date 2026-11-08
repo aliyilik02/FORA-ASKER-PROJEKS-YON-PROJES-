@@ -635,6 +635,16 @@ export class SesMotoru {
     o2.stop(t + sure + 0.02);
   }
 
+  /** Aydınlatma fişeği atışı: uzak, tok "pat" (havan/bombaatar) + 1,5 sn sonra yukarıda hafif tutuşma "fıs". */
+  fisekAtesi(azimut: number) {
+    if (!this.hazir) return;
+    this.gurultuPatlamasi(azimut, 0.35, 0.25, 700, true, "lowpass", 0.3);
+    const nesil = this.efektNesli;
+    setTimeout(() => {
+      if (nesil === this.efektNesli && this.hazir) this.gurultuPatlamasi(azimut, 0.12, 0.6, 2500, true, "bandpass");
+    }, 1500);
+  }
+
   /** Yakına çarpan mermi: kısa tok vuruş + vızıltı. */
   carpma(azimut: number) {
     if (!this.hazir) return;

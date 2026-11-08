@@ -380,6 +380,11 @@ function efektUygula(e: EfektIstegi, sesCalindi = false) {
       }, HAVAN_ISLIK_MS);
       break;
     }
+    case "fisek":
+      // Aydınlatma fişeği: 3B sahnede yıldız + salınan ışık + duman izi; atış sesi (uzak, hafif pat)
+      if (uc) sahne3b.fisek(azimut, siddet);
+      ses.fisekAtesi(azimut);
+      break;
     case "toz_duman":
       if (uc) sahne3b.tozDuman(azimut, siddet);
       if (!plaka("toz", -3, 0.7 + siddet * 0.6) && !uc) efektler.tozDuman(azimut, siddet, yerlesimler, ufuk(), H);

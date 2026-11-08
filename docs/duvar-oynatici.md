@@ -692,6 +692,12 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   (`SesMotoru.havanIsligi`: sine + testere, 2,6 kHz → 700 Hz, yükselen genlik; manifest `havan_islik` kaydı varsa dosya),
   sonra aynı yönde `patlama` uygulanır; sahne sıfırlanırsa (ses nesli değişir) patlama gelmez. Köprü DMX flaşını ıslık
   bitiminde çakar (`gecikmeliFlas`). Eğitim anlamı: kursiyere siper alma penceresi.
+- **Aydınlatma fişeği** (8 Kasım, C-18): efekt `fisek` → `Sahne3B.fisek(azimut, siddet)` → `FisekKatmani` (`sahne3b/fisek.ts`):
+  seçilen yönde 130–170 m ileride, 170–190 m yükseklikte tutuşur, paraşütle 2,5 m/s iner (`INIS_HIZI`), 28 sn yanar
+  (`VARSAYILAN_OMUR`; 40 mm M583A1 ≥ 35 sn referans), 4 m sarkaç salınımı; sabit 2 `PointLight` havuzu (~70 bin cd, decay 2;
+  program çeşidi değişmez), her kare katkı parlaması (`parlama`) ve 0,18 sn'de bir duman izi (`tutenDuman`); ilk 0,6 sn
+  yükselir, son 3 sn söner, sonra kayıt silinir. Ses: `fisekAtesi` (uzak tok pat + 1,5 sn sonra tutuşma fısıltısı).
+  Sahne sıfırlaması fişekleri kaldırır. Gündüz de atılabilir (etkisi az).
 - **Gece projeksiyon modu** (8 Kasım, C-19): `?gece=fiziksel|projeksiyon` (yerel kayıt; panel Sistem › Oynatıcı ayarları).
   "projeksiyon"da ortam ışığı 0,45'in altındayken 3B tuvale `brightness`/`contrast` CSS filtresi (karanlıkla orantılı,
   en çok ×1,3 / ×0,88): projektörün yansıtamadığı siyah yerine okunur gece. Filtre yalnız değişince yazılır.

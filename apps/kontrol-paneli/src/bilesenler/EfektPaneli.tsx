@@ -16,6 +16,7 @@ const ODA1_EFEKTLERI: Array<{ tur: EfektTuru; aciklama: string; sinif?: string }
   { tur: "simsek", aciklama: "Seçilen yönde çakma, gecikmeli gök gürültüsü, oda ışığında flaş" },
   { tur: "yangin", aciklama: "Seçilen yönde kalıcı yangın: alev, kor, kara duman, titreyen ışık (söndürene kadar sürer)", sinif: "izli" },
   { tur: "yangin_sondur", aciklama: "Sahnedeki bütün yangınlar söner (duman bir süre tüter)" },
+  { tur: "fisek", aciklama: "Seçilen yönde paraşütlü aydınlatma fişeği: ~28 sn salınan sert ışık, duman izi; gece araziyi ve yaralıyı gösterir" },
 ];
 
 /**

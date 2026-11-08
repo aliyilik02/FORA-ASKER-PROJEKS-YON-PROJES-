@@ -96,7 +96,9 @@ export type EfektTuru =
   | "yangin"
   | "yangin_sondur"
   /** Havan mermisi: önce düşen ıslık (telegraf, HAVAN_ISLIK_MS), sonra seçilen yönde patlama. Kursiyere siper alma penceresi. */
-  | "havan";
+  | "havan"
+  /** Aydınlatma fişeği: seçilen yönde paraşütlü yıldız fişeği, ~28 sn yanar, salınan sert ışık (gece eğitimi). */
+  | "fisek";
 
 /** Havan ıslığının süresi (ms): ıslık başlar, bu süre sonunda patlama ve DMX flaşı (köprü ve oynatıcı aynı değeri kullanır). */
 export const HAVAN_ISLIK_MS = 1400;
@@ -434,6 +436,7 @@ export const EFEKT_ETIKETLERI: Record<EfektTuru, string> = {
   yangin: "Yangın",
   yangin_sondur: "Yangınları söndür",
   havan: "Havan mermisi (ıslık → patlama)",
+  fisek: "Aydınlatma fişeği",
 };
 
 export function varsayilanDurum(): SimulasyonDurumu {
