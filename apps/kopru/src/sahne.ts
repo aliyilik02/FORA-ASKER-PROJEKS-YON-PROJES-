@@ -23,6 +23,9 @@ export interface SahneBagimliliklari {
   depo: { sahneyiTemeleDondur(): TemeleDonenler };
   senaryo: { al(): SenaryoDurumu; dur(sessiz?: boolean): void; readonly yukluAd: string | null };
   figur?: { komut(k: FigurKomutu, sessiz?: boolean): unknown; aktifListe(): unknown[] };
+  /** Süren makro (eğitmen dizisi) ve tekrar oynatma: sıfırlamada iptal edilir (bekleyen adımları sahneyi yeniden doldurmasın). */
+  makro?: { durdur(sessiz?: boolean): unknown };
+  tekrar?: { durdur(sessiz?: boolean): unknown; al(): unknown };
   gunluk: Pick<Gunluk, "bilgi">;
   /** Tüm istemcilere (oynatıcı + panel) yayın. */
   yayinla: (m: SunucuMesaji) => void;
@@ -59,6 +62,9 @@ export class SahneYoneticisi {
     // a) Senaryo: ilk iş, yeni adım (figür, efekt, çatışma) çıkmasın
     const senaryo = b.senaryo.al().durum !== "duruyor" ? b.senaryo.yukluAd : null;
     b.senaryo.dur(true);
+    b.makro?.durdur(true);
+    // Tekrar oynatmanın kendi başlangıç sıfırlaması tekrarı kesmemeli: tekrar kaynaklı sıfırlama dışında kes
+    if (kaynak !== "tekrar") b.tekrar?.durdur(true);
     // b) Figürler: liste boş olsa da her zaman (oynatıcıdaki artık ve kuyruktakiler de gitsin), tek `figur` yayını
     const figur = b.figur?.aktifListe().length ?? 0;
     b.figur?.komut({ islem: "temizle" }, true);

@@ -308,9 +308,10 @@ yaralı > son patlama, sıhhiyeci her zaman yaralıya; safha davranışı aktif.
 duvar 16:9 uyarısı, fov ≤ 120. **B listesi tamam.** **C-16 AAR** (`kopru/olaylar.ts`, `veri/olaylar/<gün>.jsonl`, panel Senaryo sekmesi "Tatbikat günlüğü",
 M tuşu not, CSV) ve **C-17 crack–thump** (`mesafeSesi.ts`) bitti. **C-18 havan** (efekt `havan`: ıslık 1,4 sn → patlama + gecikmeli DMX flaşı) ve **C-19 gece projeksiyon modu** (`geceModu.ts`,
 `?gece=projeksiyon`) bitti. **Aydınlatma fişeği** (efekt `fisek`, `sahne3b/fisek.ts`) bitti. **C-20/21 kısmen**: figür/HESCO kaynak bırakma, iskeletli ağ ayıklaması (sınır küresi ×2,5),
-matris güncellemesi karede bir, krater birikim sınırı. Bekleyen: uzak namlu flaşı telegrafı, merkezî dispose/`renderer.info`
-izleme, WebGL bağlam kaybı, efekt kotası, tek sahne saati, oturum tohumu, tembel GLB + KTX2, animasyon kanal ayıklama/LOD,
-panorama küçültülmüş çözme; AAR tekrar oynatma ve TCCC sayaçları;
+matris güncellemesi karede bir, krater birikim sınırı. **AAR tekrar oynatma** (`kopru/tekrar.ts`), **TCCC sayaçları**, **makrolar** (`kopru/makro.ts`; helikopter dizisi
+de köprüde), **kilit kipi**, `rastgele_bekle` + `beklenen` adım alanları bitti. Bekleyen: uzak namlu flaşı telegrafı, merkezî
+dispose/`renderer.info` izleme, WebGL bağlam kaybı, efekt kotası, tek sahne saati, oturum tohumu, tembel GLB + KTX2, animasyon
+kanal ayıklama/LOD, panorama küçültülmüş çözme; AAR tekrar oynatma ve TCCC sayaçları;
 `rastgele_sure`/`beklenen` adım alanları; yan duvar için kısmi görüntü alanı. Duvarda gözle bakılmadı (bakış genliği, yürüyüş hızı, geçiş klipleri, sisli parçacık, köşe). Domain bilgisi için skill `askeri-simulasyon-tasarimi` (`.claude/skills/`; değerlendirme/öneri işinde yükle);
 dış skill'ler: threejs-*, create-game-vfx, build-game-audio-feedback, game-audio, game-design-theory, game-development, game-ui-design.
 

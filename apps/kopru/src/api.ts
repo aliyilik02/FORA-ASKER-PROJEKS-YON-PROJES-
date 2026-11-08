@@ -9,7 +9,10 @@ import type { DurumDeposu } from "./durum.js";
 import type { FigurYoneticisi } from "./figur.js";
 import type { Gunluk } from "./gunluk.js";
 import type { OrnekBaslatici } from "./ornek.js";
-import { olaylarCsv, type OlayGunlugu } from "./olaylar.js";
+import { olaylarCsv, tcccSayaclari, type OlayGunlugu } from "./olaylar.js";
+import type { MakroCalistirici } from "./makro.js";
+import type { TekrarOynatici } from "./tekrar.js";
+import { senaryoAdimlariniDogrula as makroAdimlariniDogrula } from "./dogrulama.js";
 import { sifirlamaKaynagiCoz, type SahneYoneticisi } from "./sahne.js";
 import type { SenaryoMotoru } from "./senaryo.js";
 import type { BaglantiDurumu, OnAyar, Senaryo, SenaryoAdimi, SifirlamaYaniti } from "./tipler.js";
@@ -35,6 +38,8 @@ export interface ApiBagimliliklari {
   senaryolarDegisti?: (liste: Senaryo[]) => void;
   /** Tatbikat olay günlüğü (AAR). */
   olaylar?: OlayGunlugu;
+  makro?: MakroCalistirici;
+  tekrar?: TekrarOynatici;
 }
 
 export function baglantiDurumu(unreal: UnrealIstemci, artnet: ArtNetGonderici, oynaticiSayisi = 0, panelSayisi = 0): BaglantiDurumu {
@@ -233,6 +238,43 @@ export function apiOlustur(b: ApiBagimliliklari): express.Router {
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${ad}"`);
     res.send(olaylarCsv(liste, b.olaylar.tatbikatListesi()));
+  });
+  r.get("/olaylar/ozet", (req, res) => {
+    if (!b.olaylar) return res.status(501).json({ hata: "olay günlüğü yok" });
+    const tatbikat = sorguMetni(req.query.tatbikat);
+    const liste = b.olaylar.liste({ gun: sorguMetni(req.query.gun), tatbikat, son: 5000 });
+    const t = tatbikat ? b.olaylar.tatbikatListesi().find((x) => x.id === tatbikat) : undefined;
+    res.json(tcccSayaclari(liste, t?.baslangic));
+  });
+  // Tekrar oynatma: tatbikatın komut akışı duvara yeniden gider
+  r.post("/tekrar/baslat", (req, res) => {
+    if (!b.olaylar || !b.tekrar) return res.status(501).json({ hata: "tekrar oynatma yok" });
+    const tatbikat = typeof req.body?.tatbikat === "string" ? req.body.tatbikat : "";
+    if (!tatbikat) return res.status(400).json({ hata: "tatbikat zorunlu" });
+    const gun = typeof req.body?.gun === "string" ? req.body.gun : undefined;
+    const liste = b.olaylar.liste({ gun, tatbikat, son: 5000 });
+    const t = b.olaylar.tatbikatListesi().find((x) => x.id === tatbikat);
+    const hiz = Number(req.body?.hiz);
+    const d = b.tekrar.baslat(t?.ad ?? tatbikat, tatbikat, liste, Number.isFinite(hiz) ? hiz : 1);
+    if (!d) return res.status(404).json({ hata: "bu tatbikatta oynatılabilir olay yok" });
+    res.json(d);
+  });
+  r.post("/tekrar/dur", (_req, res) => {
+    if (!b.tekrar) return res.status(501).json({ hata: "tekrar oynatma yok" });
+    res.json({ durdu: b.tekrar.durdur() });
+  });
+  // Makro: eğitmen dizisi (köprüde zamanlanır; tablet kapansa da sürer)
+  r.post("/makro", (req, res) => {
+    if (!b.makro) return res.status(501).json({ hata: "makro yok" });
+    const ad = typeof req.body?.ad === "string" && req.body.ad.trim() ? req.body.ad.trim().slice(0, 80) : "Makro";
+    const d = makroAdimlariniDogrula(req.body?.adimlar);
+    if (d.hatalar.length) return res.status(400).json({ hata: d.hatalar.join("; ") });
+    if (!d.adimlar.length) return res.status(400).json({ hata: "adım yok" });
+    res.json(b.makro.baslat(ad, d.adimlar as unknown as SenaryoAdimi[]));
+  });
+  r.delete("/makro", (_req, res) => {
+    if (!b.makro) return res.status(501).json({ hata: "makro yok" });
+    res.json({ durdu: b.makro.durdur() });
   });
   r.post("/olay/not", (req, res) => {
     if (!b.olaylar) return res.status(501).json({ hata: "olay günlüğü yok" });

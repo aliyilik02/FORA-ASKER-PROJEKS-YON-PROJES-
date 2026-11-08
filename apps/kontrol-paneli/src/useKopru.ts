@@ -1,8 +1,7 @@
 /** Köprü sunucusuyla WebSocket bağlantısı; durum, senaryo ve günlük akışını tutar. */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
-import { heliDizisiIptal } from "./heliDizisi";
-import type { BaglantiDurumu, FigurKomutu, Olay, OrnekDurumu, Senaryo, SenaryoDurumu, SifirlamaKaynagi, SifirlamaOzeti, SifirlamaYaniti, SimulasyonDurumu, SunucuMesaji, Tatbikat, UnrealIstekKaydi } from "./tipler";
+import type { BaglantiDurumu, FigurKomutu, MakroDurumu, Olay, OrnekDurumu, Senaryo, SenaryoDurumu, SifirlamaKaynagi, SifirlamaOzeti, SifirlamaYaniti, SimulasyonDurumu, SunucuMesaji, Tatbikat, TekrarDurumu, UnrealIstekKaydi } from "./tipler";
 
 export interface GunlukSatiri {
   seviye: "bilgi" | "uyari" | "hata";
@@ -36,6 +35,9 @@ export function useKopru() {
   /** Tatbikat olay günlüğü (AAR): son 300 olay, canlı `olay` mesajıyla büyür; aktif tatbikat. */
   const [olaylar, setOlaylar] = useState<Olay[]>([]);
   const [tatbikat, setTatbikat] = useState<Tatbikat | null>(null);
+  /** Köprüde süren makro (eğitmen dizisi) ve tekrar oynatma. */
+  const [makro, setMakro] = useState<MakroDurumu | null>(null);
+  const [tekrar, setTekrar] = useState<TekrarDurumu | null>(null);
   const [baglanti, setBaglanti] = useState<BaglantiDurumu | null>(null);
   const [gunluk, setGunluk] = useState<GunlukSatiri[]>([]);
   const [unrealIstekler, setUnrealIstekler] = useState<UnrealIstekKaydi[]>([]);
@@ -90,6 +92,12 @@ export function useKopru() {
           case "tatbikat":
             setTatbikat(mesaj.tatbikat);
             break;
+          case "makro":
+            setMakro(mesaj.makro);
+            break;
+          case "tekrar":
+            setTekrar(mesaj.tekrar);
+            break;
           case "baglanti":
             setBaglanti(mesaj.baglanti);
             break;
@@ -113,7 +121,6 @@ export function useKopru() {
             // "senkron" oynatıcılar içindir (kaçırılan sıfırlama); panelde yok sayılır.
             if (mesaj.islem === "sifirla") {
               bilinenSifirlamaNesli = mesaj.nesil;
-              heliDizisiIptal();
               setSonSifirlama({ nesil: mesaj.nesil, kaynak: mesaj.kaynak, ozet: mesaj.ozet, zaman: mesaj.zaman });
             }
             break;
@@ -151,12 +158,11 @@ export function useKopru() {
    */
   const sifirlamaUygula = useCallback((y: SifirlamaYaniti) => {
     bilinenSifirlamaNesli = Math.max(bilinenSifirlamaNesli, y.nesil);
-    heliDizisiIptal();
     setDurum(y.durum);
     setSenaryo(y.senaryo);
     setFigurler([]);
     setSonSifirlama((eski) => (eski && eski.nesil >= y.nesil ? eski : { nesil: y.nesil, kaynak: y.kaynak, ozet: y.ozet, zaman: y.zaman }));
   }, []);
 
-  return { durum, senaryo, senaryolar, olaylar, tatbikat, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, sonSifirlama, soketAcik, hata, calistir, sifirlamaUygula };
+  return { durum, senaryo, senaryolar, olaylar, tatbikat, makro, tekrar, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, sonSifirlama, soketAcik, hata, calistir, sifirlamaUygula };
 }

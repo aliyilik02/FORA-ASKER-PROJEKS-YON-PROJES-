@@ -10,7 +10,7 @@
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import type { Olay, OlayTuru, SimulasyonDurumu, Tatbikat } from "./tipler.js";
+import type { Olay, OlayTuru, SimulasyonDurumu, Tatbikat, TcccOzeti } from "./tipler.js";
 import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, MEVSIM_ETIKETLERI, SAFHA_ETIKETLERI, YAGIS_ETIKETLERI } from "./tipler.js";
 export type { Olay, OlayTuru, Tatbikat };
 
@@ -60,6 +60,38 @@ export function olaylarCsv(olaylar: Olay[], tatbikatlar: Tatbikat[] = []): strin
     satirlar.push([new Date(o.zaman).toLocaleTimeString("tr-TR"), sure, o.tatbikat ?? "", o.tur, o.ozet].map(hucre).join(";"));
   }
   return `﻿${satirlar.join("\r\n")}\r\n`;
+}
+
+/**
+ * TCCC sayaçları (AAR): olay özetlerinden türetilir — "asker vuruldu" = figür duruşu `yarali`; sıhhiyeci = `yaninda` ile
+ * gelen figür; turnike = "turnike" geçen eğitmen notu; taktik saha = durum farkında "safha: Taktik saha"; tahliye =
+ * "helikopter: Yerde". Süreler ilk vurulmaya göre (vurulma yoksa null). Kaba ama eğitmene ölçülebilir hedef verir.
+ */
+export function tcccSayaclari(olaylar: Olay[], tatbikatBaslangic?: number): TcccOzeti {
+  const bas = tatbikatBaslangic ?? olaylar[0]?.zaman ?? 0;
+  const son = olaylar.at(-1)?.zaman ?? bas;
+  const ozet: TcccOzeti = { sure: Math.max(0, son - bas), vurulma: null, sihhiyeci: null, turnike: null, taktikSaha: null, tahliye: null, patlama: 0, efekt: 0, not: 0 };
+  let vurulmaZamani: number | null = null;
+  for (const o of olaylar) {
+    if (o.tur === "efekt") {
+      ozet.efekt++;
+      if (/^Patlama|^Havan/.test(o.ozet)) ozet.patlama++;
+    }
+    if (o.tur === "not") ozet.not++;
+    const a = o.ayrinti as { islem?: string; poz?: string; yaninda?: string } | undefined;
+    if (o.tur === "figur" && vurulmaZamani === null && ((a?.islem === "poz" && a.poz === "yarali") || (a?.islem === "oynat" && a.poz === "yarali"))) {
+      vurulmaZamani = o.zaman;
+      ozet.vurulma = o.zaman - bas;
+      continue;
+    }
+    if (vurulmaZamani === null) continue;
+    const gecen = o.zaman - vurulmaZamani;
+    if (o.tur === "figur" && a?.islem === "oynat" && a.yaninda && ozet.sihhiyeci === null) ozet.sihhiyeci = gecen;
+    if (o.tur === "not" && /turnike/i.test(o.ozet) && ozet.turnike === null) ozet.turnike = gecen;
+    if (o.tur === "durum" && /safha: Taktik saha/.test(o.ozet) && ozet.taktikSaha === null) ozet.taktikSaha = gecen;
+    if (o.tur === "durum" && /helikopter: Yerde/.test(o.ozet) && ozet.tahliye === null) ozet.tahliye = gecen;
+  }
+  return ozet;
 }
 
 export function sureBicimi(ms: number): string {

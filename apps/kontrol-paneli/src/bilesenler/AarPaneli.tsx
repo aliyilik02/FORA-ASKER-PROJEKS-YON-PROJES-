@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api";
 import { useArayuz } from "../arayuz";
-import { OLAY_TURU_ETIKETLERI, type Olay, type Tatbikat } from "../tipler";
+import { OLAY_TURU_ETIKETLERI, type Olay, type Tatbikat, type TcccOzeti, type TekrarDurumu } from "../tipler";
 import { Bolum, Ikon, Rozet, sureBicimi } from "./ortak";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
@@ -25,9 +25,13 @@ const TUR_ROZETI: Record<Olay["tur"], "iyi" | "kotu" | "uyari" | "notr" | "amber
   tatbikat: "amber",
 };
 
-export function AarPaneli({ olaylar, tatbikat, calistir }: { olaylar: Olay[]; tatbikat: Tatbikat | null; calistir: Calistir }) {
+const sureYaDa = (ms: number | null) => (ms === null ? "—" : `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}`);
+
+export function AarPaneli({ olaylar, tatbikat, tekrar, calistir }: { olaylar: Olay[]; tatbikat: Tatbikat | null; tekrar: TekrarDurumu | null; calistir: Calistir }) {
   const { bildir } = useArayuz();
   const [not, setNot] = useState("");
+  const [ozet, setOzet] = useState<TcccOzeti | null>(null);
+  const [hiz, setHiz] = useState(1);
   const [simdi, setSimdi] = useState(Date.now());
   const notAlani = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -52,6 +56,21 @@ export function AarPaneli({ olaylar, tatbikat, calistir }: { olaylar: Olay[]; ta
     const ilk = olaylar.find((o) => o.tatbikat === sonTatbikatId);
     return ilk ? ilk.zaman : null;
   }, [olaylar, sonTatbikatId, tatbikat]);
+  // TCCC özeti: tatbikat değişince ya da yeni olay gelince (hafif GET)
+  useEffect(() => {
+    if (!sonTatbikatId) {
+      setOzet(null);
+      return;
+    }
+    let iptal = false;
+    void api
+      .olaylarOzet(sonTatbikatId)
+      .then((o) => !iptal && setOzet(o))
+      .catch(() => undefined);
+    return () => {
+      iptal = true;
+    };
+  }, [sonTatbikatId, olaylar.length]);
   const sureMetni = (zaman: number) => (baslangic !== null ? sureBicimi(Math.max(0, zaman - baslangic)) : new Date(zaman).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
 
   const notGonder = () => {
@@ -94,6 +113,24 @@ export function AarPaneli({ olaylar, tatbikat, calistir }: { olaylar: Olay[]; ta
         <a className="dugme kucuk ikincil" href={csvAdresi} download>
           CSV indir
         </a>
+        {sonTatbikatId && !tatbikat && !tekrar && (
+          <>
+            <button type="button" className="kucuk" onClick={() => void calistir(() => api.tekrarBaslat(sonTatbikatId, hiz)).then((r) => r && bildir({ tur: "bilgi", baslik: "Tekrar oynatma başladı", metin: `${r.olaySayisi} olay · ${Math.round(r.toplamMs / 1000)} sn · ×${r.hiz}` }))}>
+              Duvarda tekrar oynat
+            </button>
+            <select value={hiz} onChange={(e) => setHiz(Number(e.target.value))} title="Tekrar hızı">
+              <option value={0.5}>×0,5</option>
+              <option value={1}>×1</option>
+              <option value={2}>×2</option>
+              <option value={4}>×4</option>
+            </select>
+          </>
+        )}
+        {tekrar && (
+          <button type="button" className="kucuk tehlike" onClick={() => void calistir(() => api.tekrarDur())}>
+            Tekrarı durdur · {tekrar.tamamlanan}/{tekrar.olaySayisi}
+          </button>
+        )}
         <span className="aciklama">Senaryo baştan oynatılınca tatbikat kendiliğinden açılır, bitince kapanır.</span>
       </div>
       <form
@@ -108,6 +145,40 @@ export function AarPaneli({ olaylar, tatbikat, calistir }: { olaylar: Olay[]; ta
           Not ekle
         </button>
       </form>
+      {ozet && (
+        <div className="tccc-ozet" title="Olay günlüğünden türetilen kaba sayaçlar: vurulma = ilk 'yaralı' duruşu; süreler vurulmadan itibaren">
+          <span>
+            <small>Süre</small>
+            <strong>{sureYaDa(ozet.sure)}</strong>
+          </span>
+          <span>
+            <small>Vurulma</small>
+            <strong>{sureYaDa(ozet.vurulma)}</strong>
+          </span>
+          <span>
+            <small>Sıhhiyeci</small>
+            <strong>{sureYaDa(ozet.sihhiyeci)}</strong>
+          </span>
+          <span>
+            <small>Turnike notu</small>
+            <strong>{sureYaDa(ozet.turnike)}</strong>
+          </span>
+          <span>
+            <small>Taktik saha</small>
+            <strong>{sureYaDa(ozet.taktikSaha)}</strong>
+          </span>
+          <span>
+            <small>Tahliye</small>
+            <strong>{sureYaDa(ozet.tahliye)}</strong>
+          </span>
+          <span>
+            <small>Patlama / efekt / not</small>
+            <strong>
+              {ozet.patlama} / {ozet.efekt} / {ozet.not}
+            </strong>
+          </span>
+        </div>
+      )}
       {liste.length === 0 ? (
         <p className="aciklama">Henüz olay yok.</p>
       ) : (

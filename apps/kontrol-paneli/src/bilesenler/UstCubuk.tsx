@@ -26,7 +26,7 @@ export function UstCubuk({
   /** Sıfırla düğmesi: kurulu (onay bekliyor), etkin öğe sayısı, dokunuş. */
   sifirla: { kurulu: boolean; sayi: number; onDokun: () => void };
 }) {
-  const { oynaticiKalite, oynaticiAdresi } = useArayuz();
+  const { oynaticiKalite, oynaticiAdresi, kilit, setKilit } = useArayuz();
   const ue = baglanti?.unreal;
   const oynatici = baglanti?.oynatici;
   const saat = durum.ortam.saat;
@@ -57,6 +57,16 @@ export function UstCubuk({
         </button>
       </nav>
 
+      <button
+        type="button"
+        className={`kilit-dugmesi ${kilit ? "secili" : ""}`}
+        data-kilit-serbest
+        title="Gösterim kilidi: açıkken yalnız senaryo oynat/duraklat/devam/durdur ve Sıfırla çalışır (yanlış dokunma koruması)"
+        aria-pressed={kilit}
+        onClick={() => setKilit(!kilit)}
+      >
+        {kilit ? "🔒 Kilitli" : "🔓 Kilit"}
+      </button>
       <div className="gorev-saati" title="Simülasyon saati (sahnedeki gün ışığı)">
         <span className="gorev-saati-ikon">{gece ? <Ikon.ay /> : <Ikon.gunes />}</span>
         <span className="gorev-saati-deger">{saatBicimi(saat)}</span>

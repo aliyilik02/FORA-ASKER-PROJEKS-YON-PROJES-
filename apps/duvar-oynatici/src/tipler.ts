@@ -144,6 +144,8 @@ export interface SenaryoAdimi {
   /** Senaryo başlangıcından itibaren milisaniye. */
   gecikmeMs: number;
   aciklama: string;
+  /** Bu adımda kursiyerden beklenen davranış (eğitmen notu; panelde adım satırında ve AAR günlüğünde görünür). */
+  beklenen?: string;
   islem:
     | { tip: "efekt"; efekt: EfektIstegi }
     | { tip: "ortam"; ortam: Partial<OrtamAyarlari> }
@@ -158,6 +160,8 @@ export interface SenaryoAdimi {
     | { tip: "bekle_onay"; mesaj?: string }
     /** TCCC safhasını değiştirir (sıhhiyeci davranışı, panel rozeti). */
     | { tip: "safha"; safha: Safha }
+    /** Rastgele süre bekler (enAz–enCok ms); sonraki adımlar o kadar kayar (her tatbikatta farklı zamanlama). */
+    | { tip: "rastgele_bekle"; enAzMs: number; enCokMs: number }
     /** Oda değiştir (Oda 1 ↔ Oda 2): gösterim senaryosu helikopter inişine geçebilsin. */
     | { tip: "oda"; oda: Oda };
 }
@@ -315,13 +319,52 @@ export interface KlipOzeti {
  * mermi, helikopter ve senaryo oynatımı temizlenir. İsteyen: panel düğmesi, panel kısayolu (Esc, Esc), oynatıcı (⇧0).
  */
 /** Sıfırlamayı kim istedi; `senaryo` = senaryo baştan oynatılırken köprünün kendiliğinden yaptığı temizlik. */
-export type SifirlamaKaynagi = "panel" | "kisayol" | "oynatici" | "senaryo";
+export type SifirlamaKaynagi = "panel" | "kisayol" | "oynatici" | "senaryo" | "tekrar";
 export const SIFIRLAMA_KAYNAK_ETIKETLERI: Record<SifirlamaKaynagi, string> = {
   panel: "panelden",
   kisayol: "panel kısayoluyla (Esc, Esc)",
   oynatici: "oynatıcıdan (⇧0)",
   senaryo: "senaryo başlarken (kendiliğinden)",
+  tekrar: "tekrar oynatma (kendiliğinden)",
 };
+
+/** Köprüde çalışan makro (eğitmen dizisi) durumu. */
+export interface MakroDurumu {
+  ad: string;
+  baslangic: number;
+  toplamMs: number;
+  adimSayisi: number;
+  tamamlanan: number;
+}
+/** Tatbikat tekrar oynatma durumu. */
+export interface TekrarDurumu {
+  ad: string;
+  tatbikat: string;
+  baslangic: number;
+  toplamMs: number;
+  hiz: number;
+  olaySayisi: number;
+  tamamlanan: number;
+}
+/** AAR TCCC sayaçları (ms; ölçülemeyense null). */
+export interface TcccOzeti {
+  /** Tatbikat süresi. */
+  sure: number;
+  /** İlk "asker vuruldu" anı (tatbikat başına göre). */
+  vurulma: number | null;
+  /** Vurulmadan sıhhiyecinin yaralının yanına gönderilmesine. */
+  sihhiyeci: number | null;
+  /** Vurulmadan "turnike" içeren ilk eğitmen notuna. */
+  turnike: number | null;
+  /** Ateş altında → taktik saha geçişi (vurulmadan itibaren). */
+  taktikSaha: number | null;
+  /** Vurulmadan helikopterin yerde olmasına (tahliye). */
+  tahliye: number | null;
+  /** Sayılar: patlama, efekt toplamı, not. */
+  patlama: number;
+  efekt: number;
+  not: number;
+}
 
 /** Sıfırlamada kapananlar (bildirim ve günlük satırı): figür sayısı, durdurulan senaryonun adı, önceden açık olanlar. */
 export interface SifirlamaOzeti {
@@ -364,6 +407,10 @@ export type SunucuMesaji =
   | { tip: "olay"; olay: Olay }
   /** Aktif tatbikat değişti (başladı / bitti). */
   | { tip: "tatbikat"; tatbikat: Tatbikat | null }
+  /** Köprüdeki makro (eğitmen dizisi) durumu; null = yok. */
+  | { tip: "makro"; makro: MakroDurumu | null }
+  /** Tatbikat tekrar oynatma durumu; null = yok. */
+  | { tip: "tekrar"; tekrar: TekrarDurumu | null }
   | { tip: "baglanti"; baglanti: BaglantiDurumu }
   | { tip: "gunluk"; seviye: "bilgi" | "uyari" | "hata"; mesaj: string; zaman: number }
   | { tip: "unreal"; istek: UnrealIstekKaydi }

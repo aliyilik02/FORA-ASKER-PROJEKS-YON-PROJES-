@@ -67,6 +67,7 @@ const TIP_ETIKETLERI: Record<AdimTipi, string> = {
   oda: "Oda değiştir (1 ↔ 2)",
   bekle_onay: "Eğitmen onayı bekle (kursiyer hazır olunca Devam)",
   safha: "TCCC safhası (ateş altında / taktik saha / tahliye)",
+  rastgele_bekle: "Rastgele bekle (her tatbikatta farklı zamanlama)",
 };
 const FIGUR_ISLEM_ETIKETLERI = { oynat: "Sahneye koy", poz: "Duruş değiştir (vuruldu / diz çök / kalk)", temizle: "Hepsini kaldır" } as const;
 type FigurIslem = keyof typeof FIGUR_ISLEM_ETIKETLERI;
@@ -77,6 +78,9 @@ interface YeniAdim {
   tip: AdimTipi;
   beklemeMesaji: string;
   safha: Safha;
+  beklenen: string;
+  rastgeleEnAzSn: number;
+  rastgeleEnCokSn: number;
   efektTur: EfektTuru;
   siddet: number;
   yon: number;
@@ -117,6 +121,9 @@ function varsayilanYeni(d: SimulasyonDurumu): YeniAdim {
     tip: "efekt",
     beklemeMesaji: "",
     safha: "taktik_saha",
+    beklenen: "",
+    rastgeleEnAzSn: 5,
+    rastgeleEnCokSn: 20,
     efektTur: "patlama",
     siddet: 1,
     yon: 0,
@@ -152,7 +159,7 @@ function varsayilanYeni(d: SimulasyonDurumu): YeniAdim {
 
 const yuzde = (v: number) => `%${Math.round(v * 100)}`;
 
-function adimUret(y: YeniAdim, id: string): SenaryoAdimi {
+function adimUretHam(y: YeniAdim, id: string): SenaryoAdimi {
   const gecikmeMs = Math.max(0, Math.round(y.saniye * 1000));
   switch (y.tip) {
     case "efekt":
@@ -209,6 +216,11 @@ function adimUret(y: YeniAdim, id: string): SenaryoAdimi {
       return { id, gecikmeMs, aciklama: `Eğitmen onayı: ${y.beklemeMesaji.trim() || "kursiyer hazır olunca Devam"}`, islem: { tip: "bekle_onay", mesaj: y.beklemeMesaji.trim() || undefined } };
     case "safha":
       return { id, gecikmeMs, aciklama: `Safha: ${SAFHA_ETIKETLERI[y.safha]}`, islem: { tip: "safha", safha: y.safha } };
+    case "rastgele_bekle": {
+      const enAz = Math.max(0, Math.min(y.rastgeleEnAzSn, y.rastgeleEnCokSn));
+      const enCok = Math.max(enAz, y.rastgeleEnCokSn);
+      return { id, gecikmeMs, aciklama: `Rastgele bekle ${enAz}–${enCok} sn`, islem: { tip: "rastgele_bekle", enAzMs: enAz * 1000, enCokMs: enCok * 1000 } };
+    }
     case "figur":
       if (y.figurIslem === "temizle") return { id, gecikmeMs, aciklama: "Birlik geri çekilir (tüm figürler)", islem: { tip: "figur", figur: { islem: "temizle" } } };
       if (y.figurIslem === "poz")
@@ -233,6 +245,13 @@ function adimUret(y: YeniAdim, id: string): SenaryoAdimi {
         islem: { tip: "figur", figur: { islem: "oynat", id: `senaryo_${id}`, klip: y.figurKlip, azimut: y.figurYon, yukseklik: y.figurYukseklik, olcek: 1, dongu: true } },
       };
   }
+}
+
+/** Adım + kursiyerden beklenen davranış (boşsa alan yok). */
+function adimUret(y: YeniAdim, id: string): SenaryoAdimi {
+  const a = adimUretHam(y, id);
+  const b = y.beklenen.trim();
+  return b ? { ...a, beklenen: b } : a;
 }
 
 function Secim<T extends string>({ deger, secenekler, onChange }: { deger: T; secenekler: Record<T, string>; onChange: (v: T) => void }) {
@@ -429,6 +448,18 @@ export function SenaryoEditoru({
             </label>
           </div>
         )}
+        {yeni.tip === "rastgele_bekle" && (
+          <div className="alanlar">
+            <Sayi etiket="En az (sn)" deger={yeni.rastgeleEnAzSn} min={0} max={600} onChange={(rastgeleEnAzSn) => g({ rastgeleEnAzSn })} />
+            <Sayi etiket="En çok (sn)" deger={yeni.rastgeleEnCokSn} min={0} max={600} onChange={(rastgeleEnCokSn) => g({ rastgeleEnCokSn })} />
+          </div>
+        )}
+        <div className="alanlar">
+          <label className="alan genis">
+            <span>Kursiyerden beklenen (isteğe bağlı; adım satırında ve AAR günlüğünde görünür)</span>
+            <input type="text" value={yeni.beklenen} placeholder="ör. Siper al, yaralıya turnike uygula" onChange={(e) => g({ beklenen: e.target.value })} />
+          </label>
+        </div>
         {yeni.tip === "catisma" && (
           <div className="alanlar">
             <label className="alan">

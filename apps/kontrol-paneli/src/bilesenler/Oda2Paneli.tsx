@@ -1,23 +1,29 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useArayuz } from "../arayuz";
-import { HELI_DIZISI, heliDizisiBaslat, heliDizisiIptal, useHeliDizisi } from "../heliDizisi";
-import { EFEKT_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type SimulasyonDurumu } from "../tipler";
+import { EFEKT_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type HelikopterDurumu, type MakroDurumu, type SimulasyonDurumu } from "../tipler";
 import { Bolum, Ikon, Kaydirici, SecenekGrubu, yonMetni } from "./ortak";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 
-export function Oda2Paneli({ durum, calistir }: { durum: SimulasyonDurumu; calistir: Calistir }) {
+/** Helikopter iniş dizisi: köprüde makro olarak çalışır (tablet kapansa da sürer; sıfırlama ve elle komut keser). */
+export const HELI_DIZISI: ReadonlyArray<{ durum: HelikopterDurumu; sn: number }> = [
+  { durum: "yaklasiyor", sn: 0 },
+  { durum: "iniyor", sn: 20 },
+  { durum: "yerde", sn: 35 },
+];
+const HELI_MAKRO_ADI = "Helikopter iniş dizisi";
+
+export function Oda2Paneli({ durum, calistir, makro }: { durum: SimulasyonDurumu; calistir: Calistir; makro?: MakroDurumu | null }) {
   const { seciliYon, bildir } = useArayuz();
   const o = durum.oda2;
+  const heliMakrosu = makro && makro.ad === HELI_MAKRO_ADI ? makro : null;
   const guncelle = (k: Partial<typeof o>) => {
-    // Elle helikopter komutu (Kalkış, "Elle" seçimi) süren iniş dizisini iptal eder: 10. sn'de Kalkış dendikten sonra dizi
-    // 20. sn'de "iniyor" gönderip helikopteri geri getiriyordu (§3-11)
-    if (k.helikopter !== undefined) heliDizisiIptal();
+    // Elle helikopter komutu (Kalkış, "Elle" seçimi) süren iniş dizisini (köprü makrosu) iptal eder (§3-11)
+    if (k.helikopter !== undefined && heliMakrosu) void api.makroDur().catch(() => undefined);
     void calistir(() => api.oda2(k));
   };
-  // Dizi modül düzeyinde (heliDizisi.ts): sekme değişince sürer, sahne sıfırlaması iptal eder
-  const diziBaslangic = useHeliDizisi();
+  const diziBaslangic = heliMakrosu ? heliMakrosu.baslangic : null;
   const [gecen, setGecen] = useState(0);
 
   useEffect(() => {
@@ -29,11 +35,15 @@ export function Oda2Paneli({ durum, calistir }: { durum: SimulasyonDurumu; calis
   }, [diziBaslangic]);
 
   const diziBaslat = () => {
-    heliDizisiBaslat((helikopter) => void api.oda2({ helikopter }).catch(() => undefined));
-    bildir({ tur: "bilgi", baslik: "Helikopter iniş dizisi başladı", metin: "Yaklaşma 20 sn → iniş 15 sn → yerde" });
+    void calistir(() =>
+      api.makro(
+        HELI_MAKRO_ADI,
+        HELI_DIZISI.map((a, i) => ({ id: `heli_${i}`, gecikmeMs: a.sn * 1000, aciklama: `Helikopter ${HELIKOPTER_ETIKETLERI[a.durum]}`, islem: { tip: "oda2", oda2: { helikopter: a.durum } } })),
+      ),
+    ).then((r) => r && bildir({ tur: "bilgi", baslik: "Helikopter iniş dizisi başladı", metin: "Yaklaşma 20 sn → iniş 15 sn → yerde (köprüde çalışır)" }));
   };
   const diziIptal = () => {
-    heliDizisiIptal();
+    void calistir(() => api.makroDur());
   };
 
   return (

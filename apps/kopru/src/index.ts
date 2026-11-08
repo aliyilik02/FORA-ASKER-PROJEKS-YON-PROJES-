@@ -23,6 +23,8 @@ import { DurumDeposu } from "./durum.js";
 import { FigurYoneticisi } from "./figur.js";
 import { Gunluk } from "./gunluk.js";
 import { OlayGunlugu, durumFarki } from "./olaylar.js";
+import { MakroCalistirici } from "./makro.js";
+import { TekrarOynatici } from "./tekrar.js";
 import { OrnekBaslatici, ornekKomutuOlustur } from "./ornek.js";
 import { ORNEK_SENARYOLAR } from "./ornekSenaryolar.js";
 import { SahneYoneticisi } from "./sahne.js";
@@ -103,11 +105,20 @@ if (sonDurum) {
     .then(() => gunluk.bilgi(`Son durum geri yüklendi (${new Date(sonDurum.zaman).toLocaleTimeString("tr-TR")}, ${sonDurum.figurler.length} figür${kapananlar.length ? `; kapalı başlatıldı: ${kapananlar.join(", ")}` : ""})`));
 }
 // Sahne sıfırlaması (temel sahne): senaryo dur → figür temizle → tek durum yayını → `sahne/sifirla` → hemen kayıt
+// Makro (eğitmen dizisi): adımlar senaryo motorunun tetikleyicisiyle uygulanır, köprüde zamanlanır
+const makro = new MakroCalistirici((adim) => senaryo.adimiTetikle(adim), gunluk);
+// Tekrar oynatma (AAR): tatbikat komut akışı duvara yeniden; başlangıç sıfırlaması kaynak "tekrar"
+// eslint-disable-next-line prefer-const
+let tekrar: TekrarOynatici;
 const sahne = new SahneYoneticisi(
   {
     depo,
     senaryo,
     figur,
+    makro,
+    get tekrar() {
+      return tekrar;
+    },
     gunluk,
     yayinla: (m) => {
       herkeseGonder(m);
@@ -119,6 +130,20 @@ const sahne = new SahneYoneticisi(
 );
 // Senaryo baştan oynatılınca önce temel sahne (elle çağrılanlar gider), sonra senaryonun adımları
 senaryo.sahneBagla(sahne);
+tekrar = new TekrarOynatici({
+  durumuYukle: (d) => depo.durumuYukle(d),
+  efektTetikle: (e) => depo.efektTetikle(e as Parameters<DurumDeposu["efektTetikle"]>[0]),
+  figurKomutu: (k) => figur.komut(k),
+  sahneSifirla: () => sahne.sifirla("tekrar"),
+  gunluk,
+});
+makro.dinle((m) => panellereGonder({ tip: "makro", makro: m }));
+tekrar.dinle((t) => {
+  panellereGonder({ tip: "tekrar", tekrar: t });
+  // Tekrar sırasında üretilen olaylar ayrı tatbikat altında toplanır
+  if (t && (!olaylar.aktifTatbikat || !olaylar.aktifTatbikat.ad.startsWith("Tekrar: "))) olaylar.tatbikatBaslat(`Tekrar: ${t.ad}`);
+  if (!t && olaylar.aktifTatbikat?.ad.startsWith("Tekrar: ")) olaylar.tatbikatBitir("tekrar bitti");
+});
 let sonDurumZamanlayici: NodeJS.Timeout | null = null;
 /** `hemen`: bekleyen gecikmeli yazımı iptal edip şimdi yazar (sahne sıfırlaması). */
 function sonDurumuKaydet(hemen = false) {
@@ -146,7 +171,7 @@ function sonDurumuYaz() {
 const uygulama = express();
 uygulama.use(
   "/api",
-  apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, panelSayisi, figur, sahne, olaylar, senaryolarDegisti: (liste) => herkeseGonder({ tip: "senaryolar", liste }) }),
+  apiOlustur({ depo, senaryo, veri, unreal, artnet, gunluk, ornek, oynaticiSayisi, panelSayisi, figur, sahne, olaylar, makro, tekrar, senaryolarDegisti: (liste) => herkeseGonder({ tip: "senaryolar", liste }) }),
 );
 for (const klasor of icerikAdaylari) {
   uygulama.use("/oynatici/icerik", express.static(klasor));
@@ -201,7 +226,10 @@ depo.dinle((durum) => {
   sonDurumuKaydet();
   const fark = durumFarki(oncekiDurum, durum);
   oncekiDurum = durum;
-  if (fark.length) olaylar.kaydet("durum", fark.join("; "), fark);
+  if (fark.length) {
+    const { sonEfektler: _s, ...anlik } = durum;
+    olaylar.kaydet("durum", fark.join("; "), { fark, durum: anlik });
+  }
 });
 depo.efektDinle((efekt) => {
   herkeseGonder({ tip: "efekt", efekt });
@@ -225,7 +253,7 @@ senaryo.dinle((s) => {
     const sn = veri.senaryoBul(s.senaryoId);
     for (const id of s.tamamlanan.slice(o.tamamlanan.length)) {
       const adim = sn?.adimlar.find((a) => a.id === id);
-      olaylar.kaydet("senaryo", `Adım: ${adim?.aciklama ?? id}`, { adimId: id, konumMs: s.konumMs });
+      olaylar.kaydet("senaryo", `Adım: ${adim?.aciklama ?? id}${adim?.beklenen ? ` — beklenen: ${adim.beklenen}` : ""}`, { adimId: id, konumMs: s.konumMs, beklenen: adim?.beklenen });
     }
   }
 });
@@ -256,6 +284,8 @@ wss.on("connection", (ws: WebSocket) => {
   ws.send(JSON.stringify({ tip: "senaryo", senaryo: senaryo.al() } satisfies SunucuMesaji));
   ws.send(JSON.stringify({ tip: "baglanti", baglanti: baglantiDurumu(unreal, artnet, oynaticiSayisi(), panelSayisi()) } satisfies SunucuMesaji));
   ws.send(JSON.stringify({ tip: "ornek", ornek: ornek.durum() } satisfies SunucuMesaji));
+  ws.send(JSON.stringify({ tip: "makro", makro: makro.al() } satisfies SunucuMesaji));
+  ws.send(JSON.stringify({ tip: "tekrar", tekrar: tekrar.al() } satisfies SunucuMesaji));
   // Sıfırlama nesli (figürlerden ÖNCE): kopukken sıfırlama kaçıran oynatıcı yerel artıklarını (krater, duman) temizler
   ws.send(JSON.stringify({ tip: "sahne", islem: "senkron", nesil: sahne.nesil } satisfies SunucuMesaji));
   // Yeniden bağlanan oynatıcı: kopukken kaldırılan figürler gitsin, sonra sahnedekiler geri gelsin (aynı id ile oynat)

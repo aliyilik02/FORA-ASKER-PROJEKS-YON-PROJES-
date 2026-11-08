@@ -207,7 +207,9 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
     Testler `senaryoBekle.test.ts`; başsız tarayıcıda sıhhiyeci siper→yürüyüş→müdahale doğrulandı. ✓ Durdur
     senaryonun açtığı çatışma/izli/helikopteri kapatır ve `tamamlanan` sıfırlanır (§3-17, `DurumDeposu.sureklileriKapat`);
     ✓ senaryo yayını adım değişiminde + 1 Hz (§3-14); ✓ liste değişimi `senaryolar` WS mesajıyla, `SenaryoDurumu.ad` (§3-15);
-    ✓ adım kimlikleri kayıtta tekilleştirilir, işlem/gecikme denetimi (§3-16, `dogrulama.ts`).
+    ✓ adım kimlikleri kayıtta tekilleştirilir, işlem/gecikme denetimi (§3-16, `dogrulama.ts`). ✓ `rastgele_bekle` adımı
+    (en az–en çok sn; senaryo "bekliyor"a düşer, süre dolunca kendiliğinden devam) ve `beklenen` alanı (editörde, adım
+    satırında ve AAR adım kaydında).
 11. ✓ **API doğrulama** (§3-8: `dogrulama.ts` şemaları, PATCH/efekt 400 + hata listesi; depo NaN/seçenek koruması, eski değer kalır)
     ve ✓ **hataların eğitmene görünmesi** (§3-9 `adim-tetikle` `{tamam:false, uyari}` → bildirim; köprü HATA satırları 3 sn'de bir
     bildirim; §3-19 FigurPaneli başarısız istekte başarı bildirimi yok; §3-23 hata bildirimi kapatılana dek kalır, `role=alert`,
@@ -232,7 +234,10 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
     eğitmen notu, oynatıcı hatası) `veri/olaylar/<gün>.jsonl`; tatbikat kimliği senaryo baştan oynatılınca ya da panelden
     "Tatbikat başlat" ile; API `GET /olaylar`, `/olaylar/gunler`, `/olaylar/csv`, `POST /olay/not`, `/tatbikat/baslat|bitir`; WS `olay`,
     `tatbikat`; panel Senaryo sekmesinde "Tatbikat günlüğü (AAR)" kartı (canlı liste, tatbikat süresine göre zaman, M tuşu not alanı,
-    CSV indir). Bekleyen: tekrar oynatma (komut akışını duvara yeniden gönderme), TCCC sayaçları (turnike süresi vb.), PDF.
+    CSV indir). ✓ Tekrar oynatma (`kopru/tekrar.ts`: tatbikatın durum anlık görüntüleri, efektleri, figür komutları ve sıfırlamaları özgün
+    göreli zamanla × hız duvara yeniden; `POST /tekrar/baslat|dur`, WS `tekrar`; panel AAR kartında "Duvarda tekrar oynat" ve hız).
+    ✓ TCCC sayaçları (`tcccSayaclari`: vurulma, sıhhiyeci varışı, turnike notu, taktik saha geçişi, tahliye; `GET /olaylar/ozet`;
+    panel AAR kartında özet şeridi). PDF yerine CSV + tarayıcı yazdırma (bekliyor).
 17. ✓ **Crack–thump ve mesafe ses modeli** (§1-4): `mesafeSesi.ts` (gecikme mesafe/343 ≤ 4 sn; kesim 300 m 6 kHz → 1 km 2 kHz →
     2 km 800 Hz; kazanç −6 dB/2×, 150 m referans) — uzak düşman atışının namlu sesi parıltıdan gecikmeli, boğuk ve mesafeyle
     kısık gelir (`CatismaSesleri.atis(azimut, uzak, mesafe)`, `SesMotoru.tekAtis`); yakın geçişin "çat"ı beklemez. Silah sesi
@@ -254,11 +259,15 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
     yakın kratere yeni çukur kazılmaz, liste ≤ 60 (§2-17). Bekleyen: tembel GLB yükleme + KTX2 (§4-14), animasyon kanal ayıklama
     ve LOD (§4-15), panorama küçültülmüş çözme (§2-25).
 
-### D. Uzun vade (gelecek sürüm)
+### D. Uzun vade (gelecek sürüm) — 24'ten kilit kipi ve makrolar ✓ 8 Kasım gece
 22. Üst/alt gövde katmanlama, ayak IK ve zemin normaline hizalama, tepki animasyonları/ragdoll karışımı, grup davranışı (ateş ve
     hareket, el işaretleri), ikincil hareket; etkileşim soketleri (sıhhiyeci–yaralı).
 23. Gerçek VFX plakaları ve yeşil perde klipleri, Türkçe bağırma/inleme kayıtları (docs §2.5, icerik-ihtiyac-listesi).
-24. Dinamik kalite, GPU zaman sorgusu, metrik kanalı; kilit kipi ve kontrol sahipliği; makro düğmeleri; önizleme/prova kanalı.
+24. Dinamik kalite, GPU zaman sorgusu, metrik kanalı; ✓ **kilit kipi** (üst çubukta Kilit: içerik alanındaki denetimler pasif,
+    yalnız senaryo oynat/duraklat/devam/durdur, Sıfırla ve Boşluk/Esc çalışır; yerel kayıtta); kontrol sahipliği bekliyor;
+    ✓ **makro düğmeleri** (`kopru/makro.ts`: köprüde zamanlanan eğitmen dizileri; Efektler sekmesinde Pusu, Havan baskını,
+    Gece aydınlatma, Temas kes; helikopter iniş dizisi de artık köprü makrosu — panel sekmesi kapansa da sürer); önizleme/prova
+    kanalı bekliyor.
 
 ## 7. Sıradaki adımlar için önerilen sıra
 

@@ -38,8 +38,8 @@ export function Uygulama() {
 
 function Govde() {
   const kopru = useKopru();
-  const { durum, senaryo, senaryolar, olaylar, tatbikat, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, sonSifirlama, soketAcik, hata, sifirlamaUygula } = kopru;
-  const { sekme, setSekme, seciliYon, setSeciliYon, bildir } = useArayuz();
+  const { durum, senaryo, senaryolar, olaylar, tatbikat, makro, tekrar, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, sonSifirlama, soketAcik, hata, sifirlamaUygula } = kopru;
+  const { sekme, setSekme, seciliYon, setSeciliYon, bildir, kilit } = useArayuz();
 
   // API çağrılarını sarar: hata olursa bildirim
   const calistir = useCallback(
@@ -119,6 +119,8 @@ function Govde() {
       // Senaryo editörü açıkken canlı kısayollar (1–6, Boşluk, oklar) çalışmaz: "+ Adım ekle"den sonra odak düğmede kalır,
       // "5" tuşu duvarda gerçek efekt tetiklerdi (§3-12). Esc ve sekme tuşları kalır.
       const editorAcik = document.querySelector(".editor") !== null;
+      // Gösterim kilidi: yalnız Boşluk (oynat/duraklat/devam) ve Esc (sıfırlama) çalışır
+      if (kilit && e.key !== " " && e.key !== "Escape") return;
       // Esc, Esc: sahneyi sıfırla (iki aşamalı onayın klavye karşılığı). Basılı tutmak (tuş tekrarı) onaylamaz;
       // Ctrl/Alt/Meta/Shift ile gelen Esc yok sayılır (Shift+Esc Chrome'da görev yöneticisi).
       if (e.key === "Escape") {
@@ -170,7 +172,7 @@ function Govde() {
     };
     window.addEventListener("keydown", dinle);
     return () => window.removeEventListener("keydown", dinle);
-  }, [durum, senaryo, seciliYon, setSeciliYon, setSekme, calistir, bildir, figurler, sifirlaDokun]);
+  }, [durum, senaryo, seciliYon, setSeciliYon, setSekme, calistir, bildir, figurler, sifirlaDokun, kilit]);
 
   if (!durum) {
     return (
@@ -207,7 +209,7 @@ function Govde() {
         calistir={calistir}
         sifirla={{ kurulu: sifirlamaKurulu, sayi: sifirlanacak, onDokun: () => sifirlaDokun("panel") }}
       />
-      <div className="govde">
+      <div className={`govde ${kilit ? "kilitli" : ""}`}>
         <YanMenu rozetler={{ figurler: figurler.length, senaryo: senaryo?.durum === "oynuyor" ? "▶" : undefined, sistem: gunluk.filter((g) => g.seviye === "hata").length || undefined }} />
         <main className="icerik">
           <aside className="sol-kolon">
@@ -221,12 +223,12 @@ function Govde() {
                 <IsikPaneli durum={durum} calistir={calistir} />
               </>
             )}
-            {sekme === "efektler" && (durum.oda === "oda1" ? <EfektPaneli durum={durum} calistir={calistir} /> : <Oda2Paneli durum={durum} calistir={calistir} />)}
+            {sekme === "efektler" && (durum.oda === "oda1" ? <EfektPaneli durum={durum} calistir={calistir} makro={makro} /> : <Oda2Paneli durum={durum} calistir={calistir} makro={makro} />)}
             {sekme === "figurler" && <FigurPaneli aktifler={figurler} calistir={calistir} oda={durum.oda} />}
             {sekme === "senaryo" && (
               <>
                 <SenaryoPaneli senaryoDurumu={senaryo} senaryolar={senaryolar} simDurumu={durum} calistir={calistir} />
-                <AarPaneli olaylar={olaylar} tatbikat={tatbikat} calistir={calistir} />
+                <AarPaneli olaylar={olaylar} tatbikat={tatbikat} tekrar={tekrar} calistir={calistir} />
                 <OnAyarPaneli calistir={calistir} />
               </>
             )}

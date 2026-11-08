@@ -1092,3 +1092,50 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Gösterim kilidi: içerik alanındaki denetimler pasif; data-kilit-serbest işaretliler (senaryo oynat/duraklat/durdur) ve
+   üst çubuktaki Sıfırla/Kilit açık kalır */
+.govde.kilitli .icerik :is(button, input, select, a, textarea):not([data-kilit-serbest]) {
+  pointer-events: none;
+  opacity: 0.45;
+}
+.govde.kilitli .icerik .bolum::after {
+  content: "";
+}
+.kilit-dugmesi {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.kilit-dugmesi.secili {
+  background: rgba(255, 179, 71, 0.18);
+  border-color: rgba(255, 179, 71, 0.6);
+  color: #ffb347;
+}
+/* AAR TCCC özeti */
+.tccc-ozet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 10px 0 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.tccc-ozet span {
+  display: grid;
+  gap: 2px;
+  min-width: 72px;
+}
+.tccc-ozet small {
+  color: var(--murekkep-3);
+  font-size: 11px;
+}
+.tccc-ozet strong {
+  font-family: var(--mono, monospace);
+  font-size: 14px;
+}
+.adim-beklenen {
+  color: var(--murekkep-3);
+}

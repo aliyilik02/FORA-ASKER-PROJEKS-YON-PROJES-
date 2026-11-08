@@ -100,13 +100,13 @@ export function SenaryoPaneli({ senaryoDurumu, senaryolar, simDurumu, calistir }
             </div>
           )}
           <div className="oynatma">
-            <button type="button" className="birincil buyuk" disabled={durum === "oynuyor"} onClick={() => void calistir(() => (bekliyor ? api.senaryoDevam() : api.senaryoOynat()))}>
+            <button type="button" className="birincil buyuk" data-kilit-serbest disabled={durum === "oynuyor"} onClick={() => void calistir(() => (bekliyor ? api.senaryoDevam() : api.senaryoOynat()))}>
               <Ikon.oynat /> {durum === "duraklatildi" || bekliyor ? "Devam" : "Oynat"}
             </button>
-            <button type="button" className="buyuk" disabled={durum !== "oynuyor"} onClick={() => void calistir(() => api.senaryoDuraklat())}>
+            <button type="button" className="buyuk" data-kilit-serbest disabled={durum !== "oynuyor"} onClick={() => void calistir(() => api.senaryoDuraklat())}>
               <Ikon.duraklat /> Duraklat
             </button>
-            <button type="button" className="tehlike buyuk" disabled={durum === "duruyor"} onClick={() => void calistir(() => api.senaryoDur())}>
+            <button type="button" className="tehlike buyuk" data-kilit-serbest disabled={durum === "duruyor"} onClick={() => void calistir(() => api.senaryoDur())}>
               <Ikon.durdur /> Durdur
             </button>
           </div>
@@ -133,7 +133,10 @@ export function SenaryoPaneli({ senaryoDurumu, senaryolar, simDurumu, calistir }
               return (
                 <li key={a.id} className={`${tamam ? "tamam" : ""} ${sonraki?.id === a.id ? "sirada" : ""}`}>
                   <span className="adim-zaman mono">{sureBicimi(a.gecikmeMs)}</span>
-                  <span className="adim-aciklama">{a.aciklama}</span>
+                  <span className="adim-aciklama">
+                    {a.aciklama}
+                    {a.beklenen && <small className="adim-beklenen"> · beklenen: {a.beklenen}</small>}
+                  </span>
                   <button
                     type="button"
                     className="kucuk ikincil"

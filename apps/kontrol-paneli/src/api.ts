@@ -1,5 +1,5 @@
 /** Köprü sunucusu HTTP istemcisi. */
-import type { BaglantiDurumu, Bolge, CatismaAyarlari, EfektIstegi, FigurKomutu, IzliMermiAyarlari, KlipOzeti, Oda, Oda2Ayarlari, Olay, OnAyar, OrnekDurumu, OrtamAyarlari, OrtamIsigi, Safha, Senaryo, SenaryoDurumu, SifirlamaKaynagi, SifirlamaYaniti, SimulasyonDurumu, Tatbikat, UnrealIstekKaydi } from "./tipler";
+import type { BaglantiDurumu, Bolge, CatismaAyarlari, EfektIstegi, FigurKomutu, IzliMermiAyarlari, KlipOzeti, MakroDurumu, Oda, Oda2Ayarlari, Olay, OnAyar, OrnekDurumu, OrtamAyarlari, OrtamIsigi, Safha, Senaryo, SenaryoAdimi, SenaryoDurumu, SifirlamaKaynagi, SifirlamaYaniti, SimulasyonDurumu, Tatbikat, TcccOzeti, TekrarDurumu, UnrealIstekKaydi } from "./tipler";
 
 async function istek<T>(yol: string, yontem: string, govde?: unknown): Promise<T> {
   const yanit = await fetch(`/api${yol}`, {
@@ -57,6 +57,13 @@ export const api = {
   olayNot: (metin: string) => istek<Olay>("/olay/not", "POST", { metin }),
   tatbikatBaslat: (ad?: string) => istek<Tatbikat>("/tatbikat/baslat", "POST", { ad }),
   tatbikatBitir: () => istek<{ tatbikat: Tatbikat | null }>("/tatbikat/bitir", "POST"),
+  olaylarOzet: (tatbikat: string) => istek<TcccOzeti>(`/olaylar/ozet?tatbikat=${encodeURIComponent(tatbikat)}`, "GET"),
+  /** Tatbikat komut akışını duvara yeniden gönderir (AAR tekrar oynatma); hız 0,25–4. */
+  tekrarBaslat: (tatbikat: string, hiz = 1) => istek<TekrarDurumu>("/tekrar/baslat", "POST", { tatbikat, hiz }),
+  tekrarDur: () => istek<{ durdu: boolean }>("/tekrar/dur", "POST"),
+  /** Makro (eğitmen dizisi): köprüde zamanlanır, tablet kapansa da sürer. */
+  makro: (ad: string, adimlar: SenaryoAdimi[]) => istek<MakroDurumu>("/makro", "POST", { ad, adimlar }),
+  makroDur: () => istek<{ durdu: boolean }>("/makro", "DELETE"),
   safha: (safha: Safha) => istek<SimulasyonDurumu>("/safha", "PUT", { safha }),
   /** `tamam: false` + `uyari`: adım uygulanamadı (ör. figür sahnede değil); eğitmene bildirim olarak gösterilir. */
   adimTetikle: (senaryoId: string, adimId: string) => istek<{ tamam: boolean; uyari?: string }>("/senaryo/adim-tetikle", "POST", { senaryoId, adimId }),

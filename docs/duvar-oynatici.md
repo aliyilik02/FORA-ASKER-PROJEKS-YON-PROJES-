@@ -688,6 +688,13 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   (kendiliğinden)" bildirimi): eğitmenin elle çağırdığı figürler, efektler, çatışma, izli mermi, helikopter ve sesler
   gider; ortam, bölge ve ışık kalır (senaryonun kendi adımları isterse değiştirir). Duraklatılmıştan devam ederken ve
   "Adımı tetikle"de sıfırlama yok. Oynatıcı için ayrı bir şey yok: aynı `sahne/sifirla` mesajı gelir.
+- **Makro ve tekrar oynatma** (8 Kasım): `kopru/makro.ts` `MakroCalistirici` — senaryo adımı listesi köprüde zamanlanır
+  (`POST /api/makro {ad, adimlar}`, `DELETE /api/makro`; WS `makro`), yüklü senaryodan bağımsız; sahne sıfırlaması ve
+  yeni makro süreni keser. Helikopter iniş dizisi (yaklaşıyor 0 sn → iniyor 20 sn → yerde 35 sn) panelden bu yolla gider
+  (eski `heliDizisi.ts` kaldırıldı). `kopru/tekrar.ts` `TekrarOynatici` — bir tatbikatın `durum` (anlık görüntü `ayrinti.durum`),
+  `efekt`, `figur`, `sahne` olaylarını ilk olaya göre zamanlayıp × hız ile uygular (`POST /api/tekrar/baslat {tatbikat, hiz}`,
+  `/tekrar/dur`; WS `tekrar`); başlarken kaynak "tekrar" ile sıfırlar, tekrar sırasında üretilen olaylar "Tekrar: <ad>"
+  tatbikatında toplanır. `GET /api/olaylar/ozet?tatbikat=` TCCC sayaçları (`tcccSayaclari`).
 - **Havan (telegraf → temas)** (8 Kasım, C-18): efekt `havan` önce `HAVAN_ISLIK_MS` (1,4 sn) düşen ıslık çalar
   (`SesMotoru.havanIsligi`: sine + testere, 2,6 kHz → 700 Hz, yükselen genlik; manifest `havan_islik` kaydı varsa dosya),
   sonra aynı yönde `patlama` uygulanır; sahne sıfırlanırsa (ses nesli değişir) patlama gelmez. Köprü DMX flaşını ıslık

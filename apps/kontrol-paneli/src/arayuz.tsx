@@ -43,6 +43,9 @@ interface ArayuzDegerleri {
   setOynaticiParametresi: (ad: string, deger: string | null) => void;
   /** Üst çubuktaki "Oynatıcı" düğmesinin açtığı adres: kalite + ek ayarlar. */
   oynaticiAdresi: string;
+  /** Gösterim kilidi: yalnız senaryo oynat/duraklat/devam/durdur ve Sıfırla açık; yanlışlıkla dokunma yok. */
+  kilit: boolean;
+  setKilit: (k: boolean) => void;
 }
 
 const Baglam = createContext<ArayuzDegerleri | null>(null);
@@ -50,6 +53,7 @@ const Baglam = createContext<ArayuzDegerleri | null>(null);
 const SEKME_ANAHTARI = "duvar.panel.sekme";
 const KALITE_ANAHTARI = "duvar.panel.kalite";
 const PARAMETRE_ANAHTARI = "duvar.panel.oynaticiParametreleri";
+const KILIT_ANAHTARI = "duvar.panel.kilit";
 
 /** Oynatıcı adresi: `?kalite=` + ek parametreler (ad sırasıyla, kararlı adres). */
 export function oynaticiAdresiOlustur(kalite: OynaticiKalite, ek: Record<string, string>): string {
@@ -118,6 +122,21 @@ export function ArayuzSaglayici({ children }: { children: ReactNode }) {
       /* özel pencere */
     }
   }, []);
+  const [kilit, setKilitHam] = useState(() => {
+    try {
+      return localStorage.getItem(KILIT_ANAHTARI) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const setKilit = useCallback((k: boolean) => {
+    setKilitHam(k);
+    try {
+      localStorage.setItem(KILIT_ANAHTARI, k ? "1" : "0");
+    } catch {
+      /* özel pencere */
+    }
+  }, []);
   const bildirimKapat = useCallback((id: number) => setBildirimler((b) => b.filter((x) => x.id !== id)), []);
   const bildir = useCallback(
     (b: Omit<Bildirim, "id">) => {
@@ -130,8 +149,8 @@ export function ArayuzSaglayici({ children }: { children: ReactNode }) {
   );
 
   const deger = useMemo(
-    () => ({ seciliYon, setSeciliYon, sekme, setSekme, bildirimler, bildir, bildirimKapat, oynaticiKalite, setOynaticiKalite, oynaticiParametreleri, setOynaticiParametresi, oynaticiAdresi }),
-    [seciliYon, setSeciliYon, sekme, setSekme, bildirimler, bildir, bildirimKapat, oynaticiKalite, setOynaticiKalite, oynaticiParametreleri, setOynaticiParametresi, oynaticiAdresi],
+    () => ({ seciliYon, setSeciliYon, sekme, setSekme, bildirimler, bildir, bildirimKapat, oynaticiKalite, setOynaticiKalite, oynaticiParametreleri, setOynaticiParametresi, oynaticiAdresi, kilit, setKilit }),
+    [seciliYon, setSeciliYon, sekme, setSekme, bildirimler, bildir, bildirimKapat, oynaticiKalite, setOynaticiKalite, oynaticiParametreleri, setOynaticiParametresi, oynaticiAdresi, kilit, setKilit],
   );
   return <Baglam.Provider value={deger}>{children}</Baglam.Provider>;
 }

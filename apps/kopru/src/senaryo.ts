@@ -237,6 +237,7 @@ export class SenaryoMotoru {
         this.depo.safhaAyarla(islem.safha);
         break;
       case "bekle_onay":
+      case "rastgele_bekle":
         // Zaman çizelgesinde `tik` bekletir; elle "Şimdi" tetiklenirse bekleyecek bir şey yok
         break;
       case "figur": {
@@ -272,6 +273,18 @@ export class SenaryoMotoru {
           this.gunluk.bilgi(`Senaryo adımı: ${adim.aciklama}`);
           if (adim.islem?.tip === "bekle_onay") {
             this.bekle(adim, adim.islem.mesaj || adim.aciklama || "Eğitmen onayı");
+            return;
+          }
+          if (adim.islem?.tip === "rastgele_bekle") {
+            // Rastgele bekleme: senaryo "bekliyor"a düşer, süre dolunca kendiliğinden devam eder (eğitmen de erken devam edebilir)
+            const enAz = Math.max(0, adim.islem.enAzMs || 0);
+            const enCok = Math.max(enAz, adim.islem.enCokMs || enAz);
+            const ms = Math.round(enAz + Math.random() * (enCok - enAz));
+            this.bekle(adim, `rastgele bekleme ${Math.round(ms / 1000)} sn (${adim.aciklama})`);
+            const iptal = this.zamanlayici.aralik(() => {
+              iptal();
+              if (this.durum.durum === "bekliyor" && this.durum.bekleme?.adimId === adim.id) this.devamEt();
+            }, Math.max(1, ms));
             return;
           }
           // Bozuk/eksik adım (elle düzenlenmiş senaryolar.json) köprüyü düşürmesin: hata günlüğe, senaryo sürer
