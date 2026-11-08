@@ -227,7 +227,7 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
     günlüğü uyarısı (§2-12); U odada yan duvar 16:9 sapması > %30 ise HUD uyarısı (reddedilmez; kısmi görüntü alanı desteği
     bekliyor), `?fov=` 120 ile sınırlı (§2-13).
 
-### C. Orta vade (3–6 hafta) — 16, 17, 18 (fişek dahil), 19 ✓ 8 Kasım gece; 20, 21 bekliyor
+### C. Orta vade (3–6 hafta) — 16–19 ✓, 20 ve 21 kısmen ✓ 8 Kasım gece
 16. ✓ **AAR:** `kopru/olaylar.ts` — her anlamlı olay (durum farkı `durumFarki`, efekt, figür, senaryo durumu/adımı, sıfırlama,
     eğitmen notu, oynatıcı hatası) `veri/olaylar/<gün>.jsonl`; tatbikat kimliği senaryo baştan oynatılınca ya da panelden
     "Tatbikat başlat" ile; API `GET /olaylar`, `/olaylar/gunler`, `/olaylar/csv`, `POST /olay/not`, `/tatbikat/baslat|bitir`; WS `olay`,
@@ -245,9 +245,14 @@ klip, kemik, kule/namlu referanslarının hepsi yerinde (eksik görünen iki dos
 19. ✓ **Gece projeksiyon modu** (§1-8): `geceModu.ts` — `?gece=projeksiyon` (panel Sistem › Oynatıcı ayarları) gece
     sahnesinde (ortam ışığı < 0,45) 3B tuvale CSS filtre: parlaklık ×1,0–1,3, kontrast ×1,0–0,88 karanlıkla orantılı; gündüz
     etkisiz. Katsayılar sahada ölçülerek ayarlanır.
-20. **Kaynak yöneticisi + ışık/efekt bütçesi + tek sahne saati + oturum tohumu** (§5).
-21. **Performans:** figür sınır küresi ve ayıklama (§2-9), matris güncellemesi bir kez (§2-18), tembel GLB yükleme + KTX2 (§4-14),
-    animasyon kanal ayıklama ve LOD (§4-15), krater sınırı (§2-17), panorama küçültülmüş çözme (§2-25).
+20. **Kaynak yöneticisi + ışık/efekt bütçesi + tek sahne saati + oturum tohumu** (§5): ✓ figür kaldırılınca karıştırıcı
+    bağları, iskelet (kemik dokusu) ve boya kopya malzemeleri bırakılır (`figuruBirak`); ✓ prosedürel HESCO geometri/malzemesi
+    dizilim değişiminde bırakılır; ✓ ışık havuzları (yangın 3, fişek 2). Bekleyen: merkezî `dispose` yardımcısı ve
+    `renderer.info` izleme, WebGL bağlam kaybı, efekt kotası, tek sahne saati, oturum tohumu.
+21. **Performans:** ✓ iskeletli figür ağları bind-poz sınır küresi ×2,5 ile ayıklanır (§2-9; sabit ağlar three küresiyle);
+    ✓ dünya matrisleri karede bir kez, üç duvar çiziminde otomatik güncelleme kapalı (§2-18); ✓ arazi krater birikimi:
+    yakın kratere yeni çukur kazılmaz, liste ≤ 60 (§2-17). Bekleyen: tembel GLB yükleme + KTX2 (§4-14), animasyon kanal ayıklama
+    ve LOD (§4-15), panorama küçültülmüş çözme (§2-25).
 
 ### D. Uzun vade (gelecek sürüm)
 22. Üst/alt gövde katmanlama, ayak IK ve zemin normaline hizalama, tepki animasyonları/ragdoll karışımı, grup davranışı (ateş ve

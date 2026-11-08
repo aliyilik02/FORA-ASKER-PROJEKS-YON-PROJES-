@@ -232,6 +232,8 @@ export interface Aktif {
   yanindaHedef: { konum: THREE.Vector3; donus: number } | null;
   /** Süren yürüyüş (hedefe, varınca `donus`a dönüp bekleme klibine). */
   yuruyus: { hedef: THREE.Vector3; donus: number; eylem: THREE.AnimationAction | null } | null;
+  /** Haki boya için kopyalanan malzemeler: figür kaldırılınca bırakılır (önbellekteki glTF malzemeleri paylaşımlı, bırakılmaz). */
+  kopyaMalzemeler: THREE.Material[];
 }
 
 /** Klip adı tam ("CharacterArmature|Idle_Gun") ya da kısa ("Idle_Gun") eşleşir. */
@@ -432,12 +434,25 @@ export class FigurKatmani {
     const nesne = iskeletKopyala(gltf.scene) as THREE.Object3D;
     iskeletleriPaylastir(nesne);
     const boya = tanim.renk ? new THREE.Color(tanim.renk) : null;
+    const kopyaMalzemeler: THREE.Material[] = [];
     nesne.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.isMesh) {
         m.castShadow = true;
         m.receiveShadow = true;
-        m.frustumCulled = false;
+        // Ayıklama açık (§2-9): eskiden bütün figür ağları ayıklamasızdı, 30K üçgenli asker 3 duvar + gölgede 4 kez deriliyor,
+        // kemik dokusu 4 kez yükleniyordu. İskeletli ağ için sınır küresi bind-poz'dan hesaplanıp ×2,5 büyütülür (yürüme,
+        // yatma, kol kaldırma sığsın); sabit ağlar three'nin kendi küresiyle.
+        const sm = m as THREE.SkinnedMesh;
+        if (sm.isSkinnedMesh) {
+          try {
+            sm.computeBoundingSphere();
+            if (sm.boundingSphere) sm.boundingSphere.radius *= 2.5;
+            m.frustumCulled = Boolean(sm.boundingSphere);
+          } catch {
+            m.frustumCulled = false;
+          }
+        }
         if (boya) {
           // Haki boya: modelin kendi renk farklarını (koyu/açık parça) koruyarak tona çeker
           const boyaUygula = (mal: THREE.Material) => {
@@ -448,6 +463,7 @@ export class FigurKatmani {
             }
             if ("roughness" in k) k.roughness = 0.9;
             if ("metalness" in k) k.metalness = 0.05;
+            kopyaMalzemeler.push(k);
             return k;
           };
           m.material = Array.isArray(m.material) ? m.material.map(boyaUygula) : boyaUygula(m.material);
@@ -664,6 +680,7 @@ export class FigurKatmani {
       safhaBekliyor,
       yanindaHedef,
       yuruyus: null,
+      kopyaMalzemeler,
     };
     // Tek seferlik klipler bitince sonraki aşama: vurulma → düşme → yerde
     karistirici?.addEventListener("finished", (olay) => {
@@ -1024,7 +1041,7 @@ export class FigurKatmani {
   /** Figürü kaldırır; yükleniyorsa yüklemesi iptal olur (sahneye çıkmaz). */
   durdur(id: string) {
     this.yuklemeyiBirak(id);
-    for (const a of this.aktifler) if (a.id === id) this.grup.remove(a.nesne);
+    for (const a of this.aktifler) if (a.id === id) this.figuruBirak(a);
     this.aktifler = this.aktifler.filter((a) => a.id !== id);
   }
 
@@ -1032,8 +1049,29 @@ export class FigurKatmani {
   temizle() {
     this.yuklemeler.clear();
     this.rezerveler.clear();
-    for (const a of this.aktifler) this.grup.remove(a.nesne);
+    for (const a of this.aktifler) this.figuruBirak(a);
     this.aktifler = [];
+  }
+
+  /**
+   * Figürü sahneden çıkarır ve GPU/CPU kaynaklarını bırakır (§2-19, §4-20): karıştırıcı eylemleri durur ve bağlar
+   * silinir, her kopyanın iskeleti (kemik dokusu) bırakılır, boya için kopyalanan malzemeler bırakılır. Geometri ve
+   * özgün malzemeler önbellekteki glTF ile paylaşımlı olduğundan DOKUNULMAZ.
+   */
+  private figuruBirak(a: Aktif) {
+    this.grup.remove(a.nesne);
+    try {
+      a.karistirici?.stopAllAction();
+      a.karistirici?.uncacheRoot(a.icNesne);
+      a.nesne.traverse((o) => {
+        const sm = o as THREE.SkinnedMesh;
+        if (sm.isSkinnedMesh) sm.skeleton.dispose();
+      });
+      for (const m of a.kopyaMalzemeler) m.dispose();
+      a.kopyaMalzemeler.length = 0;
+    } catch {
+      /* bırakma hatası görüntüyü etkilemez */
+    }
   }
 
   guncelle(dt: number) {

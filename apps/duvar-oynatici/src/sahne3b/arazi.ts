@@ -1078,7 +1078,12 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
   krater(konum: THREE.Vector3, yaricap: number, siddet: number) {
     if (!this.aktif || !this.yakin || !this.yukseklikler) return;
     const r = Math.max(1.2, yaricap);
+    // Birikim sınırı (§2-17): aynı yere üst üste patlamalar metrelerce çukur açmasın — yakın bir krater varsa (merkezler
+    // 0,6 r içinde) yeni çukur kazılmaz (yanık/moloz/duman yine gelir); liste en çok 60 krater tutar (koridor değişiminde
+    // yeniden uygulama maliyeti sınırlı kalsın)
+    if (this.kraterler.some((k) => Math.hypot(k.x - konum.x, k.z - konum.z) < 0.6 * Math.max(r, k.r))) return;
     this.kraterler.push({ x: konum.x, z: konum.z, r, s: siddet });
+    if (this.kraterler.length > 60) this.kraterler.shift();
     const etkilenen = this.kraterBitkileri(konum.x, konum.z, r);
     const pencere = kraterUygula(this.yukseklikler, IZGARA, konum.x, konum.z, r, siddet);
     if (!pencere) return;

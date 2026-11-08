@@ -692,6 +692,13 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   (`SesMotoru.havanIsligi`: sine + testere, 2,6 kHz → 700 Hz, yükselen genlik; manifest `havan_islik` kaydı varsa dosya),
   sonra aynı yönde `patlama` uygulanır; sahne sıfırlanırsa (ses nesli değişir) patlama gelmez. Köprü DMX flaşını ıslık
   bitiminde çakar (`gecikmeliFlas`). Eğitim anlamı: kursiyere siper alma penceresi.
+- **Kaynak bırakma ve ayıklama** (8 Kasım, C-20/21): figür kaldırılınca `FigurKatmani.figuruBirak` karıştırıcıyı durdurup
+  bağlarını siler, kopyanın iskeletini (`skeleton.dispose`, kemik dokusu) ve haki boya için kopyalanan malzemeleri bırakır;
+  geometri ve özgün malzemeler önbellekteki glTF ile paylaşımlı olduğundan dokunulmaz. Prosedürel HESCO (`userData.prosedurel`)
+  geometri/malzemeleri dizilim değişiminde bırakılır. İskeletli figür ağları artık ayıklanır: bind-poz'dan hesaplanan sınır
+  küresi ×2,5 (yürüme/yatma/kol kaldırma sığar); 3 duvar + gölge geçişinde görünmeyen duvarda derilmez. Üç duvar çiziminden
+  önce `sahne.updateMatrixWorld()` bir kez çağrılır, çizimler sırasında `matrixWorldAutoUpdate=false`. Arazi krateri: yakın
+  kratere (merkezler 0,6 r içinde) yeni çukur kazılmaz, liste ≤ 60.
 - **Aydınlatma fişeği** (8 Kasım, C-18): efekt `fisek` → `Sahne3B.fisek(azimut, siddet)` → `FisekKatmani` (`sahne3b/fisek.ts`):
   seçilen yönde 130–170 m ileride, 170–190 m yükseklikte tutuşur, paraşütle 2,5 m/s iner (`INIS_HIZI`), 28 sn yanar
   (`VARSAYILAN_OMUR`; 40 mm M583A1 ≥ 35 sn referans), 4 m sarkaç salınımı; sabit 2 `PointLight` havuzu (~70 bin cd, decay 2;

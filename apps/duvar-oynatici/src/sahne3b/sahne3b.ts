@@ -1442,11 +1442,19 @@ export class Sahne3B {
     // Piksel oranı ≠ 1 iken three görüş alanını cihaz pikseline yuvarlar (floor); komşu duvarlar arasında 1 px boş
     // çizgi kalabiliyordu. Her duvar 1 cihaz pikseli taşar; sonraki duvar kendi alanını üstüne yazar.
     const ek = this.pikselOrani === 1 ? 0 : 1 / this.pikselOrani;
-    this.yerlesimler.forEach((y, i) => {
-      r.setViewport(y.x, 0, y.genislik + ek, this.H + ek);
-      r.setScissor(y.x, 0, y.genislik + ek, this.H + ek);
-      r.render(this.sahne, this.kameralar[i]);
-    });
+    // Dünya matrisleri karede BİR kez: three her render()'da bütün sahneyi (arazi hücreleri, kemikler) yeniden
+    // hesaplardı; üç duvar + gölge geçişi için 4 kez (§2-18). Çizimler arasında otomatik güncelleme kapalı.
+    this.sahne.updateMatrixWorld(true);
+    this.sahne.matrixWorldAutoUpdate = false;
+    try {
+      this.yerlesimler.forEach((y, i) => {
+        r.setViewport(y.x, 0, y.genislik + ek, this.H + ek);
+        r.setScissor(y.x, 0, y.genislik + ek, this.H + ek);
+        r.render(this.sahne, this.kameralar[i]);
+      });
+    } finally {
+      this.sahne.matrixWorldAutoUpdate = true;
+    }
     r.setScissorTest(false);
     this.buKareCizildi = true;
     if (this.takastanSonraCizim === 0 && this.olculen) this.olculen.veri.zaman.ilkKare = performance.now();

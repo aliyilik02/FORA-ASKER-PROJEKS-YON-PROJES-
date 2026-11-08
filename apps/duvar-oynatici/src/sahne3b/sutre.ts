@@ -103,6 +103,7 @@ function hescoHatti(adet: number, hucre: [number, number]): THREE.Group {
     const h = yuk * (0.94 + Math.random() * 0.1);
     const g = new THREE.BoxGeometry(gen * 0.98, h, gen * 0.98);
     const m = new THREE.Mesh(g, [yanMal, yanMal, ustMal, yanMal, yanMal, yanMal]);
+    m.userData.prosedurel = true; // geometri/malzeme bu dizilime özel: temizlenince bırakılır (glTF eşyaları paylaşımlı)
     m.position.set((i - (adet - 1) / 2) * gen, h / 2, (Math.random() - 0.5) * 0.06);
     m.rotation.y = (Math.random() - 0.5) * 0.05;
     m.castShadow = true;
@@ -129,7 +130,22 @@ export class SutreKatmani {
   }
 
   temizle() {
-    for (const c of [...this.grup.children]) this.grup.remove(c);
+    // Prosedürel HESCO geometri/malzemeleri her dizilim değişiminde sızıyordu (§2-5); glTF eşyaları paylaşımlı, bırakılmaz
+    const birakilan = new Set<THREE.Material>();
+    for (const c of [...this.grup.children]) {
+      c.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (!m.isMesh || !m.userData.prosedurel) return;
+        m.geometry.dispose();
+        for (const mal of Array.isArray(m.material) ? m.material : [m.material]) {
+          if (!birakilan.has(mal)) {
+            birakilan.add(mal);
+            mal.dispose();
+          }
+        }
+      });
+      this.grup.remove(c);
+    }
     this.aktifTip = null;
   }
 
