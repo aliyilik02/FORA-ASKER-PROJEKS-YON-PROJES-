@@ -37,9 +37,10 @@ void main() {
   vIsik = normalize((viewMatrix * vec4(isikYonu, 0.0)).xyz);
   float c = cos(aci); float s = sin(aci);
   vec2 p = vec2(position.x * c - position.y * s, position.x * s + position.y * c) * boyut;
-  // Göze dönük kart (dünya uzayı): normal = göz − parçacık; sağ = yukarı × normal; yukarı = normal × sağ
+  // Göze dönük kart (dünya uzayı): normal GÖZE doğru (göz − parçacık; tersi arka yüz olur ve ayıklanır, parçacık
+  // görünmez); sağ = yukarı × normal; yukarı = normal × sağ
   vec3 merkez = (modelMatrix * vec4(konum, 1.0)).xyz;
-  vec3 n = merkez - cameraPosition;
+  vec3 n = cameraPosition - merkez;
   float nUz = length(n);
   n = nUz > 1e-4 ? n / nUz : vec3(0.0, 0.0, 1.0);
   vec3 sag = cross(vec3(0.0, 1.0, 0.0), n);
@@ -184,6 +185,7 @@ export class ParcacikGrubu {
       depthTest: true,
       blending: karisim === "katki" ? THREE.AdditiveBlending : THREE.NormalBlending,
       fog: true, // sahne.fog (doğrusal) uniformları three tarafından yenilenir
+      side: THREE.DoubleSide, // kart yönü ne olursa olsun çizilsin (yüz ayıklaması parçacığı yutmasın)
     });
     // UniformsUtils.merge dokuyu kopyalar (clone); gerçek doku nesnesi geri yazılır
     (m.uniforms.doku as THREE.IUniform).value = doku;
