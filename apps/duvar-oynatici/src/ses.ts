@@ -159,6 +159,10 @@ export class SesMotoru {
   };
   /** Sahne sıfırlamasında artar: zamanlanmış atış dizileri (setTimeout) ve tampon bekleyen çalmalar eski nesildeyse çalmaz. */
   private efektNesli = 0;
+  /** Efekt nesli (sahne sıfırlamasında artar): bekleyen zamanlanmış efektler (havan patlaması) eskiyse çalmaz. */
+  get nesil() {
+    return this.efektNesli;
+  }
   /** `ortamDongusu` yarış koruması (bkz. oradaki açıklama). */
   private ortamNesli = 0;
   private test: { baslangic: number; etiketler: string[]; kaynaklar: AudioBufferSourceNode[] } | null = null;
@@ -589,6 +593,46 @@ export class SesMotoru {
       return;
     }
     this.gurultuPatlamasi(azimut, uzak ? uzakKazanc * 0.9 : 0.5, 0.09, uzak ? Math.min(900, kesim ?? 900) : 2500, uzak, "bandpass");
+  }
+
+  /**
+   * Havan mermisi ıslığı (telegraf, C-18): `sure` sn boyunca tizden pese inen ıslık (sine + hafif testere), yükselen
+   * genlik (yaklaşıyor), son 150 ms'de kesilir; patlama ayrı çağrılır. Manifest `havan_islik` kaydı varsa o.
+   */
+  havanIsligi(azimut: number, sure = 1.4) {
+    if (!this.hazir || !this.ctx) return;
+    const liste = (this.manifest as { havan_islik?: string[] }).havan_islik;
+    if (liste?.length) {
+      void this.dosyaCal(liste, azimut, 0.5, false);
+      return;
+    }
+    const c = this.ctx;
+    const t = c.currentTime;
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.09, t + 0.25);
+    g.gain.exponentialRampToValueAtTime(0.3, t + sure - 0.15);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + sure);
+    const cikis = this.cikis(azimut, 1);
+    g.connect(cikis);
+    const o1 = c.createOscillator();
+    o1.type = "sine";
+    o1.frequency.setValueAtTime(2600, t);
+    o1.frequency.exponentialRampToValueAtTime(700, t + sure);
+    const o2 = c.createOscillator();
+    o2.type = "sawtooth";
+    o2.frequency.setValueAtTime(2600 * 1.004, t);
+    o2.frequency.exponentialRampToValueAtTime(700 * 1.004, t + sure);
+    const g2 = c.createGain();
+    g2.gain.value = 0.08;
+    o1.connect(g);
+    o2.connect(g2).connect(g);
+    this.anlik(o1, g);
+    this.anlik(o2, g2);
+    o1.start();
+    o2.start();
+    o1.stop(t + sure + 0.02);
+    o2.stop(t + sure + 0.02);
   }
 
   /** Yakına çarpan mermi: kısa tok vuruş + vızıltı. */

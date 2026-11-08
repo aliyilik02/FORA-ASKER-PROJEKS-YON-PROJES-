@@ -16,6 +16,7 @@ import {
   type SimulasyonDurumu,
   type Safha,
   SAFHA_ETIKETLERI,
+  HAVAN_ISLIK_MS,
   durumuTamamla,
   varsayilanDurum,
 } from "./tipler.js";
@@ -190,6 +191,10 @@ export class DurumDeposu {
     await this.unreal.efektTetikle(istek);
     if (istek.tur === "patlama" && this.durum.isik.senaryoyaBagli) {
       this.artnet.patlamaFlasi(istek.siddet ?? 1);
+    }
+    // Havan: oda ışığı ıslık bitince (patlama anında) çakar
+    if (istek.tur === "havan" && this.durum.isik.senaryoyaBagli) {
+      this.artnet.gecikmeliFlas(istek.siddet ?? 1, HAVAN_ISLIK_MS);
     }
     // Şimşek odada da çakar: kısa çift flaş (uzak şimşek sönük)
     if (istek.tur === "simsek" && this.durum.isik.senaryoyaBagli) {

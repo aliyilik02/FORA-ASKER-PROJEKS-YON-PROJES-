@@ -9,11 +9,14 @@ import { Bolum, Ikon, SecenekGrubu } from "./ortak";
 
 type Sarsinti = "kapali" | "hafif" | "tam";
 const SARSINTI_ETIKETLERI: Record<Sarsinti, string> = { kapali: "Kapalı", hafif: "Hafif", tam: "Tam" };
+type GeceModu = "fiziksel" | "projeksiyon";
+const GECE_ETIKETLERI: Record<GeceModu, string> = { fiziksel: "Fiziksel", projeksiyon: "Projeksiyon" };
 
 export function OynaticiAyarlari({ baglanti }: { baglanti: BaglantiDurumu | null }) {
   const { oynaticiKalite, setOynaticiKalite, oynaticiParametreleri, setOynaticiParametresi } = useArayuz();
   const sayi = baglanti?.oynatici.sayi ?? 0;
   const sarsinti = (["kapali", "hafif", "tam"] as const).find((s) => s === oynaticiParametreleri.sarsinti) ?? "hafif";
+  const gece = (["fiziksel", "projeksiyon"] as const).find((s) => s === oynaticiParametreleri.gece) ?? "fiziksel";
   return (
     <Bolum baslik="Oynatıcı ayarları" altBaslik="Görüntüyü üreten tarayıcı penceresi" ikon={<Ikon.pencere />} sag={sayi > 1 ? <span className="rozet uyari">{sayi} sekme açık</span> : undefined}>
       <div className="satir">
@@ -24,6 +27,14 @@ export function OynaticiAyarlari({ baglanti }: { baglanti: BaglantiDurumu | null
         <span className="etiket">Sarsıntı</span>
         <SecenekGrubu<Sarsinti> deger={sarsinti} secenekler={SARSINTI_ETIKETLERI} onChange={(s) => setOynaticiParametresi("sarsinti", s)} />
       </div>
+      <div className="satir">
+        <span className="etiket">Gece modu</span>
+        <SecenekGrubu<GeceModu> deger={gece} secenekler={GECE_ETIKETLERI} onChange={(s) => setOynaticiParametresi("gece", s)} />
+      </div>
+      <p className="aciklama">
+        Gece modu "Projeksiyon": projektör siyahı yansıtamaz, fiziksel doğru gece duvarda gri çamura döner; bu kipte oynatıcı gece
+        sahnesinde 3B görüntünün gölge tabanını kaldırır ve kontrastı hafif düşürür (sahada ölçerek "Fiziksel"e dönülebilir).
+      </p>
       <p className="aciklama">
         Sarsıntı: patlamada duvar görüntüsünün titremesi. Projeksiyon odasında bütün dünyanın sallanması baş dönmesi ve yön
         kaybı yapabilir (izleyici hareketi kendi başlatmaz); yerde yaralıyla çalışan kursiyer için "Kapalı" ya da "Hafif"

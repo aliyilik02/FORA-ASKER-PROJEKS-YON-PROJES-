@@ -170,6 +170,15 @@ export class ArtNetGonderici {
     }, gecikmeMs);
   }
 
+  /** Gecikmeli flaş (havan: ıslık bitince patlama); sahne sıfırlaması `flasiIptal` ile iptal eder. */
+  gecikmeliFlas(siddet: number, gecikmeMs: number, sureMs = 250) {
+    if (this.ikinciFlasZamanlayici) clearTimeout(this.ikinciFlasZamanlayici);
+    this.ikinciFlasZamanlayici = setTimeout(() => {
+      this.ikinciFlasZamanlayici = null;
+      this.patlamaFlasi(siddet, sureMs);
+    }, gecikmeMs);
+  }
+
   /** Süren flaşı keser ve flaştan önceki ışığı geri yazar (flaş bitişi, sahne sıfırlaması); flaş yoksa bir şey yapmaz. */
   flasiIptal() {
     if (this.flasZamanlayici) clearTimeout(this.flasZamanlayici);

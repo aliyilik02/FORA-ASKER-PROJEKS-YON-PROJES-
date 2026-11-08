@@ -688,6 +688,13 @@ değiştir" adımı (vuruldu / diz çök / kalk) bu kimliği hedefler. Panelde "
   (kendiliğinden)" bildirimi): eğitmenin elle çağırdığı figürler, efektler, çatışma, izli mermi, helikopter ve sesler
   gider; ortam, bölge ve ışık kalır (senaryonun kendi adımları isterse değiştirir). Duraklatılmıştan devam ederken ve
   "Adımı tetikle"de sıfırlama yok. Oynatıcı için ayrı bir şey yok: aynı `sahne/sifirla` mesajı gelir.
+- **Havan (telegraf → temas)** (8 Kasım, C-18): efekt `havan` önce `HAVAN_ISLIK_MS` (1,4 sn) düşen ıslık çalar
+  (`SesMotoru.havanIsligi`: sine + testere, 2,6 kHz → 700 Hz, yükselen genlik; manifest `havan_islik` kaydı varsa dosya),
+  sonra aynı yönde `patlama` uygulanır; sahne sıfırlanırsa (ses nesli değişir) patlama gelmez. Köprü DMX flaşını ıslık
+  bitiminde çakar (`gecikmeliFlas`). Eğitim anlamı: kursiyere siper alma penceresi.
+- **Gece projeksiyon modu** (8 Kasım, C-19): `?gece=fiziksel|projeksiyon` (yerel kayıt; panel Sistem › Oynatıcı ayarları).
+  "projeksiyon"da ortam ışığı 0,45'in altındayken 3B tuvale `brightness`/`contrast` CSS filtresi (karanlıkla orantılı,
+  en çok ×1,3 / ×0,88): projektörün yansıtamadığı siyah yerine okunur gece. Filtre yalnız değişince yazılır.
 - **Tatbikat olay günlüğü (AAR)** (8 Kasım, C-16): köprü `OlayGunlugu` (`kopru/olaylar.ts`) her anlamlı olayı
   `veri/olaylar/<YYYY-MM-DD>.jsonl`e ekler (`{zaman, tatbikat, tur, ozet, ayrinti}`): durum farkları (`durumFarki`:
   oda/bölge/safha/ortam/ışık/izli/helikopter/çatışma), efektler, figür komutları, senaryo durumu ve adımları, sahne

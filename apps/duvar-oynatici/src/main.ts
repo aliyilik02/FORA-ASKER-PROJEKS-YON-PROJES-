@@ -28,6 +28,8 @@ import { GecisKatmani, gecisSuresiCoz } from "./gecis";
 import { hudCiz, kalibrasyonCiz, uyariCiz } from "./hud";
 import { kaliteSec } from "./kaliteSecimi";
 import { SARSINTI_CARPANI, sarsintiSec } from "./sarsintiSecimi";
+import { geceFiltresi, geceModuSec } from "./geceModu";
+import { HAVAN_ISLIK_MS } from "./tipler";
 import { KlipKatmani } from "./klipler";
 import { silahHizala } from "./sahne3b/silahHizalama";
 import { duvarYerlesimleri, duvarlariOlustur, geometriOzeti, odaDuvarlari, odaGeometrisiCoz, odaGeometrisiYaz, type OdaGeometrisi, ufukSatiri, type Yerlesim, xAzimut, yonAzimut, zamanDilimi, type ZamanDilimi } from "./projeksiyon";
@@ -162,6 +164,9 @@ const kaliteSecimi = kaliteSec(params.get("kalite"), localStorage);
 const kalite: Kalite = kaliteSecimi.kalite;
 /** Patlama sarsıntısı kademesi (`?sarsinti=`; panel Sistem › Oynatıcı ayarları); varsayılan hafif (sarsintiSecimi.ts). */
 const sarsinti = sarsintiSec(params.get("sarsinti"), localStorage);
+/** Gece projeksiyon modu (`?gece=`; panel Sistem › Oynatıcı ayarları): gece sahnesinde 3B tuvale gölge tabanı/kontrast filtresi. */
+const geceModu = geceModuSec(params.get("gece"), localStorage);
+let sonGeceFiltresi = "";
 /**
  * Piksel oranı (§2-12): Windows ölçeği %125/%150 iken tuval CSS pikseliyle çizilip büyütülür, projeksiyonda bulanık.
  * `?dpr=cihaz` 3B tuvali cihaz çözünürlüğünde çizer (Iris Xe'de kare maliyeti ×1,5–2,2); varsayılan 1 ve DPR ≠ 1 ise
@@ -364,6 +369,15 @@ function efektUygula(e: EfektIstegi, sesCalindi = false) {
       } else if (plakaVar) efektler.flasVeSarsinti(siddet);
       else efektler.patlama(azimut, siddet, yerlesimler, ufuk(), H);
       if (!sesCalindi) void ses.patlama(azimut, siddet);
+      break;
+    }
+    case "havan": {
+      // Telegraf → temas: düşen ıslık HAVAN_ISLIK_MS boyunca, sonra aynı yönde patlama (sahne sıfırlanırsa patlama gelmez)
+      ses.havanIsligi(azimut, HAVAN_ISLIK_MS / 1000);
+      const nesil = ses.nesil;
+      window.setTimeout(() => {
+        if (ses.nesil === nesil) efektUygula({ tur: "patlama", siddet, yon: e.yon });
+      }, HAVAN_ISLIK_MS);
       break;
     }
     case "toz_duman":
@@ -856,6 +870,12 @@ function kare(simdi: number) {
   if (s > 0.5) ctx.translate(sx, sy);
   tuval3b.style.transform = s > 0.5 ? `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px)` : "";
   const gok = gokyuzuRenkleri(durum.ortam);
+  // Gece projeksiyon modu: filtre yalnız değişince yazılır (stil yeniden hesaplaması her karede olmasın)
+  const geceF = geceFiltresi(geceModu, gok.isik);
+  if (geceF !== sonGeceFiltresi) {
+    sonGeceFiltresi = geceF;
+    tuval3b.style.filter = geceF;
+  }
 
   // Arka plan önceliği: 3B sahne (panorama resmi + 3B nesneler, alt tuval) → 360° panorama (WebGL) → düz video döngüsü → parametrik sahne
   const ucCizildi = sahne3b.ciz();

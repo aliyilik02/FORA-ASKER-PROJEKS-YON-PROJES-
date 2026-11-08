@@ -8,6 +8,7 @@ type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 
 const ODA1_EFEKTLERI: Array<{ tur: EfektTuru; aciklama: string; sinif?: string }> = [
   { tur: "patlama", aciklama: "Ateş topu, toprak, moloz; kalıcı krater ve duman", sinif: "izli" },
+  { tur: "havan", aciklama: "Önce düşen ıslık (1,4 sn, siper alma penceresi), sonra seçilen yönde patlama ve oda ışığında flaş", sinif: "izli" },
   { tur: "toz_duman", aciklama: "Yere yakın toz bulutu" },
   { tur: "gurultu", aciklama: "Seri atış (6–10 el)" },
   { tur: "bagirma", aciklama: "Yaralı var! Siper al!" },
