@@ -1,17 +1,58 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { AlanKatmani, ogeKonumu } from "./alan";
+import { AlanKatmani, carpismaKutusuMu, ogeKonumu, parcaKutuKesisimi } from "./alan";
 import { yerKonumu } from "./uzay";
 
 /** Yükleyiciye gitmeden öğe yerleştirir: taban izi kutusu ve gruba ekleme yolu (yerlestir'in yüklemeden sonraki kısmı). */
-function kutuEkle(k: AlanKatmani, min: [number, number], max: [number, number]) {
+function kutuEkle(k: AlanKatmani, min: [number, number], max: [number, number], yukseklik = 10, catiY?: number) {
   const nesne = new THREE.Object3D();
   k.grup.add(nesne);
-  (k as unknown as { izler: Array<{ nesne: THREE.Object3D; kutu: THREE.Box3 }> }).izler.push({
+  (k as unknown as { izler: Array<{ nesne: THREE.Object3D; kutu: THREE.Box3; y?: number }> }).izler.push({
     nesne,
-    kutu: new THREE.Box3(new THREE.Vector3(min[0], 0, min[1]), new THREE.Vector3(max[0], 10, max[1])),
+    kutu: new THREE.Box3(new THREE.Vector3(min[0], catiY ?? 0, min[1]), new THREE.Vector3(max[0], (catiY ?? 0) + yukseklik, max[1])),
+    y: catiY,
   });
 }
+
+describe("alan katmanı: mermi izi, krater, helikopter", () => {
+  const kutu = new THREE.Box3(new THREE.Vector3(-1, 0, -1), new THREE.Vector3(1, 2, 1));
+
+  it("iz parçası kutuya ilk girdiği yerde kesilir; içinden başlayan ve ıskalayan parça kesişmez", () => {
+    expect(parcaKutuKesisimi(kutu, -5, 1, 0, 5, 1, 0)).toBeCloseTo(0.4); // x = -1'de
+    expect(parcaKutuKesisimi(kutu, 0, 1, 0, 5, 1, 0)).toBe(-1); // pencereden ateş: başlangıç içeride
+    expect(parcaKutuKesisimi(kutu, -5, 3, 0, 5, 3, 0)).toBe(-1); // üstünden geçer
+    expect(parcaKutuKesisimi(kutu, -5, 1, 0, -2, 1, 0)).toBe(-1); // bu karede ulaşmaz
+  });
+
+  it("direk/lamba (uzun, ince) ve çatı eşyası mermiyi durdurmaz; araç ve bina durdurur", () => {
+    const direk = new THREE.Box3(new THREE.Vector3(-0.9, 0, -0.35), new THREE.Vector3(0.9, 9, 0.35));
+    const arac = new THREE.Box3(new THREE.Vector3(-2, 0, -1), new THREE.Vector3(2, 1.5, 1));
+    expect(carpismaKutusuMu(direk, false)).toBe(false);
+    expect(carpismaKutusuMu(arac, false)).toBe(true);
+    expect(carpismaKutusuMu(arac, true)).toBe(false);
+    const k = new AlanKatmani();
+    kutuEkle(k, [-0.9, -0.35], [0.9, 0.35], 9); // lamba
+    kutuEkle(k, [3, -1], [5, 1], 1.5); // araç
+    expect(k.kesisim(-10, 1, 0, 10, 1, 0)).toBeCloseTo(13 / 20); // lambadan geçer, araçta (x = 3) biter
+  });
+
+  it("en yakın öğe mesafesi krateri sınırlar; çatı eşyası zemin sayılmaz", () => {
+    const k = new AlanKatmani();
+    expect(k.enYakinMesafe(new THREE.Vector3(0, 0, 0))).toBe(Infinity);
+    kutuEkle(k, [2, -1], [4, 1]);
+    kutuEkle(k, [-1, -1], [1, 1], 1, 10); // çatıda ısıtıcı
+    expect(k.enYakinMesafe(new THREE.Vector3(0, 0, 0))).toBeCloseTo(2);
+    expect(k.enYakinMesafe(new THREE.Vector3(3, 0, 0))).toBe(0);
+    expect(k.doluMu(new THREE.Vector3(0, 0, 0))).toBe(false);
+  });
+
+  it("helikopter için tepe yüksekliği: kutunun üstü, dışında -Infinity", () => {
+    const k = new AlanKatmani();
+    kutuEkle(k, [-13, -119], [13, -97], 34); // caddenin sonundaki kule
+    expect(k.tepeYuksekligi(0, -100)).toBe(34);
+    expect(k.tepeYuksekligi(0, -60)).toBe(-Infinity);
+  });
+});
 
 describe("alan katmanı", () => {
   it("öğe konumu: x/z verilmişse o, yoksa azimut + mesafe (sahne koordinatı)", () => {

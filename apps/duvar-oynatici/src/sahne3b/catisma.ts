@@ -161,6 +161,12 @@ export class CatismaSistemi {
   dostlar: () => THREE.Vector3[] = () => [];
   /** Ağır silahlar (tank): namlu ucu ve yönüyle. */
   agirSilahlar: () => AgirSilahKonumu[] = () => [];
+  /** 3B alanın düşman mevzileri (dünya konumu; pencere, çatı, barikat): varsa düşman ve izli mermi buradan ateş eder. */
+  mevziler: () => THREE.Vector3[] = () => [];
+  /** Mermi izi parçasının ilk çarptığı alan yapısının parametresi (0–1) ya da -1 (sahne3b → AlanKatmani.kesisim). */
+  engelKesisimi: ((x0: number, y0: number, z0: number, x1: number, y1: number, z1: number) => number) | null = null;
+  /** Son düşman kaynağı bir alan mevzisi mi: yükseklik ve sırt düzeltmesi uygulanmaz (pencereden ateş eder). */
+  private kaynakMevzi = false;
   private topSayaclar = new Map<number, number>();
   private mermiler: Array<{ p: THREE.Vector3; v: THREE.Vector3; kalan: number; hedefAz: number }> = [];
   /** Gündüz izler soluk, gece parlak (0 gece – 1 gündüz). */
@@ -250,10 +256,30 @@ export class CatismaSistemi {
   /** Düşman tarafından bir atış: uzak kaynaktan hedefe doğru. */
   /** Düşman ateş kaynağı: seçilen yönün ±10°'sinde, 150–260 m'de, zeminin 0,8–4 m üstünde. */
   private dusmanKaynagi(kaynakAzimut: number): THREE.Vector3 {
+    // 3B alan (meskûn mahal): uzak arazi kaynağı caddenin sonundaki binaların arkasında kalırdı; pencere/çatı mevzisi
+    const mevzi = this.mevziSec(kaynakAzimut, 30);
+    this.kaynakMevzi = Boolean(mevzi);
+    if (mevzi) return mevzi;
     const kaynakYon = azimutYon(kaynakAzimut + rnd(-10, 10));
     const kaynak = kaynakYon.clone().multiplyScalar(rnd(150, 260));
     kaynak.y = Math.max(ZEMIN_Y, zeminY(kaynak.x, kaynak.z)) + rnd(0.8, 4);
     return kaynak;
+  }
+
+  /**
+   * Yönün `aci` derece içindeki alan mevzilerinden biri (izleyiciden ≥ 15 m), küçük titremeyle; yoksa null.
+   * `taraf` verilirse yalnız o yandakiler (+1 sağ cephe, -1 sol cephe; çaprazlama izli mermi).
+   */
+  private mevziSec(azimut: number, aci: number, taraf = 0): THREE.Vector3 | null {
+    const adaylar = this.mevziler().filter((m) => {
+      if (Math.hypot(m.x, m.z) < 15) return false;
+      if (taraf && Math.sign(m.x) !== taraf) return false;
+      const fark = ((((konumAzimutu(m) - azimut) % 360) + 540) % 360) - 180;
+      return Math.abs(fark) <= aci;
+    });
+    if (!adaylar.length) return null;
+    const m = adaylar[Math.floor(rastgele() * adaylar.length)];
+    return m.clone().add(_yakin.set(rnd(-0.4, 0.4), rnd(-0.3, 0.3), rnd(-0.4, 0.4)));
   }
 
   /** Salvo telegrafında belirlenen kaynak: ilk iz oradan çıkar (parıltıyla aynı yer). */
@@ -284,9 +310,11 @@ export class CatismaSistemi {
       hedef = new THREE.Vector3(yon.x * mesafe, 0, yon.z * mesafe);
       hedef.y = zeminY(hedef.x, hedef.z) + rnd(1.5, 6);
     }
-    kaynak.y = this.kaynakYuksekligi(kaynak, hedef);
-    // Sınırlı yükseltme yetmediyse (doğru sırtla kapalı) düşman sırt çizgisinden ateş eder (izliYol.sirtaTasi)
-    if (this.sirtaTasi()) kaynak.set(this.yol.sx, this.yol.sy, this.yol.sz);
+    if (!this.kaynakMevzi) {
+      kaynak.y = this.kaynakYuksekligi(kaynak, hedef);
+      // Sınırlı yükseltme yetmediyse (doğru sırtla kapalı) düşman sırt çizgisinden ateş eder (izliYol.sirtaTasi)
+      if (this.sirtaTasi()) kaynak.set(this.yol.sx, this.yol.sy, this.yol.sz);
+    }
     const v = hedef.clone().sub(kaynak).normalize().multiplyScalar(rnd(140, 190));
     this.izEkle(kaynak, v, false);
     // Düşman hattında namlu parıltısı (uzak, kısa) ve uzak atış sesi
@@ -332,6 +360,7 @@ export class CatismaSistemi {
    * zemininden; arada sırt/tepe varsa kaynak sınırlı yükselir, doğru yine kapalıysa mermi yamaca çarpar.
    */
   private izliAtis(kaynakAzimut: number, yon: number) {
+    if (this.izliMevziAtis(kaynakAzimut, yon)) return;
     const y = this.yol;
     const kaynakAz = kaynakAzimut + rnd(-10, 10);
     const a = radyan(kaynakAz);
@@ -379,6 +408,52 @@ export class CatismaSistemi {
     // Kaynakta namlu parıltısı (uzak, kısa) ve uzak atış sesi
     if (rastgele() < 0.6) this.parcaciklar.parlama(_kaynak, rnd(1.5, 2.5));
     if (rastgele() < 0.35) this.sesler.atis(sesAzimutu(_kaynak), true, Math.hypot(_kaynak.x, _kaynak.z));
+  }
+
+  /**
+   * 3B alanda (meskûn mahal) izli mermi: uzak arazi kaynağı şehirde binalara takılır. Düz akış (|yön| < 20) seçilen
+   * duvarın ±30°'sindeki bir pencere/çatı mevzisinden izleyicinin önüne (dost yakını %50, yakın zemin %25, üstten
+   * arkaya %25); yan akış caddenin `yön` işaretindeki cephesinden (+ sağ, − sol) karşı kaldırıma çaprazlama, seçilen
+   * duvarın ±45°'sinde. Uygun mevzi yoksa false: klasik uzak akış.
+   */
+  private izliMevziAtis(kaynakAzimut: number, yon: number): boolean {
+    if (!this.mevziler().length) return false;
+    const duz = Math.abs(yon) < 20;
+    const kaynak = duz ? this.mevziSec(kaynakAzimut, 30) : this.mevziSec(kaynakAzimut, 45, Math.sign(yon));
+    if (!kaynak) return false;
+    const hedef = new THREE.Vector3();
+    if (duz) {
+      const dostlar = this.dostlar();
+      const r = rastgele();
+      if (dostlar.length && r < 0.5) {
+        const d = dostlar[Math.floor(rastgele() * dostlar.length)];
+        hedef.set(d.x + rnd(-3, 3), 0, d.z + rnd(-3, 3));
+        hedef.y = zeminY(hedef.x, hedef.z) + (rastgele() < 0.6 ? 0 : rnd(0.3, 1.6));
+      } else if (r < 0.75) {
+        const yonv = azimutYon(kaynakAzimut + rnd(-20, 20));
+        const m = rnd(3, 24);
+        hedef.set(yonv.x * m, 0, yonv.z * m);
+        hedef.y = zeminY(hedef.x, hedef.z);
+      } else {
+        const yonv = azimutYon(kaynakAzimut + 180 + rnd(-35, 35));
+        const m = rnd(8, 30);
+        hedef.set(yonv.x * m, 0, yonv.z * m);
+        hedef.y = zeminY(hedef.x, hedef.z) + rnd(1.5, 6);
+      }
+    } else {
+      // Karşı kaldırım: mevzinin hizasında (±8 m), kaldırım çizgisinde, 0,5–3 m yükseklikte (duvar dibine ya da araca)
+      hedef.set(-Math.sign(yon) * rnd(7, 9), 0, kaynak.z + rnd(-8, 8));
+      hedef.y = zeminY(hedef.x, hedef.z) + rnd(0.5, 3);
+    }
+    const hiz = rnd(140, 190);
+    _hiz.copy(hedef).sub(kaynak);
+    const mesafe = _hiz.length();
+    _hiz.multiplyScalar(hiz / mesafe);
+    _hiz.y += 0.5 * IZ_DUSUSU * (mesafe / hiz);
+    this.izEkle(kaynak, _hiz, false, false, true);
+    if (rastgele() < 0.6) this.parcaciklar.parlama(kaynak, rnd(1.5, 2.5));
+    if (rastgele() < 0.35) this.sesler.atis(sesAzimutu(kaynak), true, Math.hypot(kaynak.x, kaynak.z));
+    return true;
   }
 
   /**
@@ -586,6 +661,16 @@ export class CatismaSistemi {
         this.carpma(iz);
         this.havuz.push(iz);
         continue;
+      }
+      // 3B alan yapısına (bina, araç, bariyer) çarpma: iz o noktada biter, yakınsa toz/kıvılcım (carpma)
+      if (this.engelKesisimi) {
+        const t = this.engelKesisimi(x0, y0, z0, iz.p.x, yeniY, iz.p.z);
+        if (t >= 0) {
+          iz.p.set(x0 + (iz.p.x - x0) * t, y0 + (yeniY - y0) * t, z0 + (iz.p.z - z0) * t);
+          this.carpma(iz);
+          this.havuz.push(iz);
+          continue;
+        }
       }
       iz.p.y = yeniY;
       if (!iz.catladi && !iz.dost && !iz.sekti) this.catlamaDenetle(iz, x0, y0, z0);

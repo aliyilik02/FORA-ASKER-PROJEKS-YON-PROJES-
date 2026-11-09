@@ -7583,7 +7583,7 @@
   },
   "alanlar": {
     "meskun_mahal": {
-      "_aciklama": "3B meskûn mahal (9 Kasım, Meshy topluluk modelleri CC0): 18 m genişlikte cadde ileri uzanır; iki yanda hasarlı apartmanlar (ön yüzleri caddeye), sonunda yıkık kule; yan duvarlarda meydana bakan binalar. Gök, uzak dağlar ve ışık dağlık panoramadan. Konumlar sahne koordinatında (ileri -z, sağ +x); yonDerece ön yüzün (+z) dönüşü. Kaynak: araclar/alan-modelleri.json.",
+      "_aciklama": "3B meskûn mahal (9 Kasım, Meshy topluluk modelleri CC0): 18 m cadde, iki yanda apartmanlar, sonunda yıkık kule. Figür/efekt yerleşimi v2: askerler kontrol noktası bariyerlerinin, T-duvarların ve kulübenin arkasında (4–7 m), tank açık orta şeritte (31 m), helikopter 58,5 m'de boş iniş alanında, patlama/toz açık cadde ve meydanlarda (nesnelerden ≥ 2,5 m); düşman cephelerin pencere/çatı mevzilerinden ve kule/otobüs barikatından ateş eder. Denetim: node araclar/alan-plan-denetle.mjs. Konumlar sahne koordinatında (ileri -z, sağ +x); yonDerece ön yüzün (+z) dönüşü.",
       "arkaPlanBolge": "daglik",
       "arazi": "hibrit",
       "araziYaricap": 130,
@@ -7686,20 +7686,20 @@
         },
         {
           "dosya": "modeller/alan/bariyer_beton_166.glb",
-          "x": 4.8,
-          "z": -10.5,
+          "x": 4.6,
+          "z": -8.4,
           "yonDerece": 0
         },
         {
           "dosya": "modeller/alan/bariyer_beyaz_172.glb",
-          "x": 7.6,
-          "z": -10.6,
-          "yonDerece": 10
+          "x": 7.3,
+          "z": 0.8,
+          "yonDerece": 90
         },
         {
           "dosya": "modeller/alan/nobetci_kulubesi_317.glb",
-          "x": 7.4,
-          "z": -5.6,
+          "x": 7.6,
+          "z": -6.2,
           "yonDerece": -90
         },
         {
@@ -7722,14 +7722,14 @@
         },
         {
           "dosya": "modeller/alan/t_duvar_179.glb",
-          "x": -9.6,
-          "z": 0,
+          "x": -7.4,
+          "z": 0.4,
           "yonDerece": 90
         },
         {
           "dosya": "modeller/alan/t_duvar_179.glb",
-          "x": -9.6,
-          "z": 3.6,
+          "x": -7.4,
+          "z": 4,
           "yonDerece": 90
         },
         {
@@ -7746,9 +7746,9 @@
         },
         {
           "dosya": "modeller/alan/otomobil_yanik_27.glb",
-          "x": -1.8,
-          "z": -34,
-          "yonDerece": 65
+          "x": -6.3,
+          "z": -38,
+          "yonDerece": 90
         },
         {
           "dosya": "modeller/alan/otomobil_hasarli_13.glb",
@@ -7759,13 +7759,13 @@
         {
           "dosya": "modeller/alan/otomobil_hasarli_14.glb",
           "x": 6.4,
-          "z": -56,
+          "z": -47,
           "yonDerece": 90
         },
         {
           "dosya": "modeller/alan/otomobil_yanik_24.glb",
-          "x": 2.5,
-          "z": -75,
+          "x": 3.8,
+          "z": -79,
           "yonDerece": 30
         },
         {
@@ -7783,38 +7783,38 @@
         {
           "dosya": "modeller/alan/minibus_444.glb",
           "x": -6.2,
-          "z": -62,
+          "z": -86,
           "yonDerece": 90
         },
         {
           "dosya": "modeller/alan/minibus_449.glb",
           "x": 6.4,
-          "z": -66,
+          "z": -72,
           "yonDerece": -90
         },
         {
           "dosya": "modeller/alan/otobus_yanik_108.glb",
           "x": 0,
-          "z": -96,
+          "z": -93,
           "yonDerece": 0
         },
         {
           "dosya": "modeller/alan/pikap_130.glb",
-          "x": 13,
-          "z": 4,
+          "x": 14.5,
+          "z": 9,
           "yonDerece": 30
         },
         {
           "dosya": "modeller/alan/kamyon_askeri_126.glb",
-          "x": -14,
-          "z": 6,
+          "x": -15,
+          "z": 12,
           "yonDerece": 80
         },
         {
           "dosya": "modeller/alan/kamyon_yanik_129.glb",
-          "x": -2,
-          "z": -52,
-          "yonDerece": 110
+          "x": -6,
+          "z": -76,
+          "yonDerece": 90
         },
         {
           "dosya": "modeller/alan/pikap_460.glb",
@@ -7842,27 +7842,27 @@
         },
         {
           "dosya": "modeller/alan/moloz_152.glb",
-          "x": 9.5,
+          "x": 10.2,
           "z": -70,
           "yonDerece": 40
         },
         {
           "dosya": "modeller/alan/moloz_155.glb",
-          "x": -1,
-          "z": -62,
+          "x": -8.6,
+          "z": -68,
           "yonDerece": 70
         },
         {
           "dosya": "modeller/alan/barikat_200.glb",
-          "x": 3.5,
-          "z": -28,
+          "x": 5.2,
+          "z": -29.5,
           "yonDerece": 15
         },
         {
           "dosya": "modeller/alan/bariyer_beton_178.glb",
-          "x": -4,
-          "z": -58,
-          "yonDerece": 80
+          "x": -3.5,
+          "z": -82,
+          "yonDerece": 75
         },
         {
           "dosya": "modeller/alan/sokak_lambasi_257.glb",
@@ -7902,8 +7902,8 @@
         },
         {
           "dosya": "modeller/alan/sokak_lambasi_260.glb",
-          "x": 17,
-          "z": 6,
+          "x": 19,
+          "z": 3,
           "yonDerece": 90
         },
         {
@@ -7944,8 +7944,8 @@
         },
         {
           "dosya": "modeller/alan/duvar_yikik_273.glb",
-          "x": 12,
-          "z": 9,
+          "x": 11,
+          "z": 15,
           "yonDerece": -30
         },
         {
@@ -7979,104 +7979,184 @@
       ],
       "noktalar": [
         {
-          "ad": "cadde sol yakın",
-          "azimut": -15.9,
-          "mesafe": 14.6,
+          "ad": "bariyer sol arkası",
+          "azimut": -39.4,
+          "mesafe": 7.2,
           "tur": [
-            "figur",
             "asker"
           ]
         },
         {
-          "ad": "cadde sağ",
-          "azimut": 12.7,
-          "mesafe": 20.5,
+          "ad": "bariyer orta arkası",
+          "azimut": -13.6,
+          "mesafe": 6,
           "tur": [
-            "figur",
             "asker"
           ]
         },
         {
-          "ad": "cadde sol orta",
-          "azimut": -8.9,
-          "mesafe": 32.4,
+          "ad": "bariyer arası",
+          "azimut": 14.9,
+          "mesafe": 6.2,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sağ bariyer arkası",
+          "azimut": 37.9,
+          "mesafe": 6.8,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "kulübe yanı",
+          "azimut": 62.2,
+          "mesafe": 6,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "beyaz bariyer arkası",
+          "azimut": 99.5,
+          "mesafe": 6.1,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "sağ meydan önü",
+          "azimut": 123.7,
+          "mesafe": 6.5,
           "tur": [
             "asker",
-            "patlama"
+            "figur"
           ]
         },
         {
-          "ad": "cadde sağ uzak",
-          "azimut": 6.3,
-          "mesafe": 45.3,
+          "ad": "T-duvar arkası",
+          "azimut": -103.3,
+          "mesafe": 6.1,
           "tur": [
             "asker"
           ]
         },
         {
-          "ad": "cadde ortası",
-          "azimut": 0,
-          "mesafe": 26,
+          "ad": "T-duvar arkası 2",
+          "azimut": -126.4,
+          "mesafe": 7.1,
           "tur": [
-            "patlama",
-            "toz"
+            "asker",
+            "figur"
           ]
         },
         {
-          "ad": "cadde uzak",
-          "azimut": -2.1,
-          "mesafe": 55,
+          "ad": "variller yanı",
+          "azimut": -57.3,
+          "mesafe": 6.7,
           "tur": [
-            "patlama"
+            "asker"
+          ]
+        },
+        {
+          "ad": "hat gerisi orta",
+          "azimut": 0,
+          "mesafe": 4.5,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "hat gerisi sol",
+          "azimut": -43.3,
+          "mesafe": 4.7,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "hat gerisi sağ",
+          "azimut": 39.8,
+          "mesafe": 4.7,
+          "tur": [
+            "figur"
           ]
         },
         {
           "ad": "cadde yakın",
-          "azimut": 14,
-          "mesafe": 12.4,
+          "azimut": 2,
+          "mesafe": 14,
           "tur": [
             "patlama",
             "toz"
           ]
         },
         {
-          "ad": "sol köşe",
-          "azimut": -69.4,
-          "mesafe": 8.5,
+          "ad": "cadde orta",
+          "azimut": 4.1,
+          "mesafe": 21.1,
           "tur": [
-            "figur"
+            "patlama",
+            "toz"
           ]
         },
         {
-          "ad": "sağ köşe",
-          "azimut": 72.6,
-          "mesafe": 8.4,
+          "ad": "sol şerit",
+          "azimut": -7.1,
+          "mesafe": 24.2,
           "tur": [
-            "figur"
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "cadde 44 m",
+          "azimut": -2,
+          "mesafe": 44,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "iniş alanı",
+          "azimut": 1.4,
+          "mesafe": 62,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "cadde uzak",
+          "azimut": 0.3,
+          "mesafe": 86,
+          "tur": [
+            "patlama"
           ]
         },
         {
           "ad": "sol meydan",
-          "azimut": -105.9,
-          "mesafe": 14.6,
+          "azimut": -100.1,
+          "mesafe": 14.2,
           "tur": [
-            "figur",
-            "patlama"
+            "patlama",
+            "toz"
           ]
         },
         {
           "ad": "sağ meydan",
-          "azimut": 104.9,
-          "mesafe": 15.5,
+          "azimut": 93.9,
+          "mesafe": 14.5,
           "tur": [
-            "figur",
-            "patlama"
+            "patlama",
+            "toz"
           ]
         },
         {
           "ad": "cadde tank",
-          "azimut": 0,
-          "mesafe": 40,
+          "azimut": -0.9,
+          "mesafe": 31,
           "tur": [
             "tank"
           ]
@@ -8084,10 +8164,162 @@
         {
           "ad": "cadde iniş",
           "azimut": 0,
-          "mesafe": 66,
+          "mesafe": 58.5,
           "tur": [
             "helikopter"
           ]
+        }
+      ],
+      "dusmanMevzileri": [
+        {
+          "ad": "sol 44 pencere",
+          "x": -8.5,
+          "y": 7,
+          "z": -24
+        },
+        {
+          "ad": "sol 44 üst kat",
+          "x": -8.5,
+          "y": 10.5,
+          "z": -29
+        },
+        {
+          "ad": "sol 392 pencere",
+          "x": -8.5,
+          "y": 4.5,
+          "z": -42
+        },
+        {
+          "ad": "sol 392 üst kat",
+          "x": -8.5,
+          "y": 10.5,
+          "z": -47
+        },
+        {
+          "ad": "sol 65 pencere",
+          "x": -8.5,
+          "y": 7.5,
+          "z": -58
+        },
+        {
+          "ad": "sol 65 çatı",
+          "x": -8.5,
+          "y": 14,
+          "z": -66
+        },
+        {
+          "ad": "sol 414 pencere",
+          "x": -8.5,
+          "y": 10,
+          "z": -80
+        },
+        {
+          "ad": "sol 414 üst kat",
+          "x": -8.5,
+          "y": 16.5,
+          "z": -84
+        },
+        {
+          "ad": "sağ 69 pencere",
+          "x": 8.5,
+          "y": 4.5,
+          "z": -31
+        },
+        {
+          "ad": "sağ 69 üst kat",
+          "x": 8.5,
+          "y": 10,
+          "z": -36
+        },
+        {
+          "ad": "sağ 51 pencere",
+          "x": 8.5,
+          "y": 7,
+          "z": -47
+        },
+        {
+          "ad": "sağ 51 üst kat",
+          "x": 8.5,
+          "y": 11,
+          "z": -55
+        },
+        {
+          "ad": "sağ 370 pencere",
+          "x": 8.5,
+          "y": 4.5,
+          "z": -70
+        },
+        {
+          "ad": "sağ 370 çatı",
+          "x": 8.5,
+          "y": 8,
+          "z": -75
+        },
+        {
+          "ad": "sağ 406 pencere",
+          "x": 8.5,
+          "y": 7,
+          "z": -88
+        },
+        {
+          "ad": "kule sol",
+          "x": -6,
+          "y": 12,
+          "z": -96.6
+        },
+        {
+          "ad": "kule sağ",
+          "x": 5,
+          "y": 18,
+          "z": -96.6
+        },
+        {
+          "ad": "kule tepe",
+          "x": 0,
+          "y": 27,
+          "z": -96.6
+        },
+        {
+          "ad": "otobüs barikatı sol",
+          "x": -3,
+          "y": 1.6,
+          "z": -89
+        },
+        {
+          "ad": "otobüs barikatı sağ",
+          "x": 3,
+          "y": 1.6,
+          "z": -89
+        },
+        {
+          "ad": "sol meydan binası",
+          "x": -19.2,
+          "y": 7,
+          "z": 4
+        },
+        {
+          "ad": "sol meydan üst kat",
+          "x": -19.2,
+          "y": 13,
+          "z": 12
+        },
+        {
+          "ad": "sağ meydan binası",
+          "x": 20,
+          "y": 4.5,
+          "z": 2
+        },
+        {
+          "ad": "sağ meydan üst kat",
+          "x": 20,
+          "y": 10,
+          "z": 10
+        },
+        {
+          "ad": "sağ meydan çatı",
+          "x": 20,
+          "y": 13.5,
+          "z": 20
         }
       ]
     },

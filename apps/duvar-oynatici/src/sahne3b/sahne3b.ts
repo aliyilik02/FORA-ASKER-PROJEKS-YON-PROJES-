@@ -278,6 +278,10 @@ export class Sahne3B {
     });
     this.catisma.dostlar = () => this.figurler.silahliKonumlar();
     this.figurler.engel = (p) => this.sutre.doluMu(p, 0.3) || this.alan.doluMu(p, 0.3);
+    // 3B alan: düşman pencere/çatı mevzilerinden ateş eder, izler binaya/araca çarpıp biter, helikopter binaları aşar
+    this.catisma.mevziler = () => this.alan.dusmanMevzileri();
+    this.catisma.engelKesisimi = (x0, y0, z0, x1, y1, z1) => (this.alan.ogeSayisi ? this.alan.kesisim(x0, y0, z0, x1, y1, z1) : -1);
+    this.heli.engelUstu = (x, z) => this.alan.tepeYuksekligi(x, z);
     this.catisma.agirSilahlar = () => this.figurler.agirSilahlar();
     if (!r) return;
     this.renderer = r;
@@ -1276,7 +1280,13 @@ export class Sahne3B {
   private patlamaYeri(azimut: number, varsayilanMesafe: number): { azimut: number; mesafe: number } {
     const k = this.kaynak?.yawKaydirma ?? 0;
     const titret = (m: number, nokta: boolean) => m * (nokta ? 0.92 + Math.random() * 0.16 : 0.85 + Math.random() * 0.3);
-    const bos = (az: number, m: number) => !this.figurler.doluMu(yerKonumu(az, m), 4.5);
+    // Asker/tank 4,5 m; 3B alan yapısı (bina, araç, bariyer) 2 m, sütre 1 m: patlama aracın ya da binanın içine düşmez
+    const bos = (az: number, m: number) => {
+      const p = yerKonumu(az, m);
+      if (this.figurler.doluMu(p, 4.5)) return false;
+      if (typeof this.alan?.doluMu === "function" && this.alan.doluMu(p, 2)) return false;
+      return !(typeof this.sutre?.doluMu === "function" && this.sutre.doluMu(p, 1));
+    };
     const ilk = this.noktaSec(azimut, "patlama", varsayilanMesafe, 180);
     const m0 = titret(ilk.mesafe, Boolean(ilk.nokta));
     if (bos(ilk.azimut, m0)) return { azimut: ilk.azimut, mesafe: m0 };
@@ -1309,12 +1319,14 @@ export class Sahne3B {
     // Gerçek çekilmiş plaka 2B katmanda oynuyorsa 3B ateş topu çizilmez; krater, moloz ve ışık yine eklenir.
     if (!plakaVar) this.parcaciklar.patlama(p, r, varyant);
     else this.parcaciklar.tozBulutu(p, r, s * 0.6);
-    // Önce arazi çukurlaşır, sonra moloz/duman yeni (alçak) zemine yerleşir
+    // Önce arazi çukurlaşır, sonra moloz/duman yeni (alçak) zemine yerleşir. 3B alan yapısına yakınsa krater küçülür:
+    // altındaki zemin çökerse araç/bariyer havada kalırdı (alan öğeleri yalnız arazi kurulunca yeniden oturur)
+    const kraterR = Math.min(1.6 + s * 2.6, Math.max(0.8, this.alan.enYakinMesafe(p) - 0.5));
     if (this.arazi.aktif) {
-      this.arazi.krater(p, 1.6 + s * 2.6, s);
+      this.arazi.krater(p, kraterR, s);
       p.y = zeminY(p.x, p.z);
     }
-    this.hasar.krater(p, 1.6 + s * 2.6, s);
+    this.hasar.krater(p, kraterR, s);
     this.flas.position.set(p.x, p.y + r, p.z);
     this.flasGuc = Math.max(this.flasGuc, s);
     this.figurler.patlamaOldu(p); // figürler 4 sn oraya bakar (düşman/yaralı yoksa)
@@ -1325,7 +1337,10 @@ export class Sahne3B {
 
   tozDuman(azimut: number, siddet: number) {
     const secim = this.noktaSec(azimut, "toz", 9 + Math.random() * 9);
-    const p = yerKonumu(secim.azimut, secim.mesafe);
+    // 3B alan yapısının içine düşerse aynı yönde izleyiciye doğru (cadde izleyicinin önündedir)
+    let mesafe = secim.mesafe;
+    while (mesafe > 6 && this.alan.doluMu(yerKonumu(secim.azimut, mesafe), 1)) mesafe -= 1.5;
+    const p = yerKonumu(secim.azimut, mesafe);
     this.parcaciklar.tozBulutu(p, 3.5 + 1.5 * Math.min(1, siddet), Math.max(0.2, siddet));
   }
 

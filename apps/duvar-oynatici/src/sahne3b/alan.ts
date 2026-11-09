@@ -45,6 +45,41 @@ export interface AlanPlani {
   ogeler: AlanOgesi[];
   noktalar?: YerlesimNoktasi[];
   yasak?: YasakAralik[];
+  /**
+   * Düşman ateş mevzileri (sahne x/z, y zemin üstü m): pencere ve çatı ağızları, barikat arkası. Çatışma ve izli mermi
+   * düşman yönünün ±30°'sinde mevzi varsa uzak arazi yerine buradan ateş eder (catisma.ts).
+   */
+  dusmanMevzileri?: Array<{ x: number; y: number; z: number; ad?: string }>;
+}
+
+/** Mermi izinin kestiği öğe kutusu: ince/uzun direk ve lambalar (kutusu çoğunlukla boş hava) ile çatı eşyası hariç. */
+export function carpismaKutusuMu(kutu: THREE.Box3, catiEsyasi: boolean): boolean {
+  if (catiEsyasi) return false;
+  const en = Math.min(kutu.max.x - kutu.min.x, kutu.max.z - kutu.min.z);
+  const yuk = kutu.max.y - kutu.min.y;
+  return !(yuk > 5 && en < 1.5) && yuk > 0.3;
+}
+
+/**
+ * Doğru parçası (x0,y0,z0)→(x1,y1,z1) ile eksen hizalı kutunun ilk kesişiminin parametresi (0–1), yoksa -1.
+ * Başlangıcı kutunun içinde olan parça kesişim sayılmaz (pencereden ateş eden düşmanın izi kendi binasına çarpmaz).
+ */
+export function parcaKutuKesisimi(kutu: THREE.Box3, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): number {
+  const { min, max } = kutu;
+  if (x0 >= min.x && x0 <= max.x && y0 >= min.y && y0 <= max.y && z0 >= min.z && z0 <= max.z) return -1;
+  let t0 = 0;
+  let t1 = 1;
+  const eksen = (p: number, d: number, a: number, b: number) => {
+    if (Math.abs(d) < 1e-9) return p >= a && p <= b;
+    let ta = (a - p) / d;
+    let tb = (b - p) / d;
+    if (ta > tb) [ta, tb] = [tb, ta];
+    t0 = Math.max(t0, ta);
+    t1 = Math.min(t1, tb);
+    return t0 <= t1;
+  };
+  if (!eksen(x0, x1 - x0, min.x, max.x) || !eksen(y0, y1 - y0, min.y, max.y) || !eksen(z0, z1 - z0, min.z, max.z)) return -1;
+  return t0;
 }
 
 export function ogeKonumu(o: AlanOgesi): THREE.Vector3 {
@@ -181,9 +216,45 @@ export class AlanKatmani {
 
   /** (x, z) bir öğenin taban izine `pay` metreden yakın mı (asker binanın / aracın içine konmasın). */
   doluMu(konum: THREE.Vector3, pay = 0.6): boolean {
-    for (const { kutu } of this.izler) {
+    for (const { kutu, y } of this.izler) {
+      if (typeof y === "number") continue; // çatı eşyası zemini kaplamaz
       if (konum.x > kutu.min.x - pay && konum.x < kutu.max.x + pay && konum.z > kutu.min.z - pay && konum.z < kutu.max.z + pay) return true;
     }
     return false;
+  }
+
+  /** (x, z)'den en yakın zemin öğesinin taban izine yatay uzaklık (m; içindeyse 0, öğe yoksa Infinity). Krater boyu için. */
+  enYakinMesafe(konum: THREE.Vector3): number {
+    let enAz = Infinity;
+    for (const { kutu, y } of this.izler) {
+      if (typeof y === "number") continue;
+      const dx = Math.max(kutu.min.x - konum.x, 0, konum.x - kutu.max.x);
+      const dz = Math.max(kutu.min.z - konum.z, 0, konum.z - kutu.max.z);
+      enAz = Math.min(enAz, Math.hypot(dx, dz));
+    }
+    return enAz;
+  }
+
+  /** (x, z)'deki en yüksek öğe tepesi (dünya y; yoksa -Infinity): helikopter binaların üstünden geçsin. */
+  tepeYuksekligi(x: number, z: number): number {
+    let y = -Infinity;
+    for (const { kutu } of this.izler) if (x >= kutu.min.x && x <= kutu.max.x && z >= kutu.min.z && z <= kutu.max.z) y = Math.max(y, kutu.max.y);
+    return y;
+  }
+
+  /** Mermi izi parçasının ilk çarptığı öğe kutusunun parametresi (0–1), yoksa -1 (direk, lamba, çatı eşyası hariç). */
+  kesisim(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): number {
+    let enAz = -1;
+    for (const { kutu, y } of this.izler) {
+      if (!carpismaKutusuMu(kutu, typeof y === "number")) continue;
+      const t = parcaKutuKesisimi(kutu, x0, y0, z0, x1, y1, z1);
+      if (t >= 0 && (enAz < 0 || t < enAz)) enAz = t;
+    }
+    return enAz;
+  }
+
+  /** Planın düşman mevzileri, dünya koordinatında (y = zemin + mevzi yüksekliği). */
+  dusmanMevzileri(): THREE.Vector3[] {
+    return (this.aktifPlan?.dusmanMevzileri ?? []).map((m) => new THREE.Vector3(m.x, zeminY(m.x, m.z) + m.y, m.z));
   }
 }

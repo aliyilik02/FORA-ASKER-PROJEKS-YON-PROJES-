@@ -46,11 +46,16 @@ export class Helikopter3B {
   private readonly malzemeler: Array<{ mal: THREE.Material; opaklik: number }> = [];
   private readonly golgeVerenler: THREE.Mesh[] = [];
   private uygulananSolma = 1;
+  /**
+   * (x, z)'deki 3B alan yapısının tepesi (dünya y; yoksa -Infinity): uçuş modelinin arazi kaçınması binaları da
+   * "zemin" sayar, helikopter caddenin sonundaki binaların üstünden geçer (sahne3b → AlanKatmani.tepeYuksekligi).
+   */
+  engelUstu: ((x: number, z: number) => number) | null = null;
 
   constructor(private readonly parcaciklar: ParcacikSistemi) {
     this.grup.visible = false;
     this.grup.add(this.govde);
-    this.ucus.zeminFarki = (x, z) => zeminY(x, z) - this.inisZemini;
+    this.ucus.zeminFarki = (x, z) => Math.max(zeminY(x, z), this.engelUstu?.(x, z) ?? -Infinity) - this.inisZemini;
   }
 
   /**
