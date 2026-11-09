@@ -936,3 +936,25 @@ inşaat, düz damlı köy evi, 90'lar sedanı, dolmuş; Amerikan banliyö evi, o
   kullanılmayan: #61, #368, #361, #398, #67, #1, #112, #446, #138, #143, #303, #310 (sonraki dizilimler, üs bölgesi).
 - **Açık:** asfalt şerit ve kaldırım yok (zemin KENT dokusu); araç ve lambaların ön yönü gözle ayarlanmadı; duvarda ve
   normal Chrome penceresinde fps ölçülmedi (Claude sekmesindeki ölçüm Iris Xe'de güvenilmez).
+
+### Meskûn mahal figür ve efekt yerleşimi (9 Kasım akşam, plan v2)
+
+- **Askerler** her zaman izleyiciden 4–7 m'ye çekilir (`ASKER_EN_YAKIN/UZAK`; kullanıcının "çok yakın" isteği): asker
+  noktaları kontrol noktası bariyerlerinin, T-duvarların, kulübenin ve beyaz bariyerin hemen arkasında (10 nokta, üç
+  duvara yayılır); genel figür (yaralı, sıhhiyeci) hat gerisinde 4,5 m. Uzak plan noktaları 7 m çemberine çökerdi.
+- **Tank** açık orta şeritte (-0,5; -31); **helikopter** 58,5 m'de 7 m yarıçapı boş iniş alanında (rotor 5,5 m, cepheler
+  ±9 m). Uçuş modelinin arazi kaçınması bina tepelerini de zemin sayar (`Helikopter3B.engelUstu` ←
+  `AlanKatmani.tepeYuksekligi`): caddenin sonundaki 34 m'lik kuleyi aşar (eskiden içinden geçiyordu).
+- **Patlama/yangın** plan noktasına yapışır; `patlamaYeri` artık alan nesnesinin 2 m, sütrenin 1 m yakınını dolu sayar;
+  krater en yakın alan nesnesine kadar küçülür (araç/bariyer havada kalmasın). **Toz** nesne içine düşerse izleyiciye kayar.
+  Patlama/toz noktaları açık cadde ve meydanlarda, nesnelerden ≥ 2,5 m.
+- **Düşman ateşi:** manifest `dusmanMevzileri` (25: cephelerin 0,5 m önünde pencere/çatı yükseklikleri, kule, otobüs
+  barikatı, yan duvar binaları). Çatışmada düşman yönünün ±30°'sinde mevzi varsa kaynak odur (yükseklik/sırt düzeltmesi
+  yok); izli mermide düz akış mevziden izleyiciye, yan akış (yön ±) caddenin o yanındaki cepheden karşı kaldırıma
+  çaprazlar. Mevzi yoksa eski uzak arazi kaynağı. Uzak kaynak kulenin arkasında kalıyor, izler kuleden çıkıyordu.
+- **Mermi izi çarpması:** her iz karesinde parça alan kutularına bakılır (`AlanKatmani.kesisim`; direk/lamba ve çatı eşyası
+  hariç, izin başladığı kutu yok sayılır): bina, araç ya da bariyere çarpınca orada biter, yakınsa toz/kıvılcım.
+- **Denetim:** `node araclar/alan-plan-denetle.mjs meskun_mahal [--json çıktı]` noktaları GLB'lerin gerçek taban izlerine
+  göre denetler (asker 4–7 m'ye çekilmiş konumda; patlama 2,5, tank 3, helikopter 7 m pay; mevzi yapının içinde mi).
+- **Açık:** duvarda/tarayıcıda varyant denemesi yapılmadı (köprü bellek baskısıyla kapanmıştı): cephe kur ×3, patlama her
+  yöne, tank, helikopter iniş/kalkış, çatışma ve izli mermi (düz/±90).

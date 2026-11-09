@@ -326,7 +326,9 @@ eski görünüm. İçerik hattı `araclar/alan-modelleri.json` + `alan-modelleri
 ölçü; çıktı `public/icerik/modeller/alan/` depo dışı). İndirme yalnız sitedeki İndir düğmesiyle (tarayıcı `.meshy` →
 GLB); hızlı gönderi açmak Meshy güvenlik duvarında IP'yi 403'e düşürür (model başına ≥ 40 sn). 74 model indi (6'sının indirmesi kapalı) ve
 işlendi: meskûn mahalde 64 öğe (14 bina, kontrol noktası, araçlar, moloz, lamba/direk, çatı ısıtıcısı), kırsalda taş
-köy, dağlıkta iki taş ev. Ayrıntı `docs/duvar-oynatici.md` "3B meskûn mahal".
+köy, dağlıkta iki taş ev. Plan v2 (figür/efekt): askerler bariyer arkasında 4–7 m, tank şeridi, boş iniş alanı, düşman
+pencere/çatı mevzileri (`dusmanMevzileri`), izler yapıya çarpar, helikopter binaları aşar; denetim
+`araclar/alan-plan-denetle.mjs`; tarayıcıda varyant denemesi bekliyor. Ayrıntı `docs/duvar-oynatici.md` "3B meskûn mahal".
 
 ## Sıradaki işler (öncelik sırasıyla)
 
