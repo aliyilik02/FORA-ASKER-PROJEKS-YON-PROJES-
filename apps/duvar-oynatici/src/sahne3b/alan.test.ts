@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { AlanKatmani, carpismaKutusuMu, ogeKonumu, parcaKutuKesisimi } from "./alan";
+import { AlanKatmani, carpismaKutusuMu, ogeKonumu, parcacigiKutudanIt, parcaKutuKesisimi } from "./alan";
 import { yerKonumu } from "./uzay";
 
 /** Yükleyiciye gitmeden öğe yerleştirir: taban izi kutusu ve gruba ekleme yolu (yerlestir'in yüklemeden sonraki kısmı). */
@@ -44,6 +44,26 @@ describe("alan katmanı: mermi izi, krater, helikopter", () => {
     expect(k.enYakinMesafe(new THREE.Vector3(0, 0, 0))).toBeCloseTo(2);
     expect(k.enYakinMesafe(new THREE.Vector3(3, 0, 0))).toBe(0);
     expect(k.doluMu(new THREE.Vector3(0, 0, 0))).toBe(false);
+  });
+
+  it("toz/duman parçacığı yapının içinden geçmez: yandan itilir, duvar boyunca yükselir; tepenin üstünde serbest", () => {
+    const bina = new THREE.Box3(new THREE.Vector3(-20, 0, -40), new THREE.Vector3(-9, 15, -20)); // sol cephe x = -9
+    const duman = { x: -9.5, y: 5, z: -30, vx: -1, vy: 0, vz: 0, boyut: 4, yercekimi: 0 };
+    expect(parcacigiKutudanIt(duman, bina)).toBe(true);
+    expect(duman.x).toBeCloseTo(-9 + 0.4 * 4); // cephenin yarıçap kadar önünde
+    expect(duman.vx).toBeGreaterThan(0); // duvardan hafif geri teper
+    expect(duman.vy).toBeGreaterThan(0); // duvar boyunca yükselir
+    const tepede = { x: -15, y: 15.1, z: -30, vx: 0, vy: -0.2, vz: 0, boyut: 2, yercekimi: 0 };
+    parcacigiKutudanIt(tepede, bina);
+    expect(tepede.y).toBeCloseTo(15 + 0.5 * 0.8); // en kısa yol yukarı: üstüne çıkar
+    expect(tepede.vy).toBe(0);
+    const ustunde = { x: -15, y: 20, z: -30, vx: 0, vy: 0.5, vz: 0, boyut: 6, yercekimi: 0 };
+    expect(parcacigiKutudanIt(ustunde, bina)).toBe(false);
+    const k = new AlanKatmani();
+    kutuEkle(k, [-20, -40], [-9, -20], 15);
+    const p = { x: -9.2, y: 3, z: -25, vx: 0, vy: 0, vz: 0, boyut: 3, yercekimi: 0 };
+    k.parcacikIt(p);
+    expect(p.x).toBeGreaterThan(-9);
   });
 
   it("helikopter için tepe yüksekliği: kutunun üstü, dışında -Infinity", () => {

@@ -82,6 +82,66 @@ export function parcaKutuKesisimi(kutu: THREE.Box3, x0: number, y0: number, z0: 
   return t0;
 }
 
+/** Parçacık itmesinin ihtiyaç duyduğu alanlar (parcaciklar.ts Parcacik ile uyumlu). */
+export interface ItilenParcacik {
+  x: number;
+  y: number;
+  z: number;
+  vx: number;
+  vy: number;
+  vz: number;
+  boyut: number;
+  yercekimi: number;
+}
+
+/** Parçacık ızgarası hücresi (m) ve kutuların genişletme payı (en büyük parçacık yarıçapı, m). */
+const HUCRE = 10;
+const EN_BUYUK_YARICAP = 3;
+const hucreAnahtari = (ix: number, iz: number) => (ix + 512) * 1024 + (iz + 512);
+
+/**
+ * Parçacığı kutunun dışına iter: merkez, kutunun boyutun %40'ı (en çok 3 m) genişletilmiş hacmindeyse en kısa yoldan
+ * dışarı. Yandan itilirken duvara doğru hız söner (hafif geri teper) ve duman duvar boyunca yükselir; tepeye yakınsa
+ * üstüne çıkar. Tepenin üstündeki parçacık serbest (duman binanın üstünden aşar). İtildiyse true.
+ */
+export function parcacigiKutudanIt(p: ItilenParcacik, kutu: THREE.Box3): boolean {
+  const r = Math.min(EN_BUYUK_YARICAP, 0.4 * p.boyut);
+  const ust = kutu.max.y + r * 0.5;
+  if (p.y > ust || p.y < kutu.min.y - r) return false;
+  const sol = p.x - (kutu.min.x - r);
+  const sag = kutu.max.x + r - p.x;
+  if (sol <= 0 || sag <= 0) return false;
+  const on = p.z - (kutu.min.z - r);
+  const arka = kutu.max.z + r - p.z;
+  if (on <= 0 || arka <= 0) return false;
+  const dx = Math.min(sol, sag);
+  const dz = Math.min(on, arka);
+  const dy = ust - p.y;
+  if (dy <= dx && dy <= dz) {
+    p.y = ust;
+    if (p.vy < 0) p.vy = 0;
+    return true;
+  }
+  if (dx <= dz) {
+    if (sol < sag) {
+      p.x -= sol;
+      if (p.vx > 0) p.vx *= -0.15;
+    } else {
+      p.x += sag;
+      if (p.vx < 0) p.vx *= -0.15;
+    }
+  } else if (on < arka) {
+    p.z -= on;
+    if (p.vz > 0) p.vz *= -0.15;
+  } else {
+    p.z += arka;
+    if (p.vz < 0) p.vz *= -0.15;
+  }
+  // Yerçekimsiz duman/toz duvara dayanınca yükselir (yapı boyunca yukarı akar)
+  if (p.yercekimi === 0 && p.vy < 0.4) p.vy += 0.15;
+  return true;
+}
+
 export function ogeKonumu(o: AlanOgesi): THREE.Vector3 {
   if (typeof o.x === "number" && typeof o.z === "number") return new THREE.Vector3(o.x, 0, o.z);
   return yerKonumu(o.azimut ?? 0, o.mesafe ?? 20);
@@ -141,6 +201,7 @@ export class AlanKatmani {
     this.nesil++;
     for (const c of [...this.grup.children]) this.grup.remove(c);
     this.izler.length = 0;
+    this.izgara = null;
     this.aktifPlan = null;
     const bekleyen = [...this.onbellek.values()];
     this.onbellek.clear();
@@ -191,6 +252,7 @@ export class AlanKatmani {
     const iz = { nesne, kutu: new THREE.Box3(), y: o.y };
     this.izler.push(iz);
     this.oturt(iz);
+    this.izgara = null; // parçacık ızgarası yeni öğeyle yeniden kurulur
   }
 
   private oturt(iz: { nesne: THREE.Object3D; kutu: THREE.Box3; y?: number }) {
@@ -240,6 +302,37 @@ export class AlanKatmani {
     let y = -Infinity;
     for (const { kutu } of this.izler) if (x >= kutu.min.x && x <= kutu.max.x && z >= kutu.min.z && z <= kutu.max.z) y = Math.max(y, kutu.max.y);
     return y;
+  }
+
+  /** Parçacık ızgarası: hücre → o hücreye (genişletilmiş) değen katı kutular; öğeler değişince yeniden kurulur. */
+  private izgara: Map<number, THREE.Box3[]> | null = null;
+
+  private izgaraKur(): Map<number, THREE.Box3[]> {
+    const izgara = new Map<number, THREE.Box3[]>();
+    for (const { kutu, y } of this.izler) {
+      if (!carpismaKutusuMu(kutu, typeof y === "number")) continue;
+      const x0 = Math.floor((kutu.min.x - EN_BUYUK_YARICAP) / HUCRE);
+      const x1 = Math.floor((kutu.max.x + EN_BUYUK_YARICAP) / HUCRE);
+      const z0 = Math.floor((kutu.min.z - EN_BUYUK_YARICAP) / HUCRE);
+      const z1 = Math.floor((kutu.max.z + EN_BUYUK_YARICAP) / HUCRE);
+      for (let ix = x0; ix <= x1; ix++)
+        for (let iz = z0; iz <= z1; iz++) {
+          const a = hucreAnahtari(ix, iz);
+          const liste = izgara.get(a);
+          if (liste) liste.push(kutu);
+          else izgara.set(a, [kutu]);
+        }
+    }
+    this.izgara = izgara;
+    return izgara;
+  }
+
+  /** Toz/duman/ateş parçacığını yapıların dışına iter (parcaciklar.ts ParcacikGrubu.engel); yapı yoksa hiçbir şey. */
+  parcacikIt(p: ItilenParcacik) {
+    if (!this.izler.length) return;
+    const liste = (this.izgara ?? this.izgaraKur()).get(hucreAnahtari(Math.floor(p.x / HUCRE), Math.floor(p.z / HUCRE)));
+    if (!liste) return;
+    for (let i = 0; i < liste.length; i++) parcacigiKutudanIt(p, liste[i]);
   }
 
   /** Mermi izi parçasının ilk çarptığı öğe kutusunun parametresi (0–1), yoksa -1 (direk, lamba, çatı eşyası hariç). */

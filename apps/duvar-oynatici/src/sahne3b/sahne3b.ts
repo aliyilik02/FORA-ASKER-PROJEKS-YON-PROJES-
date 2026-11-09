@@ -282,6 +282,8 @@ export class Sahne3B {
     this.catisma.mevziler = () => this.alan.dusmanMevzileri();
     this.catisma.engelKesisimi = (x0, y0, z0, x1, y1, z1) => (this.alan.ogeSayisi ? this.alan.kesisim(x0, y0, z0, x1, y1, z1) : -1);
     this.heli.engelUstu = (x, z) => this.alan.tepeYuksekligi(x, z);
+    // Toz, duman, ateş, kıvılcım ve rotor tozu yapıların içinden geçmez, etrafından ve üstünden akar
+    this.parcaciklar.engelAyarla((p) => this.alan.parcacikIt(p));
     this.catisma.agirSilahlar = () => this.figurler.agirSilahlar();
     if (!r) return;
     this.renderer = r;

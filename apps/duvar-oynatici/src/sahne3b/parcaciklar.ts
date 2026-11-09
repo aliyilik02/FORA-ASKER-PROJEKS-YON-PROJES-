@@ -140,6 +140,11 @@ export class ParcacikGrubu {
   private readonly ek: THREE.InstancedBufferAttribute;
   /** Rüzgâr hızı (dünya, m/sn): `surukle` > 0 parçacıklar buna kapılır. Sahne her kare ortamdan yazar. */
   readonly ruzgar = new THREE.Vector3();
+  /**
+   * Katı engel (3B alan yapıları): konum güncellemesinden sonra parçacığı yapının dışına iter (toz/duman binanın, aracın
+   * içinden geçmez, etrafından akar). Sahne ayarlar (AlanKatmani.parcacikIt); yoksa parçacık serbest.
+   */
+  engel: ((p: Parcacik) => void) | null = null;
   /** Örnek başına öznitelikler (canlı aralık yüklemesi için). */
   private readonly oznitelikler: THREE.InstancedBufferAttribute[];
   readonly parcaciklar: Parcacik[] = [];
@@ -289,6 +294,7 @@ export class ParcacikGrubu {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.z += p.vz * dt;
+      if (this.engel) this.engel(p);
       p.boyut += p.buyume * dt;
       p.aci += p.donus * dt;
       canli[n++] = p;
@@ -415,6 +421,13 @@ export class ParcacikSistemi {
 
   set isik(v: number) {
     this.duman.isik = v;
+  }
+
+  /** Katı engel bütün gruplara (duman, toz, ateş, kıvılcım, rotor tozu): 3B alan yapılarının içinden geçmesinler. */
+  engelAyarla(engel: ((p: Parcacik) => void) | null) {
+    this.duman.engel = engel;
+    this.ates.engel = engel;
+    this.kivilcim.engel = engel;
   }
 
   guncelle(dt: number) {

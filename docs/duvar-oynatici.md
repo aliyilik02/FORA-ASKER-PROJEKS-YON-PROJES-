@@ -956,5 +956,10 @@ inşaat, düz damlı köy evi, 90'lar sedanı, dolmuş; Amerikan banliyö evi, o
   hariç, izin başladığı kutu yok sayılır): bina, araç ya da bariyere çarpınca orada biter, yakınsa toz/kıvılcım.
 - **Denetim:** `node araclar/alan-plan-denetle.mjs meskun_mahal [--json çıktı]` noktaları GLB'lerin gerçek taban izlerine
   göre denetler (asker 4–7 m'ye çekilmiş konumda; patlama 2,5, tank 3, helikopter 7 m pay; mevzi yapının içinde mi).
+- **Toz/duman yapıdan geçmez (9 Kasım gece, kullanıcı gözlemi):** `ParcacikGrubu.engel` ← `AlanKatmani.parcacikIt` (10 m ızgara,
+  `parcacigiKutudanIt`): duman, toz, ateş, kıvılcım ve rotor tozu parçacığının merkezi yapı kutusunun boyutun %40ı (en çok 3 m)
+  genişletilmiş hacmine girerse en kısa yoldan dışarı itilir; duvara doğru hız söner, duman cephe boyunca yükselir, tepeye
+  yakınsa üstüne çıkar, tepenin üstünde serbest. Ölçüm (rüzgâr 0,9 binalara doğru, 3 patlama + 3 toz, 15 sn): engelsiz
+  parçacıkların %30–50si yapı içinde (217–282 / 500–800), engelle 0.
 - **Açık:** duvarda/tarayıcıda varyant denemesi yapılmadı (köprü bellek baskısıyla kapanmıştı): cephe kur ×3, patlama her
   yöne, tank, helikopter iniş/kalkış, çatışma ve izli mermi (düz/±90).
