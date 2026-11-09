@@ -28,9 +28,9 @@ import { Helikopter3B } from "./helikopter3b";
 import { rotorTozuTuru } from "./rotorTozu";
 import { ParcacikSistemi } from "./parcaciklar";
 import { SutreKatmani, type SutreEsyasi } from "./sutre";
-import { AlanKatmani, type AlanPlani } from "./alan";
+import { AlanKatmani, ogeKonumu, type AlanPlani } from "./alan";
 import { SokakKatmani, sokakIcindeMi } from "./sokak";
-import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, type AraziModu } from "./arazi";
+import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, KIS_ESIGI, type AraziModu } from "./arazi";
 import { Gokyuzu } from "./gokyuzu";
 import { GokOrtusu } from "./gokOrtusu";
 import { Yagis3B } from "./yagis3b";
@@ -980,7 +980,7 @@ export class Sahne3B {
     const istek: AraziIstegi = { mod, bolge, mevsim, kok };
     const g = this.gecis;
     if (g.etkin) {
-      const degisir = this.araziBolge !== `${mod}|${bolge}` || this.uygulananKar !== karDegeri(mevsim);
+      const degisir = this.araziBolge !== this.araziAnahtari(mod, bolge, karDegeri(mevsim)) || this.uygulananKar !== karDegeri(mevsim);
       if (degisir || g.bekliyor) {
         this.bekleyenArazi = istek;
         if (degisir) g.yanEtkiIste();
@@ -990,6 +990,14 @@ export class Sahne3B {
     this.araziUygula(istek, g.hazirlik?.kaynak ?? this.kaynak);
   }
 
+  /**
+   * Arazi kurulum anahtarı: kip, bölge, 3B alan ve kış (kış bitki seti: karlı iğne yapraklılar, yapraksız ağaçlar; mevsim
+   * kışa girip çıkınca arazi yeniden kurulur, takasta örtünün arkasında).
+   */
+  private araziAnahtari(mod: AraziModu, bolge: string, kar: number): string {
+    return `${mod}|${bolge}${this.alanPlanlari[bolge] ? "|alan" : ""}${kar >= KIS_ESIGI ? "|kis" : ""}`;
+  }
+
   /** Arazi isteğini uygular (`planKaynagi`: görüş koridorlarının planı). Arazi yeniden kurulduysa true. */
   private araziUygula(i: AraziIstegi, planKaynagi: PanoramaKaynagi | null): boolean {
     const { mod, bolge, mevsim, kok } = i;
@@ -997,7 +1005,7 @@ export class Sahne3B {
     this.heli.tozTuru = rotorTozuTuru(bolge, mevsim);
     const kar = karDegeri(mevsim);
     const alanPlani = this.alanPlanlari[bolge] ?? null;
-    const anahtar = `${mod}|${bolge}${alanPlani ? "|alan" : ""}`;
+    const anahtar = this.araziAnahtari(mod, bolge, kar);
     let kuruldu = false;
     if (this.araziBolge !== anahtar) {
       this.araziBolge = anahtar;
@@ -1009,9 +1017,17 @@ export class Sahne3B {
       // Görüş koridorları kurulumda hesaplanır (yerinde güncelleme gereksiz: arazi zaten yeniden kuruluyor)
       this.arazi.koridorlariAyarla(this.planKoridorlari(planKaynagi), false);
       this.arazi.uyari = (m) => this.uyari?.(m);
-      // Asfalt yol, kaldırım ve meydanda çim/çalı/kaya bitmez (kurulumda dağıtılır)
+      // Asfalt yol, kaldırım ve meydanda çim/çalı/kaya bitmez; 3B alanın evlerinin, binalarının içinde ağaç bitmez
+      // (taban izi yüklenmişse onunla, henüz yüklenmemişse öğe merkezinin 7 m çevresi). Kurulumda dağıtılır.
       const sokakPlani = alanPlani?.sokak;
-      this.arazi.bitkiDisla = sokakPlani ? (x, z) => sokakIcindeMi(sokakPlani, x, z) : null;
+      const ogeMerkezleri = (alanPlani?.ogeler ?? []).filter((o) => o.y === undefined).map((o) => ogeKonumu(o));
+      const nokta = new THREE.Vector3();
+      this.arazi.bitkiDisla = alanPlani
+        ? (x, z) =>
+            (sokakPlani !== undefined && sokakIcindeMi(sokakPlani, x, z)) ||
+            ogeMerkezleri.some((p) => Math.hypot(p.x - x, p.z - z) < 7) ||
+            this.alan.doluMu(nokta.set(x, 0, z), 1)
+        : null;
       this.arazi.kur(mod, profil, ARAZI_KALITE[this.kalite], kok, kar);
       zeminFonksiyonu(this.arazi.aktif ? (x, z) => this.arazi.yukseklik(x, z) : null);
       // Bölgenin 3B alanı (yoksa önceki bölgeninki kalkar); zemin fonksiyonu kurulduktan sonra, yeni zemine oturur

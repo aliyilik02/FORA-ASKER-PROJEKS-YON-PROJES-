@@ -13,3 +13,8 @@ Modeller (modeller/<ad>/, 1K glTF + bin + textures; *_lod.glb = araclar/arazi-sa
   (26 Ekim 2026, ormanlık seti) fidan_goknar = fir_sapling, fidan_cam = pine_sapling_small, cali_1 = shrub_01, cali_2 = shrub_02,
   cali_3 = shrub_03, egrelti = fern_02, kutuk_2 = tree_stump_01, cam_koku = pine_roots
 Yeniden indirme: node araclar/arazi-indir.mjs (liste: araclar/arazi-indir-listesi.txt). Bu klasör depoya girmez (.gitignore).
+
+Sokak dokuları (sokak_*): Poly Haven asphalt_02, brick_pavement_03, concrete_pavement_02 — CC0 (polyhaven.com)
+
+Meshy topluluk modelleri (modeller/m_*/: *_lod.glb, ağaçlarda *_uzak.glb): CC0 (meshy.ai topluluk sayfaları, 9 Kasım 2026
+seçim; liste ve gönderi numaraları araclar/bitki-modelleri.json). Pişirme: araclar/model-pisir.py (Blender), ölçek: model-sadelestir.mjs.

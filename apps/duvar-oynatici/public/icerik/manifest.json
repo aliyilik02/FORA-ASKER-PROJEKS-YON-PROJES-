@@ -8441,6 +8441,13 @@
           "yonDerece": 42
         }
       ]
+    },
+    "ormanlik": {
+      "_aciklama": "3B orman (9 Kasım gece, Meshy topluluk ağaçları CC0): karaçam, çam, ladin ağırlıklı orman arazinin bitki setinden (sahne3b/arazi.ts BITKI_SETLERI.orman, kışın KIS_YERINE); gök ve uzak dağlar dağlık panoramadan, arazi 110 m. Yerleşim noktaları panoramanın planından; ağaçlar noktaların ve görüş koridorlarının dışında.",
+      "arkaPlanBolge": "daglik",
+      "arazi": "hibrit",
+      "araziYaricap": 110,
+      "ogeler": []
     }
   }
 }

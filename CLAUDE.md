@@ -331,6 +331,15 @@ pencere/çatı mevzileri (`dusmanMevzileri`), izler yapıya çarpar, helikopter 
 `araclar/alan-plan-denetle.mjs`; toz/duman yapıdan geçmez (`parcacikIt`); asfalt yol, bordürlü kaldırım, parke meydan, orta çizgi (`sahne3b/sokak.ts`, Poly
 Haven CC0, `araclar/sokak-doku-indir.mjs`). Ayrıntı `docs/duvar-oynatici.md` "3B meskûn mahal".
 
+**Orman, dağ, kırsal bitki örtüsü ve kış (9 Kasım gece):** Meshy topluluğundan 60 CC0 ağaç/çalı/kaya (artifact "Meshy Orman
+ve Dağ Modelleri", 66 seçim; #200 kenevir, #205 deniz yosunu çıktı ve elendi, #327/#330 indirilemedi, #243/#252 pişirmede kara döndü). Hat:
+`araclar/bitki-modelleri.json` + `alan-modelleri-hazirla.mjs --yapilandirma` + `araclar/model-pisir.py` (Blender: Decimate,
+takılırsa voksel; yeni UV'ye renk/normal pişirme; meshoptimizer Meshy atlasında takılıyordu). `arazi.ts`: `agac` sınıfı
+(uzak kopya 40 m, gövde aralığı, alanca eşit dağılım, yol boyu kavak sırası `bitkiYerlesimi.ts`), kış seti (`KIS_YERINE`:
+karlı iğne yapraklı, yapraksız ağaç; kışa girince arazi yeniden kurulur) + bitki/kaya/çimen kar gölgelendiricisi,
+kışın çimen saman rengi ve dibi karda; orman zemini yeşile kayar (`yesillik`), çimen sık; ormanlık 3B alan (dağlık arka plan,
+110 m). Ayrıntı `docs/duvar-oynatici.md` "Orman, dağ ve kırsal". Duvarda gözle bakış ve gerçek fps ölçümü bekliyor.
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 0. **Gösterim hazır (2 Kasım):** örnek senaryo "Gösterim – Güncel Durum (5 dk)" (`sn_gosterim_guncel`; akış

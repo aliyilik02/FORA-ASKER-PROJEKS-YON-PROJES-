@@ -977,3 +977,52 @@ inşaat, düz damlı köy evi, 90'lar sedanı, dolmuş; Amerikan banliyö evi, o
 - **Meskûn dizilimi:** asfalt x ±7,5, z +14…-100; kaldırımlar x ±(7,5–9,6), z -12…-98; meydanlar kontrol noktasının
   iki yanı (z +14…-12); orta çizgi z -14…-90, 3 m çizgi / 5 m boşluk. Araçlar bordürün içinde (en yakını 6 cm).
 - **Açık:** kraterin asfaltta görünüşü gözle denenmedi; kaldırım üstündeki lamba/moloz 15 cm gömülü (fark edilmez).
+
+## Orman, dağ ve kırsal: Meshy bitki örtüsü ve kış (9 Kasım gece)
+
+Kullanıcı meskûn mahali beğendi, diğer alanların da böyle zenginleşmesini istedi: ormanda daha çok ağaç, çalı, çimen
+(yeşillik), karlı ağaç ve karlı çimen; dağlıkta çalı ve çevre. Meshy topluluğunda 22 aramada 376 aday tarandı, 118'i
+artifact "Meshy Orman ve Dağ Modelleri"nde (onaylar db `secim/liste`), kullanıcı 66'sını seçti. İndirmede başlıklarından #200'ün kenevir bitkisi, #205'in deniz yosunu olduğu anlaşıldı
+(küçük resimde çalı gibiydiler): elendi; #327 ve #330'un indirmesi sitede kapalı; #252 (karlı çalı) ve #243 (çalı) pişirmede
+kara döndü, çıkarıldı. 60 model kullanılıyor.
+
+**İçerik hattı.** İndirme meskûndaki gibi sitedeki İndir düğmesiyle (≥ 40 sn/model), eşleme
+`araclar/bitki-indirme-adlari.json`. Yapılandırma `araclar/bitki-modelleri.json` (`"pisir": true`, ağaçlarda
+`ucgenUzak`), çalıştırma `node araclar/alan-modelleri-hazirla.mjs --yapilandirma araclar/bitki-modelleri.json [no...]`
+(`--tasi` indirilenleri `meshy_output/topluluk-bitki/<no>.glb`'ye taşır). Meshy topluluk modellerinin doku atlası
+binlerce küçük UV adasından oluşuyor: meshoptimizer dikiş kenarlarını çökertemediği için 1,6 M üçgenlik çam 570 binde
+takıldı. Yeni yol `araclar/model-pisir.py` (Blender 5.1 başsız): kopyada aynı konumdaki köşeler birleşir → Decimate
+(6 tura kadar) → yine hedefin 1,6 katından fazlaysa (binlerce ayrık yaprak kümesi) voksel yeniden ağ + Decimate →
+yeni UV (smart project) → renk özgün modelden pişirilir (Cycles, seçiliden etkine; kaya/yosunlu/kayalık/kütükte
+normal de). Ardından `model-sadelestir.mjs` yalnız ölçek (gerçek boy), taban y=0 ve JPEG doku yapar. Ağaç ~5–6 bin
+üçgen + 1024 doku, uzak kopya ~0,9 bin + 256 doku; çıktı `icerik/arazi/modeller/m_<tür>_<no>/m_..._lod.glb` ve
+`_uzak.glb` (depo dışı). Sonuç önizlemesi: `icerik/arazi/_onizleme/index.html?m=<glb,...>` (depo dışı, three CDN).
+
+**Kod (`sahne3b/arazi.ts`).**
+- Yeni sınıf `agac`: `agac()/genc()/kuruAgac()/yolSirasi()` yardımcıları; uzak kopya `UZAK_LOD_MESAFE` (40 m) ötesinde,
+  gölgesiz; izleyiciden en az 11 m (`AGAC_EN_YAKIN`); alanca eşit dağılım (`us` 0,55; çalı/ot 1,35 yakına yığar);
+  gövdeler arası en az aralık bütün ağaç türlerinde ortak ızgarada (`bitkiYerlesimi.ts` `AralikIzgarasi`); dik yamaçta
+  (eğim > 0,5) ağaç yok; örnek başına ±%10 ton farkı (`instanceColor`). Kraterde kaya gibi yeni zemine iner.
+- Kırsal: köy yolunun iki yanında kavak sırası (`yolDizisi`: üç kavak türü aynı 24 m adımda 0/8/16 m fazla iç içe,
+  yoldan 6,5 m, %18 boşluk), tarlada seyrek meşe ve yaprak döken ağaç, servi/mazı, kuru ağaç.
+- Orman: karaçam, çam, ladin ağırlıklı ~480 ağaç (yüksek kalite; orta 0,8, düşük 0,5 kat), sedir, meşe, genç çam,
+  kuru gövde; altında Meshy çalı/eğrelti, devrik gövde, kütük, yosunlu kaya + mevcut Poly Haven fidan/eğrelti. Zemin:
+  `yesillik` 0,75 (splat gölgelendiricisinde kahverengi orman tabanı yosun/zeytin yeşiline kayar; Poly Haven'da canlı
+  yeşil zemin dokusu yok), çimen demetleri 1,5 kat ve 50 m içinde (`cimenEnUzak`), üç ton (`CIMEN_TONLARI`).
+- Dağlık (Toros): Meshy kireçtaşı ve gri kayalar, yar/kayalık/taşlık (`kayalik()`, 20–60 m ötede), ardıç, sedir,
+  karaçam, kuru çam; kuru çalı (profil `cali` 0,3 → 0,7).
+- Kış (`KIS_YERINE`, `bitkiListesi(set, kar)`, eşik `KIS_ESIGI` 0,5): iğne yapraklılar dalında kar taşıyan modellerle,
+  meşe/kavak/yaprak döken ağaçlar yapraksız gövdelerle yer değiştirir (kavak sırası yapraksız sıra olur), eğrelti ve ot
+  modelleri kalkar, her dem yeşil çalı eklenir (üstü karlanır). Arazi anahtarı kışa girip çıkınca değişir (`sahne3b.araziAnahtari`):
+  arazi takasta örtünün arkasında yeniden kurulur.
+- Kar gölgelendiricisi (`bitkiMalzemesi`, bütün bitki/kaya malzemelerinde, rüzgârla birlikte): dünya uzayında yukarı
+  bakan yüzeyler `bitkiKar` ile beyazlar (sonbaharın 0,15 kırağısı yalnız zeminde kalır). Çimen kışın gizlenmez:
+  saman rengi, dibi karda, uçta kar tozu, demetlerin ~%45'i örtünün altında (`cimenMalzemesiHazirla`).
+- Bellek: bölge değişiminde listede olmayan modeller önbellekten çıkar, geometri/malzeme/dokuları bırakılır
+  (`kullanilmayanModelleriBirak`).
+- 3B alan öğelerinin (köy evleri, binalar) çevresine bitki konmaz: öğe merkezinin 7 m'si + yüklenmiş taban izi
+  (`sahne3b.ts` `bitkiDisla`).
+
+**Ormanlık 3B alan.** Manifest `alanlar.ormanlik`: arka plan dağlık panoraması (gök ve uzak dağlar), arazi hibrit
+110 m, öğe yok (orman bitki setinden); yerleşim noktaları panoramanın planından, ağaçlar noktaların ve görüş
+koridorlarının dışında. `?alan=kapali` eski görünüm (orman panoraması, 48 m arazi).
