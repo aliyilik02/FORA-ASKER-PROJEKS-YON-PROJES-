@@ -8,7 +8,7 @@
  *   node araclar/alan-modelleri-hazirla.mjs 69 67      # yalnız bu numaralar
  *
  *   node araclar/alan-modelleri-hazirla.mjs --tasi     # İndirilenler'deki Meshy GLB'lerini numaraya göre taşır
- *        (eşleme: araclar/alan-indirme-adlari.json — { "<no>": "<gönderi başlığı ya da Meshy'nin önerdiği dosya adı>" })
+ *        (eşleme: araclar/alan-indirme-adlari.json — indirme sırasıyla [["<no>", "<başlık ya da Meshy'nin önerdiği ad>"], ...])
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
@@ -33,12 +33,14 @@ function baslik(ad, damgaHane) {
 }
 
 if (arg.includes("--tasi")) {
-  const adlar = JSON.parse(readFileSync(path.join(kok, "araclar/alan-indirme-adlari.json"), "utf8"));
+  // İndirme sırasıyla [no, başlık] listesi: aynı başlıklı modeller (ör. dört "Concrete_Barrier") sırayla en eski dosyayı alır
+  const ham = JSON.parse(readFileSync(path.join(kok, "araclar/alan-indirme-adlari.json"), "utf8"));
+  const adlar = Array.isArray(ham) ? ham : Object.entries(ham);
   const indirilen = path.join(homedir(), "Downloads");
   const dosyalar = readdirSync(indirilen).filter((d) => /^Meshy_AI_.*\.glb$/i.test(d));
   const kullanildi = new Set();
   let tasinan = 0;
-  for (const [no, onerilen] of Object.entries(adlar)) {
+  for (const [no, onerilen] of adlar) {
     const hedef = path.join(hamDizin, `${no}.glb`);
     if (existsSync(hedef)) continue;
     const tam = onerilen.startsWith("Meshy_AI_") ? baslik(onerilen, 8) : onerilen.replace(/_+$/, "");

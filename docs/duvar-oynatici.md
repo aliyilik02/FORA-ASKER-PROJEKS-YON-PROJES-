@@ -926,5 +926,13 @@ inşaat, düz damlı köy evi, 90'lar sedanı, dolmuş; Amerikan banliyö evi, o
   modeller (#86, #80, #382) atlanır.
 - **Tuzak:** bazı modeller (#67, #45, #361, #385) kopuk üçgenlerden oluşuyor; meshoptimizer 270–660 bin üçgende kalıyor
   (serbest sınır da hata payı da fark etmiyor). Şimdilik böyle; gerekirse Meshy remesh (5 kredi/model, önce sor).
-- **Açık:** araçlar, moloz, bariyer ve sokak eşyası indirilip caddeye dizilecek; asfalt şerit ve kaldırım yok (zemin KENT
-  dokusu); duvarda gözle bakılmadı (yalnız Iris Xe tarayıcıda: 14 bina yüklendi, cepheler caddeye dönük, gölgeler doğru).
+- **Tam dizilim (9 Kasım akşam):** meskûn mahalde 64 öğe: 14 bina + önde kontrol noktası (şaşırtmalı beton bariyer,
+  nöbetçi kulübesi, variller, T-duvar), caddede 6 otomobil, otobüs, 3 dolmuş/minibüs, sonda yanmış otobüs barikatı,
+  meydanlarda askerî kamyon ve pikap, bina diplerinde moloz, kaldırımlarda lamba ve beton/ahşap direkler, çatılarda güneş
+  enerjili su ısıtıcı (`y` alanı: zemin üstü yükseklik). Kırsalda sol önde 75–120 m taş köy (6 yapı + elektrik hattı),
+  dağlıkta iki taş ev; bu ikisinde alanın `noktalar`ı yok, panoramanın yerleşim planı aynen geçerli (main.ts).
+- **Ağır kalan ve atlananlar:** #162 (2 M üçgen), #158 (1,2 M) tuğla molozu ve #497 güneş ısıtıcı (457 bin) sadeleşmedi,
+  dizilime konmadı (hafif eşleri kullanılıyor). İndirmesi kapalı: #86, #80, #382, #153, #306, #206. Hazır ama henüz
+  kullanılmayan: #61, #368, #361, #398, #67, #1, #112, #446, #138, #143, #303, #310 (sonraki dizilimler, üs bölgesi).
+- **Açık:** asfalt şerit ve kaldırım yok (zemin KENT dokusu); araç ve lambaların ön yönü gözle ayarlanmadı; duvarda ve
+  normal Chrome penceresinde fps ölçülmedi (Claude sekmesindeki ölçüm Iris Xe'de güvenilmez).

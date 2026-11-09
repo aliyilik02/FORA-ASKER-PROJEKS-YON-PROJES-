@@ -265,12 +265,11 @@ function panoramaKaynagi(a: PanoramaAdayi, alan?: AlanPlani): PanoramaKaynagi {
   const k = a.kayit;
   const yaw = k.yawKaydirma ?? 0;
   const panoramaya = (az: number) => ((((az + yaw + 180) % 360) + 360) % 360) - 180;
-  const plan = alan
-    ? {
-        noktalar: alan.noktalar?.map((n) => ({ ...n, azimut: panoramaya(n.azimut) })),
-        yasak: alan.yasak?.map((y) => ({ ...y, baslangic: panoramaya(y.baslangic), bitis: panoramaya(y.bitis) })),
-      }
-    : { noktalar: k.noktalar, yasak: k.yasak };
+  // Alan kendi noktalarını vermiyorsa (ör. kırsalda yalnız uzak köy evleri) panoramanın planı geçerli kalır
+  const plan = {
+    noktalar: alan?.noktalar ? alan.noktalar.map((n) => ({ ...n, azimut: panoramaya(n.azimut) })) : k.noktalar,
+    yasak: alan?.yasak ? alan.yasak.map((y) => ({ ...y, baslangic: panoramaya(y.baslangic), bitis: panoramaya(y.bitis) })) : alan?.noktalar ? undefined : k.yasak,
+  };
   return {
     url: /^(https?:|data:|blob:|\/)/.test(k.dosya) ? k.dosya : video.kok + k.dosya,
     yawKaydirma: yaw,

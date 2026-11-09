@@ -7671,6 +7671,310 @@
           "x": -40,
           "z": -50,
           "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/bariyer_beton_165.glb",
+          "x": -4.5,
+          "z": -7,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/bariyer_beton_184.glb",
+          "x": -1.4,
+          "z": -7.2,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/bariyer_beton_166.glb",
+          "x": 4.8,
+          "z": -10.5,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/bariyer_beyaz_172.glb",
+          "x": 7.6,
+          "z": -10.6,
+          "yonDerece": 10
+        },
+        {
+          "dosya": "modeller/alan/nobetci_kulubesi_317.glb",
+          "x": 7.4,
+          "z": -5.6,
+          "yonDerece": -90
+        },
+        {
+          "dosya": "modeller/alan/varil_213.glb",
+          "x": -6.8,
+          "z": -6.4,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/varil_216.glb",
+          "x": -7.4,
+          "z": -7.3,
+          "yonDerece": 30
+        },
+        {
+          "dosya": "modeller/alan/varil_218.glb",
+          "x": 6.2,
+          "z": -12.4,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/t_duvar_179.glb",
+          "x": -9.6,
+          "z": 0,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/t_duvar_179.glb",
+          "x": -9.6,
+          "z": 3.6,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/otomobil_yanik_21.glb",
+          "x": -6.2,
+          "z": -19,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/otomobil_hasarli_26.glb",
+          "x": 6.3,
+          "z": -24,
+          "yonDerece": 180
+        },
+        {
+          "dosya": "modeller/alan/otomobil_yanik_27.glb",
+          "x": -1.8,
+          "z": -34,
+          "yonDerece": 65
+        },
+        {
+          "dosya": "modeller/alan/otomobil_hasarli_13.glb",
+          "x": -6.3,
+          "z": -45,
+          "yonDerece": -90
+        },
+        {
+          "dosya": "modeller/alan/otomobil_hasarli_14.glb",
+          "x": 6.4,
+          "z": -56,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/otomobil_yanik_24.glb",
+          "x": 2.5,
+          "z": -75,
+          "yonDerece": 30
+        },
+        {
+          "dosya": "modeller/alan/otobus_111.glb",
+          "x": 5.8,
+          "z": -38,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/minibus_437.glb",
+          "x": -6,
+          "z": -30,
+          "yonDerece": -90
+        },
+        {
+          "dosya": "modeller/alan/minibus_444.glb",
+          "x": -6.2,
+          "z": -62,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/minibus_449.glb",
+          "x": 6.4,
+          "z": -66,
+          "yonDerece": -90
+        },
+        {
+          "dosya": "modeller/alan/otobus_yanik_108.glb",
+          "x": 0,
+          "z": -96,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/pikap_130.glb",
+          "x": 13,
+          "z": 4,
+          "yonDerece": 30
+        },
+        {
+          "dosya": "modeller/alan/kamyon_askeri_126.glb",
+          "x": -14,
+          "z": 6,
+          "yonDerece": 80
+        },
+        {
+          "dosya": "modeller/alan/kamyon_yanik_129.glb",
+          "x": -2,
+          "z": -52,
+          "yonDerece": 110
+        },
+        {
+          "dosya": "modeller/alan/pikap_460.glb",
+          "x": 6.2,
+          "z": -84,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/moloz_152.glb",
+          "x": -9.8,
+          "z": -27,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/moloz_155.glb",
+          "x": 8.6,
+          "z": -46,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/moloz_demir_161.glb",
+          "x": -9.3,
+          "z": -52,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/moloz_152.glb",
+          "x": 9.5,
+          "z": -70,
+          "yonDerece": 40
+        },
+        {
+          "dosya": "modeller/alan/moloz_155.glb",
+          "x": -1,
+          "z": -62,
+          "yonDerece": 70
+        },
+        {
+          "dosya": "modeller/alan/barikat_200.glb",
+          "x": 3.5,
+          "z": -28,
+          "yonDerece": 15
+        },
+        {
+          "dosya": "modeller/alan/bariyer_beton_178.glb",
+          "x": -4,
+          "z": -58,
+          "yonDerece": 80
+        },
+        {
+          "dosya": "modeller/alan/sokak_lambasi_257.glb",
+          "x": -8.2,
+          "z": -14,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/sokak_lambasi_257.glb",
+          "x": -8.2,
+          "z": -40,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/sokak_lambasi_257.glb",
+          "x": -8.2,
+          "z": -66,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/sokak_lambasi_257.glb",
+          "x": 8.2,
+          "z": -27,
+          "yonDerece": 180
+        },
+        {
+          "dosya": "modeller/alan/sokak_lambasi_257.glb",
+          "x": 8.2,
+          "z": -53,
+          "yonDerece": 180
+        },
+        {
+          "dosya": "modeller/alan/sokak_lambasi_257.glb",
+          "x": 8.2,
+          "z": -79,
+          "yonDerece": 180
+        },
+        {
+          "dosya": "modeller/alan/sokak_lambasi_260.glb",
+          "x": 17,
+          "z": 6,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/elektrik_diregi_491.glb",
+          "x": -8.4,
+          "z": -27,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/elektrik_diregi_491.glb",
+          "x": -8.4,
+          "z": -53,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/elektrik_diregi_491.glb",
+          "x": -8.4,
+          "z": -79,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/elektrik_diregi_483.glb",
+          "x": 8.4,
+          "z": -40,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/elektrik_diregi_483.glb",
+          "x": 8.4,
+          "z": -66,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/duvar_yikik_265.glb",
+          "x": -14,
+          "z": -1,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/duvar_yikik_273.glb",
+          "x": 12,
+          "z": 9,
+          "yonDerece": -30
+        },
+        {
+          "dosya": "modeller/alan/gunes_isitici_496.glb",
+          "x": 15.7,
+          "z": -86,
+          "yonDerece": -90,
+          "y": 10.5
+        },
+        {
+          "dosya": "modeller/alan/gunes_isitici_496.glb",
+          "x": 28,
+          "z": 15,
+          "yonDerece": -90,
+          "y": 16
+        },
+        {
+          "dosya": "modeller/alan/gunes_isitici_496.glb",
+          "x": 28,
+          "z": 25,
+          "yonDerece": -90,
+          "y": 16
+        },
+        {
+          "dosya": "modeller/alan/gunes_isitici_496.glb",
+          "x": -14.5,
+          "z": -80,
+          "yonDerece": 90,
+          "y": 22
         }
       ],
       "noktalar": [
@@ -7784,6 +8088,76 @@
           "tur": [
             "helikopter"
           ]
+        }
+      ]
+    },
+    "kirsal_acik_arazi": {
+      "_aciklama": "Kırsal köy (9 Kasım): sol önde 75–120 m düz damlı taş evler ve yıkıntı, elektrik hattı; panoramanın yerleşim planı (≤ 38 m) aynen geçerli. Ön yüzler izleyiciye (yonDerece = -azimut).",
+      "ogeler": [
+        {
+          "dosya": "modeller/alan/koy_evi_425.glb",
+          "azimut": -68,
+          "mesafe": 88,
+          "yonDerece": 68
+        },
+        {
+          "dosya": "modeller/alan/koy_evi_426.glb",
+          "azimut": -60,
+          "mesafe": 104,
+          "yonDerece": 60
+        },
+        {
+          "dosya": "modeller/alan/koy_evi_420.glb",
+          "azimut": -77,
+          "mesafe": 96,
+          "yonDerece": 77
+        },
+        {
+          "dosya": "modeller/alan/koy_evi_433.glb",
+          "azimut": -52,
+          "mesafe": 118,
+          "yonDerece": 52
+        },
+        {
+          "dosya": "modeller/alan/koy_yikinti_427.glb",
+          "azimut": -84,
+          "mesafe": 76,
+          "yonDerece": 84
+        },
+        {
+          "dosya": "modeller/alan/koy_evi_349.glb",
+          "azimut": -46,
+          "mesafe": 92,
+          "yonDerece": 46
+        },
+        {
+          "dosya": "modeller/alan/elektrik_diregi_493.glb",
+          "azimut": -40,
+          "mesafe": 64,
+          "yonDerece": 40
+        },
+        {
+          "dosya": "modeller/alan/elektrik_diregi_493.glb",
+          "azimut": -55,
+          "mesafe": 72,
+          "yonDerece": 55
+        }
+      ]
+    },
+    "daglik": {
+      "_aciklama": "Dağlık (9 Kasım): iki taş ev 70–90 m; panoramanın yerleşim planı geçerli.",
+      "ogeler": [
+        {
+          "dosya": "modeller/alan/koy_evi_428.glb",
+          "azimut": 28,
+          "mesafe": 72,
+          "yonDerece": -28
+        },
+        {
+          "dosya": "modeller/alan/koy_yikinti_416.glb",
+          "azimut": -42,
+          "mesafe": 88,
+          "yonDerece": 42
         }
       ]
     }

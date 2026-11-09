@@ -324,8 +324,9 @@ başladı; ölçüt **Türkiye'ye uygunluk** (Amerikan banliyö evi, okul otobü
 gök/dağlar/ışık dağlık panoramadan (`arkaPlanBolge`), arazi hibrit 130 m, sokağa özel yerleşim noktaları; `?alan=kapali`
 eski görünüm. İçerik hattı `araclar/alan-modelleri.json` + `alan-modelleri-hazirla.mjs` (`--tasi`, sadeleştirme, gerçek
 ölçü; çıktı `public/icerik/modeller/alan/` depo dışı). İndirme yalnız sitedeki İndir düğmesiyle (tarayıcı `.meshy` →
-GLB); hızlı gönderi açmak Meshy güvenlik duvarında IP'yi 403'e düşürür (model başına ≥ 40 sn). 20 bina indi ve işlendi
-(14'ü caddede); araç, moloz, bariyer ve sokak eşyası indirmesi sürüyor. Ayrıntı `docs/duvar-oynatici.md` "3B meskûn mahal".
+GLB); hızlı gönderi açmak Meshy güvenlik duvarında IP'yi 403'e düşürür (model başına ≥ 40 sn). 74 model indi (6'sının indirmesi kapalı) ve
+işlendi: meskûn mahalde 64 öğe (14 bina, kontrol noktası, araçlar, moloz, lamba/direk, çatı ısıtıcısı), kırsalda taş
+köy, dağlıkta iki taş ev. Ayrıntı `docs/duvar-oynatici.md` "3B meskûn mahal".
 
 ## Sıradaki işler (öncelik sırasıyla)
 
