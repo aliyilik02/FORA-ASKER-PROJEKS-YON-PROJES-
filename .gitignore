@@ -40,3 +40,6 @@ tasarim-taslak/
 
 # Skill kurulumunun ham kopyası (.claude/skills altındaki bağlantılar git'te dosya olarak zaten var)
 .agents/
+
+# Meshy topluluk alan modelleri (CC0, büyük; araclar/alan-modelleri-hazirla.mjs ile yeniden üretilir)
+apps/duvar-oynatici/public/icerik/modeller/alan/

@@ -42,12 +42,13 @@ import { oda2OnPlanCiz } from "./sahne/oda2";
 import { PanoramaKatmani } from "./panorama";
 import { type Kalite, type PanoramaKaynagi, Sahne3B } from "./sahne3b/sahne3b";
 import type { AraziModu } from "./sahne3b/arazi";
+import type { AlanPlani } from "./sahne3b/alan";
 import { arkaPlanKarari } from "./sahne3b/panoramaGecisi";
 import { adimlariCalistir, hataOzeti, temelDurum } from "./sahneTemizligi";
 import { figurYolu } from "./figurYonlendirme";
 import { SesMotoru } from "./ses";
 import { sesAyariniCoz } from "./sesYerlesimi";
-import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type EfektIstegi, type EfektTuru, type FigurKomutu, type SimulasyonDurumu, varsayilanDurum } from "./tipler";
+import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, type Bolge, type EfektIstegi, type EfektTuru, type FigurKomutu, type SimulasyonDurumu, varsayilanDurum } from "./tipler";
 import { panoramaAdaylari, type PanoramaAdayi, VideoKatmani } from "./video";
 
 const tuval = document.getElementById("tuval") as HTMLCanvasElement;
@@ -206,7 +207,17 @@ if (araziParam && araziSecimi) localStorage.setItem("arazi", araziSecimi);
 const ARAZI_VARSAYILAN: Record<string, AraziModu> = { kirsal_acik_arazi: "hibrit", daglik: "hibrit", ormanlik: "hibrit", us_bolgesi: "hibrit", meskun_mahal: "kapali" };
 function araziModuSec(bolge: string): AraziModu {
   if (araziSecimi) return araziSecimi;
-  return ARAZI_VARSAYILAN[bolge] ?? "kapali";
+  return alanPlani(bolge)?.arazi ?? ARAZI_VARSAYILAN[bolge] ?? "kapali";
+}
+/**
+ * 3B alan (manifest `alanlar`, sahne3b/alan.ts): meskûn mahalde yakın binalar/araçlar 3B, gök ve uzak dağlar başka
+ * bölgenin panoramasından. `?alan=kapali` eski panorama görünümüne döner, `?alan=acik` geri açar (yerel kayıtta kalır).
+ */
+const alanParam = params.get("alan");
+if (alanParam === "kapali" || alanParam === "acik") localStorage.setItem("alan", alanParam);
+const alanKapali = (alanParam ?? localStorage.getItem("alan")) === "kapali";
+function alanPlani(bolge: string): AlanPlani | undefined {
+  return alanKapali || testPanorama ? undefined : video.manifest.alanlar?.[bolge];
 }
 const ucAktifOlabilir = ucBoyut && sahne3b.destekli;
 // Çatışma sesleri sahne azimutuyla (derece) gelir; ses motoru stereo / çok kanala kendisi yerleştirir
@@ -245,15 +256,27 @@ function videoMu(dosya: string, tip?: string) {
   return tip === "video" || /\.(mp4|webm|mov)(\?|$)/i.test(dosya);
 }
 
-/** Manifest kaydı → 3B panorama kaynağı. Zamanı farklı yedekte zaman boş kalır: sahne onu saate göre karartır. */
-function panoramaKaynagi(a: PanoramaAdayi): PanoramaKaynagi {
+/**
+ * Manifest kaydı → 3B panorama kaynağı. Zamanı farklı yedekte zaman boş kalır: sahne onu saate göre karartır.
+ * Alan planı varsa yerleşim planı onun: noktaları sahneye sabit (yapılar sahne koordinatında), panorama azimutuna
+ * çevrilir (sahne = panorama − yaw; gunes.ts panoramadanSahneAzimutu).
+ */
+function panoramaKaynagi(a: PanoramaAdayi, alan?: AlanPlani): PanoramaKaynagi {
   const k = a.kayit;
+  const yaw = k.yawKaydirma ?? 0;
+  const panoramaya = (az: number) => ((((az + yaw + 180) % 360) + 360) % 360) - 180;
+  const plan = alan
+    ? {
+        noktalar: alan.noktalar?.map((n) => ({ ...n, azimut: panoramaya(n.azimut) })),
+        yasak: alan.yasak?.map((y) => ({ ...y, baslangic: panoramaya(y.baslangic), bitis: panoramaya(y.bitis) })),
+      }
+    : { noktalar: k.noktalar, yasak: k.yasak };
   return {
     url: /^(https?:|data:|blob:|\/)/.test(k.dosya) ? k.dosya : video.kok + k.dosya,
-    yawKaydirma: k.yawKaydirma ?? 0,
+    yawKaydirma: yaw,
     yukseklikKaydirma: k.yukseklikKaydirma ?? 0,
     zaman: a.zamanFarkli ? undefined : k.zaman,
-    plan: { noktalar: k.noktalar, yasak: k.yasak },
+    plan,
     gunes: k.gunes,
     gok: k.gok,
   };
@@ -279,9 +302,12 @@ function yedekBildir(a: PanoramaAdayi, zaman: ZamanDilimi) {
  */
 function panoramayiGuncelle() {
   const zaman = zamanDilimi(durum.ortam.saat);
+  // 3B alanlı bölge: gök, uzak dağlar ve ışık arka plan bölgesinin panoramasından (yakın binalar 3B)
+  const alan = alanPlani(durum.bolge);
+  const arkaPlanBolge = (alan?.arkaPlanBolge ?? durum.bolge) as Bolge;
   const adaylar: PanoramaAdayi[] = testPanorama
     ? [{ kayit: { bolge: durum.bolge, dosya: testPanorama, yawKaydirma: testYaw, yukseklikKaydirma: 0 }, yedek: false, zamanFarkli: false, mevsimFarkli: false }]
-    : panoramaAdaylari(video.manifest, durum.bolge, durum.ortam.mevsim, zaman);
+    : panoramaAdaylari(video.manifest, arkaPlanBolge, durum.ortam.mevsim, zaman);
   const secim = adaylar[0];
   if (!secim) {
     // Bölgede hiç panorama yok: ekrandaki kalır (hiç gösterilmediyse kare() yer tutucu çizer)
@@ -293,7 +319,7 @@ function panoramayiGuncelle() {
   if (ucAktifOlabilir && !videoMu(secim.kayit.dosya, secim.kayit.tip)) {
     // Resim panorama → 3B katman (arka plan + ışık); 2B WebGL panorama katmanı 3B ekrana gelince kapanır (kare)
     videoPanoramaBekleniyor = false;
-    const resimler = adaylar.filter((a) => !videoMu(a.kayit.dosya, a.kayit.tip)).map(panoramaKaynagi);
+    const resimler = adaylar.filter((a) => !videoMu(a.kayit.dosya, a.kayit.tip)).map((a) => panoramaKaynagi(a, alan));
     sahne3b.panoramaAyarla(resimler[0], resimler.slice(1));
     return;
   }
@@ -505,7 +531,10 @@ function durumUygula(d: SimulasyonDurumu) {
   video.secim(d.bolge, d.ortam.mevsim, zamanDilimi(d.ortam.saat));
   panoramayiGuncelle();
   if (bolgeDegisti) sahne3b.bolgeDegisti(); // kraterler ve duman bölgeyle birlikte gider (takasta)
-  if (sahne3b.destekli) sahne3b.araziAyarla(araziModuSec(d.bolge), d.bolge, d.ortam.mevsim, video.kok);
+  if (sahne3b.destekli) {
+    sahne3b.alanPlanlariAyarla(alanKapali || testPanorama ? undefined : video.manifest.alanlar, video.kok);
+    sahne3b.araziAyarla(araziModuSec(d.bolge), d.bolge, d.ortam.mevsim, video.kok);
+  }
   // İzli mermi ve çatışma: 3B sahne açıkken 3B izler, değilse 2B çizgiler
   const uc = sahne3b.hazir;
   izli.ayarla({ ...d.izliMermi, aktif: d.izliMermi.aktif && !uc });

@@ -28,6 +28,7 @@ import { Helikopter3B } from "./helikopter3b";
 import { rotorTozuTuru } from "./rotorTozu";
 import { ParcacikSistemi } from "./parcaciklar";
 import { SutreKatmani, type SutreEsyasi } from "./sutre";
+import { AlanKatmani, type AlanPlani } from "./alan";
 import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, type AraziModu } from "./arazi";
 import { Gokyuzu } from "./gokyuzu";
 import { GokOrtusu } from "./gokOrtusu";
@@ -210,6 +211,10 @@ export class Sahne3B {
   private heliYonu = 12;
   private readonly catisma: CatismaSistemi;
   private readonly sutre = new SutreKatmani();
+  /** Bölgeye özgü 3B yapı/araç dizilimi (manifest `alanlar`); arazi kurulurken bölgesiyle birlikte uygulanır. */
+  private readonly alan = new AlanKatmani();
+  private alanPlanlari: Record<string, AlanPlani> = {};
+  private alanKok = "";
   private catismaSesleri: CatismaSesleri = { carpma: () => undefined, atis: () => undefined };
   private yagisKararma = 1;
   /** 3B arazi (hibrit / tam) ve tam kipte prosedürel gökyüzü. */
@@ -272,7 +277,7 @@ export class Sahne3B {
       topAtisi: (azimut) => this.catismaSesleri.topAtisi?.(azimut),
     });
     this.catisma.dostlar = () => this.figurler.silahliKonumlar();
-    this.figurler.engel = (p) => this.sutre.doluMu(p, 0.3);
+    this.figurler.engel = (p) => this.sutre.doluMu(p, 0.3) || this.alan.doluMu(p, 0.3);
     this.catisma.agirSilahlar = () => this.figurler.agirSilahlar();
     if (!r) return;
     this.renderer = r;
@@ -324,7 +329,7 @@ export class Sahne3B {
     this.gokyuzu.baglan(r, this.pmrem);
 
     this.sahne.add(this.gokOrtusu.kutu, this.yagis3b.grup);
-    this.sahne.add(this.arazi.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
+    this.sahne.add(this.arazi.grup, this.alan.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
 
     if (hataAyiklama) {
       this.gunesIsareti = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffee55 }));
@@ -684,6 +689,7 @@ export class Sahne3B {
       // Aynı bölgede yeni plan: görüş koridorları yerinde güncellendi, nesneler yeni zemine
       this.figurler.zemineOturt();
       this.sutre.zemineOturt();
+      this.alan.zemineOturt();
     }
     this.yonelimUygula();
     // İniş noktası yeni plandan, panelin son yönüyle (havadaki helikopter pas geçer ya da rotasını kurar)
@@ -844,6 +850,7 @@ export class Sahne3B {
     if (this.arazi.kraterleriTemizle()) {
       this.figurler.zemineOturt();
       this.sutre.zemineOturt();
+      this.alan.zemineOturt();
     }
   }
 
@@ -931,6 +938,20 @@ export class Sahne3B {
   }
 
   /**
+   * Bölge başına 3B alan planları (manifest `alanlar`; `?alan=kapali` ise boş). Uygulama arazi kurulumuyla birlikte
+   * (araziUygula): sahne geçişinde takasa ertelenir, eski bölgenin görüntüsüne yeni yapılar karışmaz.
+   */
+  alanPlanlariAyarla(planlar: Record<string, AlanPlani> | undefined, kok: string) {
+    this.alanPlanlari = planlar ?? {};
+    this.alanKok = kok;
+  }
+
+  /** Ölçüm/hata ayıklama: etkin alan planı ve yerleşmiş öğe sayısı. */
+  alanDurumu() {
+    return { plan: Boolean(this.alan.plan), oge: this.alan.ogeSayisi };
+  }
+
+  /**
    * 3B arazi kipi. "kapali": yalnızca panorama + gölge düzlemi (eski yol). "hibrit": yakın arazi 3B, uzak
    * panorama. "tam": uzak halka + prosedürel gökyüzü, panorama yalnız yerleşim planı için yüklenir.
    * Bölge değişince arazi yeniden kurulur (profil bölgeye göre).
@@ -963,17 +984,24 @@ export class Sahne3B {
     // Rotor tozu zemin malzemesine göre: kışın kar, ormanda koyu toprak + yaprak, üs/meskûn mahalde beton tozu
     this.heli.tozTuru = rotorTozuTuru(bolge, mevsim);
     const kar = karDegeri(mevsim);
-    const anahtar = `${mod}|${bolge}`;
+    const alanPlani = this.alanPlanlari[bolge] ?? null;
+    const anahtar = `${mod}|${bolge}${alanPlani ? "|alan" : ""}`;
     let kuruldu = false;
     if (this.araziBolge !== anahtar) {
       this.araziBolge = anahtar;
       kuruldu = true;
-      const profil = ARAZI_PROFILLERI[bolge] ?? ARAZI_PROFILLERI.kirsal_acik_arazi;
+      const temel = ARAZI_PROFILLERI[bolge] ?? ARAZI_PROFILLERI.kirsal_acik_arazi;
+      // Alan planı yakın binaları 3B getirir: arazi yapıların ötesine dek uzanır, kenar çanağı gerekmez (panoramada
+      // gömülecek yakın bina yok; arka plan başka bölgenin panoraması)
+      const profil = alanPlani?.araziYaricap ? { ...temel, yaricap: alanPlani.araziYaricap, kenarCukuru: 0 } : temel;
       // Görüş koridorları kurulumda hesaplanır (yerinde güncelleme gereksiz: arazi zaten yeniden kuruluyor)
       this.arazi.koridorlariAyarla(this.planKoridorlari(planKaynagi), false);
       this.arazi.uyari = (m) => this.uyari?.(m);
       this.arazi.kur(mod, profil, ARAZI_KALITE[this.kalite], kok, kar);
       zeminFonksiyonu(this.arazi.aktif ? (x, z) => this.arazi.yukseklik(x, z) : null);
+      // Bölgenin 3B alanı (yoksa önceki bölgeninki kalkar); zemin fonksiyonu kurulduktan sonra, yeni zemine oturur
+      this.alan.uyari = (m) => this.uyari?.(m);
+      this.alan.ayarla(alanPlani, this.alanKok);
       // Yere oturan mevcut nesneler yeni yüksekliğe (bölge değişti: profil farklı; kip değişti: düz ↔ engebeli)
       this.figurler.zemineOturt();
       this.sutre.zemineOturt();
@@ -988,6 +1016,7 @@ export class Sahne3B {
       // Aynı bölgede panorama değişti (saat/mevsim → başka plan): koridorlar yerinde güncellendi, nesneler zemine
       this.figurler.zemineOturt();
       this.sutre.zemineOturt();
+      this.alan.zemineOturt();
     }
     this.arazi.karAyarla(kar);
     this.uygulananKar = kar;
@@ -1340,13 +1369,15 @@ export class Sahne3B {
     // okunsun); tank ve araçlar plandaki mesafede kalır. Doluluk da kısaltılmış mesafede denetlenir.
     const askerMi = !turler.includes("tank");
     const kisalt = (m: number) => (askerMi ? Math.min(ASKER_EN_UZAK, Math.max(ASKER_EN_YAKIN, m)) : m);
-    const dolu = (p: THREE.Vector3) => this.figurler.doluMu(p) || this.sutre.doluMu(p);
+    const dolu = (p: THREE.Vector3) => this.figurler.doluMu(p) || this.sutre.doluMu(p) || this.alan.doluMu(p);
     // Asker: istenen duvarda (±50°) boş asker, sonra figür noktası; ancak o duvar doluysa başka duvara geçilir
     const secim = birlikNoktasiSec(this.kaynak?.plan, s.azimut + k, turler, varsayilan, (az, m) => dolu(yerKonumu(panoramadanSahneAzimutu(az, k), kisalt(m))), askerMi ? ASKER_YAKIN_TOLERANS : undefined);
     const azimut = panoramadanSahneAzimutu(secim.azimut, k);
     // Seçilen yer hâlâ bir sütre eşyasının içindeyse (Oda 2 kaya/HESCO hattı) aynı yönde biraz dışarı
     let mesafe = kisalt(secim.mesafe);
     for (let ek = 0; ek < 6 && this.sutre.doluMu(yerKonumu(azimut, mesafe)); ek += 1.5) mesafe += 1.5;
+    // Alan yapısının (bina, araç) içindeyse izleyiciye doğru: binalar sokağı çevreler, sokak izleyicinin önündedir
+    while (mesafe > 4 && this.alan.doluMu(yerKonumu(azimut, mesafe))) mesafe -= 1.5;
     void this.figurler.oynat(tanim, { ...s, azimut, mesafe }, kok).then((ok) => ok || this.uyari?.(`Figür yüklenemedi: ${tanim.dosya}`));
   }
   figurDurdur(id: string) {
@@ -1406,7 +1437,7 @@ export class Sahne3B {
     // İniş noktasının 6 m içinde figür/sütre varsa (plan noktası yakın ya da tank orada) yana kaydır: 7 m adımlarla sağ/sol
     let azimut = secim.azimut;
     // (testte kurucusuz nesne: katmanlar yok → denetim atlanır)
-    const dolu = (az: number) => Boolean((typeof this.figurler?.doluMu === "function" && this.figurler.doluMu(yerKonumu(az, secim.mesafe), 6)) || (typeof this.sutre?.doluMu === "function" && this.sutre.doluMu(yerKonumu(az, secim.mesafe), 3)));
+    const dolu = (az: number) => Boolean((typeof this.figurler?.doluMu === "function" && this.figurler.doluMu(yerKonumu(az, secim.mesafe), 6)) || (typeof this.sutre?.doluMu === "function" && this.sutre.doluMu(yerKonumu(az, secim.mesafe), 3)) || (typeof this.alan?.doluMu === "function" && this.alan.doluMu(yerKonumu(az, secim.mesafe), 7)));
     if (dolu(azimut)) {
       const adimAci = derece(Math.atan2(7, secim.mesafe));
       for (const kat of [1, -1, 2, -2, 3, -3]) {

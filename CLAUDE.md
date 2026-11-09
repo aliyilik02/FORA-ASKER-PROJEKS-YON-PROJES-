@@ -317,6 +317,16 @@ sorgusu, kontrol sahipliği, ayak IK/ragdoll, ekipman sallanması. **Kullanıcı
 `rastgele_sure`/`beklenen` adım alanları; yan duvar için kısmi görüntü alanı. Duvarda gözle bakılmadı (bakış genliği, yürüyüş hızı, geçiş klipleri, sisli parçacık, köşe). Domain bilgisi için skill `askeri-simulasyon-tasarimi` (`.claude/skills/`; değerlendirme/öneri işinde yükle);
 dış skill'ler: threejs-*, create-game-vfx, build-game-audio-feedback, game-audio, game-design-theory, game-development, game-ui-design.
 
+**3B meskûn mahal / alan katmanı (9 Kasım):** kullanıcı alan tasarımına Meshy topluluk modelleriyle (CC0, ücretsiz indirme)
+başladı; ölçüt **Türkiye'ye uygunluk** (Amerikan banliyö evi, okul otobüsü vb. elenir). 515 aday tarandı, 122'si artifact
+"Meshy Alan Modelleri"nde (onaylar db `secim/liste`), kullanıcı 80'ini seçti. `sahne3b/alan.ts` (`AlanKatmani`) manifest
+`alanlar[bolge]` planını uygular: meskûn mahalde 18 m cadde, iki yanda hasarlı/ayakta apartmanlar, sonunda yıkık kule;
+gök/dağlar/ışık dağlık panoramadan (`arkaPlanBolge`), arazi hibrit 130 m, sokağa özel yerleşim noktaları; `?alan=kapali`
+eski görünüm. İçerik hattı `araclar/alan-modelleri.json` + `alan-modelleri-hazirla.mjs` (`--tasi`, sadeleştirme, gerçek
+ölçü; çıktı `public/icerik/modeller/alan/` depo dışı). İndirme yalnız sitedeki İndir düğmesiyle (tarayıcı `.meshy` →
+GLB); hızlı gönderi açmak Meshy güvenlik duvarında IP'yi 403'e düşürür (model başına ≥ 40 sn). 20 bina indi ve işlendi
+(14'ü caddede); araç, moloz, bariyer ve sokak eşyası indirmesi sürüyor. Ayrıntı `docs/duvar-oynatici.md` "3B meskûn mahal".
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 0. **Gösterim hazır (2 Kasım):** örnek senaryo "Gösterim – Güncel Durum (5 dk)" (`sn_gosterim_guncel`; akış

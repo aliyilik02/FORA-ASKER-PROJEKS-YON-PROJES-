@@ -6,6 +6,7 @@ import type { KlipTanimi } from "./klipler";
 import type { SesManifesti } from "./ses";
 import type { Bolge, Mevsim } from "./tipler";
 import type { ZamanDilimi } from "./projeksiyon";
+import type { AlanPlani } from "./sahne3b/alan";
 
 export interface DonguKaydi {
   bolge: Bolge;
@@ -50,6 +51,8 @@ export interface Manifest {
   /** Oda 2 sütre dizilimleri: güvenli alan tipi → 3B eşyalar (sahne3b/sutre.ts). */
   /** Oda 2 sütre dizilimleri; `tip: "hesco"` prosedürel (dosya gerekmez), bkz. sahne3b/sutre.ts SutreEsyasi. */
   sutreler?: Record<string, Array<{ dosya?: string; tip?: "model" | "hesco"; adet?: number; hucre?: [number, number]; azimut: number; mesafe: number; yonDerece?: number; boy?: number; renk?: string }>>;
+  /** Bölge başına 3B yapı/araç dizilimi ve sokağa özel yerleşim planı (sahne3b/alan.ts). */
+  alanlar?: Record<string, AlanPlani>;
   sesler?: SesManifesti;
 }
 

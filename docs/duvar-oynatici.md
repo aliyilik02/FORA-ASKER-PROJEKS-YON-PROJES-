@@ -898,3 +898,33 @@ PATLAMA_VARYANTLARI` (6 kayıt: dengeli, yüksek, basık, isli, kuru toz, eğik)
 rastgele), is oranı (her 4.–11. topak), toz eteği erimi ±%30, kor sayısı ±%30, renk sıcaklığı ±%5, artık yangın gücü
 ±%25 ve süresi ±%15. `patlamaVaryantiSec()` bir öncekiyle aynı varyantı seçmez; `Sahne3B.patlama` varyantı seçip
 hem parçacıklara hem artık yangına uygular. Testler: ardışık seçim farklı, bütün varyantlarda sütun < 16 m.
+
+## 3B meskûn mahal: alan katmanı (9 Kasım 2026)
+
+Meskûn mahal artık yalnız fotoğraf değil: yakın binalar 3B. Kullanıcı Meshy topluluğundan (CC0) 80 model seçti
+(artifact "Meshy Alan Modelleri"; ölçüt Türkiye'ye uygunluk: betonarme + tuğla dolgu, balkonlu apartman, yarım kalmış
+inşaat, düz damlı köy evi, 90'lar sedanı, dolmuş; Amerikan banliyö evi, okul otobüsü vb. elendi).
+
+- **Kod:** `sahne3b/alan.ts` (`AlanKatmani`): manifest `alanlar[bolge]` planındaki glTF'leri yükler, sahne koordinatına
+  koyar (`x`/`z` ya da `azimut`/`mesafe`; `yonDerece` ön yüzün (+z) dönüşü: 90 → +x, -90 → -x, 0 → izleyiciye), taban
+  izinin en alçak zemin noktasına oturtur, `doluMu` ile figür ve helikopter yerleşimini dışarıda tutar. Arazi kurulumuyla
+  birlikte uygulanır (`Sahne3B.araziUygula`; geçişte takasa ertelenir); bölge değişince GPU kaynakları bırakılır.
+- **Plan alanları:** `arkaPlanBolge` (gök, uzak dağlar ve ışık bu bölgenin panoramasından; meskûn → dağlık), `arazi`
+  (meskûn → hibrit), `araziYaricap` (130 m; kenar çanağı yok), `ogeler`, `noktalar`/`yasak` (panoramanın yerleşim
+  planının yerine geçer; sahneye sabittir, main.ts panoramanın yaw kaydırmasıyla panorama azimutuna çevirir).
+- **İlk dizilim:** izleyicinin önünde 18 m genişlikte cadde (-z yönü), iki yanda beşer hasarlı ya da ayakta apartman (ön
+  yüzleri caddeye), sonunda 34 m yıkık kule (108 m), yan duvarlarda meydana bakan binalar, solda arka sırada yarım
+  kalmış uzun inşaat. 13 nokta: caddede asker/figür ve patlama, tank (40 m), helikopter (66 m, cadde ortası).
+- **`?alan=kapali`** eski panorama görünümüne döner (`?alan=acik` geri açar; yerel kayıtta kalır).
+- **İçerik hattı:** `araclar/alan-modelleri.json` (no → ad, hedef üçgen, doku, gerçek ölçü), `araclar/alan-modelleri-hazirla.mjs`
+  (`--tasi`: İndirilenler'deki Meshy GLB'lerini `araclar/alan-indirme-adlari.json` ile numaraya eşleyip
+  `meshy_output/topluluk/<no>.glb` yapar; sonra sadeleştirir → `public/icerik/modeller/alan/<ad>.glb`, depo dışı).
+  Aday listesi `araclar/meshy-topluluk-adaylar.json`.
+- **İndirme:** topluluk modelinin GLB'si yalnız sitedeki İndir düğmesiyle gelir (tarayıcıda `.meshy` biçiminden
+  dönüştürülür, kredi düşmez); açık görev uç noktasındaki `modelUrl` `.meshy` biçimidir. Gönderi sayfalarını hızlı açmak
+  Meshy güvenlik duvarında IP'yi bir süre 403'e düşürür: model başına en az ~40 sn bekle. Sahibi indirmeyi kapatmış
+  modeller (#86, #80, #382) atlanır.
+- **Tuzak:** bazı modeller (#67, #45, #361, #385) kopuk üçgenlerden oluşuyor; meshoptimizer 270–660 bin üçgende kalıyor
+  (serbest sınır da hata payı da fark etmiyor). Şimdilik böyle; gerekirse Meshy remesh (5 kredi/model, önce sor).
+- **Açık:** araçlar, moloz, bariyer ve sokak eşyası indirilip caddeye dizilecek; asfalt şerit ve kaldırım yok (zemin KENT
+  dokusu); duvarda gözle bakılmadı (yalnız Iris Xe tarayıcıda: 14 bina yüklendi, cepheler caddeye dönük, gölgeler doğru).

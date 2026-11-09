@@ -25,6 +25,7 @@ function kur(arazi: Record<string, unknown>) {
     catisma: { temizle: kayit("catisma") },
     figurler: { temizle: kayit("figurler"), zemineOturt: kayit("figurler.zemin") },
     sutre: { zemineOturt: kayit("sutre.zemin") },
+    alan: { zemineOturt: kayit("alan.zemin") },
     flas,
     flasGuc: 0.8,
     araziBolge: "hibrit|kirsal_acik_arazi",
@@ -53,12 +54,12 @@ function sahteArazi(sonuc: boolean) {
 }
 
 describe("Sahne3B sahne sıfırlaması", () => {
-  it("arazi kraterleri yerinde geri alınır (this bağlı); değiştiyse figür ve sütre yeni zemine oturur; flaş söner", () => {
+  it("arazi kraterleri yerinde geri alınır (this bağlı); değiştiyse figür, sütre ve alan yapıları yeni zemine oturur; flaş söner", () => {
     const arazi = sahteArazi(true);
     const { s, cagrilar, flas, ic } = kur(arazi);
     s.sahneyiSifirla();
     expect(arazi.cagiran).toBe(arazi);
-    expect(cagrilar).toEqual(["hasar", "parcaciklar", "catisma", "figurler.zemin", "sutre.zemin"]);
+    expect(cagrilar).toEqual(["hasar", "parcaciklar", "catisma", "figurler.zemin", "sutre.zemin", "alan.zemin"]);
     expect(ic.flasGuc).toBe(0);
     expect(flas.intensity).toBe(0);
     // Arazi yeniden kurulmaz: anahtar korunur (eski ara katman "" yazıp bir sonraki durumda tam kurulum tetikliyordu)
@@ -125,7 +126,7 @@ describe("Sahne3B sıfırlaması panorama geçişi sürerken", () => {
     s.panoramaAyarla(panorama("b.jpg"));
     const gelen = ic.gecis.hazirlik!;
     s.temeleDondur();
-    expect(cagrilar).toEqual(["figurler", "hasar", "parcaciklar", "catisma", "figurler.zemin", "sutre.zemin"]);
+    expect(cagrilar).toEqual(["figurler", "hasar", "parcaciklar", "catisma", "figurler.zemin", "sutre.zemin", "alan.zemin"]);
     expect(ic.gecis.hazirlik).toBe(gelen);
     expect(gelen.veri.birakildi).toBe(false);
     expect(isler[1]).toEqual({ url: "b.jpg", iptal: false });

@@ -1,0 +1,1832 @@
+[
+ {
+  "no": 69,
+  "gonderi": "019fbf89-2d32-75b6-8346-f2f6f2d70665",
+  "ref": "019f2896-129f-7d14-93b2-96b9699b3303",
+  "ad": "Abandoned Concrete Block",
+  "ucgen": 1961517,
+  "lisans": "cc0",
+  "olcu": [
+   1.889,
+   1.331,
+   1.566
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 67,
+  "gonderi": "019ca92b-5d0e-78be-8473-5c8c1e06bb20",
+  "ref": "019ca924-30ab-707d-bae2-8536509d2b7b",
+  "ad": "",
+  "ucgen": 4889561,
+  "lisans": "cc0",
+  "olcu": [
+   1.9,
+   1.168,
+   1.86
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 61,
+  "gonderi": "01a00f4d-c392-7aca-977e-79acbd5c4363",
+  "ref": "019fbb5f-6718-7181-a793-b1698b7b7714",
+  "ad": "Abandoned Brick Apartment Building",
+  "ucgen": 1594070,
+  "lisans": "cc0",
+  "olcu": [
+   1.9,
+   1.072,
+   1.167
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 44,
+  "gonderi": "019ca4ad-5963-77fd-831c-2db562581ce2",
+  "ref": "019c4c43-6a98-71c9-b7f3-ce911b76bce1",
+  "ad": "",
+  "ucgen": 193421,
+  "lisans": "cc0",
+  "olcu": [
+   2,
+   1.907,
+   1.542
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 45,
+  "gonderi": "019f69f7-315b-7140-ae30-268fb273b68e",
+  "ref": "019f6679-399c-7f7a-a407-6305e4a4e5bf",
+  "ad": "Stylized Destroyed City",
+  "ucgen": 1582370,
+  "lisans": "cc0",
+  "olcu": [
+   1.49,
+   1.899,
+   1.214
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 46,
+  "gonderi": "01947660-78b4-756a-b360-411330eb9ce2",
+  "ref": "0194765c-cee6-756a-9b36-8626eae182ac",
+  "ad": "",
+  "ucgen": 96340,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   1.981,
+   2.013
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 51,
+  "gonderi": "01960bd5-09b0-7370-b76e-46cabe24ecc5",
+  "ref": "01960bd1-c394-7315-8a04-ca803df47e4f",
+  "ad": "",
+  "ucgen": 99212,
+  "lisans": "cc0",
+  "olcu": [
+   1.897,
+   1.452,
+   1.715
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 54,
+  "gonderi": "01960bd4-c260-7317-b9fa-03613a47291e",
+  "ref": "01960bd1-9797-7315-9bc4-70866a7fe8d0",
+  "ad": "",
+  "ucgen": 99212,
+  "lisans": "cc0",
+  "olcu": [
+   1.897,
+   1.452,
+   1.715
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 40,
+  "gonderi": "019cb500-566f-7645-b53f-8c25086eadfa",
+  "ref": "019caa8c-1dcf-7e40-ba6a-03f9dd4a70bb",
+  "ad": "",
+  "ucgen": 117729,
+  "lisans": "cc0",
+  "olcu": [
+   1.602,
+   1.912,
+   1.288
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 64,
+  "gonderi": "019dd36f-ab95-732a-9de2-07de8cead866",
+  "ref": "019d7d3f-69a4-75e2-ae54-9c9b180c42df",
+  "ad": "",
+  "ucgen": 83388,
+  "lisans": "cc0",
+  "olcu": [
+   1.908,
+   1.502,
+   1.499
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 65,
+  "gonderi": "0195ef33-7f9e-7004-9111-c433744ae74a",
+  "ref": "0195ef30-215b-702a-9b9c-fce5607c5f61",
+  "ad": "",
+  "ucgen": 628532,
+  "lisans": "cc0",
+  "olcu": [
+   1.537,
+   1.839,
+   1.474
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 57,
+  "gonderi": "019614b4-f019-77c5-b672-cfed993339f0",
+  "ref": "019614af-02b2-74d0-9bae-a3626943ac6f",
+  "ad": "",
+  "ucgen": 101202,
+  "lisans": "cc0",
+  "olcu": [
+   2.002,
+   0.929,
+   1.871
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 38,
+  "gonderi": "019b46d7-8e56-7f48-98aa-3cbf9260161d",
+  "ref": "019b2934-2015-7cf9-85a5-d0e2f374fcec",
+  "ad": "",
+  "ucgen": 2769660,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   0.593,
+   1.903
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 75,
+  "gonderi": "019b46d8-a124-70f4-8b6e-ab08e15c937b",
+  "ref": "019b2934-b41a-74d8-b990-11c261a6d74b",
+  "ad": "",
+  "ucgen": 88913,
+  "lisans": "cc0",
+  "olcu": [
+   1.912,
+   0.722,
+   1.873
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 85,
+  "gonderi": "019883e2-1f39-7a8b-8526-da6b388d4468",
+  "ref": "01962e0e-74c5-7f0b-b96e-93d2650e9a12",
+  "ad": "",
+  "ucgen": 624796,
+  "lisans": "cc0",
+  "olcu": [
+   1.984,
+   1.997,
+   1.986
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 86,
+  "gonderi": "019444ad-8345-70da-94d7-9de89db6864a",
+  "ref": "019441fb-df4c-7099-a837-0afedeb83d13",
+  "ad": "",
+  "ucgen": 537258,
+  "lisans": "cc0",
+  "olcu": [
+   1.961,
+   1.964,
+   1.964
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 80,
+  "gonderi": "01947550-f78d-754a-afaa-92b45f1690af",
+  "ref": "019474ed-26b4-7c63-a572-29fc8c73a449",
+  "ad": "",
+  "ucgen": 109393,
+  "lisans": "cc0",
+  "olcu": [
+   1.488,
+   2.004,
+   1.476
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 83,
+  "gonderi": "0197d1f6-8ff3-7cb3-a3ff-a549de6396ed",
+  "ref": "0197d1f2-e327-7caa-a5e7-bdd34b7fcd0f",
+  "ad": "",
+  "ucgen": 542920,
+  "lisans": "cc0",
+  "olcu": [
+   1.871,
+   0.836,
+   1.471
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 361,
+  "gonderi": "019794f4-fd46-7f09-be27-11ec54dc7b67",
+  "ref": "01979020-3bc4-779d-a87c-40da542ed24b",
+  "ad": "",
+  "ucgen": 636050,
+  "lisans": "cc0",
+  "olcu": [
+   1.995,
+   1.907,
+   1.987
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 367,
+  "gonderi": "019883e2-6f94-7577-b462-b524996c3a50",
+  "ref": "01962e0e-b3a7-7555-ba8e-74710aa1e068",
+  "ad": "",
+  "ucgen": 607887,
+  "lisans": "cc0",
+  "olcu": [
+   1.987,
+   0.907,
+   1.997
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 368,
+  "gonderi": "019883e2-aa77-7577-98ba-bfb4a75c013d",
+  "ref": "01962e0e-d9c4-7555-9cf9-549247fef339",
+  "ad": "",
+  "ucgen": 574936,
+  "lisans": "cc0",
+  "olcu": [
+   1.977,
+   1.75,
+   1.998
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 370,
+  "gonderi": "019a1c12-2970-7edb-bc7a-5504489a8680",
+  "ref": "019a139c-fa04-7617-8da4-e572db677d4a",
+  "ad": "",
+  "ucgen": 83833,
+  "lisans": "cc0",
+  "olcu": [
+   1.987,
+   1.367,
+   1.987
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 375,
+  "gonderi": "019fe9c4-6488-788d-8046-0ce3e923a514",
+  "ref": "019fe9be-11db-7069-880c-973610c78f37",
+  "ad": "Ruined Concrete Skeleton",
+  "ucgen": 1782026,
+  "lisans": "cc0",
+  "olcu": [
+   1.892,
+   1.757,
+   1.737
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 392,
+  "gonderi": "0196b3d5-61fa-788e-9b28-14c20188a0b2",
+  "ref": "0196b3ce-0b6e-788e-9d91-f553e41a7817",
+  "ad": "",
+  "ucgen": 631779,
+  "lisans": "cc0",
+  "olcu": [
+   1.974,
+   2.001,
+   1.996
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 287,
+  "gonderi": "019bd6c2-3a70-78a4-b7b5-56ced74ede9d",
+  "ref": "019bd6b9-4131-74ce-97aa-635df0ff5f9d",
+  "ad": "",
+  "ucgen": 3586917,
+  "lisans": "cc0",
+  "olcu": [
+   1.9,
+   0.919,
+   1.618
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 294,
+  "gonderi": "01a14a3f-05d8-72cf-9a2b-c9a73b83d39c",
+  "ref": "01a14a3c-8f7e-71fe-9b6a-2d4972551a5c",
+  "ad": "Forgotten Corner Store",
+  "ucgen": 1464470,
+  "lisans": "cc0",
+  "olcu": [
+   1.891,
+   1.721,
+   1.888
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 376,
+  "gonderi": "01a08a65-5282-724f-afd1-511a01d7f7fc",
+  "ref": "01a08a60-c7d5-719b-89f9-65fb971e7772",
+  "ad": "Unfinished Concrete Apartment Building",
+  "ucgen": 1965422,
+  "lisans": "cc0",
+  "olcu": [
+   1.905,
+   0.865,
+   0.572
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 377,
+  "gonderi": "01a13f76-c7bf-765b-bec5-d87d960b1a51",
+  "ref": "c6629444-369b-4ba6-bd4c-8a3749376cbf",
+  "ad": "concrete_building_3d",
+  "ucgen": 783876,
+  "lisans": "cc0",
+  "olcu": [
+   1.9,
+   1.702,
+   1.485
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 385,
+  "gonderi": "019d8b67-a7bb-7e2d-a4e7-a16f3da203dd",
+  "ref": "019d8b61-47af-7fc1-ace1-3a8501bbbbe3",
+  "ad": "",
+  "ucgen": 3524933,
+  "lisans": "cc0",
+  "olcu": [
+   1.898,
+   1.112,
+   1.9
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 382,
+  "gonderi": "0193f566-75cb-7ca3-aabe-ddad7779dc34",
+  "ref": "0193f55d-1b60-7ca2-b0ca-b1cc95a16f03",
+  "ad": "",
+  "ucgen": 384658,
+  "lisans": "cc0",
+  "olcu": [
+   0.986,
+   0.982,
+   2.007
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 398,
+  "gonderi": "0199a99c-0d29-74c0-87c8-82a723618efa",
+  "ref": "0199a996-e1b0-772c-9c45-5c03e4a912cc",
+  "ad": "",
+  "ucgen": 71056,
+  "lisans": "cc0",
+  "olcu": [
+   2.005,
+   1.607,
+   0.603
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 406,
+  "gonderi": "01968574-4682-7ea6-b8a5-07cbeb013b06",
+  "ref": "0196856b-5bb5-7f83-9865-98f046d4a202",
+  "ad": "",
+  "ucgen": 279976,
+  "lisans": "cc0",
+  "olcu": [
+   1.853,
+   1.543,
+   1.969
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 410,
+  "gonderi": "01968583-83b8-7ae4-8a5d-a198a5a571e4",
+  "ref": "01968579-ebe8-7ae3-baf9-31ad3e508d82",
+  "ad": "",
+  "ucgen": 250742,
+  "lisans": "cc0",
+  "olcu": [
+   1.487,
+   1.655,
+   2.001
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 414,
+  "gonderi": "01970467-189e-71f5-b009-18020f08c44d",
+  "ref": "0196e830-b179-7d10-997f-d72cdfda0ed0",
+  "ad": "",
+  "ucgen": 109982,
+  "lisans": "cc0",
+  "olcu": [
+   1.743,
+   2,
+   1.003
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 415,
+  "gonderi": "01967c57-662e-734c-ad95-011d27a3bcdc",
+  "ref": "01967c3c-657e-734a-8f47-cdafc0e77489",
+  "ad": "",
+  "ucgen": 170810,
+  "lisans": "cc0",
+  "olcu": [
+   2.003,
+   0.835,
+   1.149
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 401,
+  "gonderi": "01a1032a-f13e-769d-ab96-7b3889387e84",
+  "ref": "01a10321-af6a-76e9-888d-40344701421c",
+  "ad": "Sunlit Brick Balconies",
+  "ucgen": 1768636,
+  "lisans": "cc0",
+  "olcu": [
+   1.913,
+   1.685,
+   1.729
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 403,
+  "gonderi": "019e4466-cc27-77b1-8ce2-4e062a56ea32",
+  "ref": "019e29b9-63f5-7433-9e76-a0c8a4e965f3",
+  "ad": "",
+  "ucgen": 717041,
+  "lisans": "cc0",
+  "olcu": [
+   1.244,
+   1.9,
+   1.05
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 400,
+  "gonderi": "019f99e6-c22c-74ff-b531-76cbdbe3bb01",
+  "ref": "019f9485-0f3f-72b5-9494-4773a8f29e25",
+  "ad": "Sunlit Apartment Block",
+  "ucgen": 596684,
+  "lisans": "cc0",
+  "olcu": [
+   1.899,
+   0.619,
+   0.73
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 425,
+  "gonderi": "019b4835-23e4-72f8-a8b3-324beb5fa0a7",
+  "ref": "019a2292-ab6d-762f-ac20-27d3260ba726",
+  "ad": "",
+  "ucgen": 804563,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   0.733,
+   1.299
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 426,
+  "gonderi": "019b4835-5baf-75ca-b0bb-41b7ec15194f",
+  "ref": "019a2292-500c-7603-aecc-4595cde4194a",
+  "ad": "",
+  "ucgen": 701203,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   0.655,
+   1.226
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 427,
+  "gonderi": "019b4835-929e-7b03-a0c6-90588930d523",
+  "ref": "019a221d-1744-78ae-ae5b-f985f0526424",
+  "ad": "",
+  "ucgen": 1105677,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   1.089,
+   1.862
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 428,
+  "gonderi": "019b4834-f719-72f8-ac29-98132d2ed342",
+  "ref": "019a23ba-0a36-75a7-8b65-b424666aca72",
+  "ad": "",
+  "ucgen": 1231164,
+  "lisans": "cc0",
+  "olcu": [
+   1.709,
+   1.073,
+   1.904
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 416,
+  "gonderi": "01a09bb3-8e57-76b9-b379-3402ddffd8a6",
+  "ref": "01a09aea-bd9f-761a-9167-a20f4a6e435f",
+  "ad": "Olive Grove Cottage",
+  "ucgen": 2783086,
+  "lisans": "cc0",
+  "olcu": [
+   1.815,
+   0.637,
+   1.317
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 420,
+  "gonderi": "019e0c29-68bd-788c-a843-bdf1343a5bb5",
+  "ref": "019e0c23-0e69-761b-afb9-87e95c848be9",
+  "ad": "",
+  "ucgen": 1625777,
+  "lisans": "cc0",
+  "olcu": [
+   1.89,
+   0.981,
+   1.349
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 429,
+  "gonderi": "019e1b5e-9a1a-7685-9fbd-e2ccaa18bf6f",
+  "ref": "019e1b29-e303-7dac-b52b-d019404c2703",
+  "ad": "",
+  "ucgen": 948502,
+  "lisans": "cc0",
+  "olcu": [
+   1.899,
+   1.342,
+   1.451
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 433,
+  "gonderi": "0197b135-1e9c-7e51-a476-02383cda486d",
+  "ref": "0197b131-49e0-7d66-bb5f-4396cf5f775f",
+  "ad": "",
+  "ucgen": 639078,
+  "lisans": "cc0",
+  "olcu": [
+   1.795,
+   1.993,
+   1.985
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 349,
+  "gonderi": "019b5580-715f-79b0-86a3-31e0ac56438c",
+  "ref": "019b501e-2d7a-71b0-9b84-cbd071153206",
+  "ad": "",
+  "ucgen": 1017224,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   1.661,
+   1.42
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 4,
+  "gonderi": "019607c4-8dcc-72fb-a2cb-c4f33f4fe31f",
+  "ref": "019607b1-7981-77e2-bf77-8cee114ad239",
+  "ad": "",
+  "ucgen": 351042,
+  "lisans": "cc0",
+  "olcu": [
+   0.828,
+   0.672,
+   2.001
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 9,
+  "gonderi": "01961c43-d691-7aa5-9006-686b77c19baa",
+  "ref": "01961c41-5a1e-74c2-ab35-fe79ff4fecd2",
+  "ad": "",
+  "ucgen": 103862,
+  "lisans": "cc0",
+  "olcu": [
+   1.993,
+   0.76,
+   1.092
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 11,
+  "gonderi": "019a83c6-3ba4-7e17-958f-1e06bb2b5461",
+  "ref": "019a83c4-37e0-7cf7-8fd7-86542e55ebe0",
+  "ad": "",
+  "ucgen": 1750637,
+  "lisans": "cc0",
+  "olcu": [
+   1.903,
+   0.613,
+   0.858
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 21,
+  "gonderi": "01a00d32-6990-7600-a657-ec62e586fc9b",
+  "ref": "01a00d2d-f751-7551-b43a-6fe01bb9e48c",
+  "ad": "Burnt-Out Relic",
+  "ucgen": 1885086,
+  "lisans": "cc0",
+  "olcu": [
+   1.903,
+   0.624,
+   0.873
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 26,
+  "gonderi": "019544af-276b-7a0d-a349-597761eda100",
+  "ref": "019544a7-3dec-7a0d-b38a-999c977bef94",
+  "ad": "",
+  "ucgen": 574380,
+  "lisans": "cc0",
+  "olcu": [
+   1.09,
+   0.736,
+   1.998
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 27,
+  "gonderi": "019a83be-a8a5-7036-bea5-fc561a0b4c7d",
+  "ref": "019a78e8-cbea-7808-b5ee-9e07e9c339dd",
+  "ad": "",
+  "ucgen": 193806,
+  "lisans": "cc0",
+  "olcu": [
+   1.912,
+   0.646,
+   0.9
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 1,
+  "gonderi": "01a04f61-429e-76a2-a65b-744d2bde3831",
+  "ref": "019fc7b0-b94f-7524-954d-8fc7be2865ae",
+  "ad": "Wrecked Silver Sedan",
+  "ucgen": 1843674,
+  "lisans": "cc0",
+  "olcu": [
+   1.899,
+   0.564,
+   0.919
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 13,
+  "gonderi": "019a83bd-5243-7cac-9f54-af848f67bc8b",
+  "ref": "019a7903-5264-7147-bb95-3f8d3f65834c",
+  "ad": "",
+  "ucgen": 1700601,
+  "lisans": "cc0",
+  "olcu": [
+   1.903,
+   0.647,
+   0.936
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 14,
+  "gonderi": "01a0ffbd-d32a-712d-b01b-850e229e92d8",
+  "ref": "01a0ffba-aa8d-7799-9897-4e39966e916d",
+  "ad": "Rustbound Relic",
+  "ucgen": 3497930,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   0.66,
+   0.822
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 24,
+  "gonderi": "019d4062-71b6-7c40-9b7d-b64341da5ba8",
+  "ref": "019d3a40-8fad-78dd-a3a1-146a01f7a417",
+  "ad": "",
+  "ucgen": 1391509,
+  "lisans": "cc0",
+  "olcu": [
+   1.899,
+   0.691,
+   0.889
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 25,
+  "gonderi": "0199f317-23a4-75be-9a3c-24fceed451e8",
+  "ref": "0199f30f-c0e2-777f-b089-6e2564a1c491",
+  "ad": "",
+  "ucgen": 2064886,
+  "lisans": "cc0",
+  "olcu": [
+   1.896,
+   0.688,
+   0.889
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 16,
+  "gonderi": "019fcfec-6858-77a0-9a03-18b69e9a8e85",
+  "ref": "019fcfe9-5a43-7959-b7c6-f9d88319365c",
+  "ad": "Battle-Worn Yellow",
+  "ucgen": 1541756,
+  "lisans": "cc0",
+  "olcu": [
+   1.45,
+   0.951,
+   1.899
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 111,
+  "gonderi": "01a00f56-9c78-7d44-8ea4-19782a1c7d01",
+  "ref": "01a00f4f-86fc-7316-9f09-7c0c91a9e468",
+  "ad": "Rusting Relic",
+  "ucgen": 1961846,
+  "lisans": "cc0",
+  "olcu": [
+   1.903,
+   0.485,
+   0.52
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 112,
+  "gonderi": "01a00260-303b-7285-9f26-8fc0c738af22",
+  "ref": "01a00257-8a48-76e7-9a72-f5fc64e1b584",
+  "ad": "Abandoned Bus",
+  "ucgen": 1932512,
+  "lisans": "cc0",
+  "olcu": [
+   1.919,
+   0.695,
+   0.736
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 108,
+  "gonderi": "01a004f5-baf5-716b-9cea-bcc64b791deb",
+  "ref": "01a004f0-f1b7-70c8-8beb-9af39e5b48a9",
+  "ad": "Forest Relic",
+  "ucgen": 1921774,
+  "lisans": "cc0",
+  "olcu": [
+   1.757,
+   0.651,
+   1.136
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 437,
+  "gonderi": "019504a0-fa92-7de4-963a-0e1176aad2b6",
+  "ref": "01950498-f44f-7ddd-93e3-8303867b47ff",
+  "ad": "",
+  "ucgen": 620777,
+  "lisans": "cc0",
+  "olcu": [
+   1.996,
+   0.778,
+   0.968
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 444,
+  "gonderi": "019ab712-c61d-7aee-8746-d45c6910aaa4",
+  "ref": "019ab70e-7950-701b-9e4b-649383d154a8",
+  "ad": "",
+  "ucgen": 777278,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   0.907,
+   0.789
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 446,
+  "gonderi": "01992a54-b99c-784a-8f4c-311c663d1798",
+  "ref": "01992a51-abb6-715e-bdd1-efc5df950ba8",
+  "ad": "",
+  "ucgen": 530683,
+  "lisans": "cc0",
+  "olcu": [
+   1.989,
+   0.87,
+   0.954
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 449,
+  "gonderi": "01a19742-c9e9-7665-b60c-43c1a6916a2d",
+  "ref": "01a19740-26f8-744e-9c5e-e85d4082404c",
+  "ad": "Yellow Minibus on a Quiet Street",
+  "ucgen": 947896,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   0.845,
+   0.696
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 448,
+  "gonderi": "019dcfdf-97fd-769c-93bf-de2cd06bccb2",
+  "ref": "019a7eb1-3b9e-7a26-84c5-709d22089206",
+  "ad": "",
+  "ucgen": 834143,
+  "lisans": "cc0",
+  "olcu": [
+   2.001,
+   0.81,
+   0.91
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 126,
+  "gonderi": "01a0df8a-f39c-7184-90f2-8af05fe9f2ad",
+  "ref": "01a0ddbd-3594-7543-855d-aa509b584ae0",
+  "ad": "Bloodmarked Convoy",
+  "ucgen": 533638,
+  "lisans": "cc0",
+  "olcu": [
+   1.901,
+   0.816,
+   0.718
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 130,
+  "gonderi": "01a04f5f-059a-726b-8537-7457c43a23a0",
+  "ref": "019fc7b7-366c-7706-ab76-1b075b04b656",
+  "ad": "Wrecked pickup truck",
+  "ucgen": 1957056,
+  "lisans": "cc0",
+  "olcu": [
+   1.91,
+   0.602,
+   0.932
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 129,
+  "gonderi": "01a0c623-9362-71e7-b7eb-325ae1dc9bb3",
+  "ref": "01a0c4f9-6f6e-7445-a62a-613907d352d0",
+  "ad": "Rust Wraith",
+  "ucgen": 2259998,
+  "lisans": "cc0",
+  "olcu": [
+   1.903,
+   0.482,
+   0.699
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 138,
+  "gonderi": "019c620a-3430-7ba2-bb89-306d2798e5c5",
+  "ref": "019c6207-9d72-7b02-95aa-47485c3b92ec",
+  "ad": "",
+  "ucgen": 1035796,
+  "lisans": "cc0",
+  "olcu": [
+   2,
+   0.645,
+   0.785
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 143,
+  "gonderi": "019f76cf-0d97-723e-b4de-673e95fce362",
+  "ref": "019f76c9-854a-7b87-a4be-df0d5dde278d",
+  "ad": "Deserted Rust Truck",
+  "ucgen": 1404866,
+  "lisans": "cc0",
+  "olcu": [
+   1.9,
+   1.059,
+   1.007
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 460,
+  "gonderi": "01a104eb-68d1-70b2-b995-d7dc66fa2917",
+  "ref": "01a104e7-e8fb-748f-91eb-4370e941d4cf",
+  "ad": "Rustbound Survivor",
+  "ucgen": 3119918,
+  "lisans": "cc0",
+  "olcu": [
+   1.905,
+   0.702,
+   0.74
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 463,
+  "gonderi": "019d92e4-43ce-7eb0-9569-3415433939ec",
+  "ref": "019d92af-b11a-7a09-85b6-7cf71fd58c60",
+  "ad": "",
+  "ucgen": 2288364,
+  "lisans": "cc0",
+  "olcu": [
+   1.899,
+   0.793,
+   0.774
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 456,
+  "gonderi": "0199bfe2-a909-7a12-828b-09229c469a73",
+  "ref": "0199bfdd-d6a1-77c5-87f7-7361f26d0ab6",
+  "ad": "",
+  "ucgen": 1831430,
+  "lisans": "cc0",
+  "olcu": [
+   1.903,
+   0.917,
+   0.782
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 474,
+  "gonderi": "019c357b-e121-72c7-9a84-f28514085eef",
+  "ref": "019c3578-4135-725b-8798-bac8293f066d",
+  "ad": "",
+  "ucgen": 11772,
+  "lisans": "cc0",
+  "olcu": [
+   2,
+   1.097,
+   0.961
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 152,
+  "gonderi": "01960bd7-9920-746f-8fd7-763b3941bdc8",
+  "ref": "01960bd3-ec23-7317-87d7-d4ede161d272",
+  "ad": "",
+  "ucgen": 99980,
+  "lisans": "cc0",
+  "olcu": [
+   1.839,
+   0.901,
+   1.837
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 155,
+  "gonderi": "019cb1d4-bec9-70d7-9afe-d722f3861a17",
+  "ref": "019cb1d1-9508-76c7-9021-54b63004e612",
+  "ad": "",
+  "ucgen": 19691,
+  "lisans": "cc0",
+  "olcu": [
+   1.976,
+   0.365,
+   1.979
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 161,
+  "gonderi": "019f69f7-2dde-7df5-ac51-4f433153f1cf",
+  "ref": "019f6681-bbf9-71fa-be4d-ce22492796b7",
+  "ad": "Weathered Destroyed City",
+  "ucgen": 1238280,
+  "lisans": "cc0",
+  "olcu": [
+   1.859,
+   0.827,
+   1.857
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 162,
+  "gonderi": "019bfb74-b916-7ad3-87e5-f1b5f2ae0900",
+  "ref": "019bd088-635f-7182-af54-26d7b23db7e8",
+  "ad": "",
+  "ucgen": 8550626,
+  "lisans": "cc0",
+  "olcu": [
+   1.888,
+   0.79,
+   1.897
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 153,
+  "gonderi": "0193f114-1422-7ac6-90c5-3a73f7dad2a1",
+  "ref": "0193f110-8696-7ac6-94d2-783fc0423b4c",
+  "ad": "",
+  "ucgen": 631457,
+  "lisans": "cc0",
+  "olcu": [
+   1.855,
+   0.968,
+   2.008
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 158,
+  "gonderi": "019eb89e-c6f0-7d8f-ad0d-69f6ac74ce37",
+  "ref": "019eb2bf-6f2d-712a-bb2f-76449613e2b8",
+  "ad": "Brick Pile",
+  "ucgen": 6109702,
+  "lisans": "cc0",
+  "olcu": [
+   1.842,
+   0.677,
+   1.898
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 165,
+  "gonderi": "019f420c-4a2f-70a9-a4d0-cd12210099ac",
+  "ref": "019f4209-9c02-7fed-bd19-d31719bf75f0",
+  "ad": "Concrete Barrier",
+  "ucgen": 239652,
+  "lisans": "cc0",
+  "olcu": [
+   1.9,
+   0.659,
+   0.69
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 166,
+  "gonderi": "019e7c84-75d6-7b4d-9db6-00cd4549f4f2",
+  "ref": "019e77dc-973c-7bb2-a503-83565c9da34b",
+  "ad": "Concrete Barrier",
+  "ucgen": 174069,
+  "lisans": "cc0",
+  "olcu": [
+   1.9,
+   1.021,
+   0.646
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 172,
+  "gonderi": "0195d53a-53c9-7f11-91a5-ed07711f1916",
+  "ref": "0195d538-81f8-7e86-be24-7cb9afd1882d",
+  "ad": "",
+  "ucgen": 100000,
+  "lisans": "cc0",
+  "olcu": [
+   2.003,
+   0.868,
+   0.449
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 178,
+  "gonderi": "019fd00e-b8d9-7e48-8b0b-b547628c51ea",
+  "ref": "019fd004-c477-7b71-be1b-71861b28e50f",
+  "ad": "Weathered Barriers",
+  "ucgen": 1974725,
+  "lisans": "cc0",
+  "olcu": [
+   1.898,
+   0.809,
+   0.651
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 179,
+  "gonderi": "01a00860-db19-7c2f-8a68-f21fd1e8a926",
+  "ref": "01a0085e-233c-7414-843b-7d5db0ddcec8",
+  "ad": "Concrete Barrier",
+  "ucgen": 4956,
+  "lisans": "cc0",
+  "olcu": [
+   1.852,
+   1.901,
+   0.644
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 184,
+  "gonderi": "019a2cbf-3e37-7593-98d0-d196f9d42499",
+  "ref": "019a130b-ed54-7605-8176-0776178119f0",
+  "ad": "",
+  "ucgen": 256581,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   0.673,
+   0.419
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 191,
+  "gonderi": "019f0133-5db0-7c2c-bb34-af5e2f782bd3",
+  "ref": "019f0131-7251-7bdd-bb9c-6ef18a36082b",
+  "ad": "Construction Barricade",
+  "ucgen": 354988,
+  "lisans": "cc0",
+  "olcu": [
+   1.898,
+   1.9,
+   0.598
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 200,
+  "gonderi": "019d2a3e-cd8f-7327-948f-da95d0e63a44",
+  "ref": "019d2a38-5869-7047-9a5e-ba4ceff8e833",
+  "ad": "",
+  "ucgen": 584959,
+  "lisans": "cc0",
+  "olcu": [
+   1.897,
+   0.688,
+   1.474
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 309,
+  "gonderi": "01a0ddb4-1daf-7753-81fe-85bb698eb5b2",
+  "ref": "01a0dd59-7612-709e-871e-b61b8b64370b",
+  "ad": "Weathered Crossing Arm",
+  "ucgen": 61008,
+  "lisans": "cc0",
+  "olcu": [
+   1.878,
+   0.38,
+   0.537
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 315,
+  "gonderi": "01970c2f-de0b-7f95-8b76-2d057450b1f9",
+  "ref": "01970c2e-0d50-7b54-bd86-248fdc0af1db",
+  "ad": "",
+  "ucgen": 14644,
+  "lisans": "cc0",
+  "olcu": [
+   2.003,
+   1.053,
+   0.707
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 317,
+  "gonderi": "01a1ad58-d901-75f4-8602-c808d40d68a4",
+  "ref": "f6a75bfa-98ad-4377-aac0-b9af9085a50b",
+  "ad": "G1_guard_booth_30k",
+  "ucgen": 25537,
+  "lisans": "cc0",
+  "olcu": [
+   1.892,
+   1.829,
+   1.85
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 306,
+  "gonderi": "0194066b-cbad-7f68-9734-d6903f41c9c7",
+  "ref": "01940669-01d2-7f68-bc6d-45c2a94cd5e7",
+  "ad": "",
+  "ucgen": 83555,
+  "lisans": "cc0",
+  "olcu": [
+   2.003,
+   0.741,
+   0.305
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 303,
+  "gonderi": "01a189b8-6963-70f2-81a7-120c12b80df5",
+  "ref": "01a189a9-7811-73b6-84f3-11d4a4952765",
+  "ad": "Fortified Industrial Gate",
+  "ucgen": 609470,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   0.829,
+   0.448
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 310,
+  "gonderi": "01a046b4-2b24-7173-9f7e-c339ce1174e9",
+  "ref": "01a046b2-5f06-769a-9342-8d4b6eecaa84",
+  "ad": "Reinforced Bunker",
+  "ucgen": 1990592,
+  "lisans": "cc0",
+  "olcu": [
+   1.9,
+   0.905,
+   0.923
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 206,
+  "gonderi": "019431ff-cb4e-7842-b64f-42b50377f0a4",
+  "ref": "019431ef-629d-7840-97fa-ed538110fc8e",
+  "ad": "",
+  "ucgen": 9992,
+  "lisans": "cc0",
+  "olcu": [
+   1.998,
+   1.661,
+   1.627
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 207,
+  "gonderi": "01943715-7540-78cf-a3a2-bd48de8322e3",
+  "ref": "019431f2-59b8-7841-8cd9-57eb15324fa5",
+  "ad": "",
+  "ucgen": 9999,
+  "lisans": "cc0",
+  "olcu": [
+   1.922,
+   1.997,
+   1.895
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 213,
+  "gonderi": "019c90cf-2094-7714-99d3-38fc9011d02f",
+  "ref": "019c8fe3-1714-7e2d-bb35-1857283b7aff",
+  "ad": "",
+  "ucgen": 326001,
+  "lisans": "cc0",
+  "olcu": [
+   1.194,
+   1.899,
+   1.194
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 216,
+  "gonderi": "019d02ce-5985-7216-aa1a-8e96a70f0a31",
+  "ref": "019d02bb-53e4-7ea1-a81a-8f39749b35fb",
+  "ad": "",
+  "ucgen": 367064,
+  "lisans": "cc0",
+  "olcu": [
+   1.448,
+   1.899,
+   1.448
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 218,
+  "gonderi": "019caad8-de00-7ee8-a1b4-e2ba015f9373",
+  "ref": "019caa8c-b33b-72e6-9897-c49a7e02a4fd",
+  "ad": "",
+  "ucgen": 67328,
+  "lisans": "cc0",
+  "olcu": [
+   1.132,
+   1.91,
+   1.132
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 223,
+  "gonderi": "019a44bd-fd93-712f-acbc-23afaa9ceeab",
+  "ref": "019a44b8-5a3b-7089-bdd7-5029d4bd7b37",
+  "ad": "",
+  "ucgen": 474063,
+  "lisans": "cc0",
+  "olcu": [
+   1.3,
+   1.904,
+   1.301
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 231,
+  "gonderi": "0197f24c-1b41-7d0a-81e8-6e8262de536d",
+  "ref": "0197ed49-99d3-7f2e-8385-503bc0426742",
+  "ad": "",
+  "ucgen": 282732,
+  "lisans": "cc0",
+  "olcu": [
+   1.81,
+   1.993,
+   1.736
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 230,
+  "gonderi": "0199b744-787e-7780-8bbb-2fab4606e182",
+  "ref": "0199b742-927b-74dc-8f9a-f0feca52b8f2",
+  "ad": "",
+  "ucgen": 9544,
+  "lisans": "cc0",
+  "olcu": [
+   1.87,
+   1.78,
+   1.998
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 246,
+  "gonderi": "01a14ae7-365a-7737-87ed-c54a645e6da2",
+  "ref": "01a14ae2-9d0d-703b-9b01-ac15fe5d71c5",
+  "ad": "Old Streetlamp",
+  "ucgen": 20612,
+  "lisans": "cc0",
+  "olcu": [
+   0.24,
+   1.899,
+   0.98
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 260,
+  "gonderi": "019be764-816d-798a-8860-3a335e0df3f3",
+  "ref": "019be761-0d29-7be3-8ade-0c62ce1e66e9",
+  "ad": "",
+  "ucgen": 172201,
+  "lisans": "cc0",
+  "olcu": [
+   1.302,
+   1.899,
+   0.245
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 245,
+  "gonderi": "019e2551-4fcf-7952-9be4-e90201d97d8a",
+  "ref": "019ce0ca-6628-793d-9446-22b777a1f40e",
+  "ad": "",
+  "ucgen": 201655,
+  "lisans": "cc0",
+  "olcu": [
+   0.764,
+   1.899,
+   0.404
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 257,
+  "gonderi": "01a09a59-6261-75b0-8dc0-d99051e90c3e",
+  "ref": "01a06bc6-319d-7389-9f89-15eba0458da9",
+  "ad": "",
+  "ucgen": 1572292,
+  "lisans": "cc0",
+  "olcu": [
+   0.388,
+   1.904,
+   0.152
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 263,
+  "gonderi": "01982d47-b6b4-7240-8b8e-e25daa0421fb",
+  "ref": "019800a4-c0f0-75e6-b5e6-f5170daeb0e0",
+  "ad": "",
+  "ucgen": 10000,
+  "lisans": "cc0",
+  "olcu": [
+   0.313,
+   1.999,
+   0.4
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 479,
+  "gonderi": "0195c9da-0249-7b19-877d-7e4e08f7c7b1",
+  "ref": "0195c9d6-dde9-7b19-ae71-17aad128334b",
+  "ad": "",
+  "ucgen": 66406,
+  "lisans": "cc0",
+  "olcu": [
+   0.245,
+   1.96,
+   2.067
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 491,
+  "gonderi": "01a13f27-7089-7028-8cf8-396025189248",
+  "ref": "01a13efe-c4c7-74c6-a8a2-0058eb2720a5",
+  "ad": "Concrete Utility Pole",
+  "ucgen": 15832,
+  "lisans": "cc0",
+  "olcu": [
+   0.587,
+   1.9,
+   0.059
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 483,
+  "gonderi": "01a072fd-dae8-75e6-8121-a12d9df55652",
+  "ref": "9a495696-cb6e-4620-96ec-9ff9599869b4",
+  "ad": "AAA Telephone Pole UE5",
+  "ucgen": 5103,
+  "lisans": "cc0",
+  "olcu": [
+   0.587,
+   1.901,
+   0.14
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 493,
+  "gonderi": "019c6e0b-0acd-7ecd-8841-e7c45cfa95a2",
+  "ref": "019c6e07-86c0-7e4e-a1be-f71bbd4eca54",
+  "ad": "",
+  "ucgen": 254003,
+  "lisans": "cc0",
+  "olcu": [
+   0.891,
+   2,
+   0.426
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 265,
+  "gonderi": "01a038f9-fbdc-7b27-b510-2cbaf63e3e59",
+  "ref": "01a038e4-895d-7230-be3e-96720c7bc925",
+  "ad": "Breach in the Forgotten Wall",
+  "ucgen": 1892822,
+  "lisans": "cc0",
+  "olcu": [
+   1.902,
+   0.72,
+   0.12
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 271,
+  "gonderi": "019c897c-5d21-7b93-b1c2-6d0a4e1e48dc",
+  "ref": "019c8979-c58b-7b4a-94a6-9f2eca4e1e26",
+  "ad": "",
+  "ucgen": 1195699,
+  "lisans": "cc0",
+  "olcu": [
+   1.898,
+   1.373,
+   1.35
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 273,
+  "gonderi": "019c1485-0b4a-76d2-80d5-1e777c6bb7b4",
+  "ref": "019c147b-7f83-7e16-8d30-81dd94039c31",
+  "ad": "",
+  "ucgen": 981874,
+  "lisans": "cc0",
+  "olcu": [
+   2,
+   1.439,
+   1.43
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 277,
+  "gonderi": "01a038fa-497d-7c9c-87d2-0b27d1dcb016",
+  "ref": "01a038e8-a5bd-75fd-8bb8-c3ab4d4fa43c",
+  "ad": "Overgrown Concrete Ruin",
+  "ucgen": 1976224,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   0.666,
+   0.144
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 274,
+  "gonderi": "0195ba1b-843f-727d-b61d-53a73f75a0e5",
+  "ref": "0195ba06-879b-7e55-9791-abfc9cf98533",
+  "ad": "",
+  "ucgen": 638199,
+  "lisans": "cc0",
+  "olcu": [
+   1.999,
+   0.86,
+   0.626
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 275,
+  "gonderi": "019a0e87-2551-7e46-b011-65616759b80d",
+  "ref": "019a037d-11de-7566-a807-7b70fce4018f",
+  "ad": "",
+  "ucgen": 999929,
+  "lisans": "cc0",
+  "olcu": [
+   1.902,
+   0.871,
+   1.041
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 496,
+  "gonderi": "019ba714-43c6-7fd1-895e-971a251ee329",
+  "ref": "019ba70e-9019-74a0-bf2a-0621b677a62f",
+  "ad": "",
+  "ucgen": 1774279,
+  "lisans": "cc0",
+  "olcu": [
+   1.761,
+   1.904,
+   1.467
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 497,
+  "gonderi": "019b2beb-4ab6-7aee-a7cf-cbd93f20c04c",
+  "ref": "019b2be0-9aa8-7f35-b49f-ebc9f0d8edfe",
+  "ad": "",
+  "ucgen": 3058957,
+  "lisans": "cc0",
+  "olcu": [
+   1.904,
+   1.286,
+   1.889
+  ],
+  "modelVar": true,
+  "resim": true
+ },
+ {
+  "no": 512,
+  "gonderi": "01a1ba60-bc83-76f6-a253-71dc90d296e2",
+  "ref": "01a1ba60-1b19-7282-941f-ae41e10dcb1d",
+  "ad": "Wall-Mounted Water Heater",
+  "ucgen": 56746,
+  "lisans": "cc0",
+  "olcu": [
+   0.935,
+   1.9,
+   0.935
+  ],
+  "modelVar": true,
+  "resim": true
+ }
+]

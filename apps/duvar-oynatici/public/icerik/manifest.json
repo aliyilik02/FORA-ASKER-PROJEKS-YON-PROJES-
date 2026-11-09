@@ -7580,5 +7580,212 @@
         "yonDerece": 60
       }
     ]
+  },
+  "alanlar": {
+    "meskun_mahal": {
+      "_aciklama": "3B meskûn mahal (9 Kasım, Meshy topluluk modelleri CC0): 18 m genişlikte cadde ileri uzanır; iki yanda hasarlı apartmanlar (ön yüzleri caddeye), sonunda yıkık kule; yan duvarlarda meydana bakan binalar. Gök, uzak dağlar ve ışık dağlık panoramadan. Konumlar sahne koordinatında (ileri -z, sağ +x); yonDerece ön yüzün (+z) dönüşü. Kaynak: araclar/alan-modelleri.json.",
+      "arkaPlanBolge": "daglik",
+      "arazi": "hibrit",
+      "araziYaricap": 130,
+      "ogeler": [
+        {
+          "dosya": "modeller/alan/bina_insaat_385.glb",
+          "x": -15.9,
+          "z": -8.8,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/bina_yikik_44.glb",
+          "x": -15.5,
+          "z": -25.4,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/bina_yikik_392.glb",
+          "x": -16.9,
+          "z": -43.3,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/bina_yikik_65.glb",
+          "x": -17.4,
+          "z": -61.8,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/bina_ayakta_414.glb",
+          "x": -14.5,
+          "z": -81.6,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/bina_insaat_377.glb",
+          "x": 15.1,
+          "z": -9.8,
+          "yonDerece": -90
+        },
+        {
+          "dosya": "modeller/alan/bina_yikik_69.glb",
+          "x": 17.2,
+          "z": -29.4,
+          "yonDerece": -90
+        },
+        {
+          "dosya": "modeller/alan/bina_yikik_51.glb",
+          "x": 17.9,
+          "z": -50.8,
+          "yonDerece": -90
+        },
+        {
+          "dosya": "modeller/alan/bina_yikik_370.glb",
+          "x": 17.7,
+          "z": -71.2,
+          "yonDerece": -90
+        },
+        {
+          "dosya": "modeller/alan/bina_ayakta_406.glb",
+          "x": 15.7,
+          "z": -88.3,
+          "yonDerece": -90
+        },
+        {
+          "dosya": "modeller/alan/bina_yikik_45.glb",
+          "x": 0,
+          "z": -108,
+          "yonDerece": 0
+        },
+        {
+          "dosya": "modeller/alan/bina_ayakta_401.glb",
+          "x": -30,
+          "z": 10,
+          "yonDerece": 90
+        },
+        {
+          "dosya": "modeller/alan/bina_ayakta_400.glb",
+          "x": 30,
+          "z": 22,
+          "yonDerece": -90
+        },
+        {
+          "dosya": "modeller/alan/bina_insaat_376.glb",
+          "x": -40,
+          "z": -50,
+          "yonDerece": 90
+        }
+      ],
+      "noktalar": [
+        {
+          "ad": "cadde sol yakın",
+          "azimut": -15.9,
+          "mesafe": 14.6,
+          "tur": [
+            "figur",
+            "asker"
+          ]
+        },
+        {
+          "ad": "cadde sağ",
+          "azimut": 12.7,
+          "mesafe": 20.5,
+          "tur": [
+            "figur",
+            "asker"
+          ]
+        },
+        {
+          "ad": "cadde sol orta",
+          "azimut": -8.9,
+          "mesafe": 32.4,
+          "tur": [
+            "asker",
+            "patlama"
+          ]
+        },
+        {
+          "ad": "cadde sağ uzak",
+          "azimut": 6.3,
+          "mesafe": 45.3,
+          "tur": [
+            "asker"
+          ]
+        },
+        {
+          "ad": "cadde ortası",
+          "azimut": 0,
+          "mesafe": 26,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "cadde uzak",
+          "azimut": -2.1,
+          "mesafe": 55,
+          "tur": [
+            "patlama"
+          ]
+        },
+        {
+          "ad": "cadde yakın",
+          "azimut": 14,
+          "mesafe": 12.4,
+          "tur": [
+            "patlama",
+            "toz"
+          ]
+        },
+        {
+          "ad": "sol köşe",
+          "azimut": -69.4,
+          "mesafe": 8.5,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sağ köşe",
+          "azimut": 72.6,
+          "mesafe": 8.4,
+          "tur": [
+            "figur"
+          ]
+        },
+        {
+          "ad": "sol meydan",
+          "azimut": -105.9,
+          "mesafe": 14.6,
+          "tur": [
+            "figur",
+            "patlama"
+          ]
+        },
+        {
+          "ad": "sağ meydan",
+          "azimut": 104.9,
+          "mesafe": 15.5,
+          "tur": [
+            "figur",
+            "patlama"
+          ]
+        },
+        {
+          "ad": "cadde tank",
+          "azimut": 0,
+          "mesafe": 40,
+          "tur": [
+            "tank"
+          ]
+        },
+        {
+          "ad": "cadde iniş",
+          "azimut": 0,
+          "mesafe": 66,
+          "tur": [
+            "helikopter"
+          ]
+        }
+      ]
+    }
   }
 }
