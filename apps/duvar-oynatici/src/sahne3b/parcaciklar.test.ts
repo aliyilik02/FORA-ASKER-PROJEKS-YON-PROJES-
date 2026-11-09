@@ -1,7 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import * as THREE from "three";
+import { tohumAyarla } from "../rastgele";
 import { ParcacikGrubu, ParcacikSistemi } from "./parcaciklar";
 import { ROTOR_TOZU_PROFILLERI, type RotorTozuTuru } from "./rotorTozu";
+
+// Sayım/eşik testleri rastgele yayılıma bağlı; sabit tohum koşudan koşuya aynı sonucu verir
+beforeEach(() => tohumAyarla(1234));
+afterEach(() => tohumAyarla(null));
 
 const DT = 1 / 60;
 const ZEMIN = -1.7;
@@ -149,12 +154,14 @@ describe("toz bulutu (panel Toz / duman)", () => {
     const m = new THREE.Vector3(0, ZEMIN, -15);
     s.duman.ruzgar.set(3, 0, 0);
     s.tozBulutu(m, 4.5, 1);
+    const ilk = s.duman.sayi;
     for (let t = 0; t < 6; t += DT) s.guncelle(DT);
     const ortX = s.duman.parcaciklar.reduce((t, p) => t + p.x, 0) / s.duman.sayi;
     expect(ortX).toBeGreaterThan(6);
     const dusuk = new ParcacikSistemi(new THREE.Texture(), new THREE.Texture(), new THREE.Texture(), 0.5);
     dusuk.tozBulutu(m, 4.5, 1);
-    expect(dusuk.duman.sayi).toBeLessThan(s.duman.sayi);
+    // İkisi de yayıldığı anda sayılır (eskiden 6 sn sonraki sayıyla karşılaştırılıyordu, ara sıra düşüyordu)
+    expect(dusuk.duman.sayi).toBeLessThan(ilk);
   });
   it("patlama dumanı alçak kalır ve toz eteği uzun ömürlü", () => {
     const s = sistem();

@@ -3,7 +3,8 @@
  * top / izli sayaçları baştan. Eskiden uçuştaki tank mermisi temizlikten sonra uzak patlama (parçacık, flaş, ses) üretiyordu.
  */
 import * as THREE from "three";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { tohumAyarla } from "../rastgele";
 import { CatismaSistemi } from "./catisma";
 import type { ParcacikSistemi } from "./parcaciklar";
 
@@ -11,6 +12,10 @@ import type { ParcacikSistemi } from "./parcaciklar";
 const PARCACIKLAR = { parlama: () => undefined, duman: { ekle: () => undefined }, kivilcim: { ekle: () => undefined } } as unknown as ParcacikSistemi;
 
 describe("CatismaSistemi.temizle", () => {
+  // Tohumsuzken ~%4 koşuda 3 sn içinde hiç iz doğmuyordu (9 Kasım, temiz kurulum denemesi); sabit tohum testi deterministik yapar
+  beforeEach(() => tohumAyarla(1234));
+  afterEach(() => tohumAyarla(null));
+
   it("uçuştaki top mermisi de silinir; çatışma kapalıyken sonra uzak patlama ya da iz doğmaz, sayaçlar baştan", () => {
     let uzakPatlama = 0;
     const s = new CatismaSistemi(PARCACIKLAR, { carpma: () => undefined, atis: () => undefined, uzakPatlama: () => uzakPatlama++, topAtisi: () => undefined });
