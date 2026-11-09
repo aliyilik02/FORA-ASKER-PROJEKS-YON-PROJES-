@@ -31,10 +31,25 @@ Medya ve kayıtlar `.gitignore`'da; kod tek başına boş sahne açar. USB'deki 
 | `claude-hafiza\` | `%USERPROFILE%\.claude\projects\<yoldan-türeyen-ad>\memory\` | Claude'un proje hafızası; ad proje yolundan türer, betik hesaplar |
 | `claude-skills\`, `ev-memory\`, `ev-CLAUDE.md` | `%USERPROFILE%\.claude\skills\`, `%USERPROFILE%\memory\`, `%USERPROFILE%\CLAUDE.md` | Kullanıcı düzeyi skill'ler ve oturum hafızası |
 
+| `claude-ayar\` (`CLAUDE.md`, `settings.json`, `settings.local.json`) | `%USERPROFILE%\.claude\` | Claude Code global tercihleri ve izinleri; varsa üzerine yazılmaz |
+
 USB'ye **konmayanlar** (bilerek):
 - Meshy API anahtarı (`%USERPROFILE%\.config\meshy\credentials.json`): yeni makinede Meshy CLI'ye yeniden giriş yapılır.
 - GitHub girişi: `gh auth login` ile yeniden.
 - `node_modules`, `dist`, `.claude\worktrees`: `npm install` / `npm run build` yeniden üretir.
+
+## Dosya kopyalamayla taşınamayanlar (elle bak)
+
+- **Tarayıcıda saklanan oynatıcı/panel ayarları** (localStorage): duvar geometrisi `?oda=`, `?kalite=`, `?ses=`,
+  `?hoparlor=`, `?arazi=`, `?gece=` seçimleri ve paneldeki senaryo taslağı yeni Chrome'da varsayılana döner
+  (U duvar 90°, kalite otomatik, ses otomatik). Elle ölçü girdiysen panel Sistem › Duvar geometrisi'nden yeniden gir.
+- **Claude Code eklentileri ve bağlantıları** (Chrome, Meshy, Playwright…) hesaba bağlı; `claude` ile giriş yapınca
+  gelir. **Claude in Chrome** uzantısını yeni Chrome'a ayrıca kur.
+- **Tablet/uzak panel:** panel adresi yeni makinenin IP'siyle değişir (`http://<yeni-ip>:4000`); ilk `npm start`'ta
+  Windows Güvenlik Duvarı Node için izin sorar, **Özel ağ**a izin ver. Art-Net/DMX hedef IP'si de ağa göre gözden geçirilir.
+- **Blender:** betikler varsayılan olarak `C:/Program Files/Blender Foundation/Blender 5.1/blender.exe` arar
+  (`araclar/alan-modelleri-hazirla.mjs`); başka sürüm/yer ise `BLENDER` ortam değişkeniyle ver.
+- **Python paketleri:** bu makinede `pillow 12.3`, `numpy 2.5`; Blender betikleri (`bpy`) Blender'ın kendi Python'unda çalışır.
 
 ## Adım adım
 
