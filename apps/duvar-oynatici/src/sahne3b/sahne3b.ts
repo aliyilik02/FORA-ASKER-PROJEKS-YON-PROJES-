@@ -29,6 +29,7 @@ import { rotorTozuTuru } from "./rotorTozu";
 import { ParcacikSistemi } from "./parcaciklar";
 import { SutreKatmani, type SutreEsyasi } from "./sutre";
 import { AlanKatmani, type AlanPlani } from "./alan";
+import { SokakKatmani, sokakIcindeMi } from "./sokak";
 import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, type AraziModu } from "./arazi";
 import { Gokyuzu } from "./gokyuzu";
 import { GokOrtusu } from "./gokOrtusu";
@@ -213,6 +214,8 @@ export class Sahne3B {
   private readonly sutre = new SutreKatmani();
   /** Bölgeye özgü 3B yapı/araç dizilimi (manifest `alanlar`); arazi kurulurken bölgesiyle birlikte uygulanır. */
   private readonly alan = new AlanKatmani();
+  /** Alanın asfalt yolu, kaldırımı, meydanı (plan `sokak`); alanla birlikte kurulur, kraterle çöker. */
+  private readonly sokak = new SokakKatmani();
   private alanPlanlari: Record<string, AlanPlani> = {};
   private alanKok = "";
   private catismaSesleri: CatismaSesleri = { carpma: () => undefined, atis: () => undefined };
@@ -335,7 +338,7 @@ export class Sahne3B {
     this.gokyuzu.baglan(r, this.pmrem);
 
     this.sahne.add(this.gokOrtusu.kutu, this.yagis3b.grup);
-    this.sahne.add(this.arazi.grup, this.alan.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
+    this.sahne.add(this.arazi.grup, this.alan.grup, this.sokak.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
 
     if (hataAyiklama) {
       this.gunesIsareti = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffee55 }));
@@ -696,6 +699,7 @@ export class Sahne3B {
       this.figurler.zemineOturt();
       this.sutre.zemineOturt();
       this.alan.zemineOturt();
+      this.sokak?.zemineOturt();
     }
     this.yonelimUygula();
     // İniş noktası yeni plandan, panelin son yönüyle (havadaki helikopter pas geçer ya da rotasını kurar)
@@ -858,6 +862,8 @@ export class Sahne3B {
       this.sutre.zemineOturt();
       this.alan.zemineOturt();
     }
+    // Asfalt/kaldırımdaki yanık izleri her durumda gider (arazi kapalıyken de kararmış olabilir), yüzey zemine oturur
+    this.sokak?.kraterleriTemizle();
   }
 
   /**
@@ -1003,11 +1009,16 @@ export class Sahne3B {
       // Görüş koridorları kurulumda hesaplanır (yerinde güncelleme gereksiz: arazi zaten yeniden kuruluyor)
       this.arazi.koridorlariAyarla(this.planKoridorlari(planKaynagi), false);
       this.arazi.uyari = (m) => this.uyari?.(m);
+      // Asfalt yol, kaldırım ve meydanda çim/çalı/kaya bitmez (kurulumda dağıtılır)
+      const sokakPlani = alanPlani?.sokak;
+      this.arazi.bitkiDisla = sokakPlani ? (x, z) => sokakIcindeMi(sokakPlani, x, z) : null;
       this.arazi.kur(mod, profil, ARAZI_KALITE[this.kalite], kok, kar);
       zeminFonksiyonu(this.arazi.aktif ? (x, z) => this.arazi.yukseklik(x, z) : null);
       // Bölgenin 3B alanı (yoksa önceki bölgeninki kalkar); zemin fonksiyonu kurulduktan sonra, yeni zemine oturur
       this.alan.uyari = (m) => this.uyari?.(m);
       this.alan.ayarla(alanPlani, this.alanKok);
+      this.sokak.ayarla(alanPlani?.sokak, this.alanKok);
+      this.sokak.zemineOturt();
       // Yere oturan mevcut nesneler yeni yüksekliğe (bölge değişti: profil farklı; kip değişti: düz ↔ engebeli)
       this.figurler.zemineOturt();
       this.sutre.zemineOturt();
@@ -1023,8 +1034,10 @@ export class Sahne3B {
       this.figurler.zemineOturt();
       this.sutre.zemineOturt();
       this.alan.zemineOturt();
+      this.sokak?.zemineOturt();
     }
     this.arazi.karAyarla(kar);
+    this.sokak.karAyarla(kar);
     this.uygulananKar = kar;
     return kuruldu;
   }
@@ -1245,6 +1258,7 @@ export class Sahne3B {
       this.islaklik = yeni;
       this.arazi.islaklikAyarla(yeni);
       this.yagis3b.islaklikAyarla(yeni);
+      this.sokak.islaklik = yeni;
     }
     const u = this.gokOrtusu.u;
     // Rüzgâr "nereden" esiyor (pusula oku içe bakar): bulut ters yöne kayar; düzlem biriminde (bulut yüksekliği 1)
@@ -1328,6 +1342,7 @@ export class Sahne3B {
       this.arazi.krater(p, kraterR, s);
       p.y = zeminY(p.x, p.z);
     }
+    this.sokak.kraterUygula(p, kraterR); // asfalt/kaldırım da çöker, yanık rengine kararır
     this.hasar.krater(p, kraterR, s);
     this.flas.position.set(p.x, p.y + r, p.z);
     this.flasGuc = Math.max(this.flasGuc, s);

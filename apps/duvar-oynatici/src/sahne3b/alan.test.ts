@@ -107,3 +107,19 @@ describe("alan katmanı", () => {
     expect(k.grup.children.length).toBe(0);
   });
 });
+
+describe("sokak: bitki dışlama alanı", () => {
+  it("asfalt, kaldırım ve meydan içi (pay dahil) dışlanır; bina tarafı serbest", async () => {
+    const { sokakIcindeMi } = await import("./sokak");
+    const plan = {
+      asfalt: [{ x0: -7.5, x1: 7.5, z0: 14, z1: -100 }],
+      kaldirim: [{ x0: -9.6, x1: -7.5, z0: -12, z1: -98 }],
+      meydan: [{ x0: 7.5, x1: 26, z0: 14, z1: -12 }],
+    };
+    expect(sokakIcindeMi(plan, 0, -40)).toBe(true);
+    expect(sokakIcindeMi(plan, -9, -40)).toBe(true);
+    expect(sokakIcindeMi(plan, 20, 0)).toBe(true);
+    expect(sokakIcindeMi(plan, -12, -40)).toBe(false); // kaldırımın arkası (bina)
+    expect(sokakIcindeMi(plan, 0, -101)).toBe(false); // yolun sonu + pay ötesi
+  });
+});

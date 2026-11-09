@@ -963,3 +963,17 @@ inşaat, düz damlı köy evi, 90'lar sedanı, dolmuş; Amerikan banliyö evi, o
   parçacıkların %30–50si yapı içinde (217–282 / 500–800), engelle 0.
 - **Açık:** duvarda/tarayıcıda varyant denemesi yapılmadı (köprü bellek baskısıyla kapanmıştı): cephe kur ×3, patlama her
   yöne, tank, helikopter iniş/kalkış, çatışma ve izli mermi (düz/±90).
+
+### Asfalt yol, kaldırım, meydan (9 Kasım gece)
+
+- **Kod:** `sahne3b/sokak.ts` (`SokakKatmani`), plan `alanlar[bolge].sokak`: `asfalt`, `kaldirim` (yükseklik 0,15 m, bordürlü),
+  `meydan` (yol seviyesinde parke), `ortaCizgi` (kesik, yıpranmış boya; canvas gürültü dokusu). Yüzeyler zemine uyan ~1 m
+  ızgara ağlar (zeminY + 3 cm); kaldırımda yola bakan kenarda 16 cm beton bordür şeridi + yan yüz. Alanla birlikte arazi
+  kurulumunda uygulanır; krater (`kraterUygula`) o bölgeyi yeniden örnekler ve merkeze doğru yanık rengine karartır;
+  sıfırlama renkleri temizler. Kar (beyazlatır) ve ıslaklık (koyulaştırıp parlatır) `onBeforeCompile` ile ortak değer.
+  Arazi `bitkiDisla` ile yol/kaldırım/meydana çim, çalı, kaya koymaz (`sokakIcindeMi`).
+- **Dokular:** Poly Haven CC0 `asphalt_02` (çatlaklı asfalt), `brick_pavement_03` (gri kilit parke taşı),
+  `concrete_pavement_02` (bordür); `node araclar/sokak-doku-indir.mjs` → `icerik/arazi/dokular/sokak_*` (depo dışı).
+- **Meskûn dizilimi:** asfalt x ±7,5, z +14…-100; kaldırımlar x ±(7,5–9,6), z -12…-98; meydanlar kontrol noktasının
+  iki yanı (z +14…-12); orta çizgi z -14…-90, 3 m çizgi / 5 m boşluk. Araçlar bordürün içinde (en yakını 6 cm).
+- **Açık:** kraterin asfaltta görünüşü gözle denenmedi; kaldırım üstündeki lamba/moloz 15 cm gömülü (fark edilmez).

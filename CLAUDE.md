@@ -328,7 +328,8 @@ GLB); hızlı gönderi açmak Meshy güvenlik duvarında IP'yi 403'e düşürür
 işlendi: meskûn mahalde 64 öğe (14 bina, kontrol noktası, araçlar, moloz, lamba/direk, çatı ısıtıcısı), kırsalda taş
 köy, dağlıkta iki taş ev. Plan v2 (figür/efekt): askerler bariyer arkasında 4–7 m, tank şeridi, boş iniş alanı, düşman
 pencere/çatı mevzileri (`dusmanMevzileri`), izler yapıya çarpar, helikopter binaları aşar; denetim
-`araclar/alan-plan-denetle.mjs`; tarayıcıda varyant denemesi bekliyor. Ayrıntı `docs/duvar-oynatici.md` "3B meskûn mahal".
+`araclar/alan-plan-denetle.mjs`; toz/duman yapıdan geçmez (`parcacikIt`); asfalt yol, bordürlü kaldırım, parke meydan, orta çizgi (`sahne3b/sokak.ts`, Poly
+Haven CC0, `araclar/sokak-doku-indir.mjs`). Ayrıntı `docs/duvar-oynatici.md` "3B meskûn mahal".
 
 ## Sıradaki işler (öncelik sırasıyla)
 

@@ -362,6 +362,11 @@ export class AraziKatmani {
   private kraterler: Array<{ x: number; z: number; r: number; s: number }> = [];
   /** Uyarı kanalı (doku/model bulunamadı); sahne3b köprü günlüğüne iletir. */
   uyari: ((mesaj: string) => void) | null = null;
+  /**
+   * Bitki (çim demeti, çalı, kaya) konmayacak yer: 3B alanın asfalt yolu, kaldırımı ve meydanı (sahne3b → SokakKatmani).
+   * Kurulumdan önce ayarlanır; null ise her yer serbest.
+   */
+  bitkiDisla: ((x: number, z: number) => boolean) | null = null;
 
   constructor() {
     this.grup.add(this.bitkiGrubu);
@@ -1262,6 +1267,7 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
       const x = Math.cos(a) * r;
       const z = Math.sin(a) * r;
       if (this.profil.yol && Math.abs(z - yolZ(x)) < 3.2) continue;
+      if (this.bitkiDisla?.(x, z)) continue;
       const egim = this.egim(x, z);
       if (egim > 0.45) continue;
       const olcek = (0.55 + Math.random() * 0.75) * (this.profil.demetOlcek ?? 1);
@@ -1405,6 +1411,7 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
         const x = Math.cos(a) * r;
         const z = Math.sin(a) * r;
         if (this.profil.yol && Math.abs(z - yolZ(x)) < 4 + boyut.x) continue;
+        if (this.bitkiDisla?.(x, z)) continue;
         const egim = this.egim(x, z);
         if (Math.random() > 0.25 + egim * b.egimTercihi * 3) continue;
         if (this.temizNoktalar.some((t) => Math.hypot(t.x - x, t.z - z) < 4 + boyut.x * 0.5)) continue;

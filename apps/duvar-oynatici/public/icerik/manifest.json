@@ -8321,7 +8321,56 @@
           "y": 13.5,
           "z": 20
         }
-      ]
+      ],
+      "sokak": {
+        "asfalt": [
+          {
+            "x0": -7.5,
+            "x1": 7.5,
+            "z0": 14,
+            "z1": -100
+          }
+        ],
+        "kaldirim": [
+          {
+            "x0": -9.6,
+            "x1": -7.5,
+            "z0": -12,
+            "z1": -98,
+            "yukseklik": 0.15
+          },
+          {
+            "x0": 7.5,
+            "x1": 9.6,
+            "z0": -12,
+            "z1": -98,
+            "yukseklik": 0.15
+          }
+        ],
+        "meydan": [
+          {
+            "x0": -26,
+            "x1": -7.5,
+            "z0": 14,
+            "z1": -12
+          },
+          {
+            "x0": 7.5,
+            "x1": 26,
+            "z0": 14,
+            "z1": -12
+          }
+        ],
+        "ortaCizgi": {
+          "x": 0,
+          "z0": -14,
+          "z1": -90,
+          "kesik": [
+            3,
+            5
+          ]
+        }
+      }
     },
     "kirsal_acik_arazi": {
       "_aciklama": "Kırsal köy (9 Kasım): sol önde 75–120 m düz damlı taş evler ve yıkıntı, elektrik hattı; panoramanın yerleşim planı (≤ 38 m) aynen geçerli. Ön yüzler izleyiciye (yonDerece = -azimut).",

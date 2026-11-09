@@ -15,6 +15,7 @@
 import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { radyan, yerKonumu, zeminY } from "./uzay";
+import type { SokakPlani } from "./sokak";
 import type { YasakAralik, YerlesimNoktasi } from "./yerlesim";
 
 export interface AlanOgesi {
@@ -50,6 +51,8 @@ export interface AlanPlani {
    * düşman yönünün ±30°'sinde mevzi varsa uzak arazi yerine buradan ateş eder (catisma.ts).
    */
   dusmanMevzileri?: Array<{ x: number; y: number; z: number; ad?: string }>;
+  /** Asfalt yol, bordürlü kaldırım, parke meydan, orta çizgi (sahne3b/sokak.ts). */
+  sokak?: SokakPlani;
 }
 
 /** Mermi izinin kestiği öğe kutusu: ince/uzun direk ve lambalar (kutusu çoğunlukla boş hava) ile çatı eşyası hariç. */
