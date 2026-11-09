@@ -139,6 +139,9 @@ panel bağlıyken (`BaglantiDurumu.panel.sayi`); sıfırlamada (örtü eski kare
 bağlanınca ve sahne geçişi bitince hemen. Silah sesleri tek atışlık kesimler (`silah_tek_1..8.ogg`,
 `araclar/silah-tek-atis.mjs`); lisans CC BY 3.0 (Vincent Sevedge), atıf gerekir.
 
+**Yeni bilgisayar (9 Kasım 2026):** proje USB ile taşındı; kurulum, depo dışı içerik ve ilk yapılacaklar
+`docs/yeni-bilgisayar-kurulumu.md` (devir notu). Yeni makinede ilk oturumda bunu oku, GPU'yu öğren, fps'i yeniden ölç.
+
 ## Mevcut durum (2 Kasım 2026)
 
 Çalışan: panel, köprü, oynatıcı, senaryo editörü, ön ayarlar, Art-Net çıkışı (donanımsız
@@ -380,4 +383,5 @@ kışın çimen saman rengi ve dibi karda; orman zemini yeşile kayar (`yesillik
 - `docs/donanim-onerileri.md`, `docs/kaynak-proje-talebi.md`, `docs/sartname-uyumluluk.md`
 - `docs/icerik-ihtiyac-listesi.md` – Meshy modelleri, Türkçe/CC0 sesler, hava efekti eksikleri (3 Kasım), öncelikli
 - `docs/meshy-model-listesi.md` – 43 modelin Meshy promptları, ayarlar, dosya adları, Mixamo animasyonları (kopyalanabilir sayfa: artifact "Meshy Model Listesi")
+- `docs/yeni-bilgisayar-kurulumu.md` – devir notu: kod nereden çekilir, USB içeriği nereye gider, ilk yapılacaklar
 - `docs/gosterim-rehberi.md` – idareye sunum: hazırlık, tek tuş "Gösterim – Tam Tur" akışı, elle 3 dk, sorulara cevaplar, aksaklıklar
