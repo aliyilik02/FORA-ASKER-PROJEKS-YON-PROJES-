@@ -342,6 +342,10 @@ kışın çimen saman rengi ve dibi karda; orman zemini yeşile kayar (`yesillik
 
 ## Sıradaki işler (öncelik sırasıyla)
 
+00. **3B alanlar duvarda (9 Kasım sonu):** meskûn cadde, 3B orman (yaz/kış), dağ yarları, kırsal kavak sırası duvarda gözle
+   ve gerçek fps ile bakılmadı (başsız `ciz()` orman ≈ 10 ms, 3832×719 orta). Ayar noktaları: orman `yesillik`/`cimen`
+   (`arazi.ts` profili), ağaç adetleri (`BITKI_SETLERI`), yakın ağaç üçgeni (`bitki-modelleri.json` `ucgen`). Meshy modelleri
+   depo dışında (`icerik/arazi/modeller/m_*`, `icerik/modeller/alan/`): projeksiyon bilgisayarına `icerik/` kopyalanmalı.
 0. **Gösterim hazır (2 Kasım):** örnek senaryo "Gösterim – Güncel Durum (5 dk)" (`sn_gosterim_guncel`; akış
    `docs/gosterim-rehberi.md` "Önerilen"), başsız Chrome'da baştan sona 60 fps. Kullanıcı bunu idareye gösterecek;
    gelecek önerilere göre geliştirme yönü belirlenecek. Değişen örnek senaryo mevcut kuruluma kendiliğinden gelmez:
