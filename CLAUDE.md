@@ -395,6 +395,9 @@ bariyerin altında kalır). **Ölçüm tuzağı:** kullanıcının oynatıcı se
 figür + başkasının ayırdığı müdahale/bekleme yeri de dolu sayılır, 12 aday nokta); koşan askerde çatışma sırasında üst gövde
 ateş katmanı tüfeği havaya dikiyordu (katman yalnız ≤ 2 m/sn ve düşmana ± 35° yürüyen figürde); klip hız tavanı %30 → %20
 (yürüyüş 1,2, koşu 3,18 m/sn); sol el IK hedefi bilek (merkezin 9 cm önü, 8 cm altı).
+**Sıhhiyeci dağıtımı:** panel "Sıhhiyeci gönder" hep son yaralıyı seçiyordu (4–5 yaralıda hepsi tek askere toplanıyordu);
+artık başında en az sıhhiyeci olan yaralı seçilir (`figurYardimcilari.sihhiyeBekleyenYarali`; hızlı dokunuş için bekleyen
+görev listesi), düğme altında "N yaralı sıhhiyeci bekliyor".
 
 ## Sıradaki işler (öncelik sırasıyla)
 

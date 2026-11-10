@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { useArayuz, yonAzimut } from "../arayuz";
-import { vurulabilirAskerler, yoneEnYakin } from "../figurYardimcilari";
+import { sihhiyeBekleyenYarali, vurulabilirAskerler, yoneEnYakin } from "../figurYardimcilari";
 import { FIGUR_POZ_ETIKETLERI, type FigurKomutu, type FigurPozu, type KlipOzeti } from "../tipler";
 import { sifirlamaNesli } from "../useKopru";
 import { Anahtar, Bolum, Ikon, Kaydirici, OnayliDugme, yonMetni } from "./ortak";
@@ -65,6 +65,9 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
   const sihhiyeciler = havuz.filter((k) => grupAdi(k) === "sihhiye" && /_sihhiyeci$/.test(k.ad)).map((k) => k.ad);
   /** Sahnedeki yaralılar; sıhhiyeci en son vurulanın yanına gider. */
   const yaraliAktifler = aktifler.filter((f) => f.poz === "yarali");
+  /** Gönderilip henüz figür listesine düşmemiş sıhhiyeci görevleri (hızlı art arda dokunuşta aynı yaralı seçilmesin). */
+  const sihhiyeGorevleri = useRef<Array<{ yaraliId: string; zaman: number; figurId: string }>>([]);
+  const sihhiyesizYarali = yaraliAktifler.filter((y) => !aktifler.some((f) => f.yaninda === y.id)).length;
   const baslik = (ad: string) => klipler.find((k) => k.ad === ad)?.baslik ?? ad;
   /** Vurulabilecek (ayakta/diz çökmüş, 3B asker) figürler. */
   const vurulabilir = vurulabilirAskerler(aktifler, klipler);
@@ -88,11 +91,15 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
           metin: `${baslik(f.klip ?? "")} · ${yonMetni(((f.azimut ?? 0) + 360) % 360)} tarafı`,
         }),
     );
-  /** Sıhhiyeci: en son yaralının yanına diz çöker, ona dönük müdahale eder. */
+  /** Sıhhiyeci: başında en az sıhhiyeci olan yaralının yanına diz çöker (her dokunuş başka yaralıya dağıtır). */
   const sihhiyeciGonder = () => {
     const ad = sihhiyeciler[0];
-    const yarali = yaraliAktifler[yaraliAktifler.length - 1];
+    const simdi = Date.now();
+    sihhiyeGorevleri.current = sihhiyeGorevleri.current.filter((g) => simdi - g.zaman < 4000 && !aktifler.some((f) => f.id === g.figurId));
+    const yarali = sihhiyeBekleyenYarali(aktifler, sihhiyeGorevleri.current.map((g) => g.yaraliId));
     if (!ad || !yarali) return;
+    const gorev = { yaraliId: yarali.id, zaman: simdi, figurId: "" };
+    sihhiyeGorevleri.current.push(gorev);
     void calistir(() => api.figur({ islem: "oynat", klip: ad, yaninda: yarali.id, azimut: yarali.azimut, olcek: 1, dongu: true })).then(
       (r) => r && bildir({ tur: "basari", baslik: "Sıhhiyeci yaralının başında", metin: `${yonMetni(((yarali.azimut ?? 0) + 360) % 360)} tarafı` }),
     );
@@ -196,9 +203,9 @@ export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Ar
               <span className="birlik-ad">Asker vuruldu!</span>
               <small>{vurulabilir.length ? `${vurulabilir.length} asker sahnede` : "Önce asker çağır"}</small>
             </button>
-            <button type="button" className="birlik sihhiyeci" disabled={!sihhiyeciler.length || !yaraliAktifler.length} onClick={sihhiyeciGonder} title="Son yaralının yanına diz çöker, müdahale eder">
+            <button type="button" className="birlik sihhiyeci" disabled={!sihhiyeciler.length || !yaraliAktifler.length} onClick={sihhiyeciGonder} title="Başında en az sıhhiyeci olan yaralının yanına diz çöker; her dokunuş sıradaki yaralıya gider">
               <span className="birlik-ad">Sıhhiyeci gönder</span>
-              <small>{yaraliAktifler.length ? "Yaralının başına diz çöker" : "Önce yaralı olmalı"}</small>
+              <small>{!yaraliAktifler.length ? "Önce yaralı olmalı" : sihhiyesizYarali ? `${sihhiyesizYarali} yaralı sıhhiyeci bekliyor` : "Her yaralının başında sıhhiyeci var"}</small>
             </button>
           </div>
         )}

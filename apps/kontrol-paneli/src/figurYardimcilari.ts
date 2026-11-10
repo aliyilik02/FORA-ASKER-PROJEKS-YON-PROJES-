@@ -33,3 +33,23 @@ export function yoneEnYakin(figurler: Aktif[], yon: number): Aktif | undefined {
   const fark = (a: number) => Math.abs((((a - hedefAz) % 360) + 540) % 360 - 180);
   return [...figurler].sort((a, b) => fark(a.azimut ?? 0) - fark(b.azimut ?? 0))[0];
 }
+
+/**
+ * Sıhhiyecinin gideceği yaralı: başında en az sıhhiyeci olan; eşitlikte en son vurulan (listenin sonu). 10 Kasım: eski
+ * seçim hep "son yaralı"ydı, 4–5 yaralı varken gönderilen bütün sıhhiyeciler tek askerin başına toplanıyordu.
+ * `bekleyen`: az önce gönderilip henüz figür listesine düşmemiş görevlendirmelerin yaralı kimlikleri (hızlı art arda dokunuş).
+ */
+export function sihhiyeBekleyenYarali(figurler: Aktif[], bekleyen: string[] = []): Aktif | undefined {
+  const yaralilar = figurler.filter((f) => f.poz === "yarali");
+  const sayi = (id: string) => figurler.filter((f) => f.yaninda === id).length + bekleyen.filter((b) => b === id).length;
+  let secilen: Aktif | undefined;
+  let enAz = Infinity;
+  for (const y of yaralilar) {
+    const n = sayi(y.id);
+    if (n <= enAz) {
+      enAz = n;
+      secilen = y;
+    }
+  }
+  return secilen;
+}
