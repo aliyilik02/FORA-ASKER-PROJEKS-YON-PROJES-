@@ -14,6 +14,7 @@ başsız Chrome'da (GTX 1650, 3840×720, kalite yuksek) **oynatılarak** test ed
 | `meskun-figur.mjs` | Yerleşim, bekleme, çatışmaya geçiş, patlama irkilmesi, duruş geçişleri, vurulma, sıhhiyeci/safha, koşan/yürüyen |
 | `meskun-hava-efekt.mjs` | Yağmur, sağanak + şimşek, sis, kış + kar, yangın, havan, gece çatışması, fişek, Oda 2 helikopteri; her durumda fps |
 | `siper-ve-yarali.mjs` | Siper alma döngüsü (açık/kapalı, eğitmen komutu korunur) ve yaralının görüş hattı; koşullu, çıkış kodu verir |
+| `senaryo-izle.mjs` | Bir senaryoyu baştan sona oynatır, verilen saniyelerde kare çeker, aralarda fps ölçer, köprü günlüğü uyarılarını döker |
 | `figur-yakin.mjs` | fov 50 yakın plan: klip dökümü, hareket kliplerinin doğal hızı, 40 sn bekleme, model başına silah–el, yandan ateş |
 
 Ölçüt: "sıçrama" = kök hareketi düşülmüş kemik hızı (kalça > 2,5, baş > 4, el/ayak > 9 m/sn tek karede).

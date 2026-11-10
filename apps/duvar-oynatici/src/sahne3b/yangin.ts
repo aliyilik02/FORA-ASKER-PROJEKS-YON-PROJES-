@@ -43,7 +43,8 @@ export class YanginKatmani {
   constructor(private readonly parcaciklar: ParcacikSistemi) {
     for (let i = 0; i < ISIK_SAYISI; i++) {
       const isik = new THREE.PointLight(0xff8a2a, 0, 34, 1.6);
-      isik.visible = false;
+      // Hep görünür, boşta parlaklık 0: three görünmeyen ışığı saymaz, ışık sayısı değişince bütün malzemeler yeniden
+      // derlenir (ilk yangın/fişekte 17–20 program, 3+ sn donma; 10 Kasım senaryo testinde ölçüldü)
       this.isiklar.push(isik);
       this.grup.add(isik);
     }
@@ -121,14 +122,12 @@ export class YanginKatmani {
       const a = aday[i];
       if (!a) {
         isik.intensity = 0;
-        isik.visible = false;
         continue;
       }
       const y = a.y;
       const t = y.faz;
       // Titreme: üç frekansın toplamı (alev yalpalaması) + nadir parlamalar
       const titreme = 0.78 + 0.12 * Math.sin(t * 13.1) + 0.07 * Math.sin(t * 29.7 + 1.3) + 0.05 * Math.sin(t * 5.3 + 2.1);
-      isik.visible = true;
       isik.distance = 14 + 20 * y.siddet;
       isik.intensity = y.guc * y.siddet * 60 * y.yaricap * titreme; // cd; 520 zemini turuncuya boyuyordu (3 Kasım)
       isik.position.set(y.konum.x + 0.25 * Math.sin(t * 7.1), y.konum.y + 1.2 + y.siddet, y.konum.z + 0.25 * Math.cos(t * 6.3));

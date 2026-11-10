@@ -372,6 +372,12 @@ zayıf yağmur, fişek görüş alanı dışında). Figür/animasyon değişikli
 doğrulup yeniden çöker, açıktakilerin yarısı diz çöker (`siperiGuncelle`; panel Çatışma › Siper al, `catisma.siperAl`
 isteğe bağlı alan, varsayılan açık, `SOZLESME_SURUMU` 4); yaralının önündeki asker yana çekilir (`gorusHatlariniAc`). Test:
 `araclar/oyun-testi/siper-ve-yarali.mjs`. Rapordaki açık bulgulardan 1 ve 2 kapandı; sıradaki 3–9.
+**Gösterim senaryosu "Meskûn Mahal – Kuşatma (film sahnesi, 4 dk)"** (`sn_meskun_kusatma`, 57 adım, onaysız akar): akşamüstü
+devriye → havanla temas, siper, yangın → yaralı + sıhhiyeci (safha) → gece, fırtına, fişek altında karşı taarruz → şafak.
+Baştan sona izleme testi: `node araclar/oyun-testi/senaryo-izle.mjs --id <id> --kareler 22,47,...` (3840×720 başsız: en az
+35,8 fps). Bu test bir donmayı yakaladı: yangın/fişek ışık havuzları boşta `visible=false` idi; three görünmeyen ışığı
+saymadığından ilk yangın/fişekte 17–20 program yeniden derleniyor, 3+ sn donuyordu. Havuz ışıkları artık hep görünür
+(boşta parlaklık 0): program sayısı sabit, en uzun kare 56 ms. **Yeni ışık eklerken havuzu hep görünür tut.**
 
 ## Sıradaki işler (öncelik sırasıyla)
 

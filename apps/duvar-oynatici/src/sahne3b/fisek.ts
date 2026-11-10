@@ -39,7 +39,8 @@ export class FisekKatmani {
   constructor(private readonly parcaciklar: ParcacikSistemi) {
     for (let i = 0; i < ISIK_SAYISI; i++) {
       const isik = new THREE.PointLight(0xfff1d2, 0, 0, 2);
-      isik.visible = false;
+      // Hep görünür, boşta parlaklık 0: three görünmeyen ışığı saymaz, ışık sayısı değişince bütün malzemeler yeniden
+      // derlenir (ilk yangın/fişekte 17–20 program, 3+ sn donma; 10 Kasım senaryo testinde ölçüldü)
       this.isiklar.push(isik);
       this.grup.add(isik);
     }
@@ -112,11 +113,9 @@ export class FisekKatmani {
       const a = aday[i];
       if (!a) {
         isik.intensity = 0;
-        isik.visible = false;
         continue;
       }
       const titreme = 0.92 + 0.06 * Math.sin(a.f.faz * 17.3) + 0.02 * Math.sin(a.f.faz * 41.1);
-      isik.visible = true;
       isik.intensity = TAM_ISIK * a.puan * titreme;
       isik.position.copy(a.f.konum);
     }
