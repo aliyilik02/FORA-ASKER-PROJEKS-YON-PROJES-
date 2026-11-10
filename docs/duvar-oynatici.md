@@ -1026,3 +1026,70 @@ normal de). Ardından `model-sadelestir.mjs` yalnız ölçek (gerçek boy), taba
 **Ormanlık 3B alan.** Manifest `alanlar.ormanlik`: arka plan dağlık panoraması (gök ve uzak dağlar), arazi hibrit
 110 m, öğe yok (orman bitki setinden); yerleşim noktaları panoramanın planından, ağaçlar noktaların ve görüş
 koridorlarının dışında. `?alan=kapali` eski görünüm (orman panoraması, 48 m arazi).
+
+## Gerçekçilik turu: yapraklı ağaçlar (ez-tree), çimen, görsel denetim (10 Kasım)
+
+Kullanıcı ağaçların "çok üçgen, yapmacık" göründüğünü söyledi. **Kök neden:** dokular Meshy'den tam geliyordu (çam #2:
+1,58 M üçgen, 4K renk + normal + pürüzlülük); kaliteyi bizim hattımız (eski Iris Xe için) düşürmüştü: ~6000 üçgen
+(%0,4), 1K doku, normal haritası yok; üstelik Blender'ın yeni UV açılımı ağı tamamen parçalayıp düz gölgeli dışa
+veriyordu (köşe/üçgen = 3,00) → her üçgen ayrı tonla parlıyor, "kristal/origami" görüntü. Meshy ağacı zaten tek parça
+"kil heykel" (iğne/yaprak yok); üçgen artırmak siluet köşesini giderir ama gerçekçiliği getirmezdi.
+
+**Görsel denetim aracı** `araclar/goruntu-al.mjs` (Playwright, kök devDependency; kurulu Chrome `channel: "chrome"`,
+Windows'ta chrome.exe "Yüksek performans" GPU tercihiyle NVIDIA): köprü API'siyle bölge/mevsim/saati kurar, sahne
+hazır olunca (`window.duvar.sahne3b.hazir`, panorama ve geçiş örtüsü bitmiş) tam tuval + duvar başına PNG kaydeder
+(`araclar/_goruntu/`, depo dışı). `--fov 30` uzak ayrıntıya yakınlaşır, `--js` sahne hazırken ifade çalıştırır
+(ör. `window.duvar.sahne3b.renderer.info.render.triangles`). Not: açık bütün oynatıcılar da o sahneye geçer.
+
+```
+node araclar/goruntu-al.mjs --sahneler "ormanlik:yaz:12,kirsal_acik_arazi:kis:12" [--fov 30] [--cikti araclar/_goruntu/x]
+```
+
+**Meshy modellerinde yumuşak normal** (`sahne3b/normalYumusat.ts`, testli): `m_` modeller yüklenirken aynı konumdaki
+köşeler (UV dikişi dahil) açı sınırlı (75°) alan ağırlıklı normal alır; UV/indeks değişmez, kaya sırtı keskin kalır.
+Kaya, kütük, devrik gövde, yosunlu kaya ve kalan Meshy çalılar bundan yararlanır.
+
+**Yapraklı ağaçlar** (`sahne3b/ezAgac.ts`, testli): `@dgreenheck/ez-tree` 1.1.0 (MIT) yordamsal ağaç; dallar gerçek
+silindir, yaprak/iğne alfa kartı. ez-tree yalnız geometri + doku üretir; Phong malzemesi ve kendi rüzgârı bırakılır,
+yerine MeshStandard (kabuk: renk + normal + AO + pürüzlülük; yaprak: alfa testi ≥ 0,4, iki yüzlü) → arazi hattının
+`bitkiMalzemesi` (rüzgâr + kar), gölge, sektör ayıklaması, aralık ızgarası aynen çalışır. `arazi.ts model()` `ez_`
+önekli klasörü `ezAgacUret`'e yönlendirir, dönen `{ scene }` glTF gibi kullanılır.
+- Tür tablosu `EZ_TURLERI`: karaçam (yüksek gövde, yayvan taç), çam, genç çam, ladin (yere kadar sık dal), sedir
+  (katlı yatay), servi/mazı (dar sütun), ardıç, meşe, büyük meşe, dişbudak, servi kavak (dar sütun; kabuk söğüt,
+  yaprak dişbudak dokusu: ez-tree "aspen" huş gibi beyaz kabuk + sonbahar sarısı yaprak veriyordu), titrek kavak,
+  3 çalı, 2 kuru çalı; kış/kuru: yapraksız meşe, dişbudak, kavak, kuru çam/meşe. Boy gerçek metre (`boy`), örnek
+  ölçeği üstüne. `ez_karacam~2` aynı türün başka bireyi (tohum + 977·n): ormanda tek ağaç tekrar etmesin.
+- Yaprak rengi koyu (`yaprakRenk` doku çarpanı): ilk denemede gök ışığı (IBL) kartları soluk/beyazımsı gösteriyordu.
+- Yaprak normali "taç küresi" (`yaprakNormalleri`, %80): kart normali taç elipsoidinden dışa doğrultuyla karışır, taç
+  hacim gibi aydınlanır; yaprak gölgelendiricisi arka yüzde normali çevirmez (önbellek anahtarı `bitkiMalzemesi`
+  anahtarına eklenir: `oncekiAnahtar`, aksi hâlde aynı anahtarlı başka bitkiyle program paylaşılırdı).
+- Uzak kopya (40 m ötesi): aynı tohum, dal kesit/çevre bölümü %50/%60, yaprak kartlarının yarısı atılır, kalanlar
+  tabandan 1,4 kat büyür (`yapraklariSeyrelt`; çift kartta birim bölünmez).
+- Yapraksız türlerde yaprak ağı tümden atılır: ez-tree `leaves.count = 0`'da da yaprak döken dal uçlarına birer yaprak
+  koyuyor (tarayıcıda ölçüldü: Aspen Large 616 köşe).
+- Kış eşlemesi varyantı korur (`ez_mese~2` → `ez_kis_mese~2`); karlı çalı `ez_cali_2`.
+- Paket dokuları JS içinde (~4 MB) → dinamik import, ayrı parça; ağaçsız bölgede (meskûn, üs) yüklenmez.
+- Kabuk dokuları: Poly Haven (meşe, söğüt) ve TextureCan (çam, huş) CC0; yaprak PNG'leri ez-tree deposunda (MIT).
+- Kurulum: npm `three` eş bağımlılığını çalışma alanında yanlış çözüyor (`three@undefined`); ilk kurulum
+  `--legacy-peer-deps` ile yapıldı, sonraki düz `npm install` sorunsuz.
+
+**Çimen** (`cimenOlustur`, `cimenMalzemesiHazirla`): yerleşim gürültü lekeli (açıklıkta %12, çayırda %100; sık lekede
+demet uzun), renk ayrı gürültüden kuru/yeşil (rastgele benek değil), kart normalleri yukarı yatık + arka yüzde
+çevrilmez (karton görüntüsü kalkar, zeminle aynı ışık), dipte koyulaşma, malzeme rengi 0,8 (yukarı normal güneşi tam
+alıp açık yeşile kaçıyordu). Kış: saman koyu, demetlerin %62'si örtü altında.
+
+**Dağlık:** zemin `dag_tasli` (yosunlu kırmızı taş, tekrar ettikçe kaldırım/parke deseni) → `tasli_zemin` (Poly Haven
+rocks_ground_02: gri kireçtaşı molozu + çakıl, ARM + yükseklik haritalı); kuruluk 0,6 → 0,85 (ot tutamları limon
+yeşiliydi). Kaya/kayalık yerleşimi taban izinin 8 noktasındaki en alçak zemine oturur (yamaçta merkezden alınınca
+aşağı bakan yüz havada kalıyordu).
+
+**Bütçe ve fps** (1920×360, GTX 1650, yuksek, ayrı Chrome uygulama penceresi, `onizleme.bilgi`): ilk ez-tree orman
+121 → 68 fps idi (aşırı çizim: alfa kartları). Uzak kopyada yaprak kartı ~¼ (yarı birim + çift kartın tek yüzü, 1,5×),
+uzak kabuk yalnız renk dokulu, yan dallarda kesit %60 / çevre ≤ 5 (uzakta %30 / 3; gövde korunur) → kabuk üçgeni
+1,99 M → 1,02 M (fps'e az etki: darboğaz piksel). Son: orman yaz 82 boş / 76 (4 asker + çatışma), orman kış 91 / 85,
+kırsal yaz 124 / 115, kırsal kış ve dağlık 143 (144 Hz tavanı). Meshy ile: 121 / 111, 127 / 114, 144. En kötü sahne
+hâlâ meskûn cadde (57), projeksiyon PC önerisi değişmez.
+
+**Kalan / bakılacak:** duvarda gözle bakış; kırsalda bir iki ağaç sarımsı (ton farkı, gerçekçi sayılabilir); Meshy `m_`
+ağaç modelleri (`icerik/arazi/modeller/m_*`) artık bitki setlerinde kullanılmıyor (kaya/kütük/eğrelti/yosunlu kaya
+kullanılıyor); yaprak kartı aşırı çizimi için sonraki adım uzak ağaçlarda sahte ağaç (impostor) ya da alfa-kapsama (MSAA).

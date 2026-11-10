@@ -343,6 +343,16 @@ karlı iğne yapraklı, yapraksız ağaç; kışa girince arazi yeniden kurulur)
 kışın çimen saman rengi ve dibi karda; orman zemini yeşile kayar (`yesillik`), çimen sık; ormanlık 3B alan (dağlık arka plan,
 110 m). Ayrıntı `docs/duvar-oynatici.md` "Orman, dağ ve kırsal". Duvarda gözle bakış ve gerçek fps ölçümü bekliyor.
 
+**Gerçekçilik turu (10 Kasım):** ağaçlar "üçgen/yapmacık"tı: Meshy ağaçları bizim hattımızda 1,5 M → 6 bin üçgene
+inmiş, normal haritası atılmış, düz gölgeli (köşe/üçgen 3,00). Ağaçlar artık **ez-tree** (`@dgreenheck/ez-tree` MIT,
+`sahne3b/ezAgac.ts`: gerçek dal + alfa yaprak kartı, bizim MeshStandard/kar/rüzgâr hattında; `ez_` klasör adları,
+`~n` varyant, kışta yapraksız karşılık); Meshy kaya/kütük `normalYumusat.ts` ile yumuşak normal; çimen gürültü lekeli,
+yukarı normalli; dağlık zemin `tasli_zemin`, kayalar yamaca oturur. **Görsel denetim:** `node araclar/goruntu-al.mjs
+--sahneler "ormanlik:yaz:12" [--fov 30]` (Playwright + kurulu Chrome/NVIDIA, PNG `araclar/_goruntu/`; Claude görüntüyü
+okuyup değerlendirir). Bedel: orman 1920×360 GTX 1650 121 → 82 fps. Ayrıntı `docs/duvar-oynatici.md` "Gerçekçilik turu".
+**Projeksiyon PC (10 Kasım ölçümü, 5760×1080 tam yük):** GTX 1650'de meskûn 13–14, diğerleri 19–29 fps; öneri RTX 5070 Ti /
+4070 Ti Super 16 GB (asgari 5070/4070 12 GB), oda başına bir PC. Chrome için Windows GPU tercihi "Yüksek performans" şart.
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 00. **3B alanlar duvarda (9 Kasım sonu):** meskûn cadde, 3B orman (yaz/kış), dağ yarları, kırsal kavak sırası duvarda gözle

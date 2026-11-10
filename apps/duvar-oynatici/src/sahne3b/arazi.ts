@@ -22,6 +22,7 @@
 import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { normalleriYumusat } from "./normalYumusat";
+import { ezAgacUret, ezTuruMu } from "./ezAgac";
 
 /** Meshy bitki/kaya modellerinde yumuşatma eşiği (derece): yaprak kümeleri yumuşar, kaya sırtı keskin kalır. */
 const MESHY_NORMAL_ACISI = 75;
@@ -94,13 +95,15 @@ export interface AraziProfili {
 
 const BOZKIR: AraziDokulari = { toprak: "bozkir", toprakOlcek: 4, cimen: "cimen_kaya", cimenOlcek: 15, makro: "makro_kahve", makroOlcek: 20 };
 const ORMAN: AraziDokulari = { toprak: "orman_zemini", toprakOlcek: 3, cimen: "orman_cimen", cimenOlcek: 3, makro: "orman_yaprak", makroOlcek: 24 };
-const DAG: AraziDokulari = { toprak: "dag_tasli", toprakOlcek: 7, cimen: "cimen_kaya", cimenOlcek: 15, makro: "dag_kaya", makroOlcek: 45 };
+// Toros yamacı: gri kireçtaşı molozu + çakıl (rocks_ground_02). Eski dag_tasli (rocky_terrain_03) yosunlu kırmızı taş
+// tekrar ettikçe kaldırım/parke deseni veriyordu (10 Kasım görsel denetim)
+const DAG: AraziDokulari = { toprak: "tasli_zemin", toprakOlcek: 6, cimen: "cimen_kaya", cimenOlcek: 15, makro: "dag_kaya", makroOlcek: 45 };
 const US: AraziDokulari = { toprak: "us_toprak", toprakOlcek: 6, cimen: "cimen_kaya", cimenOlcek: 15, makro: "makro_kahve", makroOlcek: 20, yol: "us_cakil" };
 const KENT: AraziDokulari = { toprak: "kent_toprak", toprakOlcek: 3, cimen: "cimen_kaya", cimenOlcek: 15, makro: "makro_kahve", makroOlcek: 20, yol: "kent_yol" };
 
 export const ARAZI_PROFILLERI: Record<string, AraziProfili> = {
   kirsal_acik_arazi: { ad: "bozkır", tohum: 11, genlik: 9, dalga: 120, sirt: 18, dere: 3, uzakTepe: 45, yol: true, cimen: 0.7, kaya: 0.8, cali: 0.8, kuruluk: 0.8, dokular: BOZKIR, bitkiler: "bozkir", yaricap: 160, kenarCukuru: 0 },
-  daglik: { ad: "dağlık", tohum: 23, genlik: 22, dalga: 110, sirt: 40, dere: 0, uzakTepe: 160, yol: false, cimen: 0.4, kaya: 1, cali: 0.7, kuruluk: 0.6, dokular: DAG, bitkiler: "dag", yaricap: 160, kenarCukuru: 0 },
+  daglik: { ad: "dağlık", tohum: 23, genlik: 22, dalga: 110, sirt: 40, dere: 0, uzakTepe: 160, yol: false, cimen: 0.4, kaya: 1, cali: 0.7, kuruluk: 0.85, dokular: DAG, bitkiler: "dag", yaricap: 160, kenarCukuru: 0 },
   // Orman: panoramadaki ağaçlar yakın → küçük yarıçap + çanak (alan planı açıkken 3B orman: yarıçap planda, çanak yok);
   // zemin yeşil, sık ve üç tonlu çimen, ağaç gölgesi lekeleri
   ormanlik: { ad: "ormanlık", tohum: 37, genlik: 5, dalga: 90, sirt: 0, dere: 1.2, uzakTepe: 60, yol: true, cimen: 1.5, kaya: 0.4, cali: 1, kuruluk: 0.05, dokular: ORMAN, bitkiler: "orman", yaricap: 48, kenarCukuru: 1.6, golgeLekesi: 0.5, demetOlcek: 0.85, yesillik: 0.75, cimenEnUzak: 50 },
@@ -254,8 +257,6 @@ interface BitkiTanimi {
   /** Model rengine çarpan (örnek rengi): pişirilmiş dokusu fazla mavi/turkuaz kalan modeli yerel yeşile çeker. */
   renk?: [number, number, number];
 }
-/** #214 "koyu çalı" pişirmede turkuaza kaçtı: zeytin yeşiline çeken örnek rengi. */
-const CALI_214_RENK: [number, number, number] = [1.18, 1.0, 0.62];
 const kaya = (klasor: string, adet: number, olcek: [number, number], egim: number, gomme: number): BitkiTanimi => ({ klasor, adet, carpan: "kaya", sinif: "kaya", olcek, egimTercihi: egim, gomme, golge: true, dereYok: true });
 const tas = (klasor: string, adet: number): BitkiTanimi => ({ klasor, adet, carpan: "kaya", sinif: "tas", olcek: [0.8, 1.6], egimTercihi: 0.1, gomme: 0.05, golge: false, enUzak: TAS_EN_UZAK });
 const bitki = (klasor: string, adet: number, olcek: [number, number], gomme = 0.04, golge = true, ek: Partial<BitkiTanimi> = {}): BitkiTanimi => ({ klasor, adet, carpan: "cali", sinif: "cali", olcek, egimTercihi: 0, gomme, golge, enUzak: CALI_EN_UZAK, ...ek });
@@ -275,26 +276,27 @@ const kayalik = (klasor: string, adet: number, olcek: [number, number], enYakin:
 const BITKI_SETLERI: Record<BitkiSeti, BitkiTanimi[]> = {
   // Kırsal: köy yolu boyunca kavak sırası, tarlada seyrek meşe ve yaprak döken ağaç, köy kenarında servi/mazı
   bozkir: [
-    yolSirasi("m_kavak_83", 0),
-    yolSirasi("m_kavak_95", 8),
-    yolSirasi("m_kavak_79", 16),
-    agac("m_mese_62", 10, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
-    agac("m_mese_68", 10, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
-    agac("m_mese_77", 8, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
-    agac("m_yaprak_87", 8, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
-    agac("m_yaprak_88", 6, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
-    agac("m_yaprak_89", 6, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
-    agac("m_servi_52", 5, [0.85, 1.15], { aralik: 2.5, ruzgar: 0.05 }),
-    agac("m_mazi_49", 6, [0.8, 1.2], { aralik: 2.5, ruzgar: 0.05, enYakin: 9 }),
-    kuruAgac("m_kuru_90", 3, [0.8, 1.2]),
+    yolSirasi("ez_kavak~1", 0),
+    yolSirasi("ez_kavak~2", 8),
+    yolSirasi("ez_kavak~3", 16),
+    agac("ez_mese~1", 10, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
+    agac("ez_mese~2", 10, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
+    agac("ez_mese_buyuk", 8, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
+    agac("ez_disbudak~1", 8, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
+    agac("ez_disbudak~2", 6, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
+    agac("ez_titrek_kavak", 6, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
+    agac("ez_servi~1", 5, [0.85, 1.15], { aralik: 2.5, ruzgar: 0.05 }),
+    agac("ez_servi~2", 6, [0.8, 1.2], { aralik: 2.5, ruzgar: 0.05, enYakin: 9 }),
+    kuruAgac("ez_kuru_mese", 3, [0.8, 1.2]),
     kaya("kaya_buyuk", 7, [0.8, 1.7], 0.6, 0.18),
     kaya("kaya_orta", 12, [0.7, 1.5], 0.5, 0.15),
     kaya("kaya_kucuk", 16, [0.6, 1.3], 0.3, 0.12),
     kaya("kaya_yuvarlak", 10, [0.6, 1.4], 0.3, 0.15),
     tas("tas_kume", 26),
     tas("taslar", 30),
-    bitki("m_cali_214", 12, [0.8, 1.3], 0.04, true, { renk: CALI_214_RENK }),
-    bitki("m_kuru_cali_273", 20, [0.8, 1.4], 0.04),
+    bitki("ez_cali_1", 8, [0.8, 1.3], 0.04),
+    bitki("ez_cali_2", 8, [0.8, 1.3], 0.04),
+    bitki("ez_kuru_cali", 20, [0.8, 1.4], 0.04),
     bitki("cali", 22, [0.7, 1.6], 0.05),
     bitki("kuru_dal", 10, [0.8, 1.4], 0.03, false),
     bitki("kutuk", 3, [0.8, 1.2], 0.08),
@@ -304,17 +306,20 @@ const BITKI_SETLERI: Record<BitkiSeti, BitkiTanimi[]> = {
   // Orman: karaçam, çam, ladin ağırlıklı (araya sedir, meşe, kuru gövde); altında çalı, eğrelti, devrik gövde, yosunlu
   // kaya. Fidanlar 1–1,3 m'lik fotogrametri; 2–3,5 m'ye büyütülünce genç ağaç gibi okunur.
   orman: [
-    agac("m_karacam_14", 110, [0.8, 1.2]),
-    agac("m_cam_2", 80, [0.8, 1.15]),
-    agac("m_cam_1", 70, [0.8, 1.2]),
-    agac("m_ladin_53", 55, [0.75, 1.1]),
-    agac("m_cam_12", 50, [0.8, 1.3]),
-    agac("m_sedir_56", 20, [0.8, 1.2]),
-    agac("m_mese_62", 12, [0.8, 1.2], { ruzgar: 0.1 }),
-    genc("m_cam_10", 40, [0.5, 0.9]),
-    kuruAgac("m_kuru_cam_133", 6, [0.8, 1.1]),
-    bitki("m_cali_214", 45, [0.8, 1.3], 0.04, true, { renk: CALI_214_RENK }),
-    bitki("m_cali_195", 26, [0.8, 1.2]),
+    agac("ez_karacam~1", 55, [0.8, 1.2]),
+    agac("ez_karacam~2", 55, [0.8, 1.2]),
+    agac("ez_cam~1", 45, [0.8, 1.2]),
+    agac("ez_cam~2", 45, [0.8, 1.2]),
+    agac("ez_ladin~1", 40, [0.75, 1.1]),
+    agac("ez_ladin~2", 40, [0.75, 1.1]),
+    agac("ez_sedir", 20, [0.8, 1.2]),
+    agac("ez_mese", 12, [0.8, 1.2], { ruzgar: 0.1 }),
+    genc("ez_cam_genc~1", 20, [0.6, 1.1]),
+    genc("ez_cam_genc~2", 20, [0.6, 1.1]),
+    kuruAgac("ez_kuru_cam", 6, [0.8, 1.1]),
+    bitki("ez_cali_1", 30, [0.8, 1.3], 0.04),
+    bitki("ez_cali_2", 25, [0.8, 1.3], 0.04),
+    bitki("ez_cali_3", 16, [0.8, 1.2], 0.04),
     bitki("m_egrelti_234", 30, [0.8, 1.3], 0.03, false),
     bitki("fidan_goknar", 14, [1.8, 3.0], 0.03),
     bitki("fidan_cam", 12, [1.8, 3.2], 0.03),
@@ -348,15 +353,17 @@ const BITKI_SETLERI: Record<BitkiSeti, BitkiTanimi[]> = {
     kayalik("m_kaya_duvari_367", 3, [0.8, 1.2], 50),
     tas("tas_kume", 32),
     tas("taslar", 36),
-    agac("m_ardic_199", 40, [0.7, 1.3], { aralik: 2.5, ruzgar: 0.05, enYakin: 10 }),
-    agac("m_sedir_56", 22, [0.8, 1.25]),
-    agac("m_karacam_14", 22, [0.8, 1.2]),
-    genc("m_cam_12", 14, [0.6, 1.0]),
-    kuruAgac("m_kuru_cam_132", 5, [0.8, 1.1]),
-    kuruAgac("m_kuru_146", 6, [0.8, 1.2]),
-    bitki("m_kuru_cali_273", 25, [0.8, 1.4], 0.04),
-    bitki("m_kuru_cali_253", 12, [0.8, 1.3], 0.04),
-    bitki("m_cali_214", 15, [0.7, 1.2], 0.04, true, { renk: CALI_214_RENK }),
+    agac("ez_ardic~1", 20, [0.7, 1.3], { aralik: 2.5, ruzgar: 0.05, enYakin: 10 }),
+    agac("ez_ardic~2", 20, [0.7, 1.3], { aralik: 2.5, ruzgar: 0.05, enYakin: 10 }),
+    agac("ez_sedir", 22, [0.8, 1.25]),
+    agac("ez_karacam~1", 11, [0.8, 1.2]),
+    agac("ez_karacam~2", 11, [0.8, 1.2]),
+    genc("ez_cam_genc~1", 14, [0.6, 1.0]),
+    kuruAgac("ez_kuru_cam", 5, [0.8, 1.1]),
+    kuruAgac("ez_kuru_mese", 6, [0.8, 1.2]),
+    bitki("ez_kuru_cali", 25, [0.8, 1.4], 0.04),
+    bitki("ez_kuru_cali_2", 12, [0.8, 1.3], 0.04),
+    bitki("ez_cali_3", 15, [0.7, 1.2], 0.04),
     bitki("cali", 9, [0.6, 1.2], 0.05),
     bitki("kuru_dal", 6, [0.8, 1.3], 0.03, false),
     ot("cimen_1", 28),
@@ -372,6 +379,11 @@ const BITKI_SETLERI: Record<BitkiSeti, BitkiTanimi[]> = {
  * kalan her şeyin üstü gölgelendiricide karlanır (bitkiMalzemesi). null = kışın yok.
  */
 const KIS_YERINE: Record<string, string | null> = {
+  ez_mese: "ez_kis_mese",
+  ez_mese_buyuk: "ez_kis_mese_buyuk",
+  ez_disbudak: "ez_kis_disbudak",
+  ez_kavak: "ez_kis_kavak",
+  ez_titrek_kavak: "ez_kis_titrek_kavak",
   m_karacam_14: "m_karli_cam_102",
   m_cam_2: "m_karli_ladin_125",
   m_cam_1: "m_karli_ladin_104",
@@ -395,13 +407,17 @@ const KIS_YERINE: Record<string, string | null> = {
 
 function kisSeti(yaz: readonly BitkiTanimi[], karliCali: number): BitkiTanimi[] {
   const sonuc = yaz.flatMap((b): BitkiTanimi[] => {
-    const yeni = KIS_YERINE[b.klasor];
-    if (yeni === null) return [];
-    if (yeni === undefined) return [b];
-    return [{ ...b, klasor: yeni, ruzgar: yeni.startsWith("m_kuru") ? 0 : b.ruzgar }];
+    // "ez_mese~2" → türün kış karşılığı aynı varyantla ("ez_kis_mese~2")
+    const [taban, varyant] = b.klasor.split("~");
+    const kisTaban = KIS_YERINE[b.klasor] !== undefined ? KIS_YERINE[b.klasor] : KIS_YERINE[taban];
+    if (kisTaban === null) return [];
+    if (kisTaban === undefined) return [b];
+    const yeni = varyant && KIS_YERINE[b.klasor] === undefined ? `${kisTaban}~${varyant}` : kisTaban;
+    const ciplak = yeni.startsWith("m_kuru") || yeni.startsWith("ez_kis_");
+    return [{ ...b, klasor: yeni, ruzgar: ciplak ? (yeni.startsWith("ez_") ? 0.03 : 0) : b.ruzgar }];
   });
-  // Karlı çalı: her dem yeşil pırnal tipi çalı, üstü gölgelendiricide karlanır (#252 "karlı çalı" pişirmede kara döndü)
-  if (karliCali > 0) sonuc.push(bitki("m_cali_214", karliCali, [0.8, 1.3], 0.06, true, { ruzgar: 0.02, renk: CALI_214_RENK }));
+  // Karlı çalı: her dem yeşil çalı, üstü gölgelendiricide karlanır
+  if (karliCali > 0) sonuc.push(bitki("ez_cali_2", karliCali, [0.8, 1.3], 0.06, true, { ruzgar: 0.02 }));
   return sonuc;
 }
 
@@ -1379,7 +1395,8 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
       }
       return mevcut;
     }
-    const mal = new THREE.MeshStandardMaterial({ map: cimenRenkDokusu(this.profil.kuruluk), alphaMap: cimenAlfaDokusu(), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0 });
+    // Renk 0,8: normaller yukarı yatık olunca (cimenOlustur) güneşi tam alıp açık yeşile kaçıyordu
+    const mal = new THREE.MeshStandardMaterial({ map: cimenRenkDokusu(this.profil.kuruluk), alphaMap: cimenAlfaDokusu(), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0, color: 0xcccccc });
     mal.onBeforeCompile = (shader) => {
       shader.uniforms.zaman = this.cimenZaman;
       shader.uniforms.bitkiKar = this.bitkiKar;
@@ -1399,25 +1416,31 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
   // Kış: demetlerin bir kısmı karın altında kalır (köşeler tek noktaya: görünmez), kalanı kısalır (dibi karda)
   if (bitkiKar > 0.0) {
     float h = fract(sin(dot(dk.xz, vec2(12.9898, 78.233))) * 43758.5453);
-    if (h < bitkiKar * 0.45) transformed = vec3(0.0);
+    if (h < bitkiKar * 0.62) transformed = vec3(0.0);
     else transformed.y *= 1.0 - bitkiKar * 0.3;
   }
 }`,
         );
-      shader.fragmentShader = shader.fragmentShader.replace("#include <common>", "#include <common>\nuniform float bitkiKar;").replace(
+      shader.fragmentShader = shader.fragmentShader
+        .replace("#include <common>", "#include <common>\nuniform float bitkiKar;")
+        // Kart normali yukarı (cimenOlustur): arka yüzde çevrilmesin, ot zeminle aynı ışığı alsın (karton görüntüsü)
+        .replace("#include <normal_fragment_begin>", "#include <normal_fragment_begin>\n#ifdef DOUBLE_SIDED\nnormal *= faceDirection;\n#endif")
+        .replace(
         "#include <color_fragment>",
         `#include <color_fragment>
+// Dipte koyulaşma: demet içi gölge, ot zemine oturur
+diffuseColor.rgb *= mix(0.5, 1.0, smoothstep(0.0, 0.55, vMapUv.y));
 {
   // Kış: yeşil saman rengine döner, dibi karla örtülü, uçlarında kar tozu
   float k = bitkiKar;
-  vec3 saman = vec3(0.60, 0.53, 0.36) * (0.7 + 0.3 * vMapUv.y);
+  vec3 saman = vec3(0.44, 0.38, 0.26) * (0.6 + 0.4 * vMapUv.y);
   diffuseColor.rgb = mix(diffuseColor.rgb, saman, k * 0.85);
   float kar = max(1.0 - smoothstep(0.0, 0.42, vMapUv.y), smoothstep(0.82, 1.0, vMapUv.y) * 0.55) * k;
   diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.88, 0.9, 0.94), kar);
 }`,
       );
     };
-    mal.customProgramCacheKey = () => "arazi-cimen-v2";
+    mal.customProgramCacheKey = () => "arazi-cimen-v3";
     this.cimenMalzemesi = mal;
     this.cimenRenkKurulugu = this.profil.kuruluk;
     return mal;
@@ -1433,17 +1456,16 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
     const geo = birlestir([kart, kart2]);
     kart.dispose();
     kart2.dispose();
+    // Normaller yukarıya yatık: kart duvar gibi değil zemin gibi aydınlanır (gölgelendiricide arka yüz çevrilmez)
+    const nrm = geo.getAttribute("normal");
+    for (let i = 0; i < nrm.count; i++) nrm.setXYZ(i, nrm.getX(i) * 0.25, 0.97, nrm.getZ(i) * 0.25);
+    nrm.needsUpdate = true;
     const mesh = new THREE.InstancedMesh(geo, this.cimenMalzemesiHazirla(), sayi);
     const renk = new THREE.Color();
-    for (let i = 0; i < sayi; i++) {
-      // Üç ton: canlı yeşil (yarısı), sararmış uçlu, gölgede mavimsi koyu — tek renkli halı görünümü kırılır
-      const t = 0.86 + Math.random() * 0.26;
-      const s = Math.random();
-      const [r, g, b] = s < 0.5 ? CIMEN_TONLARI[0] : s < 0.78 ? CIMEN_TONLARI[1] : CIMEN_TONLARI[2];
-      renk.setRGB(t * r * (0.97 + Math.random() * 0.06), t * g, t * b * (0.92 + Math.random() * 0.1));
-      mesh.setColorAt(i, renk);
-    }
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    // Yerleşim ve renk aynı gürültüden: çayır lekeleri (sık, uzun, yeşil) ve açıklıklar (seyrek, kısa, kuru)
+    const tohum = Math.random() * 100;
+    const leke = (x: number, z: number) => fbm(x * 0.045, z * 0.045, tohum, 3);
+    const kuruLeke = (x: number, z: number) => fbm(x * 0.11 + 40, z * 0.11 - 17, tohum + 5, 2);
     mesh.castShadow = this.kalite.cimenGolgesi;
     mesh.receiveShadow = true;
     mesh.frustumCulled = false;
@@ -1458,7 +1480,7 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
     let deneme = 0;
     // Yakına yoğun, görünür yarıçapın %90'ına (en çok 83 m) kadar seyrelerek
     const enUzak = Math.max(12, Math.min(this.profil.cimenEnUzak ?? 83, this.profil.yaricap * 0.9));
-    while (yerlesen < sayi && deneme < sayi * 6) {
+    while (yerlesen < sayi && deneme < sayi * 10) {
       deneme++;
       const r = 3 + Math.pow(Math.random(), 0.75) * (enUzak - 3);
       const a = Math.random() * Math.PI * 2;
@@ -1468,12 +1490,22 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
       if (this.bitkiDisla?.(x, z)) continue;
       const egim = this.egim(x, z);
       if (egim > 0.45) continue;
-      const olcek = (0.55 + Math.random() * 0.75) * (this.profil.demetOlcek ?? 1);
+      // Leke yoğunluğu: açıklıkta %12, çayır içinde %100 (geçiş yumuşak) — her yere eşit serpilmiş "halı" kırılır
+      const yogun = smooth(-0.28, 0.22, leke(x, z));
+      if (Math.random() > 0.12 + 0.88 * yogun) continue;
+      const olcek = (0.5 + Math.random() * 0.5 + yogun * 0.35) * (this.profil.demetOlcek ?? 1);
       p.set(x, ZEMIN_Y + this.yukseklik(x, z) - 0.02, z);
       q.setFromAxisAngle(eksenY, Math.random() * Math.PI);
-      s.set(olcek, olcek * (0.7 + Math.random() * 0.6), olcek);
+      s.set(olcek, olcek * (0.65 + Math.random() * 0.5 + yogun * 0.3), olcek);
       m.compose(p, q, s);
       mesh.setMatrixAt(yerlesen, m);
+      // Renk: lekeye göre kuru/yeşil, demet başına küçük oynama (tek renk halı ve rastgele benek ikisi de olmasın)
+      const kuru = smooth(-0.1, 0.45, kuruLeke(x, z)) * (1 - yogun * 0.5);
+      const t = 0.88 + Math.random() * 0.2;
+      const [yr, yg, yb] = Math.random() < 0.2 ? CIMEN_TONLARI[2] : CIMEN_TONLARI[0];
+      const [kr, kg, kb] = CIMEN_TONLARI[1];
+      renk.setRGB(t * (yr + (kr - yr) * kuru) * (0.97 + Math.random() * 0.06), t * (yg + (kg - yg) * kuru), t * (yb + (kb - yb) * kuru) * (0.92 + Math.random() * 0.1));
+      mesh.setColorAt(yerlesen, renk);
       konumlar[yerlesen * 3] = x;
       konumlar[yerlesen * 3 + 1] = p.y;
       konumlar[yerlesen * 3 + 2] = z;
@@ -1482,6 +1514,7 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
     }
     mesh.count = yerlesen;
     mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     this.cimen = mesh;
     this.cimenKonumlar = konumlar;
     this.cimenOlcekler = olcekler;
@@ -1505,8 +1538,10 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
     if (!p) {
       const yol = `${this.kok}arazi/modeller/${klasor}/${klasor}`;
       const dosya = MODELLER[klasor];
-      // Önce sadeleştirilmiş LOD (araclar/arazi-sadelestir.mjs), yoksa özgün fotogrametri modeli
-      p = uzak
+      // ez_: yordamsal yapraklı ağaç (ezAgac.ts); önce sadeleştirilmiş LOD (araclar/arazi-sadelestir.mjs), yoksa özgün
+      p = ezTuruMu(klasor)
+        ? ezAgacUret(klasor, uzak)
+        : uzak
         ? this.yukleyici.loadAsync(`${yol}_uzak.glb`).catch(() => this.model(klasor))
         : this.yukleyici.loadAsync(`${yol}_lod.glb`).catch((e) => (dosya ? this.yukleyici.loadAsync(`${this.kok}arazi/modeller/${klasor}/${dosya}`) : Promise.reject(e)));
       // Meshy pişirme çıktısı parçalı ve düz gölgeli (köşe/üçgen = 3): yumuşak normal, yoksa ağaç "kristal" görünür
@@ -1590,6 +1625,8 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
     if (m.userData.bitkiHazir) return;
     m.userData.bitkiHazir = true;
     const onceki = m.onBeforeCompile;
+    // Modelin kendi yaması (ez-tree yaprağı: arka yüz normali) anahtara katılır: aynı anahtarlı başka bitkiyle program paylaşmasın
+    const oncekiAnahtar = m.customProgramCacheKey !== THREE.Material.prototype.customProgramCacheKey ? m.customProgramCacheKey() : "";
     m.onBeforeCompile = (shader, r) => {
       onceki?.(shader, r);
       shader.uniforms.bitkiKar = this.bitkiKar;
@@ -1631,7 +1668,7 @@ if (bitkiKar > 0.0) {
 }`,
       );
     };
-    m.customProgramCacheKey = () => (ruzgar ? "arazi-bitki-v2-ruzgar" : "arazi-bitki-v2");
+    m.customProgramCacheKey = () => (ruzgar ? "arazi-bitki-v2-ruzgar" : "arazi-bitki-v2") + oncekiAnahtar;
     m.needsUpdate = true;
   }
 
@@ -1731,7 +1768,14 @@ if (bitkiKar > 0.0) {
       if (this.koridorda(x, z, agacMi ? pay : boyut.x * 0.5 * b.olcek[1])) continue; // görüş koridoru: askerin önünü kapatmasın
       if (b.dereYok && this.yukseklik(x, z) < -1.2) continue; // dere yatağına büyük kaya/ağaç değil
       if (b.aralik && !agaclar.bosMu(x, z, b.aralik * olcek)) continue;
-      const y = ZEMIN_Y + this.yukseklik(x, z) - taban * olcek - boyut.y * olcek * b.gomme;
+      // Kaya/kayalık: taban izinin 8 noktasındaki en alçak zemin (yamaçta yalnız merkezden alınca aşağı bakan yüz havada
+      // kalıyordu; 10 Kasım görsel denetim, dağlık yar ve kayalık). Ağaç/çalı merkezden (gövde dik durur).
+      let zemin = this.yukseklik(x, z);
+      if (b.sinif === "kaya") {
+        const r = Math.max(boyut.x, boyut.z) * 0.45 * olcek;
+        for (let k = 0; k < 8; k++) zemin = Math.min(zemin, this.yukseklik(x + Math.cos((k * Math.PI) / 4) * r, z + Math.sin((k * Math.PI) / 4) * r));
+      }
+      const y = ZEMIN_Y + zemin - taban * olcek - boyut.y * olcek * b.gomme;
       const m = new THREE.Matrix4().compose(
         new THREE.Vector3(x, y, z),
         new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.random() * Math.PI * 2, 0)),

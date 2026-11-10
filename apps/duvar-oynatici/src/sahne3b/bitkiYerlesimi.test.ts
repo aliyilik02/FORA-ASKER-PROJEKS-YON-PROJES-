@@ -79,29 +79,30 @@ describe("karıştırma", () => {
 describe("bitki setleri: yaz ve kış", () => {
   const adlar = (set: Parameters<typeof bitkiListesi>[0], kar: number) => bitkiListesi(set, kar).map((b) => b.klasor);
 
-  it("orman yazın karaçam, çam, ladin; kışın karlı iğne yapraklılar, yapraksız meşe, eğrelti ve ot yok", () => {
+  it("orman yazın karaçam, çam, ladin; kışın iğne yapraklılar kalır (kar gölgelendiricide), meşe yapraksız, eğrelti ve ot yok", () => {
     const yaz = adlar("orman", 0);
-    expect(yaz).toContain("m_karacam_14");
+    expect(yaz).toContain("ez_karacam~1");
+    expect(yaz).toContain("ez_mese");
     expect(yaz).toContain("m_egrelti_234");
     const kis = adlar("orman", 1);
-    expect(kis).toContain("m_karli_cam_102");
-    expect(kis).toContain("m_kuru_90");
-    expect(kis.filter((k) => k === "m_cali_214").length).toBe(2); // pırnal + kışın eklenen karlı çalı
-    expect(kis).not.toContain("m_karacam_14");
+    expect(kis).toContain("ez_karacam~1"); // her dem yeşil: kalır, üstü gölgelendiricide karlanır
+    expect(kis).toContain("ez_sedir");
+    expect(kis).toContain("ez_kis_mese");
+    expect(kis).not.toContain("ez_mese");
+    expect(kis.filter((k) => k === "ez_cali_2").length).toBe(2); // yaz çalısı + kışın eklenen karlı çalı
     expect(kis).not.toContain("m_egrelti_234");
     expect(kis).not.toContain("cimen_1");
-    expect(kis).toContain("m_sedir_56"); // her dem yeşil: kalır, üstü gölgelendiricide karlanır
   });
 
-  it("kavak sırası kışın yapraksız ağaç sırası olur (dizi korunur, sallanmaz)", () => {
+  it("kavak sırası kışın yapraksız ağaç sırası olur (dizi ve varyant korunur, çıplak dal az sallanır)", () => {
     const kis = bitkiListesi("bozkir", 1).filter((b) => b.dizi);
-    expect(kis.map((b) => b.klasor)).toEqual(["m_kuru_90", "m_kuru_139", "m_kuru_146"]);
-    expect(kis.every((b) => b.ruzgar === 0)).toBe(true);
+    expect(kis.map((b) => b.klasor)).toEqual(["ez_kis_kavak~1", "ez_kis_kavak~2", "ez_kis_kavak~3"]);
+    expect(kis.every((b) => b.ruzgar === 0.03)).toBe(true);
   });
 
   it("sonbaharın hafif kırağısı yaz setinde kalır; eşik kışta", () => {
-    expect(adlar("orman", 0.15)).toContain("m_karacam_14");
-    expect(adlar("orman", KIS_ESIGI)).toContain("m_karli_cam_102");
+    expect(adlar("orman", 0.15)).toContain("ez_mese");
+    expect(adlar("orman", KIS_ESIGI)).toContain("ez_kis_mese");
   });
 
   it("ağaçlar uzak kopyalı, izleyiciden uzakta ve gövde aralıklı", () => {
