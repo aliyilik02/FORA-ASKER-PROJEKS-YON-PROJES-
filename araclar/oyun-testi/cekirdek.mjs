@@ -8,7 +8,7 @@ import { chromium } from "playwright";
 
 export const bekle = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export async function baslat({ kopru = "http://127.0.0.1:4000", genislik = 3840, kalite = "yuksek", cikti = "araclar/_goruntu/oyun", sorgu = {}, goster = false } = {}) {
+export async function baslat({ kopru = process.env.KOPRU ?? "http://127.0.0.1:4000", genislik = 3840, kalite = "yuksek", cikti = "araclar/_goruntu/oyun", sorgu = {}, goster = false } = {}) {
   const yukseklik = Math.round((genislik * 9) / 48);
   const klasor = path.resolve(cikti);
   fs.mkdirSync(klasor, { recursive: true });

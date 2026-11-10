@@ -389,7 +389,12 @@ değerlendirilir (`aciklik`), test `araclar/oyun-testi/kosan-engel.mjs` (5 geçi
 yatarak ateş eden yok": siper almada açıktaki askerler %40 diz çöküp, %30 yatıp (`siper.mod "yat"`), %30 ayakta ateş eder;
 diz/yatan atışında göğüs geri teper. Sütre arkasındakiler bilerek ayağa kalkıp ateş eder (bariyer 1 m, diz çökmüş namlu
 bariyerin altında kalır). **Ölçüm tuzağı:** kullanıcının oynatıcı sekmesi açıkken oyun testleri hem fps'i 3 kat düşük
-ölçer hem kullanıcının sahnesini sıfırlar; `/api/baglanti` `oynatici.sayi` > 0 ise önce haber ver.
+ölçer hem kullanıcının sahnesini sıfırlar; `/api/baglanti` `oynatici.sayi` > 0 ise testleri **ayrı köprüde** koş:
+`cd apps/kopru && PORT=4100 VERI_KLASORU=<geçici>/ node dist/index.js`, sonra `KOPRU=http://127.0.0.1:4100 node araclar/oyun-testi/...`.
+**Üçüncü tur gözlemler:** aynı yaralıya gönderilen sıhhiyeciler iç içeydi (yerleşim yalnız sabit engele bakıyordu; artık
+figür + başkasının ayırdığı müdahale/bekleme yeri de dolu sayılır, 12 aday nokta); koşan askerde çatışma sırasında üst gövde
+ateş katmanı tüfeği havaya dikiyordu (katman yalnız ≤ 2 m/sn ve düşmana ± 35° yürüyen figürde); klip hız tavanı %30 → %20
+(yürüyüş 1,2, koşu 3,18 m/sn); sol el IK hedefi bilek (merkezin 9 cm önü, 8 cm altı).
 
 ## Sıradaki işler (öncelik sırasıyla)
 

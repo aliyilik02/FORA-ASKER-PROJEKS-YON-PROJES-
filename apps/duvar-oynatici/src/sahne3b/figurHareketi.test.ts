@@ -16,13 +16,13 @@ function klip(ad: string, noktalar: Array<[number, number]>) {
 const kalca = (y: number) => new THREE.Vector3(0, -0.06, -y);
 
 describe("hareketUyumu", () => {
-  it("yürüyüş: 1,5 m/sn istenir, klip %30 hızlanır, figür 1,3 m/sn gider", () => {
+  it("yürüyüş: 1,5 m/sn istenir, klip %20 hızlanır, figür 1,2 m/sn gider", () => {
     const u = hareketUyumu("Rifle Walk", 1.5);
-    expect(u.zamanOlcegi).toBeCloseTo(1.3);
-    expect(u.hiz).toBeCloseTo(1.3);
+    expect(u.zamanOlcegi).toBeCloseTo(1.2);
+    expect(u.hiz).toBeCloseTo(1.2);
   });
-  it("koşu: 4,5 m/sn istenir, 2,65 × 1,3 = 3,45 m/sn (ayak kaymaz)", () => {
-    expect(hareketUyumu("Armature|Rifle Run", 4.5).hiz).toBeCloseTo(3.445);
+  it("koşu: 4,5 m/sn istenir, 2,65 × 1,2 = 3,18 m/sn (ayak kaymaz)", () => {
+    expect(hareketUyumu("Armature|Rifle Run", 4.5).hiz).toBeCloseTo(3.18);
   });
   it("yaralı yürüyüşü yavaşlar: 0,74 istenir, klip 0,8 katına iner", () => {
     const u = hareketUyumu("Injured Walk", 0.74);
@@ -30,7 +30,7 @@ describe("hareketUyumu", () => {
     expect(u.hiz).toBeCloseTo(0.93 * u.zamanOlcegi);
   });
   it("doğal hız boyla ölçeklenir; bilinmeyen klipte istenen hız kalır", () => {
-    expect(hareketUyumu("Rifle Walk", 1.0, 0.9).zamanOlcegi).toBeCloseTo(1.3);
+    expect(hareketUyumu("Rifle Walk", 1.0, 0.9).zamanOlcegi).toBeCloseTo(1.2);
     expect(hareketUyumu("Bilinmeyen", 2.2)).toEqual({ hiz: 2.2, zamanOlcegi: 1 });
     expect(hareketUyumu("Rifle Walk", 0)).toEqual({ hiz: 0, zamanOlcegi: 1 });
   });

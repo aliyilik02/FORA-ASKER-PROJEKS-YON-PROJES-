@@ -41,7 +41,7 @@ export const KLIP_DOGAL_HIZI: Record<string, number> = {
   "Injured Walk": 0.93,
 };
 /**
- * İstenen hızı klibin doğal hızına uydurur: klip en çok %30 hızlanır / %20 yavaşlar, figür tam o hızla ilerler (ayak
+ * İstenen hızı klibin doğal hızına uydurur: klip en çok %20 hızlanır (%30'da koşu telaşlı, yapay duruyordu) / %20 yavaşlar, figür tam o hızla ilerler (ayak
  * kaymaz). Doğal hızı bilinmeyen klipte istenen hız aynen kalır.
  */
 export function hareketUyumu(klipAdi: string, istenenHiz: number, boy = 1.8): { hiz: number; zamanOlcegi: number } {
@@ -49,7 +49,7 @@ export function hareketUyumu(klipAdi: string, istenenHiz: number, boy = 1.8): { 
   const dogal = KLIP_DOGAL_HIZI[kisa];
   if (!dogal || istenenHiz <= 0) return { hiz: istenenHiz, zamanOlcegi: 1 };
   const d = dogal * (boy / 1.8);
-  const zamanOlcegi = Math.min(1.3, Math.max(0.8, istenenHiz / d));
+  const zamanOlcegi = Math.min(1.2, Math.max(0.8, istenenHiz / d));
   return { hiz: d * zamanOlcegi, zamanOlcegi };
 }
 
@@ -832,10 +832,17 @@ export class FigurKatmani {
       // Tercih: izleyici tarafında yanında; orası sütre eşyasının içindeyse öbür yan, arka, tam yanlar
       // Önce tam yan (izleyiciye göre yanal 0,8 m): sıhhiyeci yaralıyı örtmez, ikisi yan yana görünür (önceden sırtı
       // izleyiciye dönük, yaralının önündeydi); doluysa ön çaprazlar, arka çaprazlar
-      const adaylar: Array<[number, number]> = [[0, 1.35], [0, -1.35], [0.9, 1], [0.9, -1], [-0.9, 1], [-0.9, -1]];
+      // Dolu sayılır: sabit engel, başka figür (yaralının kendisi hariç) ve başka sıhhiyecinin ayırdığı müdahale yeri
+      // (ateş altında siperde bekleyenlerinki dahil). Önceden yalnız sabit engele bakılıyordu: aynı yaralıya gönderilen
+      // sıhhiyeciler tam aynı noktaya, iç içe yerleşiyordu (10 Kasım, kullanıcı gözlemi).
+      const yerDolu = (p: THREE.Vector3) =>
+        this.engel(p) ||
+        this.aktifler.some((b) => b !== yanindaki && b.id !== s.id && (b.nesne.position.distanceTo(p) < 0.9 || (b.yanindaHedef !== null && b.yanindaHedef.konum.distanceTo(p) < 0.9))) ||
+        [...this.rezerveler].some(([id, k]) => id !== s.id && k.distanceTo(p) < 0.9);
+      const adaylar: Array<[number, number]> = [[0, 1.35], [0, -1.35], [0.9, 1], [0.9, -1], [-0.9, 1], [-0.9, -1], [1.3, 0], [-1.3, 0], [0, 2.9], [0, -2.9], [1.6, 2], [1.6, -2]];
       for (const [ileri, yana] of adaylar) {
         sarmal.position.copy(hedef).addScaledVector(izleyiciYonu, ileri).addScaledVector(yan, yana);
-        if (!this.engel(sarmal.position)) break;
+        if (!yerDolu(sarmal.position)) break;
       }
       sarmal.position.y = zeminY(sarmal.position.x, sarmal.position.z);
       const d = hedef.clone().sub(sarmal.position);
@@ -846,7 +853,11 @@ export class FigurKatmani {
       if (this.safha === "ates_altinda") {
         const uzaklik = Math.hypot(hedef.x, hedef.z);
         const geri = Math.min(4.5, Math.max(0, uzaklik - 2.5));
-        sarmal.position.copy(hedef).addScaledVector(izleyiciYonu, geri);
+        // Bekleme yeri de paylaşılmaz: doluysa yana 1,2 m aralıkla dizilirler
+        for (const yana of [0, 2, -2, 4, -4, 6]) {
+          sarmal.position.copy(hedef).addScaledVector(izleyiciYonu, geri).addScaledVector(yan, yana);
+          if (!yerDolu(sarmal.position)) break;
+        }
         sarmal.position.y = zeminY(sarmal.position.x, sarmal.position.z);
         const d2 = hedef.clone().sub(sarmal.position);
         sarmal.rotation.y = Math.atan2(d2.x, d2.z);
@@ -1265,7 +1276,9 @@ export class FigurKatmani {
     const se = a.asama === "normal" && a.poz !== "yarali" && !a.gecis ? this.silahEkseni(a) : null;
     if (se) {
       const olcek = a.boy / 1.8;
-      hedef = se.merkez.addScaledVector(se.eksen, 0.2 * olcek).addScaledVector(se.ust, -0.06 * olcek);
+      // Hedef bilektir: parmaklar ~15 cm öne uzanır, bu yüzden bilek merkezin 9 cm önünde, 8 cm altında (20 cm'de açık el
+      // namlunun önüne taşıyordu)
+      hedef = se.merkez.addScaledVector(se.eksen, 0.09 * olcek).addScaledVector(se.ust, -0.08 * olcek);
       const el = kol.el.getWorldPosition(new THREE.Vector3());
       if (el.distanceTo(hedef) < 0.32 * olcek) istenen = 1;
     }
@@ -1743,7 +1756,14 @@ export class FigurKatmani {
    */
   private katmaniGuncelle(a: Aktif) {
     if (!a.eylemAtesUst || !a.eylemBekle || !a.karistirici || a.hiz === 0 || a.poz === "yarali" || a.asama !== "normal") return;
-    const istenen = a.silah && this.dusmanAzimutu !== null;
+    // Üst gövde ateş katmanı yalnız yürüyen (≤ 2 m/sn) ve düşmana doğru (± 35°) giden figürde: klip gidiş yönüne nişan
+    // alır. Koşan askerde koşunun gövde eğimi/dönüşü üstüne binince tüfek havaya dikiliyor, yana koşan asker boşluğa
+    // nişan alıyordu (10 Kasım, kullanıcı gözlemi: "elindeki silah saçmalıyor").
+    let istenen = a.silah && this.dusmanAzimutu !== null && a.hiz <= 2;
+    if (istenen && this.dusmanAzimutu !== null) {
+      const d = azimutYon(this.dusmanAzimutu);
+      istenen = Math.sin(a.nesne.rotation.y) * d.x + Math.cos(a.nesne.rotation.y) * d.z > 0.82;
+    }
     if (istenen === a.katmanAktif) return;
     const alt = altGovdeKlibi(a.eylemBekle.getClip());
     if (!alt) return;
