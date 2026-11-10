@@ -360,6 +360,15 @@ Meskûn 1920×360 yuksek 57 → 86 fps. Ayrıntı docs "Meskûn cadde performans
 **Sonraki oturum (10 Kasım kararı): genel kontrol — hata ayıklama + geliştirme.** Önce `docs/devir-10-kasim.md`
 (bugün değişenler, doğrulanmayan 10 madde, ölçüm araçları `araclar/olcum/`).
 
+**Oynayarak test (10 Kasım akşam):** `araclar/oyun-testi/` (Playwright: sahneyi köprü API'siyle oynatır, kare çeker, figür
+kemiklerini kare kare ölçer: sıçrama, ayak kayması, dönüş hızı). Meskûn mahal turu: 14 figür/ateş hatası düzeltildi
+(çömelik "Hit Reaction" ayaktaki askerde 27 cm sıçrama → duruşa uyan klip + 3 ölüm çeşidi; dönüş hızı sınırı; hız klibin
+doğal hızına uyar `KLIP_DOGAL_HIZI`/`hareketUyumu`: yürüyüş 1,3, koşu 3,45 m/sn; "Standing Up" kırpma `gecisAraligi`; namlu
+gerçek tüfekten `atisNoktalari`; diz çökmüş nişan klibi; ateş klibi salvoyla eş zamanlı; sol el IK `solEliOturt`; ateş
+kesilince son düşman yönüne bakar; nefes + çevre kollama). Düzeltilmeyen 14 bulgu ve öneriler: `docs/oyun-testi-10-kasim.md`
+(açıkta dimdik ateş, yaralının önünün kapanması, Oda 2 sütre–alan iç içeliği, helikopter 58 m, kışta yalnız zemin karlı,
+zayıf yağmur, fişek görüş alanı dışında). Figür/animasyon değişikliğinden sonra `node araclar/oyun-testi/meskun-figur.mjs`.
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 00. **3B alanlar duvarda (9 Kasım sonu):** meskûn cadde, 3B orman (yaz/kış), dağ yarları, kırsal kavak sırası duvarda gözle
@@ -400,5 +409,6 @@ Meskûn 1920×360 yuksek 57 → 86 fps. Ayrıntı docs "Meskûn cadde performans
 - `docs/donanim-onerileri.md`, `docs/kaynak-proje-talebi.md`, `docs/sartname-uyumluluk.md`
 - `docs/icerik-ihtiyac-listesi.md` – Meshy modelleri, Türkçe/CC0 sesler, hava efekti eksikleri (3 Kasım), öncelikli
 - `docs/meshy-model-listesi.md` – 43 modelin Meshy promptları, ayarlar, dosya adları, Mixamo animasyonları (kopyalanabilir sayfa: artifact "Meshy Model Listesi")
+- `docs/oyun-testi-10-kasim.md` – meskûn mahal oynayarak test: düzeltilen 14 hata, açık 14 bulgu, öneriler, test aracı
 - `docs/yeni-bilgisayar-kurulumu.md` – devir notu: kod nereden çekilir, USB içeriği nereye gider, ilk yapılacaklar
 - `docs/gosterim-rehberi.md` – idareye sunum: hazırlık, tek tuş "Gösterim – Tam Tur" akışı, elle 3 dk, sorulara cevaplar, aksaklıklar

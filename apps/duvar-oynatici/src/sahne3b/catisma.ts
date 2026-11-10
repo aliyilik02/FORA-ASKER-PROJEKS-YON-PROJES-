@@ -159,6 +159,13 @@ export class CatismaSistemi {
   private dostSayaclar = new Map<number, number>();
   /** Silahlı dost figürlerin dünya konumları (ayak hizası). Dışarıdan her karede sağlanır. */
   dostlar: () => THREE.Vector3[] = () => [];
+  /**
+   * Dost namlu uçları (figür katmanı verir): yalnız nişan almış figürler, namlu elde tutulan tüfekten. Verilmezse eski
+   * yol (dostlar() konumu + 1,35 m). `dostAtisOldu` her atışta figüre bildirir (ateş klibi salvoyla eş zamanlı).
+   */
+  atisNoktalari: (() => Array<{ id: string; namlu: THREE.Vector3 }>) | null = null;
+  dostAtisOldu: ((id: string) => void) | null = null;
+  private dostSalvolari = new Map<string, { kalan: number; seri: number }>();
   /** Ağır silahlar (tank): namlu ucu ve yönüyle. */
   agirSilahlar: () => AgirSilahKonumu[] = () => [];
   /** 3B alanın düşman mevzileri (dünya konumu; pencere, çatı, barikat): varsa düşman ve izli mermi buradan ateş eder. */
@@ -471,11 +478,13 @@ export class CatismaSistemi {
     if (this.sesCalabilir(iz)) this.sesler.carpma(sesAzimutu(_yakin.set(x0 + dx * t, y0 + dy * t, z0 + dz * t)));
   }
 
-  private dostAtis(konum: THREE.Vector3) {
+  private dostAtis(konum: THREE.Vector3, hazirNamlu?: THREE.Vector3) {
     const dusman = azimutYon(this.ayar.azimut + rnd(-6, 6));
-    const namlu = konum.clone();
-    namlu.y += 1.35;
-    namlu.addScaledVector(dusman, 0.6);
+    const namlu = hazirNamlu ? hazirNamlu.clone() : konum.clone();
+    if (!hazirNamlu) {
+      namlu.y += 1.35;
+      namlu.addScaledVector(dusman, 0.6);
+    }
     this.parcaciklar.parlama(namlu, 0.45);
     const hedef = dusman.clone().multiplyScalar(rnd(160, 240));
     hedef.y = ZEMIN_Y + rnd(0, 3);
@@ -604,7 +613,23 @@ export class CatismaSistemi {
         });
       }
       // --- Dost ateşi ---
-      if (this.ayar.dostAtes) {
+      if (this.ayar.dostAtes && this.atisNoktalari) {
+        // Figür başına salvo sayacı (kimlikle: liste değişince sayaçlar kaymaz); 3–5 atış hızlı, sonra bekleme
+        for (const n of this.atisNoktalari()) {
+          const d = this.dostSalvolari.get(n.id) ?? { kalan: rnd(0.2, 1.5), seri: 0 };
+          this.dostSalvolari.set(n.id, d);
+          d.kalan -= dt;
+          if (d.kalan > 0) continue;
+          this.dostAtis(n.namlu, n.namlu);
+          this.dostAtisOldu?.(n.id);
+          d.seri++;
+          if (d.seri < Math.round(rnd(3, 5))) d.kalan = rnd(0.09, 0.16);
+          else {
+            d.seri = 0;
+            d.kalan = rnd(0.8, 3) * (1.4 - s);
+          }
+        }
+      } else if (this.ayar.dostAtes) {
         const dostlar = this.dostlar();
         dostlar.forEach((k, i) => {
           const kalan = (this.dostSayaclar.get(i) ?? rnd(0.2, 1.5)) - dt;
@@ -721,6 +746,7 @@ export class CatismaSistemi {
     this.dusmanAtisSayac = 0;
     this.uzakPatlamaSayac = 20;
     this.dostSayaclar.clear();
+    this.dostSalvolari.clear();
     this.topSayaclar.clear();
     this.izliBirikim = 0;
   }

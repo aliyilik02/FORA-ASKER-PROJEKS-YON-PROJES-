@@ -25,8 +25,94 @@ const GECIS_KLIPLERI: Record<string, string[]> = {
   "yarali>comelmis": ["Standing Up"],
 };
 /** Safha geçişinde sıhhiyecinin yaralıya yürüyüşü için klip adayları (ilk bulunan). */
-const YURUYUS_KLIPLERI = ["Rifle Crouch Walk", "Crouched Walking", "Rifle Walk", "Walking", "Walk"];
+const YURUYUS_KLIPLERI = ["Rifle Walk", "Walking", "Walk", "Rifle Crouch Walk", "Crouched Walking"];
 const YURUYUS_HIZI = 1.5;
+
+/**
+ * Hareket kliplerinin DOĞAL hızı (m/sn, 1,8 m boy): yerdeki ayağın köke göre hızı; oynatıcıda ölçüldü
+ * (araclar/oyun-testi/figur-yakin.mjs, 10 Kasım). Figür bundan hızlı kaydırılırsa ayak yerde kayar ("buz pateni"):
+ * Rifle Walk 1,5 m/sn ile %35, Rifle Run 4,5 m/sn ile %42, Rifle Crouch Walk 1,0 m/sn ile 2 kat kayıyordu.
+ */
+export const KLIP_DOGAL_HIZI: Record<string, number> = {
+  "Rifle Walk": 1.0,
+  "Rifle Run": 2.65,
+  "Rifle Crouch Walk": 0.48,
+  "Low Crawl": 0.42,
+  "Injured Walk": 0.93,
+};
+/**
+ * İstenen hızı klibin doğal hızına uydurur: klip en çok %30 hızlanır / %20 yavaşlar, figür tam o hızla ilerler (ayak
+ * kaymaz). Doğal hızı bilinmeyen klipte istenen hız aynen kalır.
+ */
+export function hareketUyumu(klipAdi: string, istenenHiz: number, boy = 1.8): { hiz: number; zamanOlcegi: number } {
+  const kisa = klipAdi.split(/[|/]/).pop() ?? klipAdi;
+  const dogal = KLIP_DOGAL_HIZI[kisa];
+  if (!dogal || istenenHiz <= 0) return { hiz: istenenHiz, zamanOlcegi: 1 };
+  const d = dogal * (boy / 1.8);
+  const zamanOlcegi = Math.min(1.3, Math.max(0.8, istenenHiz / d));
+  return { hiz: d * zamanOlcegi, zamanOlcegi };
+}
+
+/** Kalça konum/dönüş izleri (Mixamo "…Hips"): klipler arası duruş uyumu ve geçiş kliplerinin ölü başı/sonu için. */
+function kalcaIzleri(klip: THREE.AnimationClip) {
+  return {
+    konum: klip.tracks.find((t) => /hips\.position$/i.test(t.name)) ?? null,
+    donus: klip.tracks.find((t) => /hips\.quaternion$/i.test(t.name)) ?? null,
+  };
+}
+/** Klibin `t` anındaki kalça konumunun (yerel) verilen konuma uzaklığı; iz yoksa 0 (uyumlu say). */
+export function kalcaFarki(klip: THREE.AnimationClip, t: number, konum: THREE.Vector3): number {
+  const iz = kalcaIzleri(klip).konum;
+  if (!iz) return 0;
+  let i = 0;
+  while (i < iz.times.length - 1 && iz.times[i + 1] <= t) i++;
+  return Math.hypot(iz.values[i * 3] - konum.x, iz.values[i * 3 + 1] - konum.y, iz.values[i * 3 + 2] - konum.z);
+}
+/** Klipte kalçanın verilen konuma en yakın olduğu (en erken) an: çömelmiş/yerdeki figür düşme klibine ortasından girer. */
+export function kalcayaEnYakinZaman(klip: THREE.AnimationClip, konum: THREE.Vector3): number {
+  const iz = kalcaIzleri(klip).konum;
+  if (!iz) return 0;
+  const uzaklik = (i: number) => Math.hypot(iz.values[i * 3] - konum.x, iz.values[i * 3 + 1] - konum.y, iz.values[i * 3 + 2] - konum.z);
+  let enAz = Infinity;
+  for (let i = 0; i < iz.times.length; i++) enAz = Math.min(enAz, uzaklik(i));
+  for (let i = 0; i < iz.times.length; i++) if (uzaklik(i) <= enAz + 0.03) return iz.times[i];
+  return 0;
+}
+/**
+ * Geçiş klibinin işe yarar aralığı: kalçanın ilk kıpırdadığı andan 0,25 sn önce başlar, son duruşa oturduktan 0,3 sn sonra
+ * biter. Mixamo "Standing Up" 11,4 sn sürer ve ilk ~3,5 sn yerde kıpırtısız yatar: "Kalk" komutundan sonra asker saniyelerce
+ * tepkisiz kalıyordu.
+ */
+const gecisAralikOnbellek = new WeakMap<THREE.AnimationClip, { bas: number; son: number }>();
+export function gecisAraligi(klip: THREE.AnimationClip): { bas: number; son: number } {
+  const onbellek = gecisAralikOnbellek.get(klip);
+  if (onbellek) return onbellek;
+  const { konum, donus } = kalcaIzleri(klip);
+  let sonuc = { bas: 0, son: klip.duration };
+  if (konum && konum.times.length > 2) {
+    const n = konum.times.length;
+    const v = konum.values;
+    const q = donus && donus.times.length === n ? donus.values : null;
+    const fark = (i: number, j: number) => {
+      const d = Math.hypot(v[i * 3] - v[j * 3], v[i * 3 + 1] - v[j * 3 + 1], v[i * 3 + 2] - v[j * 3 + 2]);
+      if (!q) return d;
+      const nokta = Math.abs(q[i * 4] * q[j * 4] + q[i * 4 + 1] * q[j * 4 + 1] + q[i * 4 + 2] * q[j * 4 + 2] + q[i * 4 + 3] * q[j * 4 + 3]);
+      return d + 2 * Math.acos(Math.min(1, nokta)) * 0.2; // 8,6 derece dönüş ≈ 3 cm sayılır
+    };
+    let ilk = 0;
+    while (ilk < n - 1 && fark(ilk, 0) < 0.03) ilk++;
+    let sonHareket = n - 1;
+    while (sonHareket > ilk && fark(sonHareket, n - 1) < 0.03) sonHareket--;
+    sonuc = { bas: Math.max(0, konum.times[ilk] - 0.25), son: Math.min(klip.duration, konum.times[sonHareket] + 0.3) };
+    if (sonuc.son - sonuc.bas < 0.3) sonuc = { bas: 0, son: klip.duration };
+  }
+  gecisAralikOnbellek.set(klip, sonuc);
+  return sonuc;
+}
+/** Ayakta vurulan figür için düşme klibi çeşitleri (modelde varsa): hep aynı ölüm tekrar etmesin. */
+const DUSME_CESITLERI = ["Death From The Front", "Standing React Death Backward"];
+/** Diz çökmüş figürün çatışmada geçtiği nişan klibi adayları ("Rifle Kneel Idle" tüfeği dik tutar, ateş edemez). */
+const COMELMIS_NISAN_KLIPLERI = ["Idle Crouching Aiming"];
 
 /**
  * Üst/alt gövde katmanlama (D-22): ateş klibinin yalnız omurga/boyun/baş/omuz/kol/el izleri "üst" klip, yürüyüş klibinin
@@ -253,12 +339,12 @@ export interface Aktif {
   /** "Yanında" yerleşildiyse hedef figürün kimliği (bakış için). */
   yanindaId: string | null;
   /** Süren duruş geçiş klibi; bitince `hedef` döngüsüne geçilir. */
-  gecis: { eylem: THREE.AnimationAction; hedef: THREE.AnimationAction } | null;
+  gecis: { eylem: THREE.AnimationAction; hedef: THREE.AnimationAction; son: number } | null;
   /** Safha "ateş altında"da siperde bekleyen sıhhiyeci: taktik sahaya geçince `yanindaHedef`e yürür. */
   safhaBekliyor: boolean;
   yanindaHedef: { konum: THREE.Vector3; donus: number } | null;
   /** Süren yürüyüş (hedefe, varınca `donus`a dönüp bekleme klibine). */
-  yuruyus: { hedef: THREE.Vector3; donus: number; eylem: THREE.AnimationAction | null } | null;
+  yuruyus: { hedef: THREE.Vector3; donus: number; eylem: THREE.AnimationAction | null; hiz: number } | null;
   /** Haki boya için kopyalanan malzemeler: figür kaldırılınca bırakılır (önbellekteki glTF malzemeleri paylaşımlı, bırakılmaz). */
   kopyaMalzemeler: THREE.Material[];
   /** Yakın patlamaya irkilme (D-22): başlangıç saati ve güç 0..1; 1,1 sn'de gövde ve baş öne eğilip toparlanır. */
@@ -277,6 +363,26 @@ export interface Aktif {
   kacinmaHedef: number;
   /** Yana koşan/yürüyen figürün halka yarıçapı (m; doğduğu yer). Konum her kare bu yarıçap + sapma olarak kurulur. */
   hatYaricapi: number;
+  /** Kalça kemiği ve dinlenme uzunluğu (yerel birim): klipler arası duruş uyumu ölçüsü. */
+  kalca: THREE.Object3D | null;
+  kalcaBoy: number;
+  /** Ayakta vurulunca rastgele seçilen düşme klipleri (eylemDusme dahil). */
+  dusmeAdaylari: THREE.AnimationAction[];
+  /** Diz çökmüş nişan klibi (varsa): çatışmada duruş klibinin yerine çalar. */
+  eylemComelmisNisan: THREE.AnimationAction | null;
+  /** Yürüyüş bitince yumuşak dönülecek yön (radyan) ya da null. */
+  donusHedef: number | null;
+  /** Son görülen düşman azimutu: ateş kesilince asker sırtını tehdide dönmez, o yöne bakmayı sürdürür. */
+  sonDusman: number | null;
+  /** Son atış saati: ateş klibi yalnız salvo sırasında çalar, arada nişanda bekler. */
+  sonAtis: number;
+  /** Tüfeğin uzun ekseni (yerel): yere düşünce yan yatırmak için. */
+  silahUzunEksen: "x" | "z";
+  /** Tüfek gövdesinin kutu merkezi (tüfeğin yerel uzayı; model kökü namlu ekseninin ~20 cm altında). */
+  silahMerkez: THREE.Vector3;
+  /** Sol kol zinciri (üst kol, ön kol, el) ve IK ağırlığı 0..1: destek eli tüfeğin el kundağına oturur. */
+  solKol: { ust: THREE.Object3D; on: THREE.Object3D; el: THREE.Object3D } | null;
+  solElAgirlik: number;
 }
 
 /** Klip adı tam ("CharacterArmature|Idle_Gun") ya da kısa ("Idle_Gun") eşleşir. */
@@ -337,6 +443,51 @@ export class FigurKatmani {
   /** Hafif silahlı (tüfekli), ateş edebilir durumdaki figürlerin dünya konumları (ayak hizası); yaralılar ve ağır silahlar hariç. */
   silahliKonumlar(): THREE.Vector3[] {
     return this.aktifler.filter((a) => a.silah && !a.agirSilah && a.hiz === 0 && a.poz !== "yarali").map((a) => a.nesne.position.clone());
+  }
+
+  /**
+   * Gerçekten ateş edebilen figürlerin namlu ucu (dünya): nişan duruşunda, düşmana dönmüş, geçiş/yürüyüş/düşme dışında.
+   * Namlu elde tutulan tüfekten ölçülür (çömelmiş ve yatan figürde parıltı havada 1,35 m yükseklikte çıkıyordu). Tüfeği dik
+   * tutan diz çökmüş figür (nişan klibi yok) ateş etmez.
+   */
+  atisNoktalari(): Array<{ id: string; namlu: THREE.Vector3 }> {
+    const sonuc: Array<{ id: string; namlu: THREE.Vector3 }> = [];
+    if (this.dusmanAzimutu === null) return sonuc;
+    const dusman = azimutYon(this.dusmanAzimutu);
+    for (const a of this.aktifler) {
+      if (!a.silah || a.agirSilah || a.hiz !== 0 || a.poz === "yarali" || a.asama !== "normal" || a.gecis || a.yuruyus || a.silahYerde) continue;
+      if (a.eylemAtes && a.poz !== "yatmis" && !a.atesPozu) continue;
+      const ileri = new THREE.Vector3(Math.sin(a.nesne.rotation.y), 0, Math.cos(a.nesne.rotation.y));
+      if (ileri.dot(dusman) < 0.9) continue; // henüz dönüyor (> 25 derece)
+      const olcek = a.boy / 1.8;
+      let namlu: THREE.Vector3;
+      const se = this.silahEkseni(a);
+      if (se) namlu = se.merkez.addScaledVector(se.eksen, 0.5 * olcek).addScaledVector(se.ust, 0.03 * olcek);
+      else {
+        namlu = a.nesne.position.clone().addScaledVector(ileri, 0.6 * olcek);
+        namlu.y += 1.35 * olcek * (1 - 0.35 * a.comelme - 0.8 * a.yatma);
+      }
+      sonuc.push({ id: a.id, namlu });
+    }
+    return sonuc;
+  }
+  /** Elde tutulan tüfeğin dünya uzayında gövde merkezi, namlu yönü (birim) ve "üst" yönü; tüfek yoksa null. */
+  private silahEkseni(a: Aktif): { merkez: THREE.Vector3; eksen: THREE.Vector3; ust: THREE.Vector3 } | null {
+    const silah = a.silahNesne;
+    if (!silah || a.silahYerde) return null;
+    a.nesne.updateMatrixWorld(true);
+    const merkez = silah.localToWorld(a.silahMerkez.clone());
+    const q = silah.getWorldQuaternion(new THREE.Quaternion());
+    const eksen = new THREE.Vector3(a.silahUzunEksen === "x" ? 1 : 0, 0, a.silahUzunEksen === "z" ? 1 : 0).applyQuaternion(q).normalize();
+    // Namlu yönü: kabza (sağ el) gövde merkezinin gerisindedir
+    if (a.silahKemik && eksen.dot(merkez.clone().sub(a.silahKemik.getWorldPosition(new THREE.Vector3()))) < 0) eksen.negate();
+    return { merkez, eksen, ust: new THREE.Vector3(0, 1, 0).applyQuaternion(q).normalize() };
+  }
+
+  /** Figür ateş etti (çatışma katmanı bildirir): ateş klibi 0,3 sn çalar. */
+  atisOldu(id: string) {
+    const a = this.aktifler.find((x) => x.id === id);
+    if (a) a.sonAtis = this.saat;
   }
 
   /** Sahnedeki figürlerin duruşları (panel/HUD için). */
@@ -620,7 +771,7 @@ export class FigurKatmani {
 
     const mesafe = s.mesafe ?? (s.yukseklik !== undefined ? yukseklikMesafe(s.yukseklik) : (tanim.mesafe ?? 20));
     sarmal.position.copy(yerKonumu(s.azimut, mesafe));
-    const hiz = tanim.hiz ?? 0;
+    let hiz = tanim.hiz ?? 0;
     const sola = Boolean(s.yansit);
     // Boş yer (8 Kasım): aynı yöne ikinci "Cephe kur" / art arda "Asker çağır" plansız panoramada aynı noktaya düşüyordu
     // (iç içe askerler). Nokta doluysa yana (cephe hattı boyunca) ve derinliğe en yakın boş noktaya kaydırılır.
@@ -671,6 +822,15 @@ export class FigurKatmani {
     let eylemVurulma: THREE.AnimationAction | null = null;
     let eylemDusme: THREE.AnimationAction | null = null;
     const eylemPoz: Aktif["eylemPoz"] = {};
+    const dusmeAdaylari: THREE.AnimationAction[] = [];
+    let eylemComelmisNisan: THREE.AnimationAction | null = null;
+    let kalca: THREE.Object3D | null = null;
+    nesne.traverse((o) => {
+      if (!kalca && (o as THREE.Bone).isBone && /hips$/i.test(o.name)) kalca = o;
+    });
+    const kalcaBoy = kalca ? (kalca as THREE.Object3D).position.length() : 0;
+    let silahUzunEksen: "x" | "z" = "z";
+    const silahMerkez = new THREE.Vector3();
     const animasyonlar = gltf.animations ?? [];
     if (animasyonlar.length && tanim.animasyon !== "yok") {
       const klip = klipBul(animasyonlar, tanim.animasyon) ?? animasyonlar[0];
@@ -684,6 +844,12 @@ export class FigurKatmani {
       if (dongu) {
         eylemBekle.time = rastgele() * klip.duration;
         eylemBekle.timeScale = 0.95 + rastgele() * 0.1;
+      }
+      // Hareketli figür: hız klibin doğal hızına uyar (ayak kayması yok)
+      if (hiz > 0) {
+        const uyum = hareketUyumu(klip.name, hiz, hedefBoy);
+        hiz = uyum.hiz;
+        eylemBekle.timeScale = uyum.zamanOlcegi;
       }
       const atesKlip = klipBul(animasyonlar, tanim.animasyonlar?.ates);
       if (atesKlip) {
@@ -707,6 +873,19 @@ export class FigurKatmani {
       };
       eylemVurulma = tekSefer(tanim.animasyonlar?.vurulma);
       eylemDusme = tekSefer(tanim.animasyonlar?.dusme);
+      if (eylemDusme) {
+        dusmeAdaylari.push(eylemDusme);
+        for (const ad of DUSME_CESITLERI) {
+          const e = tekSefer(ad);
+          if (e && !dusmeAdaylari.includes(e)) dusmeAdaylari.push(e);
+        }
+      }
+      for (const ad of COMELMIS_NISAN_KLIPLERI) {
+        const k = klipBul(animasyonlar, ad);
+        if (!k || eylemComelmisNisan) continue;
+        eylemComelmisNisan = karistirici.clipAction(k);
+        eylemComelmisNisan.setLoop(THREE.LoopRepeat, Infinity);
+      }
       for (const poz of ["comelmis", "yatmis"] as const) {
         const k = klipBul(animasyonlar, tanim.animasyonlar?.[poz]);
         if (!k) continue;
@@ -736,8 +915,11 @@ export class FigurKatmani {
       if (kemik && silahGltf) {
         const silah = silahGltf.scene.clone(true);
         silah.updateMatrixWorld(true);
-        const kendiBoy = new THREE.Box3().setFromObject(silah).getSize(new THREE.Vector3());
+        const silahKutu = new THREE.Box3().setFromObject(silah);
+        const kendiBoy = silahKutu.getSize(new THREE.Vector3());
+        silahKutu.getCenter(silahMerkez);
         const enUzun = Math.max(kendiBoy.x, kendiBoy.y, kendiBoy.z) || 1;
+        silahUzunEksen = kendiBoy.x > kendiBoy.z ? "x" : "z";
         nesne.updateMatrixWorld(true);
         const kemikOlcek = kemik.getWorldScale(new THREE.Vector3()).x || 1; // nesne-uzayında kemik ölçeği
         const hedefBoy = (sm.boy ?? 0.85) / olcek; // nesne-uzayında metre
@@ -828,6 +1010,29 @@ export class FigurKatmani {
       kacinma: 0,
       kacinmaHedef: 0,
       hatYaricapi: Math.hypot(sarmal.position.x, sarmal.position.z),
+      kalca,
+      kalcaBoy,
+      dusmeAdaylari,
+      eylemComelmisNisan,
+      donusHedef: null,
+      sonDusman: null,
+      sonAtis: -10,
+      silahUzunEksen,
+      silahMerkez,
+      solKol: (() => {
+        const bul = (re: RegExp) => {
+          let b: THREE.Object3D | null = null;
+          nesne.traverse((o) => {
+            if (!b && (o as THREE.Bone).isBone && re.test(o.name)) b = o;
+          });
+          return b as THREE.Object3D | null;
+        };
+        const ust = bul(/left_?arm$/i);
+        const on = bul(/left_?fore_?arm$/i);
+        const el = bul(/left_?hand$/i);
+        return ust && on && el ? { ust, on, el } : null;
+      })(),
+      solElAgirlik: 0,
     };
     // Tek seferlik klipler bitince sonraki aşama: vurulma → düşme → yerde
     karistirici?.addEventListener("finished", (olay) => {
@@ -866,12 +1071,16 @@ export class FigurKatmani {
   /** Hedefe yürüyüş başlat (safha geçişi): yürüyüş klibi varsa çapraz geç; duruş klipleri ve prosedürel ofsetler kapanır. */
   private yuruyusBaslat(a: Aktif, hedef: THREE.Vector3, donus: number) {
     let eylem: THREE.AnimationAction | null = null;
+    let hiz = YURUYUS_HIZI;
     if (a.karistirici) {
       for (const ad of YURUYUS_KLIPLERI) {
         const k = klipBul(a.klipler, ad);
         if (!k) continue;
         eylem = a.karistirici.clipAction(k);
         eylem.setLoop(THREE.LoopRepeat, Infinity);
+        const uyum = hareketUyumu(k.name, YURUYUS_HIZI, a.boy);
+        hiz = uyum.hiz;
+        eylem.timeScale = uyum.zamanOlcegi;
         break;
       }
     }
@@ -886,7 +1095,8 @@ export class FigurKatmani {
     a.poz = "ayakta";
     a.comelme = 0;
     a.yatma = 0;
-    a.yuruyus = { hedef: hedef.clone(), donus, eylem };
+    a.donusHedef = null;
+    a.yuruyus = { hedef: hedef.clone(), donus, eylem, hiz };
   }
 
   /** Yürüyüşü ilerlet; varınca hedef yöne dönüp bekleme klibine (sıhhiyeci: müdahale) geçer. */
@@ -899,7 +1109,7 @@ export class FigurKatmani {
     if (uzaklik < 0.05) {
       a.nesne.position.copy(y.hedef);
       a.nesne.position.y = zeminY(y.hedef.x, y.hedef.z);
-      a.nesne.rotation.y = y.donus;
+      a.donusHedef = y.donus; // ani dönmez: guncelle() yumuşak döndürür (önceden tek karede 500 derece/sn sıçrama)
       if (y.eylem && a.eylemBekle) {
         a.eylemBekle.reset().setEffectiveWeight(1).play();
         y.eylem.crossFadeTo(a.eylemBekle, 0.3, false);
@@ -907,7 +1117,7 @@ export class FigurKatmani {
       a.yuruyus = null;
       return;
     }
-    const adim = Math.min(uzaklik, YURUYUS_HIZI * dt);
+    const adim = Math.min(uzaklik, y.hiz * dt);
     d.normalize();
     // Yolda başka figür/sütre varsa yana dolanır (hedefin kendisi hariç; yanındaId hedef figürdür)
     const yanEksen = new THREE.Vector3(-d.z, 0, d.x);
@@ -918,7 +1128,17 @@ export class FigurKatmani {
     const hedefYaw = Math.atan2(d.x, d.z);
     let fark = hedefYaw - a.nesne.rotation.y;
     fark = Math.atan2(Math.sin(fark), Math.cos(fark));
-    a.nesne.rotation.y += fark * Math.min(1, dt * 6);
+    const enCok = radyan(240) * dt;
+    a.nesne.rotation.y += Math.max(-enCok, Math.min(enCok, fark * Math.min(1, dt * 6)));
+  }
+
+  /** Hedef yaw yönüne yumuşak ve hız sınırlı dönüş (derece/sn); hedefe vardıysa true. */
+  private yumusakDon(a: Aktif, hedef: number, dt: number, kazanc: number, enCokDereceSn: number): boolean {
+    let fark = hedef - a.nesne.rotation.y;
+    fark = Math.atan2(Math.sin(fark), Math.cos(fark));
+    const enCok = radyan(enCokDereceSn) * dt;
+    a.nesne.rotation.y += Math.max(-enCok, Math.min(enCok, fark * Math.min(1, dt * kazanc)));
+    return Math.abs(fark) < 0.01;
   }
 
   /**
@@ -950,6 +1170,10 @@ export class FigurKatmani {
         const goz = a.nesne.position.clone();
         goz.y += a.boy * (0.9 - 0.25 * a.comelme - 0.6 * a.yatma);
         istenen = bakisAcilari(goz, a.nesne.rotation.y, hedef);
+      } else if (a.karistirici && a.hiz === 0 && !a.yuruyus && !a.gecis && a.kemikler.bas) {
+        // Hedef yokken çevreyi kollar: ~37 sn'lik döngünün yarısında baş ±20° ağır ağır gezinir (figür başına ayrı faz)
+        const pencere = Math.max(0, Math.sin(a.zaman * 0.17));
+        istenen = { yaw: pencere * pencere * 0.35 * Math.sin(a.zaman * 0.45), pitch: 0 };
       }
     }
     a.bakisYaw = yumusat(a.bakisYaw, istenen.yaw, dt);
@@ -967,6 +1191,61 @@ export class FigurKatmani {
     dondur(k.bas, yukari, a.bakisYaw * 0.65);
     const sag = new THREE.Vector3(1, 0, 0).applyQuaternion(a.nesne.getWorldQuaternion(new THREE.Quaternion())).applyAxisAngle(yukari, a.bakisYaw).normalize();
     dondur(k.bas, sag, -a.bakisPitch);
+  }
+
+  /**
+   * Destek eli (sol) tüfeğe oturt: iki kemikli IK. Tüfek sağ ele ölçülmüş sabit dönüşümle bağlıdır; Mixamo kliplerinde
+   * (özellikle "Firing Rifle", "Rifle Run") sol el kundağın 20–27 cm altında açıkta kalıyordu. Hedef: tüfeğin uzun ekseni
+   * üzerinde, gövde merkezinden namluya doğru 20 cm, 6 cm altı (el kundağı). Yalnız el zaten yakınsa (≤ 32 cm) ve figür
+   * normal duruştayken uygulanır; ağırlık yumuşak açılıp kapanır (el sallama, bomba atma, düşme, geçiş kliplerinde kapalı).
+   */
+  private solEliOturt(a: Aktif, dt: number) {
+    const kol = a.solKol;
+    const silah = a.silahNesne;
+    if (!kol || !silah) return;
+    let istenen = 0;
+    let hedef: THREE.Vector3 | null = null;
+    const se = a.asama === "normal" && a.poz !== "yarali" && !a.gecis ? this.silahEkseni(a) : null;
+    if (se) {
+      const olcek = a.boy / 1.8;
+      hedef = se.merkez.addScaledVector(se.eksen, 0.2 * olcek).addScaledVector(se.ust, -0.06 * olcek);
+      const el = kol.el.getWorldPosition(new THREE.Vector3());
+      if (el.distanceTo(hedef) < 0.32 * olcek) istenen = 1;
+    }
+    a.solElAgirlik += Math.sign(istenen - a.solElAgirlik) * Math.min(Math.abs(istenen - a.solElAgirlik), dt / 0.25);
+    const w = a.solElAgirlik;
+    if (w <= 0.001 || !hedef) return;
+    const kaydet = (k: THREE.Object3D) => {
+      if (!a.kemikTemel.has(k)) a.kemikTemel.set(k, k.quaternion.clone());
+    };
+    const pa = kol.ust.getWorldPosition(new THREE.Vector3());
+    const pb = kol.on.getWorldPosition(new THREE.Vector3());
+    const pc = kol.el.getWorldPosition(new THREE.Vector3());
+    const lab = pa.distanceTo(pb);
+    const lbc = pb.distanceTo(pc);
+    if (lab < 1e-4 || lbc < 1e-4) return;
+    // Ağırlıklı hedef: elin şimdiki yeri → kundak
+    const t = pc.clone().lerp(hedef, w);
+    const uzaklik = Math.min(pa.distanceTo(t), (lab + lbc) * 0.999);
+    // 1) Dirsek açısı: |omuz–bilek| hedef uzaklığa eşit olsun
+    const ba = pa.clone().sub(pb).normalize();
+    const bc = pc.clone().sub(pb).normalize();
+    const simdiki = Math.acos(Math.max(-1, Math.min(1, ba.dot(bc))));
+    const gereken = Math.acos(Math.max(-1, Math.min(1, (lab * lab + lbc * lbc - uzaklik * uzaklik) / (2 * lab * lbc))));
+    const dirsekEkseni = new THREE.Vector3().crossVectors(bc, ba);
+    if (dirsekEkseni.lengthSq() > 1e-8) {
+      kaydet(kol.on);
+      dunyaEkseniEtrafindaDondur(kol.on, dirsekEkseni.normalize(), simdiki - gereken);
+    }
+    // 2) Omuz: bilek hedefe baksın
+    kol.el.getWorldPosition(pc);
+    const ac = pc.clone().sub(pa).normalize();
+    const at = t.clone().sub(pa).normalize();
+    const omuzEkseni = new THREE.Vector3().crossVectors(ac, at);
+    if (omuzEkseni.lengthSq() > 1e-10) {
+      kaydet(kol.ust);
+      dunyaEkseniEtrafindaDondur(kol.ust, omuzEkseni.normalize(), Math.acos(Math.max(-1, Math.min(1, ac.dot(at)))));
+    }
   }
 
   /** Panel komutu: figürün duruşunu değiştir (vuruldu → yere düşer; diz çök; ayağa kalk). */
@@ -989,12 +1268,15 @@ export class FigurKatmani {
           a.eylemDusme.paused = true;
           a.karistirici?.update(0); // son kareyi hemen uygula ki silah elin yanına düşsün
           this.yereDustu(a);
-        } else if (a.eylemVurulma) {
+        } else if (a.eylemVurulma && this.kalcaUyumlu(a, a.eylemVurulma.getClip())) {
+          // Vurulma klibi figürün o anki duruşundan başlıyorsa (Mixamo "Hit Reaction" çömelik: diz çökmüşte) önce o
           this.oturanlariSondur(a, 0.15);
-          a.eylemVurulma.reset().setEffectiveWeight(1).play();
+          a.eylemVurulma.reset().setEffectiveWeight(1).fadeIn(0.15).play();
           a.asama = "vuruluyor";
           this.sesOlayi?.("vuruldu", a.azimut);
         } else {
+          // Duruş uymuyor (ayaktaki asker çömelik vurulma klibine tek karede 27 cm çöküp sonra yeniden doğruluyordu):
+          // doğrudan düşme klibi; Mixamo ölüm klipleri zaten sendeleme ile başlar
           this.dusmeyeBasla(a);
           this.sesOlayi?.("vuruldu", a.azimut);
         }
@@ -1032,9 +1314,12 @@ export class FigurKatmani {
         const g = a.karistirici.clipAction(gecisKlip);
         g.setLoop(THREE.LoopOnce, 1);
         g.clampWhenFinished = true;
+        const aralik = gecisAraligi(gecisKlip);
         g.reset().setEffectiveWeight(1).play();
+        g.time = aralik.bas;
+        g.timeScale = aralik.son - aralik.bas > 4 ? 1.3 : 1; // uzun kalkış (Standing Up ≈ 5,5 sn) biraz hızlanır
         if (kaynak && kaynak !== g) kaynak.crossFadeTo(g, 0.15, false);
-        a.gecis = { eylem: g, hedef };
+        a.gecis = { eylem: g, hedef, son: aralik.son };
       } else {
         hedef.reset().setEffectiveWeight(1).play();
         if (kaynak && kaynak !== hedef) {
@@ -1059,6 +1344,8 @@ export class FigurKatmani {
   /** Yere düştü: aşama "yerde", tüfek elden çıkıp yanına düşer (dik durmasın). */
   private yereDustu(a: Aktif) {
     a.asama = "yerde";
+    // Yardım işareti düştükten 2–5 sn sonra başlar (sayaç düşerken dolmuşsa kol hareketin ortasından, sıçrayarak kalkıyordu)
+    a.sonrakiYardim = a.zaman + 2 + rastgele() * 3;
     const s = a.silahNesne;
     if (!s || !a.silahKemik || a.silahYerde) return;
     a.silahYerde = true;
@@ -1066,7 +1353,9 @@ export class FigurKatmani {
     const el = a.nesne.worldToLocal(s.getWorldPosition(new THREE.Vector3()));
     a.nesne.attach(s); // dünya dönüşümü korunur; artık sarmal (metre) uzayında
     s.position.set(el.x + (rastgele() - 0.5) * 0.4, 0.03, el.z + 0.2);
-    s.rotation.set(0, rastgele() * Math.PI, 0); // tüfeğin uzun ekseni yatay; rastgele yön
+    // Tüfek yan yatar (önceden kabzası üstünde dik duruyordu): uzun eksen etrafında 90 derece, sonra rastgele yön
+    s.rotation.order = "YXZ";
+    s.rotation.set(a.silahUzunEksen === "x" ? Math.PI / 2 : 0, rastgele() * Math.PI, a.silahUzunEksen === "z" ? Math.PI / 2 : 0);
   }
 
   /** Kalkınca tüfek ele geri döner (bağlandığı kemik ve yerel dönüşüm). */
@@ -1080,21 +1369,41 @@ export class FigurKatmani {
     s.scale.copy(a.silahTemel.olcek);
   }
 
+  /** Klibin başlangıcındaki kalça konumu figürün o anki kalçasına yakın mı (dinlenme kalça yüksekliğinin %20 içinde)? */
+  private kalcaUyumlu(a: Aktif, klip: THREE.AnimationClip): boolean {
+    if (!a.kalca || a.kalcaBoy <= 0) return true;
+    return kalcaFarki(klip, 0, a.kalca.position) < 0.2 * a.kalcaBoy;
+  }
+
   private dusmeyeBasla(a: Aktif) {
     if (!a.eylemDusme) {
       this.yereDustu(a);
       return;
     }
     const onceki = a.asama === "vuruluyor" ? a.eylemVurulma : null;
-    a.eylemDusme.reset().setEffectiveWeight(1).play();
-    if (onceki) onceki.crossFadeTo(a.eylemDusme, 0.12, false);
-    else this.oturanlariSondur(a, 0.15);
+    // Ayaktaysa: başlangıcı uyan düşme kliplerinden rastgele biri (çeşitlilik). Çömelmiş/yerdeyse: düşme klibine, kalçanın
+    // o anki yüksekliğine denk gelen yerinden girilir (önce ayağa fırlayıp sonra düşmesin).
+    let eylem = a.eylemDusme;
+    let baslangic = 0;
+    if (a.kalca && a.kalcaBoy > 0) {
+      const uygun = (a.dusmeAdaylari.length ? a.dusmeAdaylari : [a.eylemDusme]).filter((e) => this.kalcaUyumlu(a, e.getClip()));
+      if (uygun.length) eylem = uygun[Math.floor(rastgele() * uygun.length)];
+      else baslangic = kalcayaEnYakinZaman(eylem.getClip(), a.kalca.position);
+    }
+    a.eylemDusme = eylem;
+    eylem.reset().setEffectiveWeight(1).play();
+    eylem.time = baslangic;
+    if (onceki) onceki.crossFadeTo(eylem, baslangic > 0 ? 0.3 : 0.12, false);
+    else {
+      this.oturanlariSondur(a, 0.2);
+      eylem.fadeIn(0.2);
+    }
     a.asama = "dusuyor";
   }
 
   /** Bekleme/ateş döngülerini söndürür (tek seferlik klibe geçerken). */
   private oturanlariSondur(a: Aktif, sure: number) {
-    for (const e of [a.eylemBekle, a.eylemAtes, a.eylemAtesUst, a.aktifPoz, a.gecis?.eylem ?? null, a.yuruyus?.eylem ?? null]) {
+    for (const e of [a.eylemBekle, a.eylemAtes, a.eylemAtesUst, a.aktifPoz, a.eylemPoz.comelmis ?? null, a.eylemComelmisNisan, a.gecis?.eylem ?? null, a.yuruyus?.eylem ?? null]) {
       if (!e) continue;
       if (sure > 0) e.fadeOut(sure);
       else e.stop();
@@ -1174,6 +1483,10 @@ export class FigurKatmani {
         dondur(k.sagUstKol, -radyan(70 * zarf + sallama * zarf));
         if (t < dt) this.sesOlayi?.("yardim", a.azimut);
       } else if (t >= 2.6) a.sonrakiYardim = a.zaman + 6 + rastgele() * 6;
+    }
+    // Nefes (canlılık): "Rifle Idle" 8,6 sn'de başı 2 cm oynatıyor, asker heykel gibi duruyordu; göğüs ±0,9°, ~0,27 Hz
+    if (a.karistirici && a.asama === "normal" && a.poz !== "yarali" && !a.agirSilah && a.hiz === 0) {
+      dondur(k.gogus, radyan(0.9) * Math.sin(a.zaman * Math.PI * 2 * 0.27));
     }
     // İrkilme: 1,1 sn'de gövde ve baş öne eğilir, kalça biraz iner, toparlanır (yarım sinüs zarfı)
     if (a.tepki && a.asama === "normal" && a.poz !== "yarali") {
@@ -1298,8 +1611,33 @@ export class FigurKatmani {
 
   /** Çatışma durumuna göre bekleme ↔ ateş klipleri arasında yumuşak geçiş. */
   private pozuGuncelle(a: Aktif) {
-    if (!a.eylemAtes || !a.eylemBekle || a.poz === "yarali" || a.aktifPoz || a.gecis || a.yuruyus) return;
+    if (a.poz === "yarali" || a.asama !== "normal" || a.gecis || a.yuruyus) return;
     const istenen = a.silah && a.hiz === 0 && this.dusmanAzimutu !== null;
+    // Diz çökmüş (klipli): bekleme klibi tüfeği dik tutar; çatışmada nişan klibine geçer, bitince geri döner
+    const comelmisBekle = a.eylemPoz.comelmis;
+    if (a.poz === "comelmis" && a.aktifPoz && comelmisBekle && a.eylemComelmisNisan) {
+      const nisanda = a.aktifPoz === a.eylemComelmisNisan;
+      if (istenen === nisanda) {
+        a.atesGecikmesi = null;
+        a.atesPozu = nisanda;
+        return;
+      }
+      if (istenen) {
+        if (a.atesGecikmesi === null) {
+          a.atesGecikmesi = this.saat + rastgele() * 0.9;
+          return;
+        }
+        if (this.saat < a.atesGecikmesi) return;
+      }
+      a.atesGecikmesi = null;
+      const hedef = istenen ? a.eylemComelmisNisan : comelmisBekle;
+      hedef.reset().setEffectiveWeight(1).play();
+      a.aktifPoz.crossFadeTo(hedef, 0.35, false);
+      a.aktifPoz = hedef;
+      a.atesPozu = istenen;
+      return;
+    }
+    if (!a.eylemAtes || !a.eylemBekle || a.aktifPoz) return;
     if (istenen === a.atesPozu) {
       a.atesGecikmesi = null;
       return;
@@ -1364,21 +1702,28 @@ export class FigurKatmani {
       a.kemikTemel.clear();
       for (const [kemik, temel] of a.kemikTemelKonum) kemik.position.copy(temel);
       a.kemikTemelKonum.clear();
+      // Ateş klibi yalnız salvo sırasında oynar; arada nişan duruşunda donar (önceden atış olmasa da sürekli sarsılıyordu)
+      if (a.eylemAtes && a.atesPozu && a.poz === "ayakta") a.eylemAtes.paused = this.saat - a.sonAtis > 0.3;
       a.karistirici?.update(dt);
+      if (a.gecis && a.gecis.eylem.time >= a.gecis.son) this.gecisBitti(a);
       this.yuruyusuGuncelle(a, dt);
       this.katmaniGuncelle(a);
       this.durusuUygula(a, dt);
       this.bakisiUygula(a, dt);
+      this.solEliOturt(a, dt);
       this.egimeHizala(a, dt);
       // Kuleli ağır silah: gövde yerinde, kule düşmana döner
       if (a.agirSilah && a.kule) this.kuleyiDondur(a, dt);
       // Çatışmada silahlı, sabit figürler (kulesiz) düşmana döner (yumuşak); yaralı dönmez
-      if (a.silah && a.hiz === 0 && !(a.agirSilah && a.kule) && a.poz !== "yarali" && !a.yaninda) {
-        // Modelin ön yüzü (+z) düşman yönüne (sin a, 0, -cos a) baksın: θ = π − a
-        const hedef = this.dusmanAzimutu === null ? a.temelDonus : Math.PI - radyan(this.dusmanAzimutu);
-        let fark = hedef - a.nesne.rotation.y;
-        fark = Math.atan2(Math.sin(fark), Math.cos(fark));
-        a.nesne.rotation.y += fark * Math.min(1, dt * 3);
+      if (a.silah && a.hiz === 0 && !(a.agirSilah && a.kule) && a.poz !== "yarali" && !a.yaninda && !a.yuruyus) {
+        // Modelin ön yüzü (+z) düşman yönüne (sin a, 0, -cos a) baksın: θ = π − a. Ateş kesilince son düşman yönüne
+        // bakmayı sürdürür (sırtını tehdide dönmez). Dönüş hızı sınırlı: ayakta 160 derece/sn, diz çökmüş 110, yatan 60
+        // (önceden 180 derecelik dönüş 540 derece/sn ile başlıyor, yatan asker pusula iğnesi gibi dönüyordu).
+        if (this.dusmanAzimutu !== null) a.sonDusman = this.dusmanAzimutu;
+        const hedef = a.sonDusman === null ? a.temelDonus : Math.PI - radyan(a.sonDusman);
+        this.yumusakDon(a, hedef, dt, 3, a.agirSilah ? 30 : a.poz === "yatmis" ? 60 : a.poz === "comelmis" ? 110 : 160);
+      } else if (a.donusHedef !== null && !a.yuruyus) {
+        if (this.yumusakDon(a, a.donusHedef, dt, 6, 220)) a.donusHedef = null;
       }
       if (a.hiz > 0) {
         // Yana hareket: izleyici etrafında teğet yönde (sağa, yansıt ise sola)

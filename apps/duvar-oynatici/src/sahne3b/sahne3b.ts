@@ -281,6 +281,8 @@ export class Sahne3B {
       topAtisi: (azimut) => this.catismaSesleri.topAtisi?.(azimut),
     });
     this.catisma.dostlar = () => this.figurler.silahliKonumlar();
+    this.catisma.atisNoktalari = () => this.figurler.atisNoktalari();
+    this.catisma.dostAtisOldu = (id) => this.figurler.atisOldu(id);
     this.figurler.engel = (p) => this.sutre.doluMu(p, 0.3) || this.alan.doluMu(p, 0.3);
     // 3B alan: düşman pencere/çatı mevzilerinden ateş eder, izler binaya/araca çarpıp biter, helikopter binaları aşar
     this.catisma.mevziler = () => this.alan.dusmanMevzileri();
