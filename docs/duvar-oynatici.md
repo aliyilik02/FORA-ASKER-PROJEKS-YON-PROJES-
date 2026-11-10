@@ -1090,6 +1090,14 @@ uzak kabuk yalnız renk dokulu, yan dallarda kesit %60 / çevre ≤ 5 (uzakta %3
 kırsal yaz 124 / 115, kırsal kış ve dağlık 143 (144 Hz tavanı). Meshy ile: 121 / 111, 127 / 114, 144. En kötü sahne
 hâlâ meskûn cadde (57), projeksiyon PC önerisi değişmez.
 
+**Dolgu ve yoğunluk (aynı gün, kullanıcı: "çok boş geldi"):** ez-tree taçları seyrek/içi görünür olduğundan sahne
+boş duruyordu. (1) Eski Meshy ağaçları `dolgu()` ile yalnız ≥ 36 m'ye serpiştirildi (orman 155, kırsal 29, dağlık 38;
+dolu taç boşlukları doldurur, o mesafede köşe seçilmez, kışta `KIS_YERINE` ile karlı/yapraksız Meshy). (2) Bütün
+yapraklı ez türlerinde yaprak sayısı ×1,4, kart boyu ×1,12 (`YAPRAK_YOGUNLUGU`, `YAPRAK_BUYUMESI`). (3) Çalılarda
+genişlik sınırı (`genislik`: ön ayarlar boyundan 3–4 kat yayvandı), kuru çalı açık zeytin-saman (kapkara "yanık yığın"
+gibiydi). fps (aynı ölçüm): orman yaz 62 / 58, orman kış 64 / 60, kırsal yaz 116 / 110, dağlık 143. Orman artık
+meskûn cadde (57) ile birlikte en ağır sahne.
+
 **Kalan / bakılacak:** duvarda gözle bakış; kırsalda bir iki ağaç sarımsı (ton farkı, gerçekçi sayılabilir); Meshy `m_`
 ağaç modelleri (`icerik/arazi/modeller/m_*`) artık bitki setlerinde kullanılmıyor (kaya/kütük/eğrelti/yosunlu kaya
 kullanılıyor); yaprak kartı aşırı çizimi için sonraki adım uzak ağaçlarda sahte ağaç (impostor) ya da alfa-kapsama (MSAA).

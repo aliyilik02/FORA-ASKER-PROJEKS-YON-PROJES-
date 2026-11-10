@@ -48,6 +48,8 @@ export interface EzTuru {
   /** Yaprak rengi çarpanı (doku × renk): Anadolu yazı biraz zeytin/sarı yeşil. */
   yaprakRenk?: number;
   kabukRenk?: number;
+  /** En büyük yatay genişlik (m): ölçek boy ile bunun küçüğü (çalı ön ayarları boyundan 3–4 kat yayvan). */
+  genislik?: number;
 }
 
 /** Çam/ladin ön ayarı ince ayarı için yardımcı. */
@@ -157,12 +159,13 @@ export const EZ_TURLERI: Record<string, EzTuru> = {
       o.leaves.type = "ash";
     }),
   },
-  ez_cali_1: { ayar: "Bush 1", boy: 1.4, tohum: 101, yaprakRenk: 0x7a8c5c },
-  ez_cali_2: { ayar: "Bush 2", boy: 1.1, tohum: 103, yaprakRenk: 0x748758 },
-  ez_cali_3: { ayar: "Bush 3", boy: 1.7, tohum: 107, yaprakRenk: 0x708354 },
+  ez_cali_1: { ayar: "Bush 1", boy: 1.4, genislik: 2.2, tohum: 101, yaprakRenk: 0x7a8c5c },
+  ez_cali_2: { ayar: "Bush 2", boy: 1.1, genislik: 1.8, tohum: 103, yaprakRenk: 0x748758 },
+  ez_cali_3: { ayar: "Bush 3", boy: 1.7, genislik: 2.4, tohum: 107, yaprakRenk: 0x708354 },
   // Bozkır/dağ kuru çalısı (geven, kekik, karaçalı tipi): solgun zeytin-kahve, alçak
-  ez_kuru_cali: { ayar: "Bush 2", boy: 0.9, tohum: 211, yaprakRenk: 0x8f8560, kabukRenk: 0x9a8a78 },
-  ez_kuru_cali_2: { ayar: "Bush 1", boy: 1.1, tohum: 223, yaprakRenk: 0x87805c, kabukRenk: 0x9a8a78 },
+  // Açık zeytin-saman: ilk sürüm (0x8f8560) yayvan ve kapkara "yanık çalı yığını" gibi duruyordu
+  ez_kuru_cali: { ayar: "Bush 2", boy: 0.9, genislik: 1.4, tohum: 211, yaprakRenk: 0xc2b588, kabukRenk: 0xb0a08a },
+  ez_kuru_cali_2: { ayar: "Bush 1", boy: 1.1, genislik: 1.6, tohum: 223, yaprakRenk: 0xb8ad80, kabukRenk: 0xb0a08a },
   // Kış / kuru: yaprak döken türler yapraksız (gerçek çıplak dal örgüsü)
   ez_kis_mese: { ayar: "Oak Medium", boy: 12, tohum: 61, yapraksiz: true },
   ez_kis_mese_buyuk: { ayar: "Oak Large", boy: 15, tohum: 67, yapraksiz: true },
@@ -188,7 +191,11 @@ export const EZ_TURLERI: Record<string, EzTuru> = {
   },
 };
 
-export const ezTuruMu = (klasor: string) => klasor.startsWith("ez_") && klasor.split("~")[0] in EZ_TURLERI;
+/** Yaprak sayısı ve kart boyu çarpanı (bütün yapraklı türler; yakın ve uzak kopya). fps: yaprak kartı aşırı çizimi artar. */
+export const YAPRAK_YOGUNLUGU = 1.4;
+export const YAPRAK_BUYUMESI = 1.12;
+
+export const ezTuruMu =(klasor: string) => klasor.startsWith("ez_") && klasor.split("~")[0] in EZ_TURLERI;
 
 type EzModulu = typeof import("@dgreenheck/ez-tree");
 let modulSozu: Promise<EzModulu> | null = null;
@@ -330,6 +337,11 @@ export async function ezAgacUret(klasor: string, uzak = false): Promise<GLTF> {
   o.bark.flatShading = false;
   tur.degistir?.(o);
   if (tur.yapraksiz) o.leaves.count = 0;
+  else {
+    // Taç yoğunluğu (kullanıcı isteği, 10 Kasım: ön ayar taçları seyrek/içi görünür duruyordu)
+    o.leaves.count = Math.round(o.leaves.count * YAPRAK_YOGUNLUGU);
+    o.leaves.size *= YAPRAK_BUYUMESI;
+  }
   // Dal ağı bütçesi (10 Kasım ölçümü: ormanda üçgenlerin çoğu kabuktaydı — çamın ~100 yan dalı 10 kesit × 6 çevre
   // silindir, ağaç başına ~8,8 bin; ince dalların çoğu iğne/yaprak kartının arkasında). Gövde (seviye 0) korunur.
   for (const k of Object.keys(o.branch.sections)) {
@@ -376,7 +388,8 @@ export async function ezAgacUret(klasor: string, uzak = false): Promise<GLTF> {
   sahne.updateMatrixWorld(true);
   const kutu = new THREE.Box3().setFromObject(sahne);
   const yukseklik = Math.max(0.01, kutu.max.y - kutu.min.y);
-  sahne.scale.setScalar(tur.boy / yukseklik);
+  const yatay = Math.max(0.01, kutu.max.x - kutu.min.x, kutu.max.z - kutu.min.z);
+  sahne.scale.setScalar(Math.min(tur.boy / yukseklik, tur.genislik ? tur.genislik / yatay : Infinity));
   sahne.updateMatrixWorld(true);
   return { scene: sahne } as unknown as GLTF;
 }

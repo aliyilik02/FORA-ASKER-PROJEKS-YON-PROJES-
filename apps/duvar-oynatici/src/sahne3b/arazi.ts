@@ -268,6 +268,12 @@ const genc = (klasor: string, adet: number, olcek: [number, number], ek: Partial
 const kuruAgac = (klasor: string, adet: number, olcek: [number, number], ek: Partial<BitkiTanimi> = {}) => agac(klasor, adet, olcek, { ruzgar: 0, ...ek });
 /** Köy yolu kavak sırası: üç tür aynı adımda farklı fazla iç içe tek sıra (yolun iki yanı, ~8 m arayla). */
 const yolSirasi = (klasor: string, faz: number, ek: Partial<BitkiTanimi> = {}) => agac(klasor, 80, [0.85, 1.15], { dizi: { pay: 6.5, adim: 24, faz, bosluk: 0.18 }, aralik: 3, enYakin: 12, ...ek });
+/**
+ * Dolgu ağacı (10 Kasım): eski Meshy ağaçları yalnız orta/uzak planda (≥ 36 m). ez-tree taçları gerçekçi ama seyrek/
+ * içi görünür; sahne boş kalıyordu (kullanıcı gözlemi). Meshy'nin dolu taçları aradaki boşluğu doldurur; o mesafede
+ * köşeli siluet seçilmez (normalYumusat da uygulanır), uzak kopyası opak ve az üçgenli (ez yaprak kartından ucuz).
+ */
+const dolgu = (klasor: string, adet: number, olcek: [number, number], ek: Partial<BitkiTanimi> = {}) => agac(klasor, adet, olcek, { enYakin: 36, us: 0.5, ...ek });
 /** Devrik gövde, kütük: çalı sınıfı (kraterde savrulur) ama sallanmaz. */
 const kutuk = (klasor: string, adet: number, olcek: [number, number], gomme = 0.1) => bitki(klasor, adet, olcek, gomme, true, { ruzgar: 0 });
 /** Yar, kayalık, taşlık: büyük kaya kütleleri yamaçta ve uzakta. */
@@ -287,6 +293,12 @@ const BITKI_SETLERI: Record<BitkiSeti, BitkiTanimi[]> = {
     agac("ez_titrek_kavak", 6, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
     agac("ez_servi~1", 5, [0.85, 1.15], { aralik: 2.5, ruzgar: 0.05 }),
     agac("ez_servi~2", 6, [0.8, 1.2], { aralik: 2.5, ruzgar: 0.05, enYakin: 9 }),
+    dolgu("m_mese_62", 6, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
+    dolgu("m_mese_68", 6, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
+    dolgu("m_yaprak_87", 5, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
+    dolgu("m_yaprak_88", 4, [0.8, 1.2], { ruzgar: 0.1, aralik: 6 }),
+    dolgu("m_servi_52", 4, [0.85, 1.15], { aralik: 2.5, ruzgar: 0.05 }),
+    dolgu("m_mazi_49", 4, [0.8, 1.2], { aralik: 2.5, ruzgar: 0.05 }),
     kuruAgac("ez_kuru_mese", 3, [0.8, 1.2]),
     kaya("kaya_buyuk", 7, [0.8, 1.7], 0.6, 0.18),
     kaya("kaya_orta", 12, [0.7, 1.5], 0.5, 0.15),
@@ -314,6 +326,12 @@ const BITKI_SETLERI: Record<BitkiSeti, BitkiTanimi[]> = {
     agac("ez_ladin~2", 40, [0.75, 1.1]),
     agac("ez_sedir", 20, [0.8, 1.2]),
     agac("ez_mese", 12, [0.8, 1.2], { ruzgar: 0.1 }),
+    dolgu("m_karacam_14", 40, [0.8, 1.2]),
+    dolgu("m_cam_2", 30, [0.8, 1.15]),
+    dolgu("m_cam_1", 30, [0.8, 1.2]),
+    dolgu("m_ladin_53", 25, [0.75, 1.1]),
+    dolgu("m_cam_12", 20, [0.8, 1.3]),
+    dolgu("m_sedir_56", 10, [0.8, 1.2]),
     genc("ez_cam_genc~1", 20, [0.6, 1.1]),
     genc("ez_cam_genc~2", 20, [0.6, 1.1]),
     kuruAgac("ez_kuru_cam", 6, [0.8, 1.1]),
@@ -361,6 +379,9 @@ const BITKI_SETLERI: Record<BitkiSeti, BitkiTanimi[]> = {
     genc("ez_cam_genc~1", 14, [0.6, 1.0]),
     kuruAgac("ez_kuru_cam", 5, [0.8, 1.1]),
     kuruAgac("ez_kuru_mese", 6, [0.8, 1.2]),
+    dolgu("m_ardic_199", 20, [0.7, 1.3], { aralik: 2.5, ruzgar: 0.05 }),
+    dolgu("m_karacam_14", 10, [0.8, 1.2]),
+    dolgu("m_sedir_56", 8, [0.8, 1.25]),
     bitki("ez_kuru_cali", 25, [0.8, 1.4], 0.04),
     bitki("ez_kuru_cali_2", 12, [0.8, 1.3], 0.04),
     bitki("ez_cali_3", 15, [0.7, 1.2], 0.04),
