@@ -411,6 +411,12 @@ ateş katmanı tüfeği havaya dikiyordu (katman yalnız ≤ 2 m/sn ve düşmana
 artık başında en az sıhhiyeci olan yaralı seçilir (`figurYardimcilari.sihhiyeBekleyenYarali`; hızlı dokunuş için bekleyen
 görev listesi), düğme altında "N yaralı sıhhiyeci bekliyor".
 
+**Amaç ve sonraki oturum (10 Kasım kapanış):** duvar, odada **gerçek mankenlerle** oynanan vakanın arkasına ortam ve tehdit
+hissi verir (eğitimin kendisi değil); öneri ve öncelikler buna göre. Kullanıcı sesleri ekleyecek, sonra birlikte test.
+Ardından sıra: (1) düşman silueti (pencere/çatı, namlu parıltısıyla), (2) tehdit baskısı (yakın mermi tozu, havan ıslığında
+siper alma), (3) figür durum makinesi + klip ölçümünün içerik hattına alınması + tek yürünebilir zemin (askerler derinlemesine
+hareket etsin), (4) duvarda yaralıyı sipere sürükleme. Sahne gerçeğini köprüye taşıma şimdilik yapılmayacak (kazancı düşük).
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 00. **3B alanlar duvarda (9 Kasım sonu):** meskûn cadde, 3B orman (yaz/kış), dağ yarları, kırsal kavak sırası duvarda gözle
