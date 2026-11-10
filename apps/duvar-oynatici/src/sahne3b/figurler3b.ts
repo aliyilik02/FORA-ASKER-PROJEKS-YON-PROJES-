@@ -109,6 +109,19 @@ export function gecisAraligi(klip: THREE.AnimationClip): { bas: number; son: num
   gecisAralikOnbellek.set(klip, sonuc);
   return sonuc;
 }
+/**
+ * Sıhhiyecinin yaralı başındaki müdahale döngüsü (10 Kasım, kullanıcı gözlemi: "Kneeling Pointing" tek bir işaret
+ * jestidir, 4 sn'de bir sonsuz dönünce gerçekçilik kayboluyordu). Bekleme klibi `isaret` olan ve başka figürün yanına
+ * yerleşen figür şu döngüye girer: değerlendirme (`bekle`, 2–4 sn) → yaralının üstünde elle çalışma (`calis`, 8–14 sn,
+ * yavaşlatılmış: bası/sargı gibi okunur) → kontrol (`bekle`, 3–6 sn) → …; her üç turda bir kez `isaret` (yardım/tahliye
+ * çağrısı, tek oynatım). Süreler rastgele: iki sıhhiyeci eş zamanlı hareket etmez.
+ */
+const MUDAHALE_KLIPLERI = { bekle: "Kneeling Idle", calis: "Administering Cpr", isaret: "Kneeling Pointing" };
+const MUDAHALE_CALISMA_HIZI = 0.6;
+/** Çalışma klibinin harman payı (kalanı dik diz çökme): 1 = gövde yere yatık, 0,5 = öne eğilmiş. */
+const MUDAHALE_CALISMA_PAYI = 0.5;
+type MudahaleDurumu = "bekle" | "calis" | "isaret";
+
 /** Ayakta vurulan figür için düşme klibi çeşitleri (modelde varsa): hep aynı ölüm tekrar etmesin. */
 const DUSME_CESITLERI = ["Death From The Front", "Standing React Death Backward"];
 /** Diz çökmüş figürün çatışmada geçtiği nişan klibi adayları ("Rifle Kneel Idle" tüfeği dik tutar, ateş edemez). */
@@ -388,9 +401,22 @@ export interface Aktif {
    * diz çöküp öyle ateş eder; "ayakta" olduğu gibi; "elle" eğitmen duruş verdi, karışılmaz. `sonraki` bir sonraki
    * değişimin saati; `otoComeldi` duruşu bu davranış değiştirdiyse (çatışma bitince ayağa kalkar).
    */
-  siper: { mod: "inKalk" | "diz" | "ayakta" | "elle"; sonraki: number; otoComeldi: boolean } | null;
+  siper: { mod: "inKalk" | "diz" | "yat" | "ayakta" | "elle"; sonraki: number; otoComeldi: boolean } | null;
   /** Yaralının görüş hattını açmak için en son kenara çekildiği saat (art arda yer değiştirmesin). */
   kenaraCekilme: number;
+  /** Sıhhiyecinin müdahale döngüsü (MUDAHALE_KLIPLERI); `simdiki` null: döngü başlamadı / bırakıldı. */
+  mudahale: {
+    eylemler: Record<MudahaleDurumu, THREE.AnimationAction>;
+    durum: MudahaleDurumu;
+    simdiki: THREE.AnimationAction | null;
+    bitis: number;
+    tur: number;
+    /** Yumuşatılmış ağırlıklar 0..1: çalışma klibi payı ve işaret klibi payı. */
+    calisma: number;
+    isaret: number;
+    /** Döngüye giriş rampası 0..1 (0,7 sn). */
+    giris: number;
+  } | null;
 }
 
 /** Klip adı tam ("CharacterArmature|Idle_Gun") ya da kısa ("Idle_Gun") eşleşir. */
@@ -804,7 +830,9 @@ export class FigurKatmani {
       const izleyiciYonu = new THREE.Vector3(-hedef.x, 0, -hedef.z).normalize();
       const yan = new THREE.Vector3(-izleyiciYonu.z, 0, izleyiciYonu.x).multiplyScalar(0.6);
       // Tercih: izleyici tarafında yanında; orası sütre eşyasının içindeyse öbür yan, arka, tam yanlar
-      const adaylar: Array<[number, number]> = [[0.9, 1], [0.9, -1], [-0.9, 1], [-0.9, -1], [0, 1.8], [0, -1.8]];
+      // Önce tam yan (izleyiciye göre yanal 0,8 m): sıhhiyeci yaralıyı örtmez, ikisi yan yana görünür (önceden sırtı
+      // izleyiciye dönük, yaralının önündeydi); doluysa ön çaprazlar, arka çaprazlar
+      const adaylar: Array<[number, number]> = [[0, 1.35], [0, -1.35], [0.9, 1], [0.9, -1], [-0.9, 1], [-0.9, -1]];
       for (const [ileri, yana] of adaylar) {
         sarmal.position.copy(hedef).addScaledVector(izleyiciYonu, ileri).addScaledVector(yan, yana);
         if (!this.engel(sarmal.position)) break;
@@ -1046,6 +1074,20 @@ export class FigurKatmani {
       solElAgirlik: 0,
       siper: null,
       kenaraCekilme: -100,
+      mudahale: (() => {
+        if (!yanindaki || !karistirici || !eylemBekle) return null;
+        const kisaAd = (eylemBekle.getClip().name.split(/[|/]/).pop() ?? "").trim();
+        if (kisaAd !== MUDAHALE_KLIPLERI.isaret) return null;
+        const bekleKlip = klipBul(animasyonlar, MUDAHALE_KLIPLERI.bekle);
+        const calisKlip = klipBul(animasyonlar, MUDAHALE_KLIPLERI.calis);
+        if (!bekleKlip || !calisKlip) return null;
+        const bekle = karistirici.clipAction(bekleKlip);
+        const calis = karistirici.clipAction(calisKlip);
+        bekle.setLoop(THREE.LoopRepeat, Infinity);
+        calis.setLoop(THREE.LoopRepeat, Infinity);
+        calis.timeScale = MUDAHALE_CALISMA_HIZI;
+        return { eylemler: { bekle, calis, isaret: eylemBekle }, durum: "bekle" as MudahaleDurumu, simdiki: null, bitis: 0, tur: 0, calisma: 0, isaret: 0, giris: 0 };
+      })(),
     };
     // Tek seferlik klipler bitince sonraki aşama: vurulma → düşme → yerde
     karistirici?.addEventListener("finished", (olay) => {
@@ -1083,6 +1125,7 @@ export class FigurKatmani {
 
   /** Hedefe yürüyüş başlat (safha geçişi): yürüyüş klibi varsa çapraz geç; duruş klipleri ve prosedürel ofsetler kapanır. */
   private yuruyusBaslat(a: Aktif, hedef: THREE.Vector3, donus: number) {
+    this.mudahaleyiBirak(a);
     let eylem: THREE.AnimationAction | null = null;
     let hiz = YURUYUS_HIZI;
     if (a.karistirici) {
@@ -1125,7 +1168,8 @@ export class FigurKatmani {
       a.donusHedef = y.donus; // ani dönmez: guncelle() yumuşak döndürür (önceden tek karede 500 derece/sn sıçrama)
       if (y.eylem && a.eylemBekle) {
         a.eylemBekle.reset().setEffectiveWeight(1).play();
-        y.eylem.crossFadeTo(a.eylemBekle, 0.3, false);
+        // Sıhhiyeci ayakta yürüyüşten diz çökmeye iner (kalça 0,5 m): 0,3 sn'de çöküş sıçrama gibiydi
+        y.eylem.crossFadeTo(a.eylemBekle, a.mudahale ? 0.7 : 0.3, false);
       }
       a.yuruyus = null;
       return;
@@ -1290,7 +1334,7 @@ export class FigurKatmani {
     if (!uygun) return;
     if (!tehdit || !this.siperAl) {
       if (!a.siper) return;
-      if (!a.siper.otoComeldi || a.siper.mod === "elle" || a.poz !== "comelmis") {
+      if (!a.siper.otoComeldi || a.siper.mod === "elle" || a.poz === "ayakta") {
         a.siper = null;
         return;
       }
@@ -1307,7 +1351,10 @@ export class FigurKatmani {
         a.siper = { mod: "elle", sonraki: Infinity, otoComeldi: false };
         return;
       }
-      const mod = this.sutreArkasinda(a) ? "inKalk" : rastgele() < 0.5 ? "diz" : "ayakta";
+      // Açıkta: %40 diz çöküp, %30 yere yatıp, %30 ayakta ateş eder (kullanıcı: diz çökerek/yatarak ateş eden de olsun)
+      const zar = rastgele();
+      const acikta = zar < 0.4 ? "diz" : zar < 0.7 && a.eylemPoz.yatmis ? "yat" : "ayakta";
+      const mod = this.sutreArkasinda(a) ? "inKalk" : acikta;
       a.siper = { mod, sonraki: this.saat + 0.5 + rastgele() * 1.7, otoComeldi: false };
       return;
     }
@@ -1315,12 +1362,68 @@ export class FigurKatmani {
     if (s.mod === "elle" || s.mod === "ayakta" || this.saat < s.sonraki || a.gecis || a.yuruyus) return;
     if (a.poz === "ayakta") {
       s.otoComeldi = true;
-      s.sonraki = s.mod === "diz" ? Infinity : this.saat + 3 + rastgele() * 4;
-      this.pozUygula(a, "comelmis", false);
+      s.sonraki = s.mod === "inKalk" ? this.saat + 3 + rastgele() * 4 : Infinity;
+      this.pozUygula(a, s.mod === "yat" ? "yatmis" : "comelmis", false);
     } else if (a.poz === "comelmis" && s.mod === "inKalk") {
       s.sonraki = this.saat + 3.5 + rastgele() * 2.5;
       this.pozUygula(a, "ayakta", false);
     }
+  }
+
+  /** Müdahale döngüsünü bırak (duruş komutu, yürüyüş, vurulma): bekleme klibine kısa çapraz geçiş. */
+  private mudahaleyiBirak(a: Aktif, sure = 0.2) {
+    const m = a.mudahale;
+    if (!m || !m.simdiki) return;
+    m.eylemler.bekle.fadeOut(sure);
+    m.eylemler.calis.fadeOut(sure);
+    if (a.eylemBekle) a.eylemBekle.reset().setEffectiveWeight(1).fadeIn(sure).play();
+    m.simdiki = null;
+  }
+
+  /**
+   * Sıhhiyecinin yaralı başındaki döngüsü (bkz. MUDAHALE_KLIPLERI); siperde beklerken, yürürken, duruş klibinde çalışmaz.
+   * Üç klibin ağırlığı elle sürülür: "çalışma" klibi tek başına gövdeyi yere yatırıyor (göğüs masajı duruşu; yandan
+   * yaralının üstüne yatmış gibi görünüyordu), bu yüzden dik diz çökme ile yarı yarıya harmanlanır: öne eğilmiş, elleri
+   * yaralının üstünde çalışan sıhhiyeci.
+   */
+  private mudahaleyiGuncelle(a: Aktif, dt: number) {
+    const m = a.mudahale;
+    if (!m) return;
+    if (a.safhaBekliyor || a.yuruyus || a.gecis || a.aktifPoz || a.poz !== "ayakta" || a.asama !== "normal") {
+      if (m.simdiki && (a.poz === "yarali" || a.asama !== "normal")) m.simdiki = null; // vurulma: oturanlariSondur söndürdü
+      return;
+    }
+    const e = m.eylemler;
+    const gec = (durum: MudahaleDurumu, sure: number) => {
+      m.durum = durum;
+      m.bitis = this.saat + sure;
+      if (durum === "isaret") e.isaret.time = 0;
+    };
+    if (!m.simdiki) {
+      m.simdiki = e.bekle;
+      m.tur = 0;
+      m.calisma = 0;
+      m.isaret = 0;
+      m.giris = 0; // yürüyüş klibi 0,7 sn'de sönerken döngü aynı sürede açılır (toplam ağırlık 1 kalır, çöküş yumuşak)
+      e.bekle.reset().setEffectiveWeight(0).play();
+      e.calis.reset().setEffectiveWeight(0).play();
+      e.calis.time = rastgele() * e.calis.getClip().duration;
+      gec("bekle", 2 + rastgele() * 2);
+    } else if (this.saat >= m.bitis) {
+      if (m.durum === "bekle") gec("calis", 8 + rastgele() * 6);
+      else if (m.durum === "calis") {
+        m.tur++;
+        if (m.tur % 3 === 0) gec("isaret", e.isaret.getClip().duration - 0.4);
+        else gec("bekle", 3 + rastgele() * 3);
+      } else gec("calis", 8 + rastgele() * 6);
+    }
+    const yaklas = (simdi: number, hedef: number, sure: number) => simdi + Math.sign(hedef - simdi) * Math.min(Math.abs(hedef - simdi), dt / sure);
+    m.calisma = yaklas(m.calisma, m.durum === "calis" ? MUDAHALE_CALISMA_PAYI : 0, 0.9);
+    m.isaret = yaklas(m.isaret, m.durum === "isaret" ? 1 : 0, 0.5);
+    m.giris = Math.min(1, m.giris + dt / 0.7);
+    e.isaret.setEffectiveWeight(m.giris * m.isaret);
+    e.calis.setEffectiveWeight(m.giris * (1 - m.isaret) * m.calisma);
+    e.bekle.setEffectiveWeight(m.giris * (1 - m.isaret) * (1 - m.calisma));
   }
 
   /**
@@ -1358,6 +1461,7 @@ export class FigurKatmani {
 
   private pozUygula(a: Aktif, poz: FigurPozu, aninda: boolean) {
     if (a.poz === poz) return;
+    if (poz !== "yarali") this.mudahaleyiBirak(a);
     const onceki = a.poz;
     a.poz = poz;
     if (poz === "yarali") {
@@ -1505,7 +1609,7 @@ export class FigurKatmani {
 
   /** Bekleme/ateş döngülerini söndürür (tek seferlik klibe geçerken). */
   private oturanlariSondur(a: Aktif, sure: number) {
-    for (const e of [a.eylemBekle, a.eylemAtes, a.eylemAtesUst, a.aktifPoz, a.eylemPoz.comelmis ?? null, a.eylemComelmisNisan, a.gecis?.eylem ?? null, a.yuruyus?.eylem ?? null]) {
+    for (const e of [a.eylemBekle, a.eylemAtes, a.eylemAtesUst, a.aktifPoz, a.eylemPoz.comelmis ?? null, a.eylemComelmisNisan, a.gecis?.eylem ?? null, a.yuruyus?.eylem ?? null, a.mudahale?.simdiki ? a.mudahale.eylemler.bekle : null, a.mudahale?.simdiki ? a.mudahale.eylemler.calis : null]) {
       if (!e) continue;
       if (sure > 0) e.fadeOut(sure);
       else e.stop();
@@ -1590,6 +1694,11 @@ export class FigurKatmani {
     if (a.karistirici && a.asama === "normal" && a.poz !== "yarali" && !a.agirSilah && a.hiz === 0) {
       dondur(k.gogus, radyan(0.9) * Math.sin(a.zaman * Math.PI * 2 * 0.27));
     }
+    // Geri tepme (diz çökmüş / yatan): nişan klibi durağan, atış anında göğüs 0,1 sn geriye vurur (ayakta ateş klibi var)
+    if ((a.poz === "comelmis" || a.poz === "yatmis") && a.asama === "normal") {
+      const t = this.saat - a.sonAtis;
+      if (t >= 0 && t < 0.1) dondur(k.gogus, radyan(2.4) * (1 - t / 0.1));
+    }
     // İrkilme: 1,1 sn'de gövde ve baş öne eğilir, kalça biraz iner, toparlanır (yarım sinüs zarfı)
     if (a.tepki && a.asama === "normal" && a.poz !== "yarali") {
       const t = this.saat - a.tepki.baslangic;
@@ -1668,47 +1777,52 @@ export class FigurKatmani {
     const aci0 = Math.atan2(p.x, -p.z);
     const yonIsaret = a.sola ? -1 : 1; // sağa koşan azimutu artırır
     const onBakis = Math.max(3.5, a.hiz * 1.6);
-    const engeller: Array<{ ileri: number; yanHat: number; b: Aktif }> = [];
+    const figurler: Array<{ ileri: number; yanHat: number; b: Aktif }> = [];
     for (const b of this.aktifler) {
       if (b === a || b.id === a.yanindaId) continue;
       let fark = (Math.atan2(b.nesne.position.x, -b.nesne.position.z) - aci0) * yonIsaret;
       fark = Math.atan2(Math.sin(fark), Math.cos(fark));
       const ileri = fark * r0;
-      if (ileri < -0.5 || ileri > onBakis) continue;
-      engeller.push({ ileri, yanHat: Math.hypot(b.nesne.position.x, b.nesne.position.z) - r0, b });
+      if (ileri < -0.8 || ileri > onBakis) continue;
+      figurler.push({ ileri, yanHat: Math.hypot(b.nesne.position.x, b.nesne.position.z) - r0, b });
     }
-    const hatta = engeller.filter((e) => Math.abs(e.yanHat) <= 1.2).sort((x, y) => x.ileri - y.ileri)[0];
-    if (hatta) {
-      const yolBos = (sapma: number) => !engeller.some((e) => Math.abs(e.yanHat - sapma) < 1.2) && r0 + sapma > 2.5;
-      let tercih: number;
-      if (Math.abs(a.kacinma) > 0.2) tercih = Math.sign(a.kacinma);
-      else if (hatta.b.hiz > 0 && Math.abs(hatta.yanHat) < 0.4) tercih = a.id < hatta.b.id ? -1 : 1; // karşılıklı: biri içe, öbürü dışa
-      else tercih = hatta.yanHat >= 0 ? -1 : 1;
-      for (const sapma of [tercih * 1.4, -tercih * 1.4, tercih * 2.8, -tercih * 2.8]) if (yolBos(sapma)) return sapma;
-      return tercih * 1.4;
-    }
-    // Sütre eşyası (Oda 2 kaya/kum torbası/HESCO hattı): yolun yarıçapında ileri bakış boyunca ilk engel kaç m sonra?
-    // Yakınsa aday yarıçaplardan (±1,5 / ±3 / ±4,5 m; önce dışa — sütre halkası izleyici tarafındadır) ilk engeli en uzak olan
-    // seçilir; her kare yeniden değerlendirilir (bütün yolun boş olmasını istemek halka boyunca dizili kayalarda hepsini
-    // kapalı gösteriyor, koşan içinden geçiyordu).
-    const ilkEngel = (yaricap: number) => {
-      if (yaricap < 2) return 0;
-      for (let s = 0.4; s <= onBakis; s += 0.8) if (this.engel(yerKonumu(derece(aci0 + (yonIsaret * s) / r0), yaricap))) return s;
-      return Infinity;
+    // Bir sapmada (hat yarıçapı + sapma) ileri bakış boyunca ilk engele uzaklık (m): duran/koşan figür (yanal ≤ 1,2 m) ya da
+    // sabit engel (bariyer, araç, sütre; gövde genişliği için yarıçap ± 0,4 m de bakılır). Figür ve sabit engel BİRLİKTE
+    // değerlendirilir: önceden figürden kaçan asker 1,4 m dışa açılıp bariyerin içinden koşuyordu (10 Kasım, kullanıcı gözlemi).
+    const aciklik = (sapma: number): number => {
+      const yaricap = r0 + sapma;
+      if (yaricap < 2.5) return 0;
+      let enYakin = Infinity;
+      for (const f of figurler) if (Math.abs(f.yanHat - sapma) < 1.2) enYakin = Math.min(enYakin, Math.max(0, f.ileri));
+      for (let ileri = -0.4; ileri <= onBakis && ileri < enYakin; ileri += 0.5) {
+        const az = derece(aci0 + (yonIsaret * ileri) / yaricap);
+        if (this.engel(yerKonumu(az, yaricap)) || this.engel(yerKonumu(az, yaricap + 0.4)) || this.engel(yerKonumu(az, yaricap - 0.4))) {
+          enYakin = Math.max(0, ileri);
+          break;
+        }
+      }
+      return enYakin;
     };
-    const simdiki = ilkEngel(r0 + a.kacinma);
-    if (simdiki < Math.min(onBakis, 4)) {
-      const tercih = Math.abs(a.kacinma) > 0.2 ? Math.sign(a.kacinma) : 1;
-      let enIyi = { sapma: a.kacinma, uzaklik: simdiki };
-      for (const sapma of [tercih * 1.5, -tercih * 1.5, tercih * 3, -tercih * 3, tercih * 4.5, -tercih * 4.5, tercih * 6, -tercih * 6]) {
-        const u = ilkEngel(r0 + sapma);
+    // Hat boşsa hatta dön / hatta kal; sapmışken sapma hâlâ boşsa ve hat kapalıysa sapmayı koru
+    if (aciklik(0) === Infinity) return 0;
+    const simdiki = Math.abs(a.kacinmaHedef) > 0.2 ? a.kacinmaHedef : 0;
+    if (simdiki !== 0 && aciklik(simdiki) === Infinity) return simdiki;
+    // Yeni sapma: önce o anki yan, karşılıklı koşanlarda biri içe öbürü dışa; küçükten büyüğe; ilk tamamen boş olan
+    const onde = figurler.filter((f) => Math.abs(f.yanHat) <= 1.2).sort((x, y) => x.ileri - y.ileri)[0];
+    let tercih: number;
+    if (simdiki !== 0) tercih = Math.sign(simdiki);
+    else if (onde && onde.b.hiz > 0 && Math.abs(onde.yanHat) < 0.4) tercih = a.id < onde.b.id ? -1 : 1;
+    else if (onde) tercih = onde.yanHat >= 0 ? -1 : 1; // figür dışarıdaysa içten, içerideyse dıştan geç
+    else tercih = -1; // sabit engel: önce izleyici tarafı (açık alan)
+    let enIyi = { sapma: simdiki, uzaklik: aciklik(simdiki) };
+    for (const buyukluk of [1.4, 2.8, 4.2, 5.6]) {
+      for (const sapma of [tercih * buyukluk, -tercih * buyukluk]) {
+        const u = aciklik(sapma);
+        if (u === Infinity) return sapma;
         if (u > enIyi.uzaklik + 0.5) enIyi = { sapma, uzaklik: u };
       }
-      return enIyi.sapma;
     }
-    if (Math.abs(a.kacinma) > 0.2 && simdiki === Infinity && ilkEngel(r0) === Infinity) return 0; // hat boşaldı: dön
-    if (Math.abs(a.kacinma) > 0.2) return a.kacinma; // hatta dönüş henüz kapalı: sapmayı koru
-    return 0;
+    return enIyi.sapma;
   }
 
   /** Çatışma durumuna göre bekleme ↔ ateş klipleri arasında yumuşak geçiş. */
@@ -1806,6 +1920,7 @@ export class FigurKatmani {
     }
     for (const a of this.aktifler) {
       this.siperiGuncelle(a);
+      this.mudahaleyiGuncelle(a, dt);
       this.pozuGuncelle(a);
       for (const [kemik, temel] of a.kemikTemel) kemik.quaternion.copy(temel);
       a.kemikTemel.clear();

@@ -378,6 +378,18 @@ Baştan sona izleme testi: `node araclar/oyun-testi/senaryo-izle.mjs --id <id> -
 35,8 fps). Bu test bir donmayı yakaladı: yangın/fişek ışık havuzları boşta `visible=false` idi; three görünmeyen ışığı
 saymadığından ilk yangın/fişekte 17–20 program yeniden derleniyor, 3+ sn donuyordu. Havuz ışıkları artık hep görünür
 (boşta parlaklık 0): program sayısı sabit, en uzun kare 56 ms. **Yeni ışık eklerken havuzu hep görünür tut.**
+**Sıhhiyeci müdahale döngüsü (10 Kasım, kullanıcı gözlemi: "çağırma loopunda kalıyor"):** `sihhiyeci_sihhiyeci` /
+`komando_sihhiyeci` ("Kneeling Pointing" bekleme klibi + `yaninda`) artık döngüde: dik diz çökme ("Kneeling Idle", 2–6 sn)
+↔ yaralının üstünde elle çalışma ("Administering Cpr" 0,6× hız, dik diz çökmeyle %50 harman: tek başına gövdeyi yere
+yatırıyor), her üç turda bir tek işaret; ağırlıklar elle sürülür (`mudahaleyiGuncelle`, `MUDAHALE_KLIPLERI`). Sıhhiyeci
+yaralının önüne değil yanına (izleyiciye göre yanal 1,35 × 0,6 m) yerleşir. Gerçek turnike/sargı klibi hâlâ yok.
+**Aynı gün kullanıcı gözlemleri:** (1) koşan asker bariyerin içinden geçiyordu: `halkaKacinmasi` figürden kaçarken sabit
+engele bakmıyordu (1,4 m dışa açılıp bariyer hattına giriyordu); artık her sapma adayı figür + sabit engel birlikte
+değerlendirilir (`aciklik`), test `araclar/oyun-testi/kosan-engel.mjs` (5 geçişte engel içinde 0 kare). (2) "diz çökerek /
+yatarak ateş eden yok": siper almada açıktaki askerler %40 diz çöküp, %30 yatıp (`siper.mod "yat"`), %30 ayakta ateş eder;
+diz/yatan atışında göğüs geri teper. Sütre arkasındakiler bilerek ayağa kalkıp ateş eder (bariyer 1 m, diz çökmüş namlu
+bariyerin altında kalır). **Ölçüm tuzağı:** kullanıcının oynatıcı sekmesi açıkken oyun testleri hem fps'i 3 kat düşük
+ölçer hem kullanıcının sahnesini sıfırlar; `/api/baglanti` `oynatici.sayi` > 0 ise önce haber ver.
 
 ## Sıradaki işler (öncelik sırasıyla)
 

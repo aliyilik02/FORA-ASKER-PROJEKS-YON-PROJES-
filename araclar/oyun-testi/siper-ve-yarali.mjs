@@ -72,9 +72,9 @@ try {
   }
   // Çatışma biter: kendi çökenler kalkar
   await c.api("PATCH", "/catisma", { aktif: false });
-  await bekle(7500);
+  await bekle(11000);
   const sonra = await durumlar();
-  console.log("  ateş kesildi +7,5 sn:", sonra.map((f) => `${f.id}:${f.poz}`).join(" "));
+  console.log("  ateş kesildi +11 sn:", sonra.map((f) => `${f.id}:${f.poz}`).join(" "));
   bekleKosul("çatışma bitince herkes ayakta", sonra.every((f) => f.poz === "ayakta"));
   await c.cek("sp_siper_bitti");
 
