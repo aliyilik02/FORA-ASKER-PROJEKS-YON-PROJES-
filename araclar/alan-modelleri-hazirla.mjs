@@ -94,6 +94,8 @@ for (const m of yapilandirma.modeller) {
     if (gecici) {
       const pArg = ["-b", "--factory-startup", "--python", path.join(kok, "araclar/model-pisir.py"), "--", girdi, gecici, "--ucgen", String(k.ucgen), "--doku", String(k.doku)];
       if (m.normal && !k.uzak) pArg.push("--normal");
+      if (m.vokselYok) pArg.push("--voksel-yok");
+      if (m.aci) pArg.push("--aci", String(m.aci));
       const p = spawnSync(BLENDER, pArg, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
       pisirme = ((p.stdout || "").match(/PISIRILDI .* üçgen (\d+ → \d+(?: \(\w+\))?)/) ?? [])[1] ?? "";
       if (p.status !== 0 || !pisirme || !existsSync(gecici)) {

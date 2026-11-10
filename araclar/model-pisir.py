@@ -21,6 +21,11 @@ def secenek(ad, varsayilan=None):
 ucgen = int(secenek("--ucgen", "6000"))
 doku = int(secenek("--doku", "1024"))
 normal_pisir = "--normal" in arg
+# Bina/araç: hacimden yeniden ağ (voksel) pencere ve kenarları eritir; Decimate hedefe inemezse olduğu gibi kalır
+voksel_yok = "--voksel-yok" in arg
+# Yumuşatma açısı (derece): sadeleştirmeden sonra açı sınırlı yumuşak gölge. Yoksa ağ UV adalarında parçalanıp düz
+# gölgeli çıkıyordu (köşe/üçgen = 3,00; ağaçlarda "kristal" görüntü, 10 Kasım). Duvar köşesi (90°) keskin kalır.
+yumusatma_acisi = float(secenek("--aci", "40"))
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=girdi)
@@ -76,7 +81,7 @@ sadelestir(alcak)
 yontem = "decimate"
 # Binlerce ayrık parçalı (yaprak kümesi, iğne) modelde Decimate parça başına birkaç üçgende takılır: hacimden yeniden ağ
 # (voksel; ince dallar kalınlaşır, yaprak arası boşluk dolar, renk yine pişirilir) ve onun sadeleştirilmesi
-if ucgen_sayisi(alcak) > ucgen * 1.6:
+if ucgen_sayisi(alcak) > ucgen * 1.6 and not voksel_yok:
     alcak.modifiers.clear()
     alcak.data = yuksek.data.copy()
     v = alcak.modifiers.new("hacim", "REMESH")
@@ -87,6 +92,15 @@ if ucgen_sayisi(alcak) > ucgen * 1.6:
     sadelestir(alcak)
     yontem = "voksel"
 sonra = ucgen_sayisi(alcak)
+
+# Açı sınırlı yumuşak gölge (normal pişirmesi de bu normallere göre: düz gölge + normal haritası değil)
+bpy.ops.object.select_all(action="DESELECT")
+alcak.select_set(True)
+bpy.context.view_layer.objects.active = alcak
+try:
+    bpy.ops.object.shade_smooth_by_angle(angle=math.radians(yumusatma_acisi))
+except Exception:
+    bpy.ops.object.shade_smooth()
 
 # Yeni UV (eski katmanlar silinir: pişirme yeni UV'ye)
 while alcak.data.uv_layers:

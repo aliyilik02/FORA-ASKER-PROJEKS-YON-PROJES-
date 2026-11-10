@@ -1101,3 +1101,38 @@ meskûn cadde (57) ile birlikte en ağır sahne.
 **Kalan / bakılacak:** duvarda gözle bakış; kırsalda bir iki ağaç sarımsı (ton farkı, gerçekçi sayılabilir); Meshy `m_`
 ağaç modelleri (`icerik/arazi/modeller/m_*`) artık bitki setlerinde kullanılmıyor (kaya/kütük/eğrelti/yosunlu kaya
 kullanılıyor); yaprak kartı aşırı çizimi için sonraki adım uzak ağaçlarda sahte ağaç (impostor) ya da alfa-kapsama (MSAA).
+
+## Meskûn cadde performansı (10 Kasım)
+
+**Belirti:** meskûn 3B cadde diğer bölgelerin yarı hızındaydı (1920×360 GTX 1650 yuksek 57 fps; 5760×1080 tam yükte 13–14)
+ve çözünürlükten bağımsız ~13 ms sabit maliyet taşıyordu. **Ölçüm yöntemi:** başsız Chrome'da (Playwright) sahne
+kurulup kare `sahne3b.ciz()` + `readPixels` ile senkron 40 kez çizildi (süre göreli; gerçek pencerede ~7 kat hızlı),
+katmanlar tek tek kapatıldı (betik oturum scratchpad'inde `profil.mjs`; yeniden gerekirse aynı yolla yazılır).
+
+| Deneme | Kare (başsız ms) |
+|---|---|
+| Tam sahne | 152 |
+| Gölge geçişi atlanınca | 119 |
+| Alan (bina/araç) gizlenince | 38 |
+| Arazi gizlenince | 162 (fark yok) |
+
+1. **Üçgen:** alan modelleri 10,1 M üçgendi; 28'i hedefini 1,3 kattan fazla aşıyordu (moloz_tugla_162 2,02 M, moloz
+   158 1,17 M, çatıdaki güneş ısıtıcısı 457 bin). Neden: `model-sadelestir.mjs` (meshoptimizer `lockBorder`) Meshy'nin
+   binlerce UV adalı atlasında dikişleri çökertemiyordu. Blender pişirmesi (`model-pisir.py --normal`) denendi:
+   ayrık parçalı molozda kara/kırık porselen çıktı, kullanılmadı. Çözüm `araclar/model-sadelestir-izinli.mjs`:
+   meshoptimizer 1.1 (kök devDependency 0.22 → 1.1.1) `simplifyWithAttributes` + `Permissive` (dikiş boyunca) +
+   `Prune` (kopuk kırıntı), UV/normal ağırlıklı, özgün UV ve doku korunur, `--hata 0,01` kalite tavanı. 28 model
+   7,76 M → 1,30 M üçgen, 47 sn; yan yana önizlemede fark seçilmiyor. Yapılandırma `araclar/alan-agir-modeller.json`,
+   eski çıktılar `meshy_output/alan_yedek_10kasim/` (depo dışı). Kare 152 → 120 ms: üçgen asıl neden değildi.
+2. **Ekran kartı belleği (asıl neden):** alan 131 doku (34'ü 2048²) ≈ 1,2 GB; GTX 1650'nin 4 GB'ında taşıyordu.
+   Sayfada dokular yerinde küçültülünce: özgün 102 ms → en çok 1024: 76 → en çok 512: 33 (alan gizliyken ki kadar).
+   Çözüm `alan.ts` `ALAN_DOKU_SINIRI` / `dokulariSinirla`: yüklemede kaliteye göre renk / diğer (normal, pürüzlülük,
+   AO) dokusu: yuksek 2048 / 1024, orta 1024 / 512, dusuk 512 / 512 (`sahne3b` kaliteden verir).
+
+**Sonuç** (gerçek pencere 1920×360): meskûn yuksek 57 → **86** (4 asker + çatışma 55 → 80), orta 96; görüntüde fark
+yok. 16 GB'lık projeksiyon kartında bellek taşması beklenmez; asıl kalıcı çözüm GPU doku sıkıştırması (KTX2/Basis,
+bellek 4–6 kat az) — `toktx` gerektirir, yapılmadı.
+
+**Pişirme hattı düzeltmeleri** (`model-pisir.py`, ileride kullanılırsa): sadeleştirmeden sonra açı sınırlı yumuşak
+gölge (`--aci`, varsayılan 40°; ağaçlardaki "kristal" düz gölgenin kaynağıydı), `--voksel-yok` (bina/araçta hacimden
+yeniden ağ kenarları eritir); `alan-modelleri-hazirla.mjs` yapılandırmada `vokselYok`, `aci`.

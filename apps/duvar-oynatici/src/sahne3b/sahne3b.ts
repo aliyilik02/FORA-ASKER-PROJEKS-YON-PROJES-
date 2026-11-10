@@ -28,7 +28,7 @@ import { Helikopter3B } from "./helikopter3b";
 import { rotorTozuTuru } from "./rotorTozu";
 import { ParcacikSistemi } from "./parcaciklar";
 import { SutreKatmani, type SutreEsyasi } from "./sutre";
-import { AlanKatmani, ogeKonumu, type AlanPlani } from "./alan";
+import { ALAN_DOKU_SINIRI, AlanKatmani, ogeKonumu, type AlanPlani } from "./alan";
 import { SokakKatmani, sokakIcindeMi } from "./sokak";
 import { ARAZI_KALITE, ARAZI_PROFILLERI, AraziKatmani, KIS_ESIGI, type AraziModu } from "./arazi";
 import { Gokyuzu } from "./gokyuzu";
@@ -255,6 +255,7 @@ export class Sahne3B {
 
   constructor(tuval: HTMLCanvasElement, hataAyiklama = false, kalite: Kalite = "yuksek") {
     this.kalite = kalite;
+    this.alan.dokuSiniri = ALAN_DOKU_SINIRI[kalite];
     this.yagis3b = new Yagis3B(kalite);
     const k = KALITE_AYARLARI[kalite];
     let r: THREE.WebGLRenderer | null = null;

@@ -350,6 +350,10 @@ inmiş, normal haritası atılmış, düz gölgeli (köşe/üçgen 3,00). Ağaç
 yukarı normalli; dağlık zemin `tasli_zemin`, kayalar yamaca oturur. **Görsel denetim:** `node araclar/goruntu-al.mjs
 --sahneler "ormanlik:yaz:12" [--fov 30]` (Playwright + kurulu Chrome/NVIDIA, PNG `araclar/_goruntu/`; Claude görüntüyü
 okuyup değerlendirir). Bedel: orman 1920×360 GTX 1650 121 → 82 fps. Ayrıntı `docs/duvar-oynatici.md` "Gerçekçilik turu".
+**Meskûn performansı (10 Kasım):** yavaşlığın asıl nedeni ekran kartı belleğiydi (alan dokuları ≈ 1,2 GB, GTX 1650
+4 GB); `alan.ts` `ALAN_DOKU_SINIRI` kaliteye göre küçültür; ayrıca 28 ağır alan modeli `araclar/model-sadelestir-izinli.mjs`
+(meshoptimizer 1.1 Permissive) ile 7,8 M → 1,3 M üçgen (depo dışı içerik, yedek `meshy_output/alan_yedek_10kasim/`).
+Meskûn 1920×360 yuksek 57 → 86 fps. Ayrıntı docs "Meskûn cadde performansı". Bu ölçüm öncesi:
 **Projeksiyon PC (10 Kasım ölçümü, 5760×1080 tam yük):** GTX 1650'de meskûn 13–14, diğerleri 19–29 fps; öneri RTX 5070 Ti /
 4070 Ti Super 16 GB (asgari 5070/4070 12 GB), oda başına bir PC. Chrome için Windows GPU tercihi "Yüksek performans" şart.
 

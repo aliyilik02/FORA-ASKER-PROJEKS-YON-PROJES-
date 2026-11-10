@@ -160,7 +160,60 @@ function tabanY(kutu: THREE.Box3): number {
   return Number.isFinite(y) ? y : 0;
 }
 
+/**
+ * Alan modeli doku sınırı (piksel, en uzun kenar). 10 Kasım profili: meskûn caddenin yavaşlığı üçgen değil ekran kartı
+ * belleğiydi — alan 131 doku (34'ü 2048²) ≈ 1,2 GB; GTX 1650'nin 4 GB'ında taşıyordu. Dokular yerinde 512'ye
+ * küçülünce kare süresi alan gizliyken ki kadar düştü (başsız ölçüm 102 → 33 ms). Renk ayrıntıyı taşır, normal/
+ * pürüzlülük/AO yarı çözünürlükte fark etmez.
+ */
+export const ALAN_DOKU_SINIRI: Record<"dusuk" | "orta" | "yuksek", { renk: number; diger: number }> = {
+  dusuk: { renk: 512, diger: 512 },
+  orta: { renk: 1024, diger: 512 },
+  yuksek: { renk: 2048, diger: 1024 },
+};
+
+/** Malzeme dokularını rolüne göre (renk / diğer) sınıra küçültür; yerinde (aynı Texture nesnesi, yeni resim). */
+export function dokulariSinirla(kok: THREE.Object3D, sinir: { renk: number; diger: number }): number {
+  const hedef = new Map<THREE.Texture, number>();
+  const ekle = (t: unknown, s: number) => {
+    if (!(t instanceof THREE.Texture)) return;
+    hedef.set(t, Math.min(hedef.get(t) ?? Infinity, s));
+  };
+  kok.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (!m.isMesh) return;
+    for (const mal of Array.isArray(m.material) ? m.material : [m.material]) {
+      const std = mal as THREE.MeshStandardMaterial;
+      ekle(std.map, sinir.renk);
+      ekle(std.emissiveMap, sinir.renk);
+      ekle(std.normalMap, sinir.diger);
+      ekle(std.roughnessMap, sinir.diger);
+      ekle(std.metalnessMap, sinir.diger);
+      ekle(std.aoMap, sinir.diger);
+    }
+  });
+  let kucuk = 0;
+  for (const [t, s] of hedef) {
+    const img = t.image as { width?: number; height?: number } | undefined;
+    if (!img?.width || !img.height || Math.max(img.width, img.height) <= s || typeof document === "undefined") continue;
+    const k = s / Math.max(img.width, img.height);
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(img.width * k));
+    c.height = Math.max(1, Math.round(img.height * k));
+    const ctx = c.getContext("2d");
+    if (!ctx) continue;
+    ctx.drawImage(t.image as CanvasImageSource, 0, 0, c.width, c.height);
+    (t.image as { close?: () => void }).close?.(); // ImageBitmap belleği hemen bırakılsın
+    t.image = c;
+    t.needsUpdate = true;
+    kucuk++;
+  }
+  return kucuk;
+}
+
 export class AlanKatmani {
+  /** Doku sınırı (sahne3b kaliteye göre verir; yoksa küçültme yok). */
+  dokuSiniri: { renk: number; diger: number } | null = null;
   readonly grup = new THREE.Group();
   private readonly yukleyici = new GLTFLoader();
   private readonly onbellek = new Map<string, Promise<GLTF>>();
@@ -182,7 +235,11 @@ export class AlanKatmani {
   private yukle(url: string) {
     let p = this.onbellek.get(url);
     if (!p) {
-      p = this.yukleyici.loadAsync(url);
+      const sinir = this.dokuSiniri;
+      p = this.yukleyici.loadAsync(url).then((g) => {
+        if (sinir) dokulariSinirla(g.scene, sinir);
+        return g;
+      });
       this.onbellek.set(url, p);
     }
     return p;
