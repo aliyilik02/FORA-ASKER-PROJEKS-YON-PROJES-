@@ -357,6 +357,9 @@ Meskûn 1920×360 yuksek 57 → 86 fps. Ayrıntı docs "Meskûn cadde performans
 **Projeksiyon PC (10 Kasım ölçümü, 5760×1080 tam yük):** GTX 1650'de meskûn 13–14, diğerleri 19–29 fps; öneri RTX 5070 Ti /
 4070 Ti Super 16 GB (asgari 5070/4070 12 GB), oda başına bir PC. Chrome için Windows GPU tercihi "Yüksek performans" şart.
 
+**Sonraki oturum (10 Kasım kararı): genel kontrol — hata ayıklama + geliştirme.** Önce `docs/devir-10-kasim.md`
+(bugün değişenler, doğrulanmayan 10 madde, ölçüm araçları `araclar/olcum/`).
+
 ## Sıradaki işler (öncelik sırasıyla)
 
 00. **3B alanlar duvarda (9 Kasım sonu):** meskûn cadde, 3B orman (yaz/kış), dağ yarları, kırsal kavak sırası duvarda gözle
