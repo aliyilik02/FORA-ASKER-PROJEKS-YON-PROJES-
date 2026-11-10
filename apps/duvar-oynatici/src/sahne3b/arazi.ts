@@ -21,6 +21,10 @@
  */
 import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { normalleriYumusat } from "./normalYumusat";
+
+/** Meshy bitki/kaya modellerinde yumuşatma eşiği (derece): yaprak kümeleri yumuşar, kaya sırtı keskin kalır. */
+const MESHY_NORMAL_ACISI = 75;
 import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise.js";
 import { deinterleaveGeometry, mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { konumlariYaz, kraterPenceresi, kraterUygula, pencereAraligi, pencereNormalleri, pencereyiYenile, type IzgaraDuzeni, type IzgaraPenceresi } from "./araziIzgara";
@@ -1505,6 +1509,16 @@ roughnessFactor = mix(roughnessFactor, 0.08, gBirikinti);`,
       p = uzak
         ? this.yukleyici.loadAsync(`${yol}_uzak.glb`).catch(() => this.model(klasor))
         : this.yukleyici.loadAsync(`${yol}_lod.glb`).catch((e) => (dosya ? this.yukleyici.loadAsync(`${this.kok}arazi/modeller/${klasor}/${dosya}`) : Promise.reject(e)));
+      // Meshy pişirme çıktısı parçalı ve düz gölgeli (köşe/üçgen = 3): yumuşak normal, yoksa ağaç "kristal" görünür
+      if (klasor.startsWith("m_")) {
+        p = p.then((gltf) => {
+          gltf.scene.traverse((o) => {
+            const m = o as THREE.Mesh;
+            if (m.isMesh) normalleriYumusat(m.geometry, MESHY_NORMAL_ACISI);
+          });
+          return gltf;
+        });
+      }
       p.catch(() => this.modelOnbellek.delete(anahtar));
       this.modelOnbellek.set(anahtar, p);
     }

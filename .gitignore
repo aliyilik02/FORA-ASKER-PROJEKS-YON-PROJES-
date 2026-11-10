@@ -43,3 +43,6 @@ tasarim-taslak/
 
 # Meshy topluluk alan modelleri (CC0, büyük; araclar/alan-modelleri-hazirla.mjs ile yeniden üretilir)
 apps/duvar-oynatici/public/icerik/modeller/alan/
+
+# Görsel denetim çıktıları (araclar/goruntu-al.mjs)
+araclar/_goruntu/
