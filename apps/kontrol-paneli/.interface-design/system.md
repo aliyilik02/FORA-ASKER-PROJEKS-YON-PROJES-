@@ -37,3 +37,18 @@ yeniden çizilip oynatıcının kare hızını düşürüyordu).
 ## Yerleşim
 Üst çubuk 64 px cam; sol ray 208 px satır ikon+ad; içerik `minmax(400px,440px) 1fr`; 900 px altı ray sekme çubuğu,
 1100 px altı oda adları gizli (yalnız numara).
+
+
+## Eğitmen ekranı (10 Kasım 2026)
+
+Kullanıcı: teknolojiyi az bilen eğitmen, gözü çoğunlukla duvarda. Kurallar:
+
+- **Tek sayfa, iki soru:** "Nereye?" (duvar şeridine dokun) → "Ne olsun?" (konu kartındaki düğme). Her düğme tek dokunuş.
+- **Dil:** sade Türkçe eylem adı + bir satır sonucun tarifi ("Havan · Önce ıslık, sonra patlama"). Derece, yüzde, fps,
+  kısaltma, İngilizce terim yok. Kaydırıcı yerine 3 kademeli seçim (Az / Orta / Çok).
+- **Boyut:** eylem düğmesi en az 68 px yükseklik, 150 px genişlik; üst çubuk öğeleri 52 px.
+- **Konu renkleri** (kartın üst çizgisi ve başlığı): Askerler `--nvg`, Yaralı `--izli`, Çatışma `--amber`, Patlama turuncu,
+  Sesler `--gok`, Hazır olaylar `--kum`. Seçili durum konu renginin %24'ü; pasif düğme %42 opak ve nedenini alt satırda söyler
+  ("Önce asker çağır").
+- **Durum her zaman görünür:** kart başlığının sağında sade özet ("Sahnede 3", "1 yaralı · sıhhiyeci bekliyor", "Sürüyor").
+- **Teknik her şey Teknisyen görünümünde**; eğitmen ekranına yeni teknik denetim eklenmez.

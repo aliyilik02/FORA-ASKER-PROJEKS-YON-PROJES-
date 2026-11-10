@@ -159,6 +159,18 @@ parçacık dokuları (`icerik/dokular/`). Depoda: asker modelleri (three.js Sold
 helikopter (OGA CC-BY). Kaynak/lisans notları manifestte `_kaynak`. Araştırma listeleri (128 HDRI,
 modeller, VFX/ses adayları) oturum scratchpad'indeydi; yeniden gerekirse Poly Haven API ile üretilir.
 
+**Eğitmen ekranı (10 Kasım, kullanıcı kararı: "teknolojiyi çok bilmeyen birine göre, sıfırdan"):** panel artık iki görünüm
+(`Uygulama.tsx` `gorunum`, yerel kayıt `duvar.panel.gorunum`). **Eğitmen** (varsayılan) tek sayfa: üst çubuk (Oda 1/2, "Yer ve
+hava" özeti, Senaryolar, tek bağlantı lambası "Duvar bağlı", Kilitle, Sahneyi temizle, Teknisyen) → **duvar şeridi**
+(`egitmen/DuvarSeridi.tsx`: canlı önizlemeye dokun = yer seç, `oranAzimut` duvar başına perspektif eşleme; altta 5 yön düğmesi;
+asker/yaralı/düşman işaretleri) → konu kartları (`egitmen/EgitmenEkrani.tsx`: Askerler, Yaralı + Durum (safha), Çatışma
+(başlat/durdur, Az/Orta/Çok, izli mermi), Patlama ve ateş, Sesler, Hazır olaylar (makrolar); Oda 2'de Güvenli alan +
+Helikopter). Çekmeceler (`egitmen/Cekmeceler.tsx`): Yer ve hava (bölge, Yaz/Kış, 4 saat, 6 hazır hava) ve Senaryolar (seç →
+Oynat; "Test –" adlılar gizli). Oynayan senaryo üstte şerit (Duraklat/Devam/Bitir). Derece, kaydırıcı, teknik terim yok; stil
+`egitmen.css` (Tema A belirteçleri, düğme ≥ 64 px). **Teknisyen** görünümü eski beş sekmeli panelin tamamı (ince ayar, senaryo
+editörü, AAR, kurulum, günlük); F1–F5 ve M onu açar. Yeni eğitmen eylemi eklerken: sade Türkçe ad + bir satır ne olacağı,
+seçili yere gitsin, teknik seçenek Teknisyen'de kalsın. Tarayıcı turu: `KOPRU=… node araclar/oyun-testi/panel-tur.mjs`.
+
 **Panel Tema A (4 Kasım):** kullanıcı seçimi A + D2 + F (artifact "Eğitmen Paneli Tasarım Seçenekleri";
 `tasarim-taslak/` depo dışı): `apps/kontrol-paneli/src/tema-a.css` stil.css'i ezer (cam kartlar, Manrope/JetBrains Mono
 yerel `public/fonts`, bileşen durumları), `YonSecici.tsx` pusulanın yerine (Pusula.tsx silindi), `Simgeler.tsx` SVG grup

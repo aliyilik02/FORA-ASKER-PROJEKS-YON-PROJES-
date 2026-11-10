@@ -30,7 +30,7 @@ function izliYonMetni(v: number): string {
 }
 
 /** Hazır makrolar (eğitmen dizileri): adımlar köprüde zamanlanır; yön soldaki seçiciden. */
-function makrolar(yon: number): Array<{ ad: string; aciklama: string; adimlar: SenaryoAdimi[] }> {
+export function makrolar(yon: number): Array<{ ad: string; aciklama: string; adimlar: SenaryoAdimi[] }> {
   const efekt = (id: string, ms: number, tur: EfektTuru, siddet: number, sapma = 0): SenaryoAdimi => ({ id, gecikmeMs: ms, aciklama: EFEKT_ETIKETLERI[tur], islem: { tip: "efekt", efekt: { tur, siddet, yon: (((yon + sapma) % 360) + 360) % 360 } } });
   return [
     {

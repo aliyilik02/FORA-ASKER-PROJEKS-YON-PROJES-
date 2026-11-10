@@ -7,7 +7,7 @@
  */
 import { Ikon } from "./ortak";
 
-export function SifirlaDugmesi({ kurulu, sayi, onDokun }: { kurulu: boolean; sayi: number; onDokun: () => void }) {
+export function SifirlaDugmesi({ kurulu, sayi, onDokun, etiket = "Sıfırla" }: { kurulu: boolean; sayi: number; onDokun: () => void; etiket?: string }) {
   return (
     <button
       type="button"
@@ -21,7 +21,7 @@ export function SifirlaDugmesi({ kurulu, sayi, onDokun }: { kurulu: boolean; say
         <span className="sifirla-metin">Temizlensin mi?</span>
       ) : (
         <>
-          <span className="sifirla-metin">Sıfırla</span>
+          <span className="sifirla-metin">{etiket}</span>
           {sayi > 0 && <span className="sifirla-sayi mono">{sayi}</span>}
         </>
       )}

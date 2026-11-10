@@ -12,7 +12,7 @@ export const HELI_DIZISI: ReadonlyArray<{ durum: HelikopterDurumu; sn: number }>
   { durum: "iniyor", sn: 20 },
   { durum: "yerde", sn: 35 },
 ];
-const HELI_MAKRO_ADI = "Helikopter iniş dizisi";
+export const HELI_MAKRO_ADI = "Helikopter iniş dizisi";
 
 export function Oda2Paneli({ durum, calistir, makro }: { durum: SimulasyonDurumu; calistir: Calistir; makro?: MakroDurumu | null }) {
   const { seciliYon, bildir } = useArayuz();

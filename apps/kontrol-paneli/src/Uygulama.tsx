@@ -22,6 +22,15 @@ import { SEKME_KISAYOLLARI, YanMenu } from "./bilesenler/YanMenu";
 import { EFEKT_ETIKETLERI, SIFIRLAMA_KAYNAK_ETIKETLERI, SOZLESME_SURUMU, sifirlamaOzetiMetni, type EfektTuru, type SifirlamaKaynagi } from "./tipler";
 import { vurulabilirAskerler, yoneEnYakin } from "./figurYardimcilari";
 import { useKopru } from "./useKopru";
+import { EgitmenEkrani } from "./bilesenler/egitmen/EgitmenEkrani";
+import { Cekmece, SenaryoSecimi, YerVeHava } from "./bilesenler/egitmen/Cekmeceler";
+import { SifirlaDugmesi } from "./bilesenler/SifirlaDugmesi";
+import { BOLGE_ETIKETLERI, MEVSIM_ETIKETLERI, YAGIS_ETIKETLERI } from "./tipler";
+import { saatBicimi } from "./bilesenler/ortak";
+
+/** Görünüm: "egitmen" tek sayfalık sade ekran (varsayılan); "teknisyen" kurulum, ince ayar, senaryo düzenleme, günlük. */
+type Gorunum = "egitmen" | "teknisyen";
+const GORUNUM_ANAHTARI = "duvar.panel.gorunum";
 
 /** Sıfırla düğmesinin kurulu (onay bekleyen) kalma süresi: ikinci dokunuş / Esc bu sürede gelmezse çözülür. */
 const SIFIRLAMA_ONAY_MS = 3000;
@@ -39,7 +48,23 @@ export function Uygulama() {
 function Govde() {
   const kopru = useKopru();
   const { durum, senaryo, senaryolar, olaylar, tatbikat, makro, tekrar, baglanti, gunluk, unrealIstekler, ornek, figurler, onizleme, sonSifirlama, soketAcik, hata, sifirlamaUygula } = kopru;
-  const { sekme, setSekme, seciliYon, setSeciliYon, bildir, kilit } = useArayuz();
+  const { sekme, setSekme, seciliYon, setSeciliYon, bildir, kilit, setKilit } = useArayuz();
+  const [gorunum, setGorunumHam] = useState<Gorunum>(() => {
+    try {
+      return localStorage.getItem(GORUNUM_ANAHTARI) === "teknisyen" ? "teknisyen" : "egitmen";
+    } catch {
+      return "egitmen";
+    }
+  });
+  const setGorunum = useCallback((g: Gorunum) => {
+    setGorunumHam(g);
+    try {
+      localStorage.setItem(GORUNUM_ANAHTARI, g);
+    } catch {
+      /* özel pencere */
+    }
+  }, []);
+  const [cekmece, setCekmece] = useState<"ortam" | "senaryo" | null>(null);
 
   // API çağrılarını sarar: hata olursa bildirim
   const calistir = useCallback(
@@ -131,7 +156,9 @@ function Govde() {
       }
       const s = SEKME_KISAYOLLARI[e.key];
       if (s) {
+        // F1–F5 Teknisyen sayfasının bölümleri; eğitmen ekranında sayfayı da açar
         e.preventDefault();
+        setGorunum("teknisyen");
         setSekme(s);
         return;
       }
@@ -158,6 +185,7 @@ function Govde() {
       if (e.key === "m" || e.key === "M") {
         if (e.repeat) return;
         e.preventDefault();
+        setGorunum("teknisyen");
         setSekme("senaryo");
         window.setTimeout(() => window.dispatchEvent(new CustomEvent(AAR_NOT_OLAYI)), 50);
         return;
@@ -172,7 +200,7 @@ function Govde() {
     };
     window.addEventListener("keydown", dinle);
     return () => window.removeEventListener("keydown", dinle);
-  }, [durum, senaryo, seciliYon, setSeciliYon, setSekme, calistir, bildir, figurler, sifirlaDokun, kilit]);
+  }, [durum, senaryo, seciliYon, setSeciliYon, setSekme, setGorunum, calistir, bildir, figurler, sifirlaDokun, kilit]);
 
   if (!durum) {
     return (
@@ -207,6 +235,74 @@ function Govde() {
           düğmeler "İşlem başarısız" verir. Köprüyü yeniden başlat: <span className="mono">demo.bat yeniden</span> ya da köprü penceresinde Ctrl+C → <span className="mono">npm start</span>.
         </div>
       )}
+      {gorunum === "egitmen" ? (
+        <>
+          <header className="e-ust">
+            <nav className="e-oda" aria-label="Oda">
+              <button type="button" className={durum.oda === "oda1" ? "secili" : ""} onClick={() => void calistir(() => api.odaSec("oda1"))}>
+                <strong>Oda 1</strong>
+                <small>Yaralıya müdahale</small>
+              </button>
+              <button type="button" className={durum.oda === "oda2" ? "secili" : ""} onClick={() => void calistir(() => api.odaSec("oda2"))}>
+                <strong>Oda 2</strong>
+                <small>Güvenli alan, tahliye</small>
+              </button>
+            </nav>
+            <button type="button" className="e-ortam" onClick={() => setCekmece("ortam")}>
+              <small>Yer ve hava</small>
+              <strong>
+                {BOLGE_ETIKETLERI[durum.bolge]} · {MEVSIM_ETIKETLERI[durum.ortam.mevsim]} · {saatBicimi(durum.ortam.saat)}
+                {durum.ortam.yagis !== "yok" ? ` · ${YAGIS_ETIKETLERI[durum.ortam.yagis]}` : durum.ortam.sis > 0.3 ? " · Sisli" : ""}
+              </strong>
+            </button>
+            <button type="button" className="e-senaryo" data-kilit-serbest onClick={() => setCekmece("senaryo")}>
+              <small>Hazır akış</small>
+              <strong>Senaryolar</strong>
+            </button>
+            <span className={`e-baglanti ${!soketAcik ? "kotu" : baglanti?.oynatici?.bagli ? "iyi" : "bekliyor"}`}>
+              <i />
+              {!soketAcik ? "Bağlantı yok" : baglanti?.oynatici?.bagli ? "Duvar bağlı" : "Duvar açık değil"}
+            </span>
+            <button type="button" className={`e-kilit ${kilit ? "secili" : ""}`} data-kilit-serbest aria-pressed={kilit} title="Kilitliyken yalnız senaryo düğmeleri ve Temizle çalışır (yanlış dokunma koruması)" onClick={() => setKilit(!kilit)}>
+              {kilit ? "Kilidi aç" : "Kilitle"}
+            </button>
+            <SifirlaDugmesi kurulu={sifirlamaKurulu} sayi={sifirlanacak} onDokun={() => sifirlaDokun("panel")} etiket="Sahneyi temizle" />
+            <button type="button" className="e-teknisyen" title="Teknisyen sayfası: kurulum, ince ayar, senaryo düzenleme, günlük" onClick={() => setGorunum("teknisyen")}>
+              Teknisyen
+            </button>
+          </header>
+          <div className={`e-govde ${kilit ? "kilitli" : ""}`}>
+            <EgitmenEkrani durum={durum} figurler={figurler} senaryo={senaryo} makro={makro ?? null} calistir={calistir} onizleme={onizleme} sonSifirlamaZamani={sonSifirlama?.zaman} />
+          </div>
+          {cekmece === "ortam" && (
+            <Cekmece baslik="Yer ve hava" altBaslik="Dokun, duvar değişsin" onKapat={() => setCekmece(null)}>
+              <YerVeHava durum={durum} calistir={calistir} />
+            </Cekmece>
+          )}
+          {cekmece === "senaryo" && (
+            <Cekmece baslik="Senaryolar" altBaslik="Hazır akışı seç, Oynat de" onKapat={() => setCekmece(null)}>
+              <SenaryoSecimi
+                senaryolar={senaryolar}
+                senaryoDurumu={senaryo}
+                calistir={calistir}
+                onKapat={() => setCekmece(null)}
+                onDuzenle={() => {
+                  setCekmece(null);
+                  setSekme("senaryo");
+                  setGorunum("teknisyen");
+                }}
+              />
+            </Cekmece>
+          )}
+        </>
+      ) : (
+        <>
+      <div className="teknisyen-seridi">
+        <button type="button" className="birincil" onClick={() => setGorunum("egitmen")}>
+          ← Eğitmen ekranına dön
+        </button>
+        <span>Teknisyen sayfası: kurulum, ince ayar, senaryo düzenleme ve günlük. Günlük kullanımda eğitmen ekranı yeterlidir.</span>
+      </div>
       <UstCubuk
         durum={durum}
         baglanti={baglanti}
@@ -251,6 +347,8 @@ function Govde() {
           </div>
         </main>
       </div>
+        </>
+      )}
       <Bildirimler />
     </div>
   );
