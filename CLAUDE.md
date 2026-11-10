@@ -368,6 +368,10 @@ gerçek tüfekten `atisNoktalari`; diz çökmüş nişan klibi; ateş klibi salv
 kesilince son düşman yönüne bakar; nefes + çevre kollama). Düzeltilmeyen 14 bulgu ve öneriler: `docs/oyun-testi-10-kasim.md`
 (açıkta dimdik ateş, yaralının önünün kapanması, Oda 2 sütre–alan iç içeliği, helikopter 58 m, kışta yalnız zemin karlı,
 zayıf yağmur, fişek görüş alanı dışında). Figür/animasyon değişikliğinden sonra `node araclar/oyun-testi/meskun-figur.mjs`.
+**Siper alma + yaralı görüş hattı (10 Kasım gece, kullanıcı onayı):** çatışmada sütre arkasındaki asker çöker, ateş için
+doğrulup yeniden çöker, açıktakilerin yarısı diz çöker (`siperiGuncelle`; panel Çatışma › Siper al, `catisma.siperAl`
+isteğe bağlı alan, varsayılan açık, `SOZLESME_SURUMU` 4); yaralının önündeki asker yana çekilir (`gorusHatlariniAc`). Test:
+`araclar/oyun-testi/siper-ve-yarali.mjs`. Rapordaki açık bulgulardan 1 ve 2 kapandı; sıradaki 3–9.
 
 ## Sıradaki işler (öncelik sırasıyla)
 

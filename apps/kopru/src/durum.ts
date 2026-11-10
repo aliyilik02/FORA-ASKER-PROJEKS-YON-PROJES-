@@ -164,6 +164,7 @@ export class DurumDeposu {
       siddet: sinirla(sayiYaDa(kismi.siddet, c.siddet), 0, 1),
       yon: ((Math.round(sayiYaDa(kismi.yon, c.yon)) % 360) + 360) % 360,
       dostAtes: boolYaDa(kismi.dostAtes, c.dostAtes),
+      siperAl: boolYaDa(kismi.siperAl, c.siperAl ?? true),
     };
     await this.unreal.catismaAyarla(this.durum.catisma);
     this.gunluk.bilgi(this.durum.catisma.aktif ? `Çatışma: %${Math.round(this.durum.catisma.siddet * 100)}, yön ${this.durum.catisma.yon}°` : "Çatışma durdu");

@@ -101,6 +101,7 @@ export const CATISMA_SEMASI: Record<keyof CatismaAyarlari, AlanSemasi> = {
   siddet: { tip: "sayi" },
   yon: { tip: "sayi" },
   dostAtes: { tip: "bool" },
+  siperAl: { tip: "bool" },
 };
 export const EFEKT_SEMASI: Record<keyof EfektIstegi, AlanSemasi> = {
   tur: { tip: "secenek", secenekler: EFEKT_TURLERI },

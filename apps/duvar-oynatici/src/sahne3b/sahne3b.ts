@@ -1520,6 +1520,7 @@ export class Sahne3B {
   catismaAyarla(c: CatismaAyarlari, azimut: number) {
     this.catisma.catismaAyarla({ aktif: c.aktif, siddet: c.siddet, azimut, dostAtes: c.dostAtes });
     this.figurler.dusmanAzimutu = c.aktif ? azimut : null;
+    this.figurler.siperAl = c.siperAl ?? true;
   }
   /**
    * Klasik izli mermi ayarı 3B'de: kaynak seçilen duvarın ortası yönünde (duvar yaw'ı; ±10° dağılım, 150–300 m),

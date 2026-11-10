@@ -82,6 +82,11 @@ export interface CatismaAyarlari {
   yon: number;
   /** Sahnedeki silahlı figürler ateşle karşılık versin mi. */
   dostAtes: boolean;
+  /**
+   * Siper alma (10 Kasım): çatışmada sütre arkasındaki askerler diz çöker, ateş etmek için doğrulup yeniden çöker;
+   * açıktakilerin yarısı diz çöküp öyle ateş eder. Kapalıysa herkes ayakta ateş eder. Eski kayıtlarda yok: açık sayılır.
+   */
+  siperAl?: boolean;
 }
 
 export type EfektTuru =
@@ -202,7 +207,7 @@ export interface OnAyar {
  * mesajında gönderir; panel kendi değeriyle karşılaştırır, uyuşmazlıkta "köprü eski sürüm, yeniden başlat" şeridi gösterir
  * (yeni derlenmiş panel + eski çalışan köprü = her yeni düğme "İşlem başarısız").
  */
-export const SOZLESME_SURUMU = 3;
+export const SOZLESME_SURUMU = 4;
 
 export interface BaglantiDurumu {
   /** Köprünün sözleşme sürümü (SOZLESME_SURUMU); eski köprüde alan yok. */
@@ -512,7 +517,7 @@ export function varsayilanDurum(): SimulasyonDurumu {
     isik: { parlaklik: 0.8, r: 255, g: 244, b: 224, senaryoyaBagli: true },
     izliMermi: { aktif: false, cikisNoktasi: 1, yon: 0, siklik: 3 },
     oda2: { guvenliAlan: "kaya_sutre_arkasi", helikopter: "yok", helikopterYonu: 12, uzakSesMesafesi: 800, uzakSesYonu: 45 },
-    catisma: { aktif: false, siddet: 0.5, yon: 0, dostAtes: true },
+    catisma: { aktif: false, siddet: 0.5, yon: 0, dostAtes: true, siperAl: true },
     safha: "taktik_saha",
     sonEfektler: [],
   };

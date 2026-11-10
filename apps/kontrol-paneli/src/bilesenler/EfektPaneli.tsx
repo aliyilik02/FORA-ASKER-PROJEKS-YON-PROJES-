@@ -146,6 +146,7 @@ export function EfektPaneli({ durum, calistir, makro }: { durum: SimulasyonDurum
         </div>
         <Kaydirici etiket="Şiddet" deger={c.siddet} min={0.05} max={1} bicim={(v) => (v < 0.3 ? `%${Math.round(v * 100)} · tek tük` : v < 0.7 ? `%${Math.round(v * 100)} · yoğun` : `%${Math.round(v * 100)} · ağır çatışma`)} onChange={(siddet) => catismaGuncelle({ siddet })} vurgu="izli" />
         <Anahtar acik={c.dostAtes} onChange={(dostAtes) => catismaGuncelle({ dostAtes })} etiket="Dost ateşi" aciklama="Sahnedeki silahlı figürler (asker, tank) düşmana döner ve ateş eder" />
+        <Anahtar acik={c.siperAl ?? true} onChange={(siperAl) => catismaGuncelle({ siperAl })} etiket="Siper al" aciklama="Sütre arkasındaki askerler çöker, ateş için doğrulup yeniden çöker; açıktakilerin yarısı diz çöker" />
         <p className="aciklama">Figür eklemek için Figürler bölümünden "Cephe kur" kullan: seçili yöne üç asker yerleşir.</p>
       </Bolum>
 

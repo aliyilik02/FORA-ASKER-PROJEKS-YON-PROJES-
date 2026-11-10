@@ -13,6 +13,7 @@ başsız Chrome'da (GTX 1650, 3840×720, kalite yuksek) **oynatılarak** test ed
 | `cekirdek.mjs` | Ortak çekirdek: `cek` (ekran/kırpım), `figurKutusu` (figüre yakın plan), `ornekle` (kemikleri kare kare kaydet), `cozumle` (sıçrama, ayak kayması, klibin doğal hızı, dönüş hızı, eylem zaman çizgisi), `fps` |
 | `meskun-figur.mjs` | Yerleşim, bekleme, çatışmaya geçiş, patlama irkilmesi, duruş geçişleri, vurulma, sıhhiyeci/safha, koşan/yürüyen |
 | `meskun-hava-efekt.mjs` | Yağmur, sağanak + şimşek, sis, kış + kar, yangın, havan, gece çatışması, fişek, Oda 2 helikopteri; her durumda fps |
+| `siper-ve-yarali.mjs` | Siper alma döngüsü (açık/kapalı, eğitmen komutu korunur) ve yaralının görüş hattı; koşullu, çıkış kodu verir |
 | `figur-yakin.mjs` | fov 50 yakın plan: klip dökümü, hareket kliplerinin doğal hızı, 40 sn bekleme, model başına silah–el, yandan ateş |
 
 Ölçüt: "sıçrama" = kök hareketi düşülmüş kemik hızı (kalça > 2,5, baş > 4, el/ayak > 9 m/sn tek karede).
@@ -43,12 +44,17 @@ Birim test: `figurHareketi.test.ts`.
 
 Öncelik sırasıyla:
 
-1. **Askerler çatışmada açıkta, dimdik ateş ediyor.** Beton bariyerler 1 m; beş asker de ayakta, aynı klipte. CUF ipucu
-   ("sipere gir") tersine işliyor. Öneri: çatışma başlayınca sütre yakınındaki askerlerin bir kısmı kendiliğinden diz
-   çöksün (panelde "siper al" anahtarı), ateş salvosunda doğrulup sonra çöksün.
-2. **Yaralı öndeki askerin arkasında kalabiliyor.** `azimut` isteği mevzi noktasına yapışıyor (−48° istenen −39°'ye,
-   −20° istenen −43°'ye ve 3,4 m'ye düştü: sıra bile değişti). Yaralı, eğitimin ana ipucu; "Asker vuruldu" seçiminde
-   izleyiciye görüş hattı açık olan figür tercih edilmeli ya da öndeki asker kenara çekilmeli.
+1. ~~Askerler çatışmada açıkta, dimdik ateş ediyor.~~ **Yapıldı (10 Kasım gece): siper alma.** Çatışma başlayınca her
+   asker 0,5–2,2 sn içinde karar verir: düşman yönünde 0,6–2,4 m içinde sabit engel (bariyer, kum torbası, HESCO, duvar)
+   varsa çöker, 3–7 sn sonra doğrulup 3,5–6 sn ateş eder, yeniden çöker (figür başına ayrı zamanlama); açıktaysa yarısı
+   diz çöküp öyle ateş eder. Siperde çökmüşken nişan almaz, ateş etmez. Çatışma bitince kendi çökenler 1,5–4 sn içinde
+   kalkar. Eğitmenin verdiği duruşa karışmaz. Panel: Efektler › Çatışma › **Siper al** (`catisma.siperAl`, varsayılan
+   açık; sözleşme sürümü 4). Kod: `FigurKatmani.siperiGuncelle`, `sutreArkasinda`.
+2. ~~Yaralı öndeki askerin arkasında kalabiliyor.~~ **Yapıldı: görüş hattı açılır.** İzleyici ile yerdeki yaralı arasında
+   duran asker yana yürür (`gorusHatlariniAc`, saniyede bir; görüş açıklığı < 1 m ise 1,4 m olacak kadar, boş olan yana;
+   sıhhiyeci ve nesneler hariç). Ölçüm: açıklık 0,48 → 1,63 m. Açık kalan: `azimut` isteği mevzi noktasına yapışıyor
+   (−20° istenen −43°'ye ve 3,4 m'ye düştü).
+   İkisinin testi: `node araclar/oyun-testi/siper-ve-yarali.mjs` (koşul sağlanmazsa çıkış kodu 1).
 3. **Oda 2 sütreleri meskûn mahalde alan nesneleriyle iç içe**: jeneratör römorku beton bariyerin, HESCO hattı nöbetçi
    kulübesinin içinden geçiyor. Oda 2 dizilimi alan planından haberdar değil (meskûn için ayrı dizilim ya da alan
    nesnelerini gizleme gerekir).

@@ -383,6 +383,14 @@ export interface Aktif {
   /** Sol kol zinciri (üst kol, ön kol, el) ve IK ağırlığı 0..1: destek eli tüfeğin el kundağına oturur. */
   solKol: { ust: THREE.Object3D; on: THREE.Object3D; el: THREE.Object3D } | null;
   solElAgirlik: number;
+  /**
+   * Siper davranışı (çatışma boyunca): "inKalk" sütre arkasında çöker, ateş için doğrulur, yeniden çöker; "diz" açıkta
+   * diz çöküp öyle ateş eder; "ayakta" olduğu gibi; "elle" eğitmen duruş verdi, karışılmaz. `sonraki` bir sonraki
+   * değişimin saati; `otoComeldi` duruşu bu davranış değiştirdiyse (çatışma bitince ayağa kalkar).
+   */
+  siper: { mod: "inKalk" | "diz" | "ayakta" | "elle"; sonraki: number; otoComeldi: boolean } | null;
+  /** Yaralının görüş hattını açmak için en son kenara çekildiği saat (art arda yer değiştirmesin). */
+  kenaraCekilme: number;
 }
 
 /** Klip adı tam ("CharacterArmature|Idle_Gun") ya da kısa ("Idle_Gun") eşleşir. */
@@ -398,6 +406,9 @@ export class FigurKatmani {
   private aktifler: Aktif[] = [];
   /** Çatışmada silahlı figürlerin döneceği düşman azimutu (null: izleyiciye dönük kal). */
   dusmanAzimutu: number | null = null;
+  /** Çatışmada siper alma davranışı (panel Efektler › Çatışma › Siper al). */
+  siperAl = true;
+  private gorusDenetimi = 0;
   /** TCCC safhası (durum.safha); "ates_altinda"da sıhhiyeci yaralıya gitmez, siperde bekler. */
   safha: Safha = "taktik_saha";
   /** Son patlamanın yeri ve sahne saati: 4 sn boyunca figürler oraya bakar (düşman/yaralı yoksa). */
@@ -1033,6 +1044,8 @@ export class FigurKatmani {
         return ust && on && el ? { ust, on, el } : null;
       })(),
       solElAgirlik: 0,
+      siper: null,
+      kenaraCekilme: -100,
     };
     // Tek seferlik klipler bitince sonraki aşama: vurulma → düşme → yerde
     karistirici?.addEventListener("finished", (olay) => {
@@ -1251,7 +1264,96 @@ export class FigurKatmani {
   /** Panel komutu: figürün duruşunu değiştir (vuruldu → yere düşer; diz çök; ayağa kalk). */
   pozAyarla(id: string, poz: FigurPozu) {
     const a = this.aktifler.find((x) => x.id === id);
-    if (a) this.pozUygula(a, poz, false);
+    if (!a) return;
+    // Eğitmen duruş verdi: çatışma bitene dek siper davranışı bu figüre karışmaz
+    if (this.dusmanAzimutu !== null && poz !== "yarali") a.siper = { mod: "elle", sonraki: Infinity, otoComeldi: false };
+    this.pozUygula(a, poz, false);
+  }
+
+  /** Figürden düşman yönüne 0,6–2,4 m içinde sabit engel (bariyer, kum torbası, HESCO, duvar) var mı? */
+  private sutreArkasinda(a: Aktif): boolean {
+    if (this.dusmanAzimutu === null) return false;
+    const yon = azimutYon(this.dusmanAzimutu);
+    for (let d = 0.6; d <= 2.4; d += 0.3) if (this.engel(a.nesne.position.clone().addScaledVector(yon, d))) return true;
+    return false;
+  }
+
+  /**
+   * Siper alma (CUF ipucu: temas → sipere gir). Çatışma başlayınca her figür 0,5–2,2 sn içinde kararını verir: sütre
+   * arkasındaysa çöker, 3–7 sn sonra doğrulup 3,5–6 sn ateş eder, yeniden çöker (figür başına ayrı zamanlama: hepsi aynı
+   * anda inip kalkmaz); açıktaysa yarısı diz çöküp öyle ateş eder. Çatışma bitince kendi çöktürdükleri 1,5–4 sn içinde
+   * kalkar. Eğitmenin verdiği duruşa ve klipsiz (prosedürel) modellere karışmaz.
+   */
+  private siperiGuncelle(a: Aktif) {
+    const tehdit = this.dusmanAzimutu !== null;
+    const uygun = a.silah && !a.agirSilah && a.hiz === 0 && !a.yaninda && a.poz !== "yarali" && a.asama === "normal" && Boolean(a.eylemPoz.comelmis);
+    if (!uygun) return;
+    if (!tehdit || !this.siperAl) {
+      if (!a.siper) return;
+      if (!a.siper.otoComeldi || a.siper.mod === "elle" || a.poz !== "comelmis") {
+        a.siper = null;
+        return;
+      }
+      // Kendi çöktürdüğü figür: gecikmeyle ayağa kalkar
+      if (a.siper.mod !== "ayakta") a.siper = { mod: "ayakta", sonraki: this.saat + 1.5 + rastgele() * 2.5, otoComeldi: true };
+      if (this.saat >= a.siper.sonraki && !a.gecis && !a.yuruyus) {
+        a.siper = null;
+        this.pozUygula(a, "ayakta", false);
+      }
+      return;
+    }
+    if (!a.siper) {
+      if (a.poz !== "ayakta") {
+        a.siper = { mod: "elle", sonraki: Infinity, otoComeldi: false };
+        return;
+      }
+      const mod = this.sutreArkasinda(a) ? "inKalk" : rastgele() < 0.5 ? "diz" : "ayakta";
+      a.siper = { mod, sonraki: this.saat + 0.5 + rastgele() * 1.7, otoComeldi: false };
+      return;
+    }
+    const s = a.siper;
+    if (s.mod === "elle" || s.mod === "ayakta" || this.saat < s.sonraki || a.gecis || a.yuruyus) return;
+    if (a.poz === "ayakta") {
+      s.otoComeldi = true;
+      s.sonraki = s.mod === "diz" ? Infinity : this.saat + 3 + rastgele() * 4;
+      this.pozUygula(a, "comelmis", false);
+    } else if (a.poz === "comelmis" && s.mod === "inKalk") {
+      s.sonraki = this.saat + 3.5 + rastgele() * 2.5;
+      this.pozUygula(a, "ayakta", false);
+    }
+  }
+
+  /**
+   * Yaralının görüş hattını aç: izleyici (sahne merkezi) ile yerdeki yaralı arasında duran asker yana çekilir. Yaralı
+   * eğitimin ana ipucudur; öndeki asker onu örtüyordu. Ölçü: askerin görüş hattından sapması yaralının uzaklığına
+   * izdüşürülür; 1 m'den azsa 1,4 m olacak kadar yana yürür (boş olan yana; ikisi de doluysa kalır). Saniyede bir bakılır.
+   */
+  private gorusHatlariniAc() {
+    for (const y of this.aktifler) {
+      if (y.poz !== "yarali") continue;
+      const uzaklik = Math.hypot(y.nesne.position.x, y.nesne.position.z);
+      if (uzaklik < 1.5) continue;
+      const yon = new THREE.Vector3(y.nesne.position.x / uzaklik, 0, y.nesne.position.z / uzaklik);
+      const yan = new THREE.Vector3(-yon.z, 0, yon.x);
+      for (const b of this.aktifler) {
+        if (b === y || b.poz === "yarali" || b.hiz !== 0 || b.yuruyus || b.gecis || b.yaninda || b.agirSilah || !b.karistirici || b.asama !== "normal") continue;
+        if (this.saat - b.kenaraCekilme < 6) continue;
+        const ileri = b.nesne.position.x * yon.x + b.nesne.position.z * yon.z;
+        if (ileri < 0.5 || ileri > uzaklik - 0.3) continue;
+        const sapma = b.nesne.position.x * yan.x + b.nesne.position.z * yan.z;
+        if ((Math.abs(sapma) * uzaklik) / ileri >= 1) continue;
+        const gereken = (1.4 * ileri) / uzaklik - Math.abs(sapma) + 0.15;
+        const taraf = sapma >= 0 ? 1 : -1;
+        for (const t of [taraf, -taraf]) {
+          const adim = t === taraf ? gereken : gereken + 2 * Math.abs(sapma);
+          const hedef = b.nesne.position.clone().addScaledVector(yan, t * adim);
+          if (this.doluMuHaric(hedef, 0.8, b.id)) continue;
+          b.kenaraCekilme = this.saat;
+          this.yuruyusBaslat(b, hedef, b.nesne.rotation.y);
+          break;
+        }
+      }
+    }
   }
 
   private pozUygula(a: Aktif, poz: FigurPozu, aninda: boolean) {
@@ -1612,7 +1714,9 @@ export class FigurKatmani {
   /** Çatışma durumuna göre bekleme ↔ ateş klipleri arasında yumuşak geçiş. */
   private pozuGuncelle(a: Aktif) {
     if (a.poz === "yarali" || a.asama !== "normal" || a.gecis || a.yuruyus) return;
-    const istenen = a.silah && a.hiz === 0 && this.dusmanAzimutu !== null;
+    const tehdit = a.silah && a.hiz === 0 && this.dusmanAzimutu !== null;
+    // Sütre arkasında çökmüş (siper, "inKalk"): başını eğmiş bekler, nişan almaz ve ateş etmez
+    const istenen = tehdit && !(a.poz === "comelmis" && a.siper?.mod === "inKalk");
     // Diz çökmüş (klipli): bekleme klibi tüfeği dik tutar; çatışmada nişan klibine geçer, bitince geri döner
     const comelmisBekle = a.eylemPoz.comelmis;
     if (a.poz === "comelmis" && a.aktifPoz && comelmisBekle && a.eylemComelmisNisan) {
@@ -1696,7 +1800,12 @@ export class FigurKatmani {
 
   guncelle(dt: number) {
     this.saat += dt;
+    if (this.saat >= this.gorusDenetimi) {
+      this.gorusDenetimi = this.saat + 1;
+      this.gorusHatlariniAc();
+    }
     for (const a of this.aktifler) {
+      this.siperiGuncelle(a);
       this.pozuGuncelle(a);
       for (const [kemik, temel] of a.kemikTemel) kemik.quaternion.copy(temel);
       a.kemikTemel.clear();
