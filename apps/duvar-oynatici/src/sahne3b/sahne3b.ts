@@ -88,9 +88,9 @@ function kaynakImzasi(k: PanoramaKaynagi): string {
 function dosyaAdi(url: string): string {
   return url.split("/").slice(-2).join("/");
 }
-/** Zemin kar örtüsü (arazi): kışın tam, sonbaharda serpinti. */
+/** Zemin kar örtüsü (arazi): kışın tam, yazın yok. */
 function karDegeri(mevsim: string): number {
-  return mevsim === "kis" ? 1 : mevsim === "sonbahar" ? 0.12 : 0;
+  return mevsim === "kis" ? 1 : 0;
 }
 
 /** Bir panoramanın hazırlık ve ekran kaynakları (nesil başına; ekrandan kalkınca ya da iptalde bırakılır). */

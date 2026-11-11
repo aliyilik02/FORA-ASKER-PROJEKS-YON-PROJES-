@@ -16,7 +16,7 @@ export interface DogrulamaSonucu<T> {
   hatalar: string[];
 }
 
-export const MEVSIMLER: readonly Mevsim[] = ["ilkbahar", "yaz", "sonbahar", "kis"];
+export const MEVSIMLER: readonly Mevsim[] = ["yaz", "kis"];
 export const YAGISLAR: readonly Yagis[] = ["yok", "hafif_yagmur", "siddetli_yagmur", "kar"];
 export const GUVENLI_ALANLAR: readonly GuvenliAlanTipi[] = ["operasyonel_bolge", "meskun_mahal_ici", "kaya_sutre_arkasi", "cukur"];
 export const HELIKOPTER_DURUMLARI: readonly HelikopterDurumu[] = ["yok", "yaklasiyor", "iniyor", "yerde", "kalkiyor"];

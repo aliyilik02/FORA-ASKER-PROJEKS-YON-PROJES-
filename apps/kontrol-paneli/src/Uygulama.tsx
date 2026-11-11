@@ -26,7 +26,7 @@ import { EgitmenEkrani } from "./bilesenler/egitmen/EgitmenEkrani";
 import { Cekmece, SenaryoSecimi, YerVeHava } from "./bilesenler/egitmen/Cekmeceler";
 import { SifirlaDugmesi } from "./bilesenler/SifirlaDugmesi";
 import { BOLGE_ETIKETLERI, MEVSIM_ETIKETLERI, YAGIS_ETIKETLERI } from "./tipler";
-import { saatBicimi } from "./bilesenler/ortak";
+import { zamanEtiketi } from "./bilesenler/ortak";
 
 /** Görünüm: "egitmen" tek sayfalık sade ekran (varsayılan); "teknisyen" kurulum, ince ayar, senaryo düzenleme, günlük. */
 type Gorunum = "egitmen" | "teknisyen";
@@ -251,7 +251,7 @@ function Govde() {
             <button type="button" className="e-ortam" onClick={() => setCekmece("ortam")}>
               <small>Yer ve hava</small>
               <strong>
-                {BOLGE_ETIKETLERI[durum.bolge]} · {MEVSIM_ETIKETLERI[durum.ortam.mevsim]} · {saatBicimi(durum.ortam.saat)}
+                {BOLGE_ETIKETLERI[durum.bolge]} · {MEVSIM_ETIKETLERI[durum.ortam.mevsim]} · {zamanEtiketi(durum.ortam.saat)}
                 {durum.ortam.yagis !== "yok" ? ` · ${YAGIS_ETIKETLERI[durum.ortam.yagis]}` : durum.ortam.sis > 0.3 ? " · Sisli" : ""}
               </strong>
             </button>

@@ -173,11 +173,20 @@ describe("senaryo motoru", () => {
 });
 
 describe("durum deposu", () => {
+  it("ortam yalnız yaz/kış ve gündüz/gece taşır: eski ara değerler iner", async () => {
+    const { depo } = kur();
+    await depo.ortamGuncelle({ mevsim: "sonbahar" as never, saat: 18.5 });
+    expect(depo.al().ortam).toMatchObject({ mevsim: "yaz", saat: 12 });
+    await depo.ortamGuncelle({ mevsim: "kis", saat: 5.75 });
+    expect(depo.al().ortam).toMatchObject({ mevsim: "kis", saat: 23 });
+    await depo.ortamGuncelle({ saat: 10.5 });
+    expect(depo.al().ortam.saat).toBe(12);
+  });
   it("değerleri sınırlar ve uzak sesleri oda 2 ayarlarıyla tamamlar", async () => {
     const { depo, unreal } = kur();
     await depo.ortamGuncelle({ saat: 30, bulut: 2, ruzgarYonu: -90 });
     const o = depo.al().ortam;
-    expect(o.saat).toBe(24);
+    expect(o.saat).toBe(23);
     expect(o.bulut).toBe(1);
     expect(o.ruzgarYonu).toBe(270);
 

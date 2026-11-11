@@ -411,6 +411,13 @@ ateş katmanı tüfeği havaya dikiyordu (katman yalnız ≤ 2 m/sn ve düşmana
 artık başında en az sıhhiyeci olan yaralı seçilir (`figurYardimcilari.sihhiyeBekleyenYarali`; hızlı dokunuş için bekleyen
 görev listesi), düğme altında "N yaralı sıhhiyeci bekliyor".
 
+**Sadeleştirme (11 Kasım, kullanıcı kararı):** mevsim yalnız **yaz/kış**, zaman yalnız **gündüz/gece**; saat kaydırıcısı ve ara
+dilimler (şafak, sabah, akşamüstü, alacakaranlık, ilkbahar, sonbahar) panelden ve simülasyondan çıktı. `OrtamAyarlari.saat`
+alanı duruyor ama yalnız 12 (gündüz) / 23 (gece) taşır (`tipler.ts` `GUN_ZAMANI_SAATI`, `gunZamani`, `ortamiIndir`); köprü eski
+senaryo, ön ayar ve kayıtlı durumdaki ara değerleri indirir (06–19 gündüz). Panelde Gündüz/Gece tıklanır (Eğitmen çekmecesi,
+Teknisyen › Ortam, senaryo editörü). Alacakaranlık panoramaları yalnız eksik gece birleşiminin yedeği. Yeni saat/mevsim
+seçeneği ekleme. Ayrıntı docs/duvar-oynatici.md "Yalnız yaz/kış ve gündüz/gece".
+
 **Amaç ve sonraki oturum (10 Kasım kapanış):** duvar, odada **gerçek mankenlerle** oynanan vakanın arkasına ortam ve tehdit
 hissi verir (eğitimin kendisi değil); öneri ve öncelikler buna göre. Kullanıcı sesleri ekleyecek, sonra birlikte test.
 Ardından sıra: (1) düşman silueti (pencere/çatı, namlu parıltısıyla), (2) tehdit baskısı (yakın mermi tozu, havan ıslığında

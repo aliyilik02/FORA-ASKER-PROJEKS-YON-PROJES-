@@ -1,4 +1,5 @@
 /** Ortak yapı taşları: bölüm kartı, gecikmeli kaydırıcı, seçenek grubu, anahtar, rozet, LED, onaylı düğme, ikonlar. */
+import { GUN_ZAMANI_ETIKETLERI, gunZamani } from "../tipler";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export function Bolum({ baslik, altBaslik, children, sag, ikon, sinif }: { baslik: string; altBaslik?: string; children: ReactNode; sag?: ReactNode; ikon?: ReactNode; sinif?: string }) {
@@ -174,10 +175,9 @@ export function OnayliDugme({ children, onay = "Emin misin?", onClick, sinif = "
   );
 }
 
-export function saatBicimi(saat: number): string {
-  const s = Math.floor(saat);
-  const d = Math.round((saat - s) * 60);
-  return `${String(s % 24).padStart(2, "0")}:${String(d).padStart(2, "0")}`;
+/** Sahnenin zamanı: "Gündüz" ya da "Gece" (saat yalnız bu ikisini taşır). */
+export function zamanEtiketi(saat: number): string {
+  return GUN_ZAMANI_ETIKETLERI[gunZamani(saat)];
 }
 
 export function sureBicimi(ms: number): string {

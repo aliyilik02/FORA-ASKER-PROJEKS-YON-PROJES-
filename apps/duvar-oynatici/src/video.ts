@@ -8,6 +8,12 @@ import type { Bolge, Mevsim } from "./tipler";
 import type { ZamanDilimi } from "./projeksiyon";
 import type { AlanPlani } from "./sahne3b/alan";
 
+/**
+ * İçeriğin çekildiği zaman. Sahne yalnız gündüz/gece ister; alacakaranlık çekimleri seçilemez, yalnız eksik gece
+ * (ya da gündüz) panoramasının yerine en yakın yedek olarak kullanılır.
+ */
+export type IcerikZamani = ZamanDilimi | "alacakaranlik";
+
 export interface DonguKaydi {
   bolge: Bolge;
   mevsim: Mevsim;
@@ -21,7 +27,7 @@ export interface PanoramaKaydiManifest {
   /** Belirtilmezse tüm mevsimler. */
   mevsim?: Mevsim | "yaz" | "kis";
   /** Belirtilmezse tüm zaman dilimleri. */
-  zaman?: ZamanDilimi;
+  zaman?: IcerikZamani;
   dosya: string;
   tip?: "resim" | "video";
   yawKaydirma?: number;
@@ -68,9 +74,8 @@ export interface PanoramaAdayi {
 }
 
 /** İstenen zaman dilimine yakınlık (0 aynı): gece için alacakaranlık, sonra gündüz; gündüz için alacakaranlık, sonra gece. */
-const ZAMAN_UZAKLIGI: Record<ZamanDilimi, Record<ZamanDilimi, number>> = {
+const ZAMAN_UZAKLIGI: Record<ZamanDilimi, Record<IcerikZamani, number>> = {
   gunduz: { gunduz: 0, alacakaranlik: 1, gece: 2 },
-  alacakaranlik: { alacakaranlik: 0, gunduz: 1, gece: 2 },
   gece: { gece: 0, alacakaranlik: 1, gunduz: 2 },
 };
 

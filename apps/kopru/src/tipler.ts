@@ -8,7 +8,31 @@ export type Oda = "oda1" | "oda2";
 /** Şartname §2: en az 5 bölge (Meskûn Mahal, Ormanlık, Dağlık, Üs Bölgesi + 1). */
 export type Bolge = "meskun_mahal" | "ormanlik" | "daglik" | "us_bolgesi" | "kirsal_acik_arazi";
 
-export type Mevsim = "ilkbahar" | "yaz" | "sonbahar" | "kis";
+/** Yalnız yaz ve kış (11 Kasım 2026 sadeleştirmesi; eski kayıtlardaki ilkbahar/sonbahar `mevsimeIndir` ile yaza düşer). */
+export type Mevsim = "yaz" | "kis";
+
+/** Günün zamanı: yalnız gündüz ve gece (ara saatler, alacakaranlık, şafak yok). */
+export type GunZamani = "gunduz" | "gece";
+
+/** Durum modelindeki `saat` yalnız bu iki değeri alır (gündüz 12:00, gece 23:00). */
+export const GUN_ZAMANI_SAATI: Record<GunZamani, number> = { gunduz: 12, gece: 23 };
+
+/** Saat → gündüz/gece (06:00–19:00 arası gündüz); eski kayıtlardaki ara saatler de buna iner. */
+export function gunZamani(saat: number): GunZamani {
+  return saat >= 6 && saat < 19 ? "gunduz" : "gece";
+}
+
+/** Herhangi bir saati modelin iki değerinden birine indirir. */
+export function saatiIndir(saat: number): number {
+  return GUN_ZAMANI_SAATI[gunZamani(saat)];
+}
+
+/** Eski mevsim değerlerini (ilkbahar, sonbahar) yaza indirir; tanınmayan değer undefined. */
+export function mevsimeIndir(m: unknown): Mevsim | undefined {
+  if (m === "kis") return "kis";
+  if (m === "yaz" || m === "ilkbahar" || m === "sonbahar") return "yaz";
+  return undefined;
+}
 
 export type Yagis = "yok" | "hafif_yagmur" | "siddetli_yagmur" | "kar";
 
@@ -20,7 +44,7 @@ export type HelikopterDurumu = "yok" | "yaklasiyor" | "iniyor" | "yerde" | "kalk
 /** Şartname §3: her bölgede yaz/kış, gece/gündüz ve hava durumu değiştirilebilir. */
 export interface OrtamAyarlari {
   mevsim: Mevsim;
-  /** 0–24 saat (ondalıklı, ör. 18.5 = 18:30). */
+  /** Yalnız 12 (gündüz) ya da 23 (gece): `GUN_ZAMANI_SAATI`; okurken `gunZamani(saat)`. */
   saat: number;
   /** 0–1 bulut örtüsü. */
   bulut: number;
@@ -457,10 +481,13 @@ export const BOLGE_ETIKETLERI: Record<Bolge, string> = {
 };
 
 export const MEVSIM_ETIKETLERI: Record<Mevsim, string> = {
-  ilkbahar: "İlkbahar",
   yaz: "Yaz",
-  sonbahar: "Sonbahar",
   kis: "Kış",
+};
+
+export const GUN_ZAMANI_ETIKETLERI: Record<GunZamani, string> = {
+  gunduz: "Gündüz",
+  gece: "Gece",
 };
 
 export const YAGIS_ETIKETLERI: Record<Yagis, string> = {
@@ -523,13 +550,19 @@ export function varsayilanDurum(): SimulasyonDurumu {
   };
 }
 
+/** Ortamı sade modele indirir: mevsim yaz/kış, saat gündüz (12) ya da gece (23). */
+export function ortamiIndir(o: OrtamAyarlari): OrtamAyarlari {
+  return { ...o, mevsim: mevsimeIndir(o.mevsim) ?? "yaz", saat: saatiIndir(Number.isFinite(o.saat) ? o.saat : 12) };
+}
+
 /** Eski kayıtlarda (ön ayar, disk) eksik alanları varsayılanla tamamlar. */
 export function durumuTamamla(d: Partial<SimulasyonDurumu>): SimulasyonDurumu {
   const v = varsayilanDurum();
   return {
     ...v,
     ...d,
-    ortam: { ...v.ortam, ...d.ortam },
+    // Eski kayıt (son durum, ön ayar) ara saat ya da ilkbahar/sonbahar taşıyabilir: yaz/kış ve gündüz/gece'ye iner.
+    ortam: ortamiIndir({ ...v.ortam, ...d.ortam }),
     isik: { ...v.isik, ...d.isik },
     izliMermi: { ...v.izliMermi, ...d.izliMermi },
     oda2: { ...v.oda2, ...d.oda2 },

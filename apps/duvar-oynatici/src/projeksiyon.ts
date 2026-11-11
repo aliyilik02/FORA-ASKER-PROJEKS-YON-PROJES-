@@ -18,6 +18,7 @@
  *    kamera; yatay sınır ±tan(fov/2), dikey sınır duvarın piksel en/boy oranından (±tan(fov/2)·H/w);
  *  - ölçülmüş oda (`odaDuvarlari`, `?oda=`): U oda (sol, ön, sağ duvar) ya da 3 projektörlü düz duvar.
  */
+import { type GunZamani, gunZamani } from "./tipler";
 
 /** Sahne koordinatında vektör [x, y, z]. */
 export type Vektor3 = [number, number, number];
@@ -528,13 +529,11 @@ export function alacakaranlik(saat: number): number {
   return Math.max(0, 1 - Math.abs(e) / 14);
 }
 
-export type ZamanDilimi = "gunduz" | "alacakaranlik" | "gece";
+/** İstenen zaman dilimi: yalnız gündüz ve gece (11 Kasım 2026). */
+export type ZamanDilimi = GunZamani;
 
 export function zamanDilimi(saat: number): ZamanDilimi {
-  const e = gunesKonumu(saat).yukseklik;
-  if (e > 12) return "gunduz";
-  if (e > -12) return "alacakaranlik";
-  return "gece";
+  return gunZamani(saat);
 }
 
 /** Nesne uzaklığı (0 = hemen önde, 1 = ufukta) → zemin y ve ölçek. */

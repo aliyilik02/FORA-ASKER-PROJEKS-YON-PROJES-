@@ -1,7 +1,7 @@
 import { api } from "../api";
 import { useArayuz } from "../arayuz";
-import { BOLGE_ETIKETLERI, MEVSIM_ETIKETLERI, YAGIS_ETIKETLERI, type SimulasyonDurumu } from "../tipler";
-import { Anahtar, Bolum, Ikon, Kaydirici, SecenekGrubu, saatBicimi } from "./ortak";
+import { BOLGE_ETIKETLERI, GUN_ZAMANI_ETIKETLERI, GUN_ZAMANI_SAATI, MEVSIM_ETIKETLERI, YAGIS_ETIKETLERI, gunZamani, type SimulasyonDurumu } from "../tipler";
+import { Anahtar, Bolum, Ikon, Kaydirici, SecenekGrubu } from "./ortak";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 
@@ -34,38 +34,19 @@ export function BolgePaneli({ durum, calistir }: { durum: SimulasyonDurumu; cali
   );
 }
 
-const ZAMANLAR: Array<[number, string]> = [
-  [5.5, "Şafak"],
-  [8, "Sabah"],
-  [12, "Öğle"],
-  [16, "İkindi"],
-  [19.5, "Gün batımı"],
-  [21, "Alacakaranlık"],
-  [23.5, "Gece"],
-];
-
 export function OrtamPaneli({ durum, calistir }: { durum: SimulasyonDurumu; calistir: Calistir }) {
   const o = durum.ortam;
   const guncelle = (k: Partial<typeof o>) => void calistir(() => api.ortam(k));
   return (
-    <Bolum baslik="Ortam" altBaslik="Mevsim, gün saati ve hava; oynatıcı uygun panoramayı kendisi seçer" ikon={<Ikon.gunes />}>
+    <Bolum baslik="Ortam" altBaslik="Yaz/kış, gündüz/gece ve hava; oynatıcı uygun panoramayı kendisi seçer" ikon={<Ikon.gunes />}>
       <div className="satir">
         <span className="etiket">Mevsim</span>
         <SecenekGrubu secenekler={MEVSIM_ETIKETLERI} deger={o.mevsim} onChange={(mevsim) => guncelle({ mevsim })} />
       </div>
 
-      <div className="gun-cizgisi" aria-hidden="true">
-        <div className="gun-cizgisi-ray">
-          <span className="gun-cizgisi-gunes" style={{ left: `${(o.saat / 24) * 100}%` }} />
-        </div>
-      </div>
-      <Kaydirici etiket="Saat" deger={o.saat} min={0} max={24} adim={0.25} bicim={saatBicimi} onChange={(saat) => guncelle({ saat })} vurgu="amber" />
-      <div className="hizli-zaman">
-        {ZAMANLAR.map(([s, ad]) => (
-          <button key={ad} type="button" className={`kucuk ${Math.abs(o.saat - s) < 0.3 ? "secili" : "ikincil"}`} onClick={() => guncelle({ saat: s })}>
-            {ad}
-          </button>
-        ))}
+      <div className="satir">
+        <span className="etiket">Zaman</span>
+        <SecenekGrubu secenekler={GUN_ZAMANI_ETIKETLERI} deger={gunZamani(o.saat)} onChange={(z) => guncelle({ saat: GUN_ZAMANI_SAATI[z] })} />
       </div>
 
       <div className="satir">

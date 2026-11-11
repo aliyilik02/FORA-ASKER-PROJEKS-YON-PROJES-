@@ -11,7 +11,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { Olay, OlayTuru, SimulasyonDurumu, Tatbikat, TcccOzeti } from "./tipler.js";
-import { BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, MEVSIM_ETIKETLERI, SAFHA_ETIKETLERI, YAGIS_ETIKETLERI } from "./tipler.js";
+import { GUN_ZAMANI_ETIKETLERI, gunZamani, BOLGE_ETIKETLERI, GUVENLI_ALAN_ETIKETLERI, HELIKOPTER_ETIKETLERI, MEVSIM_ETIKETLERI, SAFHA_ETIKETLERI, YAGIS_ETIKETLERI } from "./tipler.js";
 export type { Olay, OlayTuru, Tatbikat };
 
 type Dinleyici = (olay: Olay) => void;
@@ -27,7 +27,7 @@ export function durumFarki(eski: SimulasyonDurumu, yeni: SimulasyonDurumu): stri
   const o1 = eski.ortam;
   const o2 = yeni.ortam;
   if (o1.mevsim !== o2.mevsim) f.push(`mevsim: ${MEVSIM_ETIKETLERI[o2.mevsim] ?? o2.mevsim}`);
-  if (Math.abs(o1.saat - o2.saat) > 1e-6) f.push(`saat: ${saatBicimi(o2.saat)}`);
+  if (Math.abs(o1.saat - o2.saat) > 1e-6) f.push(`zaman: ${GUN_ZAMANI_ETIKETLERI[gunZamani(o2.saat)]}`);
   if (Math.abs(o1.bulut - o2.bulut) > 1e-6) f.push(`bulut: %${Math.round(o2.bulut * 100)}`);
   if (Math.abs(o1.sis - o2.sis) > 1e-6) f.push(`sis: %${Math.round(o2.sis * 100)}`);
   if (o1.yagis !== o2.yagis) f.push(`yağış: ${YAGIS_ETIKETLERI[o2.yagis] ?? o2.yagis}`);

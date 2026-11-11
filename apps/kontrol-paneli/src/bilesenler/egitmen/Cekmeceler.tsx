@@ -5,7 +5,7 @@
 import type { ReactNode } from "react";
 import { api } from "../../api";
 import { useArayuz } from "../../arayuz";
-import { BOLGE_ETIKETLERI, type Bolge, type OrtamAyarlari, type Senaryo, type SenaryoDurumu, type SimulasyonDurumu } from "../../tipler";
+import { BOLGE_ETIKETLERI, GUN_ZAMANI_SAATI, gunZamani, type Bolge, type OrtamAyarlari, type Senaryo, type SenaryoDurumu, type SimulasyonDurumu } from "../../tipler";
 import { sureBicimi } from "../ortak";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
@@ -37,10 +37,8 @@ const BOLGE_ACIKLAMA: Record<Bolge, string> = {
   us_bolgesi: "Üs, beton alan",
 };
 const ZAMANLAR: Array<{ ad: string; saat: number }> = [
-  { ad: "Sabah", saat: 8 },
-  { ad: "Öğle", saat: 12 },
-  { ad: "Akşamüstü", saat: 19.5 },
-  { ad: "Gece", saat: 23 },
+  { ad: "Gündüz", saat: GUN_ZAMANI_SAATI.gunduz },
+  { ad: "Gece", saat: GUN_ZAMANI_SAATI.gece },
 ];
 const HAVALAR: Array<{ ad: string; aciklama: string; ortam: Partial<OrtamAyarlari> }> = [
   { ad: "Açık", aciklama: "Güneşli, temiz hava", ortam: { yagis: "yok", bulut: 0.15, sis: 0, simsek: false, ruzgarSiddeti: 0.2 } },
@@ -81,10 +79,10 @@ export function YerVeHava({ durum, calistir }: { durum: SimulasyonDurumu; calist
         </button>
       </div>
 
-      <h3 className="cekmece-baslik">Günün saati</h3>
-      <div className="kart-izgara dort">
+      <h3 className="cekmece-baslik">Gündüz mü, gece mi?</h3>
+      <div className="kart-izgara iki">
         {ZAMANLAR.map((z) => (
-          <button key={z.ad} type="button" className={`secim-karti ${Math.abs(o.saat - z.saat) < 1.6 ? "secili" : ""}`} onClick={() => ortam({ saat: z.saat }, z.ad)}>
+          <button key={z.ad} type="button" className={`secim-karti ${gunZamani(o.saat) === gunZamani(z.saat) ? "secili" : ""}`} onClick={() => ortam({ saat: z.saat }, z.ad)}>
             <strong>{z.ad}</strong>
           </button>
         ))}
@@ -99,7 +97,7 @@ export function YerVeHava({ durum, calistir }: { durum: SimulasyonDurumu; calist
           </button>
         ))}
       </div>
-      <p className="cekmece-not">Yer ya da saat değişince duvar birkaç saniyede yeni görüntüye geçer. Daha ince ayar (rüzgâr, ışık rengi) Teknisyen sayfasında.</p>
+      <p className="cekmece-not">Yer ya da zaman değişince duvar birkaç saniyede yeni görüntüye geçer. Daha ince ayar (rüzgâr, ışık rengi) Teknisyen sayfasında.</p>
     </>
   );
 }

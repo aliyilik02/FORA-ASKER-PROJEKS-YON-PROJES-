@@ -40,10 +40,6 @@ describe("panoramaAdaylari: tam eşleşme", () => {
     expect(ilk.yedek).toBe(false);
     expect(panoramaAdaylari(MANIFEST, "kirsal_acik_arazi", "yaz", "gunduz").some((a) => a.kayit._ornek)).toBe(false);
   });
-  it("ilkbahar/sonbahar yaz grubuna düşer", () => {
-    expect(panoramaSec(MANIFEST, "daglik", "ilkbahar" as Mevsim, "gece")?.dosya).toBe("daglik/yaz_gece.jpg");
-    expect(panoramaSec(MANIFEST, "daglik", "sonbahar" as Mevsim, "gunduz")?.dosya).toBe("daglik/yaz_gunduz.jpg");
-  });
   it("en özel kayıt kazanır (mevsimi ve zamanı yazılı olan genel kaydın önünde)", () => {
     expect(panoramaSec(MANIFEST, "meskun_mahal", "kis", "gece")?.dosya).toBe("meskun/kis_gece.jpg");
     expect(panoramaSec(MANIFEST, "meskun_mahal", "yaz", "gunduz")?.dosya).toBe("meskun/genel.jpg");
@@ -58,8 +54,7 @@ describe("panoramaAdaylari: eksik birleşimde en yakın panorama", () => {
     expect(a.mevsimFarkli).toBe(true);
     expect(a.zamanFarkli).toBe(false);
   });
-  it("dağlık kış alacakaranlık → dağlık yaz alacakaranlık; kırsal kış gece → kırsal yaz gece", () => {
-    expect(panoramaSec(MANIFEST, "daglik", "kis", "alacakaranlik")?.dosya).toBe("daglik/yaz_alaca.jpg");
+  it("kırsal kış gece → kırsal yaz gece", () => {
     expect(panoramaSec(MANIFEST, "kirsal_acik_arazi", "kis", "gece")?.dosya).toBe("kirsal/yaz_gece.jpg");
   });
   it("aynı zaman hiç yoksa aynı mevsimde gecede önce alacakaranlık: üs yaz gece → üs yaz alacakaranlık (zaman farklı)", () => {
@@ -86,7 +81,7 @@ describe("gerçek manifest", () => {
   const m = gercekManifest as unknown as Manifest;
   const bolgeler: Bolge[] = ["kirsal_acik_arazi", "daglik", "meskun_mahal", "ormanlik", "us_bolgesi"];
   const mevsimler: Mevsim[] = ["yaz", "kis"];
-  const zamanlar: ZamanDilimi[] = ["gunduz", "alacakaranlik", "gece"];
+  const zamanlar: ZamanDilimi[] = ["gunduz", "gece"];
   it("her bölge × mevsim × zaman birleşiminde bir panorama var (eksikler en yakın yedeğe düşer)", () => {
     for (const b of bolgeler) for (const mv of mevsimler) for (const z of zamanlar) expect(panoramaSec(m, b, mv, z), `${b} ${mv} ${z}`).not.toBeNull();
   });
@@ -102,7 +97,6 @@ describe("gerçek manifest", () => {
       const a = yedek(b, mv, z);
       expect(a.kayit.zaman === "gece" || a.kayit.zaman === "alacakaranlik", `${b} ${mv} ${z} → ${a.kayit.dosya}`).toBe(true);
     }
-    expect(yedek("daglik", "kis", "alacakaranlik").kayit.zaman).toBe("alacakaranlik");
     expect(yedek("meskun_mahal", "kis", "gunduz").kayit.zaman).toBe("gunduz");
   });
 });

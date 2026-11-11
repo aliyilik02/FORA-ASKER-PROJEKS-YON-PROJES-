@@ -96,7 +96,7 @@ function kur(baslangicNesli?: number) {
 /** Eğitim sırasında karışmış sahne: oynayan senaryo, iki figür, çatışma + izli mermi, Oda 2'de yerde helikopter, efektler. */
 async function karisikSahne(k: ReturnType<typeof kur>) {
   await k.depo.bolgeSec("kirsal_acik_arazi");
-  await k.depo.ortamGuncelle({ saat: 7.5, sis: 0.25, bulut: 0.6 });
+  await k.depo.ortamGuncelle({ saat: 23, sis: 0.25, bulut: 0.6 });
   await k.depo.izliMermiGuncelle({ aktif: true, cikisNoktasi: 0, yon: -30, siklik: 6 });
   await k.depo.oda2Guncelle({ helikopter: "yerde", helikopterYonu: 300, guvenliAlan: "operasyonel_bolge", uzakSesMesafesi: 2000, uzakSesYonu: 100 });
   await k.depo.efektTetikle({ tur: "patlama", siddet: 1, yon: 10 });
@@ -117,7 +117,7 @@ describe("senaryo baştan oynatılınca temel sahne", () => {
     k.senaryo.sahneBagla(k.sahne);
     // Eğitmenin elle kurduğu karışık sahne (senaryo oynatmadan)
     await k.depo.bolgeSec("daglik");
-    await k.depo.ortamGuncelle({ saat: 7.5, sis: 0.25 });
+    await k.depo.ortamGuncelle({ saat: 23, sis: 0.25 });
     await k.depo.catismaGuncelle({ aktif: true, siddet: 2, yon: 20 });
     await k.depo.oda2Guncelle({ helikopter: "yerde" });
     k.figur.komut({ islem: "oynat", id: "fg_elle", klip: "asker_yarali_3b", azimut: 15, poz: "yarali" });
@@ -146,7 +146,7 @@ describe("senaryo baştan oynatılınca temel sahne", () => {
     expect(d.catisma.aktif).toBe(true);
     expect(d.catisma.yon).toBe(30);
     expect(d.oda2.helikopter).toBe("yok");
-    expect(d.ortam.saat).toBe(7.5);
+    expect(d.ortam.saat).toBe(23);
     expect(d.ortam.sis).toBe(0.25);
   });
 

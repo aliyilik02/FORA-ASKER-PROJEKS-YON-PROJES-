@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useArayuz } from "../arayuz";
 import { BOLGE_ETIKETLERI, MEVSIM_ETIKETLERI, type OnAyar } from "../tipler";
-import { Bolum, Ikon, OnayliDugme, saatBicimi } from "./ortak";
+import { Bolum, Ikon, OnayliDugme, zamanEtiketi } from "./ortak";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
 
@@ -44,7 +44,7 @@ export function OnAyarPaneli({ calistir }: { calistir: Calistir }) {
               <div className="liste-govde">
                 <strong>{o.ad}</strong>
                 <small>
-                  {BOLGE_ETIKETLERI[o.durum.bolge]} · {MEVSIM_ETIKETLERI[o.durum.ortam.mevsim]} · {saatBicimi(o.durum.ortam.saat)} · {new Date(o.olusturma).toLocaleDateString("tr-TR")}
+                  {BOLGE_ETIKETLERI[o.durum.bolge]} · {MEVSIM_ETIKETLERI[o.durum.ortam.mevsim]} · {zamanEtiketi(o.durum.ortam.saat)} · {new Date(o.olusturma).toLocaleDateString("tr-TR")}
                 </small>
               </div>
               <button type="button" className="kucuk birincil" onClick={() => void calistir(() => api.onAyarYukle(o.id)).then((r) => r && bildir({ tur: "basari", baslik: `"${o.ad}" yüklendi` }))}>

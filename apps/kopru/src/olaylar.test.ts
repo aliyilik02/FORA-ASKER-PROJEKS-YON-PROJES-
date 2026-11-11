@@ -11,11 +11,11 @@ describe("durumFarki", () => {
     const b = varsayilanDurum();
     expect(durumFarki(a, b)).toEqual([]);
     b.bolge = "ormanlik";
-    b.ortam.saat = 18.5;
+    b.ortam.saat = 23;
     b.catisma = { aktif: true, siddet: 0.6, yon: 45, dostAtes: true };
     b.safha = "ates_altinda";
     b.oda2.helikopter = "iniyor";
-    expect(durumFarki(a, b)).toEqual(["bölge: Ormanlık", "safha: Ateş altında bakım", "saat: 18:30", "helikopter: İniyor", "çatışma: %60 @ 45°"]);
+    expect(durumFarki(a, b)).toEqual(["bölge: Ormanlık", "safha: Ateş altında bakım", "zaman: Gece", "helikopter: İniyor", "çatışma: %60 @ 45°"]);
     const c = structuredClone(b);
     c.catisma.aktif = false;
     expect(durumFarki(b, c)).toEqual(["çatışma: durdu"]);

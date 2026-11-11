@@ -14,8 +14,7 @@ describe("rotorTozuTuru", () => {
     expect(rotorTozuTuru("daglik", "yaz")).toBe("toprak");
     expect(rotorTozuTuru("ormanlik", "yaz")).toBe("orman");
     expect(rotorTozuTuru("us_bolgesi", "yaz")).toBe("beton");
-    expect(rotorTozuTuru("meskun_mahal", "ilkbahar")).toBe("beton");
-    expect(rotorTozuTuru("daglik", "sonbahar")).toBe("toprak");
+    expect(rotorTozuTuru("meskun_mahal", "yaz")).toBe("beton");
   });
 
   it("bilinmeyen bölge kuru toprak sayılır", () => {

@@ -37,7 +37,7 @@ Oynat'a basınca sahne kendiliğinden temele döner (elle çağrılan figür/efe
 | 0:05–0:15 | Üç asker mevzide (biri diz çökmüş), tank, koşan asker | Askerler hazır mevzi noktalarına kendiliğinden yerleşir; eğitmen yer seçmez |
 | 0:22–0:38 | Düşman ateşi, izli mermiler, askerler karşılık verir; iki patlama, **kalıcı krater** | Çatışma yönü/şiddeti panelden; hasar bölge değişene kadar kalır |
 | 0:42–0:54 | **Asker vurulur**, yardım çağırır; sıhhiyeci başına diz çöker | Oda 1 eğitimi: ateş altında bakım |
-| 1:20 | Akşam 19:30 – yumuşak geçiş (alacakaranlık çekimi) | Sahne değişirken görüntü donmaz, eski sahne yenisi hazır olana dek akar |
+| 1:20 | Gece – yumuşak geçiş | Sahne değişirken görüntü donmaz, eski sahne yenisi hazır olana dek akar |
 | 1:37–2:10 | **Gece** (karartılmış gerçek gece çekimi, ay ışığı): yandan geçen izli mermiler, uzak ve yakın patlama | 3B ışık gece panoramasına eşlenir; izli mermi gece belirgin |
 | 2:16 | Kış sabahı | Aynı sahne, farklı mevsim |
 | 2:37–2:55 | **Ormanlık bölge**: asker ağaçların arasında, yürüyen asker, patlama | 5 bölge; bölge geçişi de kesintisiz |
@@ -58,7 +58,7 @@ Panel **Senaryo** sekmesi → "Gösterim – Tam Tur (5 dk)" → **Oynat**. Akı
 | 0:25 | Düşman ateşi başlar: izli mermiler, çarpma, askerler karşılık verir, tank top atar | Çatışma yönü/şiddeti panelden; dost ateşi |
 | 0:32 / 0:40 | Patlamalar: ateş topu, toprak, moloz, **kalıcı krater** ve tüten duman | Hasar kalıcıdır; bölge değişene kadar kalır |
 | 0:44 | **Asker vurulur**: yere düşer, nefes alır, kol kaldırıp yardım çağırır; 0:56 sıhhiyeci başına diz çöker | Oda 1 eğitimi: ateş altında bakım |
-| 1:40 → 2:25 | Akşam, yağmur, gece (ay ışığı), kış sabahı | Aynı sahne, farklı mevsim/saat/hava |
+| 1:40 → 2:25 | Yağmur, gece (ay ışığı), kış gündüzü | Aynı sahne, farklı mevsim/zaman/hava |
 | 3:30 | **Oda 2**: üs bölgesi güvenli alanı (HESCO, kum torbası), yaralı + sıhhiyeci | Oda 2 eğitimi: taktik güvenli alan |
 | 3:48 → 5:00 | Helikopter yaklaşır, iner (rotor tozu, ses), yerde bekler, kalkar; Oda 1'e dönüş | Tahliye |
 
@@ -69,7 +69,7 @@ Senaryo sırasında paneldeki her şey kullanılabilir (ör. ek patlama tetikle)
 1. **Sahne**: pusuladan yön seç; 1–5 tuşları hızlı efekt (1 patlama).
 2. **Figürler**: "Cephe kur" (3 asker + düşman yönü) → **Çatışma** kartında şiddeti artır.
 3. "Asker vuruldu!" → "Sıhhiyeci gönder".
-4. **Sahne** → Ortam: saati 22:00 yap (gece), yağış "Şiddetli yağmur".
+4. **Sahne** → Ortam: Zaman → Gece, yağış "Şiddetli yağmur".
 5. Üst çubuktan **Oda 2** → Güvenli alan "Operasyonel bölge" → Helikopter "Tam dizi".
 
 ## Sorulara hazır cevaplar

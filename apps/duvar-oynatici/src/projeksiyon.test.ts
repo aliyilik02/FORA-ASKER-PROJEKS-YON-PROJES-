@@ -76,7 +76,10 @@ describe("açılar ve zaman", () => {
     expect(gunIsigi(12)).toBe(1);
     expect(gunIsigi(0)).toBe(0);
     expect(zamanDilimi(12)).toBe("gunduz");
-    expect(zamanDilimi(19.5)).toBe("alacakaranlik");
+    // Yalnız gündüz/gece: eski ara saatler ikisinden birine iner.
+    expect(zamanDilimi(18.75)).toBe("gunduz");
+    expect(zamanDilimi(19.5)).toBe("gece");
+    expect(zamanDilimi(5.75)).toBe("gece");
     expect(zamanDilimi(23)).toBe("gece");
     expect(gunIsigi(18.6)).toBeGreaterThan(0.5); // akşamüstü hâlâ aydınlık
   });

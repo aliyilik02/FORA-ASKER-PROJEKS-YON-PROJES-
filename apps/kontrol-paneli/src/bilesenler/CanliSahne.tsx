@@ -8,7 +8,7 @@ import { api } from "../api";
 import { useArayuz } from "../arayuz";
 import { BOLGE_ETIKETLERI, EFEKT_ETIKETLERI, HELIKOPTER_ETIKETLERI, MEVSIM_ETIKETLERI, YAGIS_ETIKETLERI, type EfektTuru, type FigurKomutu, type SenaryoDurumu, type SimulasyonDurumu, SAFHA_ETIKETLERI, type Safha } from "../tipler";
 import { vurulabilirAskerler, yoneEnYakin } from "../figurYardimcilari";
-import { Ikon, Rozet, saatBicimi, sureBicimi, yonMetni } from "./ortak";
+import { Ikon, Rozet, zamanEtiketi, sureBicimi, yonMetni } from "./ortak";
 import { YonSecici } from "./YonSecici";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
@@ -88,7 +88,7 @@ export function CanliSahne({
         </div>
         <div className="canli-ozet">
           <Rozet tur="amber">
-            {MEVSIM_ETIKETLERI[o.mevsim]} · {saatBicimi(o.saat)}
+            {MEVSIM_ETIKETLERI[o.mevsim]} · {zamanEtiketi(o.saat)}
           </Rozet>
           {havaMetni && <Rozet>{havaMetni}</Rozet>}
           {durum.izliMermi.aktif && <Rozet tur="kotu">izli mermi {durum.izliMermi.siklik}/sn</Rozet>}

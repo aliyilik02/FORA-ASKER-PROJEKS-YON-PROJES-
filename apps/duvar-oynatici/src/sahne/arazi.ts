@@ -451,7 +451,6 @@ export function araziCiz(
   const ufuk = H * o.ufukOrani;
   const kis = ortam.mevsim === "kis";
   const isik = gok.isik;
-  const sonbahar = ortam.mevsim === "sonbahar";
 
   // Uzak tepeler (atmosfer pusuyla ufuk rengine yaklaşır)
   const uzak = karistir(kis ? o.kisUzakRenk : o.uzakRenk, gok.ufuk, 0.45 + ortam.sis * 0.4);
@@ -460,12 +459,8 @@ export function araziCiz(
   tepeCiz(ctx, y, ufuk, H, o.yakinTepeler, yakin, false, isik, ortam.mevsim);
 
   // Zemin
-  let zUst = kis ? o.kisZeminUst : o.zeminUst;
-  let zAlt = kis ? o.kisZeminAlt : o.zeminAlt;
-  if (sonbahar && !kis) {
-    zUst = karistir(zUst, [170, 120, 60], 0.35);
-    zAlt = karistir(zAlt, [140, 100, 50], 0.3);
-  }
+  const zUst = kis ? o.kisZeminUst : o.zeminUst;
+  const zAlt = kis ? o.kisZeminAlt : o.zeminAlt;
   const g = ctx.createLinearGradient(0, ufuk, 0, H);
   g.addColorStop(0, rgb(isikla(karistir(zUst, gok.ufuk, 0.35), isik)));
   g.addColorStop(0.25, rgb(isikla(zUst, isik)));
@@ -514,7 +509,7 @@ export function araziCiz(
   if (o.otluk) {
     const adet = Math.floor(y.genislik / 9);
     const r = mulberry32(y.indeks * 97 + 5);
-    const renk = rgb(isikla(kis ? [205, 210, 218] : sonbahar ? [150, 120, 60] : [70, 110, 48], isik));
+    const renk = rgb(isikla(kis ? [205, 210, 218] : [70, 110, 48], isik));
     ctx.strokeStyle = renk;
     ctx.lineWidth = Math.max(1, y.genislik * 0.0012);
     ctx.beginPath();

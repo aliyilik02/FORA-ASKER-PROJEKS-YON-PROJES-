@@ -296,6 +296,12 @@ makinesi, `panoramaCozucu.ts` + `panoramaIscisi.ts` işçi, `panoramaDokulari.ts
   kaynakları bırakılır); A→B→A'da geçiş olmaz; aynı dosyada yalnız yaw/plan/güneş/zaman değişirse yeniden yükleme yok.
 - **Yer tutucu** (gokyuzuCiz/araziCiz) yalnız hiç panorama gösterilmemişken ve gösterilecek panorama yokken; ilk açılışta
   manifest/ilk panorama beklenirken ekran siyah, ilk sahne siyahtan solar.
+- **Yalnız yaz/kış ve gündüz/gece (11 Kasım 2026, kullanıcı kararı):** `Mevsim = "yaz" | "kis"`; durumdaki `saat` yalnız 12
+  (gündüz) ya da 23 (gece) (`tipler.ts` `GUN_ZAMANI_SAATI`, `gunZamani`, `saatiIndir`, `mevsimeIndir`, `ortamiIndir`). Köprü
+  `ortamGuncelle` ve `durumuTamamla` eski senaryo/ön ayar/kayıtlı durumdaki ara saatleri (06–19 gündüz, kalanı gece) ve
+  ilkbahar/sonbaharı (yaz) indirir. Panelde saat kaydırıcısı yok: Eğitmen çekmecesi, Teknisyen › Ortam ve senaryo editöründe
+  Gündüz/Gece seçimi. Oynatıcı yalnız `gunduz`/`gece` panoraması ister; manifestteki `alacakaranlik` çekimleri seçilemez,
+  yalnız eksik gece (ya da gündüz) birleşiminde en yakın yedek olur (`video.ts` `IcerikZamani`).
 - **Eksik birleşim** (Kasım 2026'da 7: kırsal kış gece, dağlık kış alacakaranlık/gece, meskûn kış gündüz, ormanlık kış
   gece, üs yaz/kış gece): `video.ts panoramaAdaylari` bölgenin en yakın panoramasını seçer (önce aynı zaman başka mevsim,
   sonra aynı mevsimde en yakın zaman; gecede alacakaranlık, sonra gündüz). Zamanı farklı yedekte `zaman` boş kalır, sahne

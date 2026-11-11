@@ -6,8 +6,11 @@ import {
   FIGUR_POZ_ETIKETLERI,
   GUVENLI_ALAN_ETIKETLERI,
   HELIKOPTER_ETIKETLERI,
+  GUN_ZAMANI_ETIKETLERI,
+  GUN_ZAMANI_SAATI,
   MEVSIM_ETIKETLERI,
   YAGIS_ETIKETLERI,
+  gunZamani,
   type Bolge,
   type EfektTuru,
   type FigurPozu,
@@ -23,7 +26,7 @@ import {
   SAFHA_ETIKETLERI,
   type Safha,
 } from "../tipler";
-import { saatBicimi, sureBicimi, yonMetni } from "./ortak";
+import { zamanEtiketi, sureBicimi, yonMetni } from "./ortak";
 
 const TASLAK_ANAHTARI = "duvar.panel.senaryoTaslagi";
 interface Taslak {
@@ -175,7 +178,7 @@ function adimUretHam(y: YeniAdim, id: string): SenaryoAdimi {
       return {
         id,
         gecikmeMs,
-        aciklama: `Ortam: ${MEVSIM_ETIKETLERI[y.mevsim]}, ${saatBicimi(y.saat)}, bulut ${yuzde(y.bulut)}, sis ${yuzde(y.sis)}, ${YAGIS_ETIKETLERI[y.yagis].toLowerCase()}`,
+        aciklama: `Ortam: ${MEVSIM_ETIKETLERI[y.mevsim]}, ${zamanEtiketi(y.saat)}, bulut ${yuzde(y.bulut)}, sis ${yuzde(y.sis)}, ${YAGIS_ETIKETLERI[y.yagis].toLowerCase()}`,
         islem: { tip: "ortam", ortam: { mevsim: y.mevsim, saat: y.saat, bulut: y.bulut, sis: y.sis, yagis: y.yagis } },
       };
     case "izli_mermi":
@@ -381,7 +384,10 @@ export function SenaryoEditoru({
               <span>Mevsim</span>
               <Secim deger={yeni.mevsim} secenekler={MEVSIM_ETIKETLERI} onChange={(mevsim) => g({ mevsim })} />
             </label>
-            <Sayi etiket="Saat (0–24)" deger={yeni.saat} min={0} max={24} adim={0.25} onChange={(saat) => g({ saat })} />
+            <label className="alan">
+              <span>Zaman</span>
+              <Secim deger={gunZamani(yeni.saat)} secenekler={GUN_ZAMANI_ETIKETLERI} onChange={(z) => g({ saat: GUN_ZAMANI_SAATI[z] })} />
+            </label>
             <Sayi etiket="Bulut (0–1)" deger={yeni.bulut} min={0} max={1} adim={0.1} onChange={(bulut) => g({ bulut })} />
             <Sayi etiket="Sis (0–1)" deger={yeni.sis} min={0} max={1} adim={0.1} onChange={(sis) => g({ sis })} />
             <label className="alan">

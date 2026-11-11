@@ -4,8 +4,8 @@
  */
 import { api } from "../api";
 import { useArayuz } from "../arayuz";
-import type { BaglantiDurumu, Oda, SimulasyonDurumu } from "../tipler";
-import { Ikon, Led, saatBicimi } from "./ortak";
+import { gunZamani, type BaglantiDurumu, type Oda, type SimulasyonDurumu } from "../tipler";
+import { Ikon, Led, zamanEtiketi } from "./ortak";
 import { SifirlaDugmesi } from "./SifirlaDugmesi";
 
 type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
@@ -30,7 +30,7 @@ export function UstCubuk({
   const ue = baglanti?.unreal;
   const oynatici = baglanti?.oynatici;
   const saat = durum.ortam.saat;
-  const gece = saat < 5.5 || saat > 20;
+  const gece = gunZamani(saat) === "gece";
   return (
     <header className="ust-cubuk">
       <div className="marka">
@@ -67,9 +67,9 @@ export function UstCubuk({
       >
         {kilit ? "🔒 Kilitli" : "🔓 Kilit"}
       </button>
-      <div className="gorev-saati" title="Simülasyon saati (sahnedeki gün ışığı)">
+      <div className="gorev-saati" title="Sahnede gündüz mü gece mi">
         <span className="gorev-saati-ikon">{gece ? <Ikon.ay /> : <Ikon.gunes />}</span>
-        <span className="gorev-saati-deger">{saatBicimi(saat)}</span>
+        <span className="gorev-saati-deger">{zamanEtiketi(saat)}</span>
       </div>
 
       <div className="lambalar">

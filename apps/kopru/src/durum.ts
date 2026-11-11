@@ -18,6 +18,8 @@ import {
   SAFHA_ETIKETLERI,
   HAVAN_ISLIK_MS,
   durumuTamamla,
+  mevsimeIndir,
+  saatiIndir,
   varsayilanDurum,
 } from "./tipler.js";
 import { UE_SIFIRLAMA_ZAMAN_ASIMI_MS, type UnrealIstemci } from "./unreal.js";
@@ -97,8 +99,9 @@ export class DurumDeposu {
   async ortamGuncelle(kismi: Partial<OrtamAyarlari>) {
     const o = this.durum.ortam;
     this.durum.ortam = {
-      mevsim: secenekYaDa(kismi.mevsim, MEVSIMLER, o.mevsim),
-      saat: sinirla(sayiYaDa(kismi.saat, o.saat), 0, 24),
+      // Yalnız yaz/kış ve gündüz/gece: eski senaryo, ön ayar ve kayıtlı durumdaki ara değerler burada iner.
+      mevsim: secenekYaDa(mevsimeIndir(kismi.mevsim), MEVSIMLER, mevsimeIndir(o.mevsim) ?? "yaz"),
+      saat: saatiIndir(sinirla(sayiYaDa(kismi.saat, o.saat), 0, 24)),
       bulut: sinirla(sayiYaDa(kismi.bulut, o.bulut), 0, 1),
       sis: sinirla(sayiYaDa(kismi.sis, o.sis), 0, 1),
       yagis: secenekYaDa(kismi.yagis, YAGISLAR, o.yagis),
