@@ -418,6 +418,18 @@ senaryo, ön ayar ve kayıtlı durumdaki ara değerleri indirir (06–19 gündü
 Teknisyen › Ortam, senaryo editörü). Alacakaranlık panoramaları yalnız eksik gece birleşiminin yedeği. Yeni saat/mevsim
 seçeneği ekleme. Ayrıntı docs/duvar-oynatici.md "Yalnız yaz/kış ve gündüz/gece".
 
+**Film görünümü denemesi (11 Kasım; kullanıcı örnek Unreal paketindeki görüntüyü hedef gösterdi, "denemeyi yap" dedi):**
+`?gorsel=film` (yerel kayıtta kalır, varsayılan `sade`; eski görünüm bozulmaz). Karar noktası: bu deneme yetmezse görüntü Unreal'a
+taşınır (panel/köprü kalır). İçerik: son işlem katmanı `sahne3b/sonIslem.ts` (temas gölgesi, parlama, ACES film tonu); manifest
+`alanlar.<bolge>_film` eki (`alan.ts filmPlani`: `cikar`/`ekle`/`dokuntu`/`aracRotasi`/`yikilabilir`); Sketchfab CC-BY taramaları
+(`araclar/sketchfab.mjs ara|indir`, anahtar `SKETCHFAB_TOKEN` ortam değişkeni; `glb-onizle.py`, `sketchfab-hazirla.py`,
+`sketchfab-modelleri.json`; çıktı `icerik/modeller/alan/sf_*.glb` depo dışı, ham `sketchfab_indirilen/`, atıf `*.kaynak.json`);
+`dokuntu.ts` (saçılmış kırıntı), `sokak.ts` kir + su birikintisi; efektler `zirhli_arac` (`aracOlayi.ts`: Kirpi gelir, durur, ateş
+açar) ve `duvar_yik` (`yikilanDuvar.ts`), sözleşme 5, Eğitmen ekranında iki düğme. Test `araclar/oyun-testi/film-olaylar.mjs`,
+görüntü `goruntu-al.mjs --gorsel film --bulut 0.55`. GTX 1650 3840×720 başsız: sade 49, film 40 fps. Örnek paketin meskûn haritası
+referans: `araclar/_goruntu/ornek/meskun_2.png`. Açık: Kirpi tekerleği dönmez, duvar düz renkli tuğla, asker noktaları yeni
+düzende denetlenmedi, yalnız meskûn mahalde. Meshy üretimi için önce kullanıcıya sor.
+
 **Amaç ve sonraki oturum (10 Kasım kapanış):** duvar, odada **gerçek mankenlerle** oynanan vakanın arkasına ortam ve tehdit
 hissi verir (eğitimin kendisi değil); öneri ve öncelikler buna göre. Kullanıcı sesleri ekleyecek, sonra birlikte test.
 Ardından sıra: (1) düşman silueti (pencere/çatı, namlu parıltısıyla), (2) tehdit baskısı (yakın mermi tozu, havan ıslığında
