@@ -1,0 +1,519 @@
+/**
+ * SesMotoru düğüm grafiği testleri: Node'da Web Audio yok, bağlantıları kaydeden sahte bir AudioContext ile
+ * stereo yolun eskisi gibi kaldığı, çok kanalın doğru birleştirici girişlerine ve LFE'ye gittiği doğrulanır.
+ */
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SesMotoru } from "./ses";
+import type { OrtamAyarlari } from "./tipler";
+
+class SahteParam {
+  hedef: number | null = null;
+  /** Son cancelAndHoldAtTime / cancelScheduledValues zamanı (sıfırlamada rampalar kesilir). */
+  iptal: number | null = null;
+  constructor(public value: number) {}
+  setTargetAtTime(v: number) {
+    this.hedef = v;
+    return this;
+  }
+  cancelScheduledValues(t: number) {
+    this.iptal = t;
+    return this;
+  }
+  cancelAndHoldAtTime(t: number) {
+    this.iptal = t;
+    return this;
+  }
+  setValueAtTime(v: number) {
+    this.value = v;
+    return this;
+  }
+  linearRampToValueAtTime() {
+    return this;
+  }
+  exponentialRampToValueAtTime() {
+    return this;
+  }
+}
+
+interface Baglanti {
+  hedef: SahteDugum | SahteParam;
+  cikis: number;
+  giris: number;
+}
+
+class SahteDugum {
+  baglantilar: Baglanti[] = [];
+  channelCount = 2;
+  channelCountMode = "max";
+  channelInterpretation = "speakers";
+  gain = new SahteParam(1);
+  pan = new SahteParam(0);
+  frequency = new SahteParam(350);
+  Q = new SahteParam(1);
+  playbackRate = new SahteParam(1);
+  type = "";
+  buffer: unknown = null;
+  loop = false;
+  baslama: number | null = null;
+  durma: number | null = null;
+  onended: ((e: Event) => void) | null = null;
+  constructor(
+    public tur: string,
+    baglam: SahteBaglam,
+  ) {
+    baglam.dugumler.push(this);
+  }
+  connect(hedef: SahteDugum | SahteParam, cikis = 0, giris = 0) {
+    this.baglantilar.push({ hedef, cikis, giris });
+    return hedef;
+  }
+  start(t = 0) {
+    this.baslama = t;
+  }
+  stop(t = 0) {
+    this.durma = t;
+  }
+  /** Kaynak çalıp bitti (tarayıcı `ended` olayı). */
+  bitir() {
+    this.onended?.({ target: this } as unknown as Event);
+  }
+}
+
+class SahteTampon {
+  private veri: Float32Array[];
+  constructor(
+    public numberOfChannels: number,
+    public length: number,
+    public sampleRate: number,
+  ) {
+    this.veri = Array.from({ length: numberOfChannels }, () => new Float32Array(length));
+  }
+  getChannelData(i: number) {
+    return this.veri[i];
+  }
+  get duration() {
+    return this.length / this.sampleRate;
+  }
+}
+
+class SahteBaglam {
+  static maxKanal = 2;
+  static son: SahteBaglam;
+  dugumler: SahteDugum[] = [];
+  currentTime = 0;
+  sampleRate = 48000;
+  state = "suspended";
+  destination: SahteDugum & { maxChannelCount: number };
+  constructor() {
+    this.destination = Object.assign(new SahteDugum("cikis", this), { maxChannelCount: SahteBaglam.maxKanal, channelCountMode: "explicit" });
+    SahteBaglam.son = this;
+  }
+  async resume() {
+    this.state = "running";
+  }
+  createGain() {
+    return new SahteDugum("kazanc", this);
+  }
+  createStereoPanner() {
+    return new SahteDugum("pan", this);
+  }
+  createBiquadFilter() {
+    return new SahteDugum("filtre", this);
+  }
+  createChannelMerger(n: number) {
+    return Object.assign(new SahteDugum("birlestirici", this), { girisSayisi: n });
+  }
+  createChannelSplitter() {
+    return new SahteDugum("bolucu", this);
+  }
+  createBufferSource() {
+    return new SahteDugum("kaynak", this);
+  }
+  createOscillator() {
+    return new SahteDugum("osc", this);
+  }
+  createBuffer(kanal: number, uzunluk: number, oran: number) {
+    return new SahteTampon(kanal, uzunluk, oran);
+  }
+  async decodeAudioData() {
+    return new SahteTampon(2, 48000, 48000);
+  }
+}
+
+/** Önbelleğe (fetch'siz) kayıt koyar: `sure` sn, stereo. */
+function tamponKoy(ses: SesMotoru, ad: string, sure: number) {
+  (ses as unknown as { tamponlar: Map<string, unknown> }).tamponlar.set(ad, new SahteTampon(2, Math.round(48000 * sure), 48000));
+}
+
+const ORTAM = { yagis: "yok", ruzgarSiddeti: 0.5 } as OrtamAyarlari;
+
+/** Bir düğüme (ya da birleştiricinin bir girişine) doğrudan bağlananlar. */
+const gelenler = (b: SahteBaglam, hedef: SahteDugum, giris?: number) =>
+  b.dugumler.filter((d) => d.baglantilar.some((k) => k.hedef === hedef && (giris === undefined || k.giris === giris)));
+
+async function motor(maxKanal: number, ayar?: ConstructorParameters<typeof SesMotoru>[0]) {
+  SahteBaglam.maxKanal = maxKanal;
+  const ses = new SesMotoru(ayar);
+  expect(await ses.etkinlestir()).toBe(true);
+  const b = SahteBaglam.son;
+  const ana = gelenler(b, b.destination)[0];
+  return { ses, b, ana };
+}
+
+describe("SesMotoru (sahte Web Audio)", () => {
+  beforeEach(() => {
+    vi.stubGlobal("AudioContext", SahteBaglam);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("stereo cihaz: StereoPanner yolu (pan = sin azimut), çıkış 2 kanal kalır, birleştirici yok", async () => {
+    const { ses, b, ana } = await motor(2);
+    expect(ses.duzenBilgisi).toBe("stereo (2 kanal)");
+    expect(b.destination.channelCount).toBe(2);
+    expect(b.destination.channelInterpretation).toBe("speakers");
+    expect(ana.gain.value).toBe(0.8);
+    await ses.patlama(30, 1);
+    const panlar = b.dugumler.filter((d) => d.tur === "pan");
+    expect(panlar).toHaveLength(2); // gürültü + alçak frekans vuruşu
+    for (const p of panlar) {
+      expect(p.pan.value).toBeCloseTo(0.5);
+      expect(p.baglantilar[0].hedef).toBe(ana);
+    }
+    expect(b.dugumler.some((d) => d.tur === "birlestirici")).toBe(false);
+    // Ortam (rüzgâr) doğrudan ana kazanca, eskisi gibi (tek kanallı gürültü)
+    ses.ortamAyarla(ORTAM);
+    const ruzgarKaynagi = b.dugumler.filter((d) => d.tur === "kaynak").find((d) => d.loop);
+    expect((ruzgarKaynagi!.buffer as SahteTampon).numberOfChannels).toBe(1);
+    const filtre = ruzgarKaynagi!.baglantilar[0].hedef as SahteDugum;
+    const kazanc = filtre.baglantilar[0].hedef as SahteDugum;
+    expect(kazanc.baglantilar[0].hedef).toBe(ana);
+  });
+
+  it("5.1 cihaz (otomatik): çıkış 6 kanal ayrık; ses iki komşu hoparlöre, patlama basları LFE'ye", async () => {
+    const { ses, b, ana } = await motor(6);
+    expect(ses.duzenBilgisi).toBe("5.1 (6 kanal)");
+    expect(b.destination.channelCount).toBe(6);
+    expect(b.destination.channelInterpretation).toBe("discrete");
+    expect(ana.channelCount).toBe(6);
+    const birlestirici = b.dugumler.find((d) => d.tur === "birlestirici")!;
+    expect(birlestirici.baglantilar[0].hedef).toBe(ana);
+
+    const once = b.dugumler.length;
+    ses.tekAtis(15); // orta (0°) ile ön sağ (30°) arası
+    const yeni = b.dugumler.slice(once);
+    const girisler = yeni.flatMap((d) => d.baglantilar.filter((k) => k.hedef === birlestirici).map((k) => ({ giris: k.giris, kazanc: d.gain.value })));
+    expect(girisler.map((g) => g.giris).sort()).toEqual([1, 2]);
+    for (const g of girisler) expect(g.kazanc).toBeCloseTo(Math.SQRT1_2);
+    expect(b.dugumler.some((d) => d.tur === "pan")).toBe(false);
+
+    const once2 = b.dugumler.length;
+    await ses.patlama(0, 1);
+    const lfeGelen = gelenler(b, birlestirici, 3).filter((d) => b.dugumler.indexOf(d) >= once2);
+    expect(lfeGelen).toHaveLength(2); // gürültü + vuruş, ikisinin de bas kopyası
+    for (const k of lfeGelen) {
+      expect(k.gain.value).toBe(0.5);
+      const filtre = gelenler(b, k)[0];
+      expect(filtre.type).toBe("lowpass");
+      expect(filtre.frequency.value).toBe(120);
+    }
+    // Ortam: rüzgâr dağınık girişe (2 kanal, hoparlör kuralıyla açılır)
+    ses.ortamAyarla(ORTAM);
+    const ruzgarKaynagi = b.dugumler.filter((d) => d.tur === "kaynak").find((d) => d.loop)!;
+    const kazanc = (ruzgarKaynagi.baglantilar[0].hedef as SahteDugum).baglantilar[0].hedef as SahteDugum;
+    const giris = kazanc.baglantilar[0].hedef as SahteDugum;
+    expect(giris.channelCount).toBe(2);
+    expect(giris.channelCountMode).toBe("explicit");
+    // Rüzgâr gürültüsü iki bağımsız kanal: sol ve sağ hoparlör grupları ilintisiz (ortada hayalet kaynak yok)
+    const tampon = ruzgarKaynagi.buffer as SahteTampon;
+    expect(tampon.numberOfChannels).toBe(2);
+    const [sol, sag] = [tampon.getChannelData(0), tampon.getChannelData(1)];
+    let ilinti = 0;
+    let guc = 0;
+    for (let i = 0; i < sol.length; i++) {
+      ilinti += sol[i] * sag[i];
+      guc += sol[i] * sol[i];
+    }
+    expect(guc).toBeGreaterThan(0);
+    expect(Math.abs(ilinti / guc)).toBeLessThan(0.02);
+  });
+
+  it("uzak ses çok kanalda yayılır, LFE'siz düzende bas kopyası yok", async () => {
+    const { ses, b } = await motor(4);
+    expect(ses.duzenBilgisi).toBe("dortlu (4 kanal)");
+    const birlestirici = b.dugumler.find((d) => d.tur === "birlestirici")!;
+    const once = b.dugumler.length;
+    await ses.patlama(0, 1, true, 800);
+    const girisler = new Set(b.dugumler.slice(once).flatMap((d) => d.baglantilar.filter((k) => k.hedef === birlestirici).map((k) => k.giris)));
+    expect([...girisler].sort()).toEqual([0, 1, 2, 3]); // %35 yayılım: arka hoparlörler de alır
+    expect(b.dugumler.slice(once).some((d) => d.tur === "filtre" && d.frequency.value === 120)).toBe(false);
+  });
+
+  it("istenen düzen cihaza sığmazsa otomatik + uyarı; adres uyarıları dinleyiciye iletilir", async () => {
+    const uyarilar: string[] = [];
+    const { ses } = await motor(2, { duzen: "7.1", hoparlor: null, uyarilar: ["?ses=9 tanınmadı"] });
+    ses.uyariDinle((m) => uyarilar.push(m));
+    expect(ses.duzenBilgisi).toBe("stereo (2 kanal) · istenen 7.1, cihaz 2 kanal");
+    expect(uyarilar[0]).toBe("?ses=9 tanınmadı");
+    expect(uyarilar[1]).toContain("7.1 istendi");
+  });
+
+  it("?hoparlor= kanal sayısı düzeni belirler, özel açılar kullanılır", async () => {
+    const { ses, b } = await motor(8, { duzen: null, hoparlor: [-60, 60, -120, 120], uyarilar: [] });
+    expect(ses.duzenBilgisi).toBe("dortlu (4 kanal, özel açılar)");
+    expect(b.destination.channelCount).toBe(4);
+    const birlestirici = b.dugumler.find((d) => d.tur === "birlestirici")!;
+    const once = b.dugumler.length;
+    ses.vizilti(120); // tam arka sağ hoparlör
+    const girisler = b.dugumler.slice(once).flatMap((d) => d.baglantilar.filter((k) => k.hedef === birlestirici).map((k) => k.giris));
+    expect(girisler).toEqual([3]);
+    const uyarilar: string[] = [];
+    ses.uyariDinle((m) => uyarilar.push(m));
+    expect(uyarilar).toEqual([]);
+  });
+
+  it("?hoparlor= kullanılamazsa her durumda uyarı: stereo cihaz, ?ses=stereo, kanal sayısı tutmuyor", async () => {
+    const dortlu = [-45, 45, -135, 135];
+    const durumlar: Array<[number, ConstructorParameters<typeof SesMotoru>[0], string[]]> = [
+      [2, { duzen: null, hoparlor: dortlu, uyarilar: [] }, ["?hoparlor= 4 kanallı (dortlu) ama ses cihazı 2 kanal veriyor", "?hoparlor= kullanılmadı: stereo"]],
+      [8, { duzen: "stereo", hoparlor: dortlu, uyarilar: [] }, ["?hoparlor= kullanılmadı: stereo"]],
+      [6, { duzen: "5.1", hoparlor: dortlu, uyarilar: [] }, ["?hoparlor= kullanılmadı: 4 kanal veriyor, 5.1 düzeni 6 kanal"]],
+    ];
+    for (const [maxKanal, ayar, beklenen] of durumlar) {
+      const { ses } = await motor(maxKanal, ayar);
+      const uyarilar: string[] = [];
+      ses.uyariDinle((m) => uyarilar.push(m));
+      expect(uyarilar, `${maxKanal} kanal, ${ayar?.duzen}`).toHaveLength(beklenen.length);
+      beklenen.forEach((b, i) => expect(uyarilar[i]).toContain(b));
+      expect(ses.duzenBilgisi).not.toContain("özel açılar");
+    }
+  });
+
+  it("5.1 / 7.1'de ?hoparlor= 4. kanala (LFE) açı verilirse uyarı; lfe 4. sıradaysa uyarı yok", async () => {
+    const acili = await motor(6, { duzen: null, hoparlor: [-30, 30, 0, -90, -150, 150], uyarilar: [] });
+    const uyarilar: string[] = [];
+    acili.ses.uyariDinle((m) => uyarilar.push(m));
+    expect(acili.ses.duzenBilgisi).toBe("5.1 (6 kanal, özel açılar)");
+    expect(uyarilar).toHaveLength(1);
+    expect(uyarilar[0]).toContain("4. kanalda açı var (-90°)");
+    const dogru = await motor(8, { duzen: null, hoparlor: [-30, 30, 0, null, -150, 150, -90, 90], uyarilar: [] });
+    const uyarilar2: string[] = [];
+    dogru.ses.uyariDinle((m) => uyarilar2.push(m));
+    expect(dogru.ses.duzenBilgisi).toBe("7.1 (8 kanal, özel açılar)");
+    expect(uyarilar2).toEqual([]);
+  });
+
+  it("helikopter (stereo): konumsuz eski seviye ve yönsüz; konumla zayıflama, yön, boğuklaşma, Doppler", async () => {
+    const { ses, b } = await motor(2);
+    ses.helikopter("yaklasiyor", 0);
+    const osc = b.dugumler.find((d) => d.tur === "osc" && d.baglantilar.some((k) => (k.hedef as SahteDugum).tur === "kazanc"))!;
+    const vuru = osc.baglantilar[0].hedef as SahteDugum;
+    const sentezFiltre = vuru.baglantilar[0].hedef as SahteDugum;
+    const kazanc = sentezFiltre.baglantilar[0].hedef as SahteDugum;
+    const mesafeFiltresi = kazanc.baglantilar[0].hedef as SahteDugum;
+    const pan = mesafeFiltresi.baglantilar[0].hedef as SahteDugum;
+    // Konumsuz: tek kanallı sentez StereoPanner'da 3 dB kısılır → √2 telafi, pan 0, filtre Nyquist (tam geçirgen)
+    expect(kazanc.gain.hedef).toBeCloseTo(0.15 * Math.SQRT2);
+    expect(pan.pan.hedef).toBe(0);
+    expect(mesafeFiltresi.frequency.value).toBe(24000);
+    expect(mesafeFiltresi.frequency.hedef).toBe(24000);
+
+    b.currentTime = 0.1;
+    ses.helikopter("yaklasiyor", 0, { azimut: 90, mesafe: 400, irtifa: 0 });
+    expect(kazanc.gain.hedef).toBeCloseTo(0.15 * Math.SQRT2 * 0.12); // 40/400 = 0,1 → taban 0,12
+    expect(pan.pan.hedef).toBeCloseTo(1);
+    expect(mesafeFiltresi.frequency.hedef!).toBeLessThan(2000);
+    expect(mesafeFiltresi.frequency.hedef!).toBeGreaterThanOrEqual(700);
+
+    // 20 Hz sınırı: aynı anda ikinci çağrı konumu güncellemez
+    ses.helikopter("yaklasiyor", 0, { azimut: -90, mesafe: 400, irtifa: 0 });
+    expect(pan.pan.hedef).toBeCloseTo(1);
+
+    b.currentTime = 0.2;
+    ses.helikopter("yaklasiyor", 0, { azimut: 90, mesafe: 396, irtifa: 0 }); // 40 m/sn yaklaşıyor
+    expect(osc.frequency.hedef!).toBeGreaterThan(55);
+    expect(osc.frequency.hedef!).toBeLessThanOrEqual(55 * 1.05);
+
+    b.currentTime = 0.3;
+    ses.helikopter("yerde", 0.45, { azimut: 12, mesafe: 30, irtifa: 0 });
+    expect(mesafeFiltresi.frequency.hedef).toBe(24000); // yakında açık
+    expect(kazanc.gain.hedef).toBeCloseTo((0.15 + 0.45 * 0.45 + 0.1) * Math.SQRT2);
+  });
+
+  it("helikopter (çok kanal): kalıcı zincir, konumsuz dağınık, konumla yönlü; yeni düğüm üretmez", async () => {
+    const { ses, b } = await motor(6);
+    ses.helikopter("yaklasiyor", 0);
+    const dugumSayisi = b.dugumler.length;
+    const mesafeFiltresi = b.dugumler.find((d) => d.tur === "filtre" && d.frequency.value === 24000)!;
+    const kanallar = mesafeFiltresi.baglantilar.map((k) => k.hedef as SahteDugum);
+    expect(kanallar).toHaveLength(5); // LFE hariç
+    for (const k of kanallar) expect(k.gain.hedef).toBeCloseTo(1 / Math.sqrt(5));
+    b.currentTime = 0.1;
+    ses.helikopter("iniyor", 0.3, { azimut: 30, mesafe: 38, irtifa: 5 });
+    expect(b.dugumler.length).toBe(dugumSayisi);
+    expect(kanallar[1].gain.hedef).toBeCloseTo(1); // ön sağ (30°)
+    expect(kanallar[0].gain.hedef).toBeCloseTo(0);
+  });
+
+  it("hoparlör testi (5.1): kanal sırasıyla gürültü, LFE'de bant, ekran etiketi; ikinci çağrı durdurur", async () => {
+    const { ses, b } = await motor(6);
+    const birlestirici = b.dugumler.find((d) => d.tur === "birlestirici")!;
+    const once = b.dugumler.length;
+    expect(ses.hoparlorTesti()).toBe(true);
+    expect(ses.testDurumu).toEqual({ ad: "Ön sol", kanal: 1, toplam: 6 });
+    const kaynaklar = b.dugumler.slice(once).filter((d) => d.tur === "kaynak");
+    expect(kaynaklar).toHaveLength(6);
+    expect(kaynaklar[1].baslama! - kaynaklar[0].baslama!).toBeCloseTo(1.05);
+    for (let i = 0; i < 6; i++) expect(gelenler(b, birlestirici, i).some((d) => b.dugumler.indexOf(d) >= once)).toBe(true);
+    // LFE: yüksek geçiren 30 Hz → alçak geçiren 120 Hz
+    const lfeYuksek = kaynaklar[3].baglantilar[0].hedef as SahteDugum;
+    expect(lfeYuksek.type).toBe("highpass");
+    expect((lfeYuksek.baglantilar[0].hedef as SahteDugum).frequency.value).toBe(120);
+    b.currentTime = 0.15 + 3 * 1.05 + 0.1;
+    expect(ses.testDurumu).toEqual({ ad: "Bas (LFE)", kanal: 4, toplam: 6 });
+    expect(ses.hoparlorTesti()).toBe(false); // durdur
+    expect(ses.testDurumu).toBeNull();
+    expect(kaynaklar.every((k) => k.durma !== null)).toBe(true);
+  });
+
+  it("hoparlör testi (stereo): sol tam sola, sağ tam sağa; test bitince etiket yok", async () => {
+    const { ses, b } = await motor(2);
+    ses.hoparlorTesti();
+    const panlar = b.dugumler.filter((d) => d.tur === "pan");
+    expect(panlar.map((p) => p.pan.value)).toEqual([-1, 1]);
+    expect(ses.testDurumu?.ad).toBe("Sol");
+    b.currentTime = 0.15 + 2 * 1.05 + 0.01;
+    expect(ses.testDurumu).toBeNull();
+  });
+});
+
+describe("SesMotoru sahne sıfırlaması (efektleriSustur)", () => {
+  const konusmaIptal = vi.fn();
+  beforeEach(() => {
+    vi.stubGlobal("AudioContext", SahteBaglam);
+    vi.stubGlobal("speechSynthesis", { cancel: konusmaIptal });
+    konusmaIptal.mockClear();
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  /** Bir düğümün doğrudan çıkış verdiği kazanç düğümü. */
+  const sonraki = (d: SahteDugum) => d.baglantilar[0].hedef as SahteDugum;
+
+  it("çalan tek seferlik sesler ~0,1 sn'de söner ve durur; biten kaynak listeden çıkar; ortam döngüsü sürer; konuşma silinir", async () => {
+    const { ses, b } = await motor(2);
+    ses.ortamAyarla(ORTAM);
+    const ortamKaynagi = b.dugumler.find((d) => d.tur === "kaynak" && d.loop)!;
+    const once = b.dugumler.length;
+    await ses.patlama(0, 1); // gürültü kaynağı + bas osilatörü
+    ses.tekAtis(20); // kayıt yok: kısa gürültü vuruşu
+    ses.vizilti(-30);
+    const kaynaklar = b.dugumler.slice(once).filter((d) => d.tur === "kaynak" || d.tur === "osc");
+    expect(kaynaklar).toHaveLength(4);
+    expect(ses.anlikSayisi).toBe(4);
+    // Vızıltı çalıp bitti: listeden çıkar, sıfırlama ona dokunmaz
+    const vizilti = kaynaklar[3];
+    const vizBitis = vizilti.durma;
+    vizilti.bitir();
+    expect(ses.anlikSayisi).toBe(3);
+
+    b.currentTime = 1.5;
+    ses.efektleriSustur();
+    expect(ses.anlikSayisi).toBe(0);
+    for (const k of kaynaklar.slice(0, 3)) {
+      expect(k.durma).toBeCloseTo(1.7);
+      // Kaynağın kendi kazancı (zarf): rampası tutulup kesilir, 0'a söner (τ 30 ms)
+      const kazanc = sonraki(k.tur === "kaynak" ? sonraki(k) : k);
+      expect(kazanc.tur).toBe("kazanc");
+      expect(kazanc.gain.iptal).toBe(1.5);
+      expect(kazanc.gain.hedef).toBe(0);
+    }
+    expect(vizilti.durma).toBe(vizBitis);
+    expect(ortamKaynagi.durma).toBeNull();
+    expect(konusmaIptal).toHaveBeenCalledTimes(1);
+  });
+
+  it("zamanlanmış atış dizisinin kalan atışları ve tampon bekleyen çalmalar sıfırlamadan sonra çalmaz (yedek konuşma da yok)", async () => {
+    vi.useFakeTimers();
+    const { ses, b } = await motor(2);
+    const kaynakSayisi = () => b.dugumler.filter((d) => d.tur === "kaynak").length;
+    // Kayıtsız seri atış: 8–14 gürültü vuruşu 70–110 ms arayla
+    void ses.gurultu(0, 1);
+    await vi.advanceTimersByTimeAsync(0);
+    const ilk = kaynakSayisi();
+    expect(ilk).toBeGreaterThanOrEqual(1);
+    ses.efektleriSustur();
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(kaynakSayisi()).toBe(ilk);
+    // Kayıtlı seri atış (manifest tek atışları önbellekte)
+    ses.manifestAyarla({ gurultu: ["silah_tek_1.ogg"], bagirma: ["bagirma_1.ogg"] });
+    tamponKoy(ses, "silah_tek_1.ogg", 1.1);
+    void ses.gurultu(0, 1);
+    await vi.advanceTimersByTimeAsync(0);
+    const ikinci = kaynakSayisi();
+    expect(ikinci).toBe(ilk + 1);
+    ses.efektleriSustur();
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(kaynakSayisi()).toBe(ikinci);
+    // Bağırma kaydı yükleniyor (fetch bekliyor) → sıfırlama → kayıt gelince çalmaz, konuşma sentezine de düşmez
+    let yanitVer: ((v: unknown) => void) | null = null;
+    vi.stubGlobal("fetch", () => new Promise((r) => (yanitVer = r)));
+    const bagirma = ses.bagirma(10);
+    await vi.advanceTimersByTimeAsync(0);
+    ses.efektleriSustur();
+    yanitVer!({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) });
+    await bagirma;
+    expect(kaynakSayisi()).toBe(ikinci);
+  });
+
+  it("rotor: çalan ve 'yok' ile sönmekte olan rotor sıfırlamada hızla söner (1 sn'de durur); rotor=false çalanı bırakır", async () => {
+    const { ses, b } = await motor(2);
+    ses.helikopter("yaklasiyor", 0);
+    const osc = b.dugumler.find((d) => d.tur === "osc" && d.type === "sawtooth")!;
+    const lfo = b.dugumler.find((d) => d.tur === "osc" && d.type === "square")!;
+    const kazanc = sonraki(sonraki(sonraki(osc)));
+    b.currentTime = 2;
+    ses.helikopter("yok", 0);
+    expect(osc.durma).toBe(8); // τ 2 sn, 6 sn sonra durur
+    expect(kazanc.gain.hedef).toBe(0);
+    // Her karede "yok": yeniden zamanlanmaz
+    b.currentTime = 2.1;
+    ses.helikopter("yok", 0);
+    expect(osc.durma).toBe(8);
+    b.currentTime = 2.5;
+    ses.efektleriSustur();
+    expect(osc.durma).toBe(3.5);
+    expect(lfo.durma).toBe(3.5);
+    expect(kazanc.gain.iptal).toBe(2.5);
+
+    const ikinci = await motor(2);
+    ikinci.ses.helikopter("yerde", 0.5);
+    const osc2 = ikinci.b.dugumler.find((d) => d.tur === "osc" && d.type === "sawtooth")!;
+    ikinci.ses.efektleriSustur(false);
+    expect(osc2.durma).toBeNull();
+    ikinci.ses.efektleriSustur(true);
+    expect(osc2.durma).toBe(1);
+  });
+
+  it("tekAtis: uzun (çok atışlı) kayıt en çok 1,8 sn çalar ve sonunda söner; kısa tek atış kesilmez", async () => {
+    const { ses, b } = await motor(2);
+    ses.manifestAyarla({ gurultu: ["silah_uzun.ogg"] });
+    tamponKoy(ses, "silah_uzun.ogg", 15);
+    b.currentTime = 10;
+    const once = b.dugumler.length;
+    ses.tekAtis(0);
+    const kaynak = b.dugumler.slice(once).find((d) => d.tur === "kaynak")!;
+    const hiz = kaynak.playbackRate.value;
+    expect(hiz).toBeGreaterThanOrEqual(0.9);
+    expect(kaynak.durma).toBeCloseTo(10 + 1.8 / hiz + 0.02, 6);
+    expect(kaynak.durma! - 10).toBeLessThanOrEqual(1.8 / 0.9 + 0.03);
+    ses.manifestAyarla({ gurultu: ["silah_tek_2.ogg"] });
+    tamponKoy(ses, "silah_tek_2.ogg", 1.2);
+    const once2 = b.dugumler.length;
+    ses.tekAtis(0);
+    expect(b.dugumler.slice(once2).find((d) => d.tur === "kaynak")!.durma).toBeNull();
+  });
+});

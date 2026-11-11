@@ -1,0 +1,237 @@
+import { describe, expect, it } from "vitest";
+import { ArtNetGonderici } from "./artnet.js";
+import { DurumDeposu } from "./durum.js";
+import { Gunluk } from "./gunluk.js";
+import { SenaryoMotoru, type Zamanlayici } from "./senaryo.js";
+import type { Senaryo } from "./tipler.js";
+import { UnrealIstemci } from "./unreal.js";
+
+/** Elle ilerletilen sahte saat. */
+function sahteZamanlayici() {
+  let simdi = 0;
+  const geriCagrilar: Array<() => void> = [];
+  const z: Zamanlayici = {
+    simdi: () => simdi,
+    aralik: (cb) => {
+      geriCagrilar.push(cb);
+      return () => {
+        const i = geriCagrilar.indexOf(cb);
+        if (i >= 0) geriCagrilar.splice(i, 1);
+      };
+    },
+  };
+  const ilerle = async (ms: number) => {
+    simdi += ms;
+    for (const cb of [...geriCagrilar]) cb();
+    await new Promise((r) => setTimeout(r, 0));
+  };
+  return { z, ilerle };
+}
+
+function kur() {
+  const gunluk = new Gunluk();
+  const unreal = new UnrealIstemci({ adres: "http://localhost:30010", preset: "Test", mod: "simulasyon" }, gunluk);
+  const artnet = new ArtNetGonderici({ hedef: "127.0.0.1", port: 6454, evren: 0, aktif: false });
+  const depo = new DurumDeposu(unreal, artnet, gunluk);
+  const { z, ilerle } = sahteZamanlayici();
+  const motor = new SenaryoMotoru(depo, gunluk, z, 50);
+  return { depo, unreal, motor, ilerle };
+}
+
+const senaryo: Senaryo = {
+  id: "t1",
+  ad: "Test",
+  oda: "oda1",
+  adimlar: [
+    { id: "s2", gecikmeMs: 2000, aciklama: "patlama", islem: { tip: "efekt", efekt: { tur: "patlama", siddet: 1 } } },
+    { id: "s1", gecikmeMs: 0, aciklama: "bölge", islem: { tip: "bolge", bolge: "ormanlik" } },
+    { id: "s3", gecikmeMs: 4000, aciklama: "mermi", islem: { tip: "izli_mermi", izliMermi: { aktif: true, siklik: 5 } } },
+  ],
+};
+
+describe("senaryo motoru", () => {
+  it("adımları gecikmeye göre sırayla tetikler ve tamamlanınca durur", async () => {
+    const { depo, unreal, motor, ilerle } = kur();
+    motor.yukle(senaryo);
+    expect(motor.al().toplamMs).toBe(4000);
+
+    await motor.oynat();
+    expect(motor.al().durum).toBe("oynuyor");
+    expect(motor.al().tamamlanan).toEqual(["s1"]);
+    expect(depo.al().bolge).toBe("ormanlik");
+
+    await ilerle(1000);
+    expect(motor.al().tamamlanan).toEqual(["s1"]);
+
+    await ilerle(1500);
+    expect(motor.al().tamamlanan).toEqual(["s1", "s2"]);
+    expect(depo.al().sonEfektler[0]?.tur).toBe("patlama");
+
+    await ilerle(2000);
+    expect(motor.al().tamamlanan).toEqual(["s1", "s2", "s3"]);
+    expect(motor.al().durum).toBe("duruyor");
+    expect(depo.al().izliMermi.aktif).toBe(true);
+
+    const cagrilar = unreal.gonderilen.map((g) => g.yol.split("/").pop());
+    expect(cagrilar).toContain("BolgeYukle");
+    expect(cagrilar).toContain("EfektTetikle");
+    expect(cagrilar).toContain("IzliMermiAyarla");
+  });
+
+  it("duraklatıp devam edince konumu korur", async () => {
+    const { motor, ilerle } = kur();
+    motor.yukle(senaryo);
+    await motor.oynat();
+    await ilerle(1000);
+    motor.duraklat();
+    expect(motor.al().durum).toBe("duraklatildi");
+    expect(motor.al().konumMs).toBe(1000);
+
+    await ilerle(5000); // duraklatılmışken geçen süre sayılmaz
+    expect(motor.al().tamamlanan).toEqual(["s1"]);
+
+    await motor.oynat();
+    await ilerle(1100);
+    expect(motor.al().tamamlanan).toEqual(["s1", "s2"]);
+  });
+
+  it("durdurulunca sıfırlanır", async () => {
+    const { motor, ilerle } = kur();
+    motor.yukle(senaryo);
+    await motor.oynat();
+    await ilerle(2500);
+    motor.dur();
+    expect(motor.al().durum).toBe("duruyor");
+    expect(motor.al().konumMs).toBe(0);
+  });
+
+  it("adım beklenirken dur(): aynı tikteki sonraki adım uygulanmaz, 'tamamlandı' yazılmaz, sonra da adım çıkmaz", async () => {
+    const gunluk = new Gunluk();
+    // Gerçek UE kipinde efekt çağrısı HTTP'dir: adım await'te bekler (sahte: elle çözülür)
+    let bekleyenCoz: (() => void) | null = null;
+    const unreal = new UnrealIstemci({ adres: "http://x", preset: "T", mod: "simulasyon" }, gunluk);
+    (unreal as unknown as { efektTetikle: () => Promise<void> }).efektTetikle = () => new Promise<void>((r) => (bekleyenCoz = r));
+    const artnet = new ArtNetGonderici({ hedef: "127.0.0.1", port: 6454, evren: 0, aktif: false });
+    const depo = new DurumDeposu(unreal, artnet, gunluk);
+    const { z, ilerle } = sahteZamanlayici();
+    const motor = new SenaryoMotoru(depo, gunluk, z, 50);
+    const sahnedekiler = new Set<string>();
+    motor.figurBagla({
+      komut: (k) => {
+        if (k.islem === "oynat") sahnedekiler.add(k.id ?? "?");
+        if (k.islem === "temizle") sahnedekiler.clear();
+        return { ...k, id: k.id ?? "?" };
+      },
+    });
+    motor.yukle({
+      id: "s",
+      ad: "Yarış",
+      oda: "oda1",
+      adimlar: [
+        { id: "a1", gecikmeMs: 0, aciklama: "patlama", islem: { tip: "efekt", efekt: { tur: "patlama", siddet: 1 } } },
+        { id: "a2", gecikmeMs: 0, aciklama: "asker", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_a2", klip: "asker_swat" } } },
+        { id: "a3", gecikmeMs: 500, aciklama: "asker 2", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_a3", klip: "asker_swat" } } },
+      ],
+    });
+    const satirlar: string[] = [];
+    gunluk.dinle((k) => satirlar.push(k.mesaj));
+    const oynatma = motor.oynat();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(bekleyenCoz).not.toBeNull();
+    // Eğitmen sıfırlar: senaryo dur + figür temizle, sonra bekleyen UE çağrısı döner
+    motor.dur();
+    sahnedekiler.clear();
+    bekleyenCoz!();
+    await oynatma;
+    await ilerle(1000);
+    expect([...sahnedekiler]).toEqual([]);
+    expect(motor.al().durum).toBe("duruyor");
+    expect(motor.al().konumMs).toBe(0);
+    expect(satirlar.some((s) => s.startsWith("Senaryo tamamlandı"))).toBe(false);
+    // Yeniden oynatınca baştan
+    bekleyenCoz = null;
+    (unreal as unknown as { efektTetikle: () => Promise<void> }).efektTetikle = () => Promise.resolve();
+    await motor.oynat();
+    expect(motor.al().tamamlanan).toEqual(["a1", "a2"]);
+    expect([...sahnedekiler]).toEqual(["senaryo_a2"]);
+  });
+
+  it("oda değişimini beklerken dur(): oynatma başlamaz, zamanlayıcı kurulmaz", async () => {
+    const { depo, motor, ilerle } = kur();
+    let odaCoz: (() => void) | null = null;
+    (depo as unknown as { odaSec: () => Promise<void> }).odaSec = () => new Promise<void>((r) => (odaCoz = r));
+    motor.yukle(senaryo);
+    const oynatma = motor.oynat();
+    motor.dur();
+    odaCoz!();
+    await oynatma;
+    await ilerle(5000);
+    expect(motor.al().durum).toBe("duruyor");
+    expect(motor.al().tamamlanan).toEqual([]);
+    expect(motor.yukluAd).toBe("Test");
+  });
+});
+
+describe("durum deposu", () => {
+  it("ortam yalnız yaz/kış ve gündüz/gece taşır: eski ara değerler iner", async () => {
+    const { depo } = kur();
+    await depo.ortamGuncelle({ mevsim: "sonbahar" as never, saat: 18.5 });
+    expect(depo.al().ortam).toMatchObject({ mevsim: "yaz", saat: 12 });
+    await depo.ortamGuncelle({ mevsim: "kis", saat: 5.75 });
+    expect(depo.al().ortam).toMatchObject({ mevsim: "kis", saat: 23 });
+    await depo.ortamGuncelle({ saat: 10.5 });
+    expect(depo.al().ortam.saat).toBe(12);
+  });
+  it("değerleri sınırlar ve uzak sesleri oda 2 ayarlarıyla tamamlar", async () => {
+    const { depo, unreal } = kur();
+    await depo.ortamGuncelle({ saat: 30, bulut: 2, ruzgarYonu: -90 });
+    const o = depo.al().ortam;
+    expect(o.saat).toBe(23);
+    expect(o.bulut).toBe(1);
+    expect(o.ruzgarYonu).toBe(270);
+
+    await depo.oda2Guncelle({ uzakSesMesafesi: 1200, uzakSesYonu: 135 });
+    await depo.efektTetikle({ tur: "uzak_patlama" });
+    const son = unreal.gonderilen.at(-1)!.govde as { Parameters: Record<string, unknown> };
+    expect(son.Parameters.Mesafe).toBe(1200);
+    expect(son.Parameters.Yon).toBe(135);
+  });
+
+  it("figür adımını bağlı figür yöneticisine iletir; bağlı değilse uyarıp geçer", async () => {
+    const { motor, ilerle } = kur();
+    const komutlar: string[] = [];
+    const s: Senaryo = {
+      id: "f1",
+      ad: "Figür",
+      oda: "oda1",
+      adimlar: [
+        { id: "a1", gecikmeMs: 0, aciklama: "asker", islem: { tip: "figur", figur: { islem: "oynat", id: "senaryo_a1", klip: "asker_bekleyen", azimut: 15 } } },
+        { id: "a2", gecikmeMs: 1000, aciklama: "vuruldu", islem: { tip: "figur", figur: { islem: "poz", id: "senaryo_a1", poz: "yarali" } } },
+      ],
+    };
+    // Bağlı değil: hata vermez
+    motor.yukle(s);
+    await motor.oynat();
+    await ilerle(1500);
+    expect(motor.al().tamamlanan).toEqual(["a1", "a2"]);
+
+    motor.figurBagla({
+      komut: (k) => {
+        komutlar.push(`${k.islem}:${k.id ?? ""}:${k.poz ?? k.klip ?? ""}`);
+        return { ...k, id: k.id ?? "x" };
+      },
+    });
+    motor.yukle(s);
+    await motor.oynat();
+    await ilerle(1500);
+    expect(komutlar).toEqual(["oynat:senaryo_a1:asker_bekleyen", "poz:senaryo_a1:yarali"]);
+  });
+
+  it("oda adımı depoda odayı değiştirir", async () => {
+    const { depo, motor, ilerle } = kur();
+    motor.yukle({ id: "o1", ad: "Oda", oda: "oda1", adimlar: [{ id: "x1", gecikmeMs: 0, aciklama: "oda2", islem: { tip: "oda", oda: "oda2" } }] });
+    await motor.oynat();
+    await ilerle(100);
+    expect(depo.al().oda).toBe("oda2");
+  });
+});

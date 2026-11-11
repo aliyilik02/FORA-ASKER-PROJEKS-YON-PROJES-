@@ -1,0 +1,578 @@
+/**
+ * Simülasyon durum modeli – kontrol paneli ve köprü sunucusu bu tipleri paylaşır.
+ * (apps/kontrol-paneli/src/tipler.ts dosyası bunun birebir kopyasıdır.)
+ */
+
+export type Oda = "oda1" | "oda2";
+
+/** Şartname §2: en az 5 bölge (Meskûn Mahal, Ormanlık, Dağlık, Üs Bölgesi + 1). */
+export type Bolge = "meskun_mahal" | "ormanlik" | "daglik" | "us_bolgesi" | "kirsal_acik_arazi";
+
+/** Yalnız yaz ve kış (11 Kasım 2026 sadeleştirmesi; eski kayıtlardaki ilkbahar/sonbahar `mevsimeIndir` ile yaza düşer). */
+export type Mevsim = "yaz" | "kis";
+
+/** Günün zamanı: yalnız gündüz ve gece (ara saatler, alacakaranlık, şafak yok). */
+export type GunZamani = "gunduz" | "gece";
+
+/** Durum modelindeki `saat` yalnız bu iki değeri alır (gündüz 12:00, gece 23:00). */
+export const GUN_ZAMANI_SAATI: Record<GunZamani, number> = { gunduz: 12, gece: 23 };
+
+/** Saat → gündüz/gece (06:00–19:00 arası gündüz); eski kayıtlardaki ara saatler de buna iner. */
+export function gunZamani(saat: number): GunZamani {
+  return saat >= 6 && saat < 19 ? "gunduz" : "gece";
+}
+
+/** Herhangi bir saati modelin iki değerinden birine indirir. */
+export function saatiIndir(saat: number): number {
+  return GUN_ZAMANI_SAATI[gunZamani(saat)];
+}
+
+/** Eski mevsim değerlerini (ilkbahar, sonbahar) yaza indirir; tanınmayan değer undefined. */
+export function mevsimeIndir(m: unknown): Mevsim | undefined {
+  if (m === "kis") return "kis";
+  if (m === "yaz" || m === "ilkbahar" || m === "sonbahar") return "yaz";
+  return undefined;
+}
+
+export type Yagis = "yok" | "hafif_yagmur" | "siddetli_yagmur" | "kar";
+
+/** Şartname §7 / idare metni 1.2: Oda 2 güvenli alan görüntüleri. */
+export type GuvenliAlanTipi = "operasyonel_bolge" | "meskun_mahal_ici" | "kaya_sutre_arkasi" | "cukur";
+
+export type HelikopterDurumu = "yok" | "yaklasiyor" | "iniyor" | "yerde" | "kalkiyor";
+
+/** Şartname §3: her bölgede yaz/kış, gece/gündüz ve hava durumu değiştirilebilir. */
+export interface OrtamAyarlari {
+  mevsim: Mevsim;
+  /** Yalnız 12 (gündüz) ya da 23 (gece): `GUN_ZAMANI_SAATI`; okurken `gunZamani(saat)`. */
+  saat: number;
+  /** 0–1 bulut örtüsü. */
+  bulut: number;
+  /** 0–1 sis yoğunluğu. */
+  sis: number;
+  yagis: Yagis;
+  /** 0–1 rüzgâr şiddeti. */
+  ruzgarSiddeti: number;
+  /** 0–360 derece rüzgâr yönü. */
+  ruzgarYonu: number;
+  /**
+   * Şimşekli fırtına: köprü 12–40 sn'de bir (şiddetli yağmurda sık) rastgele yönden şimşek çaktırır (gök örtüsünde
+   * çakma, DMX flaşı, mesafeye göre gecikmeli gök gürültüsü). Eski kayıtlarda yok: kapalı sayılır.
+   */
+  simsek?: boolean;
+}
+
+/** Şartname §6: ortam ışığı DMX512/Art-Net üzerinden. */
+export interface OrtamIsigi {
+  /** 0–1 parlaklık. */
+  parlaklik: number;
+  /** 0–255 RGB. */
+  r: number;
+  g: number;
+  b: number;
+  /** Senaryoya göre otomatik güncellensin mi (gün ışığı/patlama ile). */
+  senaryoyaBagli: boolean;
+}
+
+/** Şartname §5: izli mermi çıkış noktası, yönü ve sıklığı. */
+export interface IzliMermiAyarlari {
+  aktif: boolean;
+  /** Hangi duvar/çıkış noktası (0: sol duvar, 1: orta duvar, 2: sağ duvar). */
+  cikisNoktasi: 0 | 1 | 2;
+  /** Yatay açı, -90..90 derece. */
+  yon: number;
+  /** Saniyede mermi sayısı. */
+  siklik: number;
+}
+
+export interface Oda2Ayarlari {
+  guvenliAlan: GuvenliAlanTipi;
+  helikopter: HelikopterDurumu;
+  /** İniş yönü, 0–360 derece (0 = karşı); oynatıcı panoramanın en yakın iniş noktasına yapıştırır. */
+  helikopterYonu: number;
+  /** Uzaktan gelen seslerin mesafesi (metre). Ses bu mesafeye göre zayıflatılır. */
+  uzakSesMesafesi: number;
+  /** Uzaktan gelen seslerin yönü, 0–360 derece. */
+  uzakSesYonu: number;
+}
+
+/**
+ * Çatışma: sürekli düşman ateşi (uzaktan gelen izli mermiler, yere çarpma, sekme) ve dost
+ * figürlerin karşılık vermesi (namlu alevi, atış sesi). Şiddet 0–1; yön düşman cephesi (0–360).
+ */
+export interface CatismaAyarlari {
+  aktif: boolean;
+  siddet: number;
+  yon: number;
+  /** Sahnedeki silahlı figürler ateşle karşılık versin mi. */
+  dostAtes: boolean;
+  /**
+   * Siper alma (10 Kasım): çatışmada sütre arkasındaki askerler diz çöker, ateş etmek için doğrulup yeniden çöker;
+   * açıktakilerin yarısı diz çöküp öyle ateş eder. Kapalıysa herkes ayakta ateş eder. Eski kayıtlarda yok: açık sayılır.
+   */
+  siperAl?: boolean;
+}
+
+export type EfektTuru =
+  | "patlama"
+  | "gurultu"
+  | "bagirma"
+  | "cagirma"
+  | "toz_duman"
+  | "uzak_patlama"
+  | "uzak_mermi_sesi"
+  | "simsek"
+  | "yangin"
+  | "yangin_sondur"
+  /** Havan mermisi: önce düşen ıslık (telegraf, HAVAN_ISLIK_MS), sonra seçilen yönde patlama. Kursiyere siper alma penceresi. */
+  | "havan"
+  /** Aydınlatma fişeği: seçilen yönde paraşütlü yıldız fişeği, ~28 sn yanar, salınan sert ışık (gece eğitimi). */
+  | "fisek"
+  /** Zırhlı araç caddeden gelir, durur, tavan silahıyla ateş açar (oynatıcı sahne3b/aracOlayi.ts). */
+  | "zirhli_arac"
+  /** Seçilen yöne en yakın yıkılabilir duvarda patlama: duvar tuğla tuğla çöker (sahne3b/yikilanDuvar.ts). */
+  | "duvar_yik";
+
+/** Havan ıslığının süresi (ms): ıslık başlar, bu süre sonunda patlama ve DMX flaşı (köprü ve oynatıcı aynı değeri kullanır). */
+export const HAVAN_ISLIK_MS = 1400;
+
+export interface EfektIstegi {
+  tur: EfektTuru;
+  /** 0–1 şiddet. */
+  siddet?: number;
+  /** 0–360 derece yön (konumsal ses için). */
+  yon?: number;
+  /** metre (uzak sesler için zayıflatma). */
+  mesafe?: number;
+}
+
+/**
+ * TCCC/TMYB safhası (8 Kasım): oynatıcıda sıhhiyeci davranışını belirler — "ates_altinda"da sıhhiyeci yaralıya gitmez,
+ * izleyici tarafında siperde diz çöker; "taktik_saha"ya geçince yürüyüp yaralının başına gider. Panel rozeti ve senaryo
+ * adımı (`safha`) ile değişir. Eski kayıtlarda yok: taktik saha sayılır.
+ */
+export type Safha = "ates_altinda" | "taktik_saha" | "tahliye";
+export const SAFHA_ETIKETLERI: Record<Safha, string> = {
+  ates_altinda: "Ateş altında bakım",
+  taktik_saha: "Taktik saha bakımı",
+  tahliye: "Taktik tahliye",
+};
+
+export interface SimulasyonDurumu {
+  oda: Oda;
+  bolge: Bolge;
+  safha?: Safha;
+  ortam: OrtamAyarlari;
+  isik: OrtamIsigi;
+  izliMermi: IzliMermiAyarlari;
+  oda2: Oda2Ayarlari;
+  catisma: CatismaAyarlari;
+  /** Son tetiklenen efektler (panelde günlük için). */
+  sonEfektler: Array<EfektIstegi & { zaman: number }>;
+}
+
+/** Senaryo zaman çizelgesi adımı. */
+export interface SenaryoAdimi {
+  id: string;
+  /** Senaryo başlangıcından itibaren milisaniye. */
+  gecikmeMs: number;
+  aciklama: string;
+  /** Bu adımda kursiyerden beklenen davranış (eğitmen notu; panelde adım satırında ve AAR günlüğünde görünür). */
+  beklenen?: string;
+  islem:
+    | { tip: "efekt"; efekt: EfektIstegi }
+    | { tip: "ortam"; ortam: Partial<OrtamAyarlari> }
+    | { tip: "bolge"; bolge: Bolge }
+    | { tip: "izli_mermi"; izliMermi: Partial<IzliMermiAyarlari> }
+    | { tip: "isik"; isik: Partial<OrtamIsigi> }
+    | { tip: "oda2"; oda2: Partial<Oda2Ayarlari> }
+    | { tip: "catisma"; catisma: Partial<CatismaAyarlari> }
+    /** Figür komutu: asker/tank çağır, duruş değiştir (vuruldu), kaldır. */
+    | { tip: "figur"; figur: FigurKomutu }
+    /** Senaryo durur ("bekliyor"), eğitmen Devam/Boşluk diyene dek bekler; sonraki adımlar bekleme süresi kadar kayar. */
+    | { tip: "bekle_onay"; mesaj?: string }
+    /** TCCC safhasını değiştirir (sıhhiyeci davranışı, panel rozeti). */
+    | { tip: "safha"; safha: Safha }
+    /** Rastgele süre bekler (enAz–enCok ms); sonraki adımlar o kadar kayar (her tatbikatta farklı zamanlama). */
+    | { tip: "rastgele_bekle"; enAzMs: number; enCokMs: number }
+    /** Oda değiştir (Oda 1 ↔ Oda 2): gösterim senaryosu helikopter inişine geçebilsin. */
+    | { tip: "oda"; oda: Oda };
+}
+
+export interface Senaryo {
+  id: string;
+  ad: string;
+  aciklama?: string;
+  oda: Oda;
+  adimlar: SenaryoAdimi[];
+}
+
+export type SenaryoOynatmaDurumu = "duruyor" | "oynuyor" | "duraklatildi" | "bekliyor";
+
+export interface SenaryoDurumu {
+  senaryoId: string | null;
+  /** Yüklü senaryonun adı (panel listesi çekilmemiş olsa da denetimler görünsün). */
+  ad?: string;
+  durum: SenaryoOynatmaDurumu;
+  /** Senaryo içindeki konum (ms). */
+  konumMs: number;
+  toplamMs: number;
+  /** Tamamlanan adım id'leri. */
+  tamamlanan: string[];
+  /** "bekliyor" durumunda: hangi adım, eğitmene gösterilecek mesaj. */
+  bekleme?: { adimId: string; mesaj: string };
+}
+
+export interface OnAyar {
+  id: string;
+  ad: string;
+  olusturma: string;
+  durum: Omit<SimulasyonDurumu, "sonEfektler">;
+}
+
+/**
+ * Köprü ↔ panel ↔ oynatıcı sözleşme sürümü (8 Kasım): API/mesaj sözleşmesi değişince artır. Köprü `baglanti`
+ * mesajında gönderir; panel kendi değeriyle karşılaştırır, uyuşmazlıkta "köprü eski sürüm, yeniden başlat" şeridi gösterir
+ * (yeni derlenmiş panel + eski çalışan köprü = her yeni düğme "İşlem başarısız").
+ */
+export const SOZLESME_SURUMU = 5;
+
+export interface BaglantiDurumu {
+  /** Köprünün sözleşme sürümü (SOZLESME_SURUMU); eski köprüde alan yok. */
+  sozlesme?: number;
+  unreal: { mod: "gercek" | "simulasyon"; bagli: boolean; adres: string; sonHata?: string };
+  artnet: { aktif: boolean; hedef: string; evren: number; sonGonderim?: number };
+  /** Bağlı Duvar Oynatıcı sayısı (hibrit yol: görüntüyü tarayıcı tabanlı oynatıcı üretir). */
+  oynatici: { bagli: boolean; sayi: number };
+  /**
+   * Bağlı kontrol paneli sayısı ("merhaba" ile rol: panel diyenler). Oynatıcı canlı önizlemeyi yalnız panel bağlıyken
+   * yollar (toDataURL ana iş parçacığını ~0,2 sn bekletir; izleyen yokken boşuna takılmasın).
+   */
+  panel: { sayi: number };
+}
+
+/** Tatbikat olay günlüğü (AAR) kaydı; köprü `veri/olaylar/<gün>.jsonl`e yazar, panele `olay` mesajıyla akar. */
+export type OlayTuru = "durum" | "efekt" | "figur" | "senaryo" | "sahne" | "not" | "oynatici" | "tatbikat";
+export interface Olay {
+  /** Köprü saati (ms). */
+  zaman: number;
+  /** Tatbikat kimliği (başlangıç damgası, 36 tabanı) ya da null (serbest çalışma). */
+  tatbikat: string | null;
+  tur: OlayTuru;
+  /** Tek satır Türkçe özet (AAR listesi ve CSV). */
+  ozet: string;
+  /** Ham veri (komut, efekt, fark listesi). */
+  ayrinti?: unknown;
+}
+export interface Tatbikat {
+  id: string;
+  ad: string;
+  baslangic: number;
+  bitis?: number;
+}
+export const OLAY_TURU_ETIKETLERI: Record<OlayTuru, string> = {
+  durum: "Durum",
+  efekt: "Efekt",
+  figur: "Figür",
+  senaryo: "Senaryo",
+  sahne: "Sahne",
+  not: "Not",
+  oynatici: "Oynatıcı",
+  tatbikat: "Tatbikat",
+};
+
+/** İstemci → sunucu WebSocket mesajları. */
+export type IstemciMesaji =
+  | { tip: "merhaba"; rol: "panel" | "oynatici"; ad?: string }
+  /** Oynatıcıdan küçük JPEG önizleme (data URL, en çok 5 sn'de bir, yalnız panel bağlıyken); köprü yalnızca panellere iletir. */
+  | { tip: "onizleme"; veri: string; bilgi?: string }
+  /** Oynatıcıdan uyarı/hata (model yüklenemedi, WebGL yok...); köprü günlüğüne "Oynatıcı:" önekiyle düşer. */
+  | { tip: "gunluk"; seviye: "uyari" | "hata"; mesaj: string }
+  /** Oynatıcıdan: yürüyen/koşan figür duvarın ucundan çıktı; köprü listeden düşürür, `durdur` yayınlar. */
+  | { tip: "figur"; islem: "bitti"; id: string };
+
+/** Köprünün Unreal Engine'e gönderdiği bir Remote Control çağrısının kaydı (panelde canlı izlenir). */
+export interface UnrealIstekKaydi {
+  fonksiyon: string;
+  parametreler: Record<string, unknown>;
+  zaman: number;
+  mod: "gercek" | "simulasyon";
+  basarili: boolean;
+  hata?: string;
+}
+
+/** Panelden başlatılan örnek paketin (paketlenmiş UE oyunu) durumu. */
+export interface OrnekDurumu {
+  /** ORNEK_PAKET ayarı verilmiş ve UnrealGame.exe bulunmuş mu. */
+  yapilandirildi: boolean;
+  calisiyor: boolean;
+  pid?: number;
+  baslangic?: number;
+  komut: string;
+  sonCikis?: { kod: number | null; sinyal?: string; zaman: number; hata?: string };
+}
+
+/**
+ * Figür / klip komutu: oynatıcıdaki alfa kanallı klip katmanına (asker, araç, efekt plakası)
+ * bir klibi belirli bir azimuta yerleştirir veya kaldırır. Klip adları içerik manifestinden gelir.
+ */
+export type FigurPozu = "ayakta" | "comelmis" | "yatmis" | "yarali";
+export const FIGUR_POZ_ETIKETLERI: Record<FigurPozu, string> = { ayakta: "Ayakta", comelmis: "Diz çökmüş", yatmis: "Yere yatmış", yarali: "Yaralı (yerde)" };
+
+export interface FigurKomutu {
+  /** `poz`: sahnedeki figürün duruşunu değiştirir (vurulma → yere düşme, diz çökme, ayağa kalkma). */
+  islem: "oynat" | "durdur" | "temizle" | "poz";
+  /** Örnek (instance) kimliği; verilmezse köprü üretir. */
+  id?: string;
+  /** Duruş; `oynat` ile başlangıç duruşu, `poz` ile değişiklik. Varsayılan ayakta. */
+  poz?: FigurPozu;
+  /** `oynat`: bu kimlikli figürün hemen yanına, ona dönük yerleşir (sıhhiyeci → yaralı); azimut/yükseklik yok sayılır. */
+  yaninda?: string;
+  /** Manifestteki klip adı (ör. asker_yarali_yerde). */
+  klip?: string;
+  /** -180..180; 0 = orta duvarın ortası. */
+  azimut?: number;
+  /** Ufka göre derece; negatif = ufkun altı (daha yakın zemin). */
+  yukseklik?: number;
+  /** Boyut çarpanı (1 = manifestteki genişlik). */
+  olcek?: number;
+  dongu?: boolean;
+  /** Yatay ayna. */
+  yansit?: boolean;
+}
+
+/** Panelde listelenen klip özeti (içerik manifestinden). */
+export interface KlipOzeti {
+  ad: string;
+  baslik: string;
+  kategori: string;
+  dongu: boolean;
+  /** Panel grubu: asker | sihhiye | yarali | tank | arac | silah | nesne | yapi (manifest `grup`; yoksa addan türetilir). */
+  grup?: string;
+  /** Panelde gösterilen simge (manifest `simge`, emoji). */
+  simge?: string;
+  /** Eski yer tutucu model (Quaternius vb.): panelde varsayılan gizli, senaryolar için çalışır. */
+  eski?: boolean;
+}
+
+/**
+ * Sahne sıfırlaması ("temel sahne", köprüde `SahneYoneticisi`): oda, bölge, ortam, ışık, Oda 2 güvenli alanı ve sütre,
+ * ayar değerleri ve yüklü senaryo (durmuş, 00:00) kalır; figürler, efektler, krater/duman, sesler, çatışma, izli
+ * mermi, helikopter ve senaryo oynatımı temizlenir. İsteyen: panel düğmesi, panel kısayolu (Esc, Esc), oynatıcı (⇧0).
+ */
+/** Sıfırlamayı kim istedi; `senaryo` = senaryo baştan oynatılırken köprünün kendiliğinden yaptığı temizlik. */
+export type SifirlamaKaynagi = "panel" | "kisayol" | "oynatici" | "senaryo" | "tekrar";
+export const SIFIRLAMA_KAYNAK_ETIKETLERI: Record<SifirlamaKaynagi, string> = {
+  panel: "panelden",
+  kisayol: "panel kısayoluyla (Esc, Esc)",
+  oynatici: "oynatıcıdan (⇧0)",
+  senaryo: "senaryo başlarken (kendiliğinden)",
+  tekrar: "tekrar oynatma (kendiliğinden)",
+};
+
+/** Köprüde çalışan makro (eğitmen dizisi) durumu. */
+export interface MakroDurumu {
+  ad: string;
+  baslangic: number;
+  toplamMs: number;
+  adimSayisi: number;
+  tamamlanan: number;
+}
+/** Tatbikat tekrar oynatma durumu. */
+export interface TekrarDurumu {
+  ad: string;
+  tatbikat: string;
+  baslangic: number;
+  toplamMs: number;
+  hiz: number;
+  olaySayisi: number;
+  tamamlanan: number;
+}
+/** AAR TCCC sayaçları (ms; ölçülemeyense null). */
+export interface TcccOzeti {
+  /** Tatbikat süresi. */
+  sure: number;
+  /** İlk "asker vuruldu" anı (tatbikat başına göre). */
+  vurulma: number | null;
+  /** Vurulmadan sıhhiyecinin yaralının yanına gönderilmesine. */
+  sihhiyeci: number | null;
+  /** Vurulmadan "turnike" içeren ilk eğitmen notuna. */
+  turnike: number | null;
+  /** Ateş altında → taktik saha geçişi (vurulmadan itibaren). */
+  taktikSaha: number | null;
+  /** Vurulmadan helikopterin yerde olmasına (tahliye). */
+  tahliye: number | null;
+  /** Sayılar: patlama, efekt toplamı, not. */
+  patlama: number;
+  efekt: number;
+  not: number;
+}
+
+/** Sıfırlamada kapananlar (bildirim ve günlük satırı): figür sayısı, durdurulan senaryonun adı, önceden açık olanlar. */
+export interface SifirlamaOzeti {
+  figur: number;
+  /** Oynayan ya da duraklatılmış senaryo durdu (adı); duruyorduysa null. */
+  senaryo: string | null;
+  catisma: boolean;
+  izliMermi: boolean;
+  helikopter: boolean;
+}
+
+/** `POST /api/sahne/sifirla` yanıtı: panel WebSocket mesajını beklemeden durumu ve senaryoyu hemen yazar. */
+export interface SifirlamaYaniti {
+  tamam: boolean;
+  nesil: number;
+  kaynak: SifirlamaKaynagi;
+  ozet: SifirlamaOzeti;
+  /** Köprü saati (ms): panel önizlemesi bundan eskiyse "temizleniyor…" gösterir. */
+  zaman: number;
+  durum: SimulasyonDurumu;
+  senaryo: SenaryoDurumu;
+}
+
+/** Özetin okunur metni: "3 figür, çatışma, izli mermi kaldırıldı; senaryo "X" durdu" (hiçbiri yoksa "sahne zaten temizdi"). */
+export function sifirlamaOzetiMetni(o: SifirlamaOzeti): string {
+  const kalkanlar = [o.figur > 0 ? `${o.figur} figür` : "", o.catisma ? "çatışma" : "", o.izliMermi ? "izli mermi" : "", o.helikopter ? "helikopter" : ""].filter((k) => k !== "");
+  const parcalar: string[] = [];
+  if (kalkanlar.length) parcalar.push(`${kalkanlar.join(", ")} kaldırıldı`);
+  if (o.senaryo) parcalar.push(`senaryo "${o.senaryo}" durdu`);
+  return parcalar.length ? parcalar.join("; ") : "sahne zaten temizdi";
+}
+
+/** Sunucu → istemci WebSocket mesajları. */
+export type SunucuMesaji =
+  | { tip: "durum"; durum: SimulasyonDurumu }
+  | { tip: "senaryo"; senaryo: SenaryoDurumu }
+  /** Senaryo listesi değişti (kayıt/silme, bu ya da başka panelden); paneller listeyi yeniler. */
+  | { tip: "senaryolar"; liste: Senaryo[] }
+  /** Tatbikat olay günlüğüne yeni kayıt (AAR canlı akışı; yalnız panellere). */
+  | { tip: "olay"; olay: Olay }
+  /** Aktif tatbikat değişti (başladı / bitti). */
+  | { tip: "tatbikat"; tatbikat: Tatbikat | null }
+  /** Köprüdeki makro (eğitmen dizisi) durumu; null = yok. */
+  | { tip: "makro"; makro: MakroDurumu | null }
+  /** Tatbikat tekrar oynatma durumu; null = yok. */
+  | { tip: "tekrar"; tekrar: TekrarDurumu | null }
+  | { tip: "baglanti"; baglanti: BaglantiDurumu }
+  | { tip: "gunluk"; seviye: "bilgi" | "uyari" | "hata"; mesaj: string; zaman: number }
+  | { tip: "unreal"; istek: UnrealIstekKaydi }
+  | { tip: "ornek"; ornek: OrnekDurumu }
+  /** Tetiklenen efekt olayı (oynatıcı ve paneller için). */
+  | { tip: "efekt"; efekt: EfektIstegi & { zaman: number } }
+  /** Figür / klip komutu (oynatıcı uygular, paneller aktif listeyi günceller). */
+  | { tip: "figur"; komut: FigurKomutu & { id: string }; aktifler: Array<FigurKomutu & { id: string }> }
+  /** Duvar görüntüsünün küçük önizlemesi (panelin canlı sahne kartı). */
+  | { tip: "onizleme"; veri: string; zaman: number; bilgi?: string }
+  /**
+   * Sahne sıfırlaması: köprü önce senaryoyu durdurur, figürleri temizler ve çatışma/izli mermi/helikopteri kapatan TEK
+   * durum yayınını yollar, en son bu mesajı. Oynatıcı yerel artıkları (krater, duman, parçacık, 2B efekt, uçuştaki iz
+   * ve top mermisi, yüklenmekte olan figür, sesler) temizler; paneller tek bildirim gösterir. `nesil` her sıfırlamada
+   * artar (köprü son durumla diske yazar).
+   */
+  | { tip: "sahne"; islem: "sifirla"; nesil: number; kaynak: SifirlamaKaynagi; ozet: SifirlamaOzeti; zaman: number }
+  /**
+   * Bağlanan istemciye son sıfırlama nesli (figürlerden ÖNCE gider): oynatıcının bildiği nesil farklıysa kopukken
+   * sıfırlama kaçırılmıştır, yerel temizlik yapar. İlk bağlantıda (nesil bilinmiyor) yalnız kaydedilir.
+   */
+  | { tip: "sahne"; islem: "senkron"; nesil: number };
+
+export const BOLGE_ETIKETLERI: Record<Bolge, string> = {
+  meskun_mahal: "Meskûn Mahal",
+  ormanlik: "Ormanlık",
+  daglik: "Dağlık",
+  us_bolgesi: "Üs Bölgesi",
+  kirsal_acik_arazi: "Kırsal Açık Arazi",
+};
+
+export const MEVSIM_ETIKETLERI: Record<Mevsim, string> = {
+  yaz: "Yaz",
+  kis: "Kış",
+};
+
+export const GUN_ZAMANI_ETIKETLERI: Record<GunZamani, string> = {
+  gunduz: "Gündüz",
+  gece: "Gece",
+};
+
+export const YAGIS_ETIKETLERI: Record<Yagis, string> = {
+  yok: "Yok",
+  hafif_yagmur: "Hafif yağmur",
+  siddetli_yagmur: "Şiddetli yağmur",
+  kar: "Kar",
+};
+
+export const GUVENLI_ALAN_ETIKETLERI: Record<GuvenliAlanTipi, string> = {
+  operasyonel_bolge: "Operasyonel bölge",
+  meskun_mahal_ici: "Meskûn mahal içi",
+  kaya_sutre_arkasi: "Kaya / sütre arkası",
+  cukur: "Çukur",
+};
+
+export const HELIKOPTER_ETIKETLERI: Record<HelikopterDurumu, string> = {
+  yok: "Yok",
+  yaklasiyor: "Yaklaşıyor",
+  iniyor: "İniyor",
+  yerde: "Yerde",
+  kalkiyor: "Kalkıyor",
+};
+
+export const EFEKT_ETIKETLERI: Record<EfektTuru, string> = {
+  patlama: "Patlama",
+  gurultu: "Gürültü",
+  bagirma: "Bağırma",
+  cagirma: "Çağırma",
+  toz_duman: "Toz / duman",
+  uzak_patlama: "Uzaktan patlama",
+  uzak_mermi_sesi: "Uzaktan mermi sesi",
+  simsek: "Şimşek",
+  yangin: "Yangın",
+  yangin_sondur: "Yangınları söndür",
+  havan: "Havan mermisi (ıslık → patlama)",
+  fisek: "Aydınlatma fişeği",
+  zirhli_arac: "Zırhlı araç gelir, ateş açar",
+  duvar_yik: "Duvar patlar ve yıkılır",
+};
+
+export function varsayilanDurum(): SimulasyonDurumu {
+  return {
+    oda: "oda1",
+    bolge: "daglik",
+    ortam: {
+      mevsim: "yaz",
+      saat: 12,
+      bulut: 0.2,
+      sis: 0,
+      yagis: "yok",
+      ruzgarSiddeti: 0.1,
+      ruzgarYonu: 90,
+      simsek: false,
+    },
+    isik: { parlaklik: 0.8, r: 255, g: 244, b: 224, senaryoyaBagli: true },
+    izliMermi: { aktif: false, cikisNoktasi: 1, yon: 0, siklik: 3 },
+    oda2: { guvenliAlan: "kaya_sutre_arkasi", helikopter: "yok", helikopterYonu: 12, uzakSesMesafesi: 800, uzakSesYonu: 45 },
+    catisma: { aktif: false, siddet: 0.5, yon: 0, dostAtes: true, siperAl: true },
+    safha: "taktik_saha",
+    sonEfektler: [],
+  };
+}
+
+/** Ortamı sade modele indirir: mevsim yaz/kış, saat gündüz (12) ya da gece (23). */
+export function ortamiIndir(o: OrtamAyarlari): OrtamAyarlari {
+  return { ...o, mevsim: mevsimeIndir(o.mevsim) ?? "yaz", saat: saatiIndir(Number.isFinite(o.saat) ? o.saat : 12) };
+}
+
+/** Eski kayıtlarda (ön ayar, disk) eksik alanları varsayılanla tamamlar. */
+export function durumuTamamla(d: Partial<SimulasyonDurumu>): SimulasyonDurumu {
+  const v = varsayilanDurum();
+  return {
+    ...v,
+    ...d,
+    // Eski kayıt (son durum, ön ayar) ara saat ya da ilkbahar/sonbahar taşıyabilir: yaz/kış ve gündüz/gece'ye iner.
+    ortam: ortamiIndir({ ...v.ortam, ...d.ortam }),
+    isik: { ...v.isik, ...d.isik },
+    izliMermi: { ...v.izliMermi, ...d.izliMermi },
+    oda2: { ...v.oda2, ...d.oda2 },
+    catisma: { ...v.catisma, ...d.catisma },
+    sonEfektler: d.sonEfektler ?? [],
+  };
+}

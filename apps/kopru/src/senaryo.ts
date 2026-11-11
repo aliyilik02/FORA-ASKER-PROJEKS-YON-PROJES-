@@ -1,0 +1,315 @@
+/**
+ * Senaryo motoru – zaman çizelgesine göre adımları tetikler (§3 efekt ve senaryo motoru).
+ * Eğitmen senaryoyu oynatabilir, duraklatabilir, durdurabilir; adımlar sırayla işlenir.
+ * Zamanlayıcı dışarıdan verilebilir (testlerde sahte saat kullanılır).
+ */
+import type { DurumDeposu } from "./durum.js";
+import type { FigurYoneticisi } from "./figur.js";
+import type { Gunluk } from "./gunluk.js";
+import type { Senaryo, SenaryoAdimi, SenaryoDurumu, SifirlamaKaynagi } from "./tipler.js";
+
+export interface Zamanlayici {
+  simdi(): number;
+  aralik(cb: () => void, ms: number): () => void;
+}
+
+export const gercekZamanlayici: Zamanlayici = {
+  simdi: () => Date.now(),
+  aralik: (cb, ms) => {
+    const t = setInterval(cb, ms);
+    return () => clearInterval(t);
+  },
+};
+
+type Dinleyici = (durum: SenaryoDurumu) => void;
+
+export class SenaryoMotoru {
+  private senaryo: Senaryo | null = null;
+  private durum: SenaryoDurumu = { senaryoId: null, durum: "duruyor", konumMs: 0, toplamMs: 0, tamamlanan: [] };
+  private baslangicZamani = 0;
+  private duraklatmaKonumu = 0;
+  private durdur: (() => void) | null = null;
+  private dinleyiciler = new Set<Dinleyici>();
+  /** Figür adımları için; `figurBagla` ile verilir (isteğe bağlı, testlerde yok). */
+  private figur: Pick<FigurYoneticisi, "komut"> | null = null;
+  /**
+   * Sahne yöneticisi; `sahneBagla` ile verilir. Senaryo BAŞTAN oynatılırken (duruyor → oynuyor) önce sahne temele döner:
+   * eğitmenin elle çağırdığı figürler, efektler, çatışma, izli mermi, helikopter ve sesler gider, senaryo temiz sahnede
+   * başlar (kullanıcı kararı, 8 Kasım). Duraklatılmış senaryoya devam ederken sıfırlama yok. Ortam, bölge ve ışık
+   * sıfırlamada korunur; senaryonun kendi adımları bunları ister.
+   */
+  private sahne: { sifirla(kaynak: SifirlamaKaynagi): unknown } | null = null;
+  /**
+   * Oynatma nesli: oynat, duraklat, dur ve yukle artırır. Bir adımı bekleyen (UE çağrısı, oda değişimi) tik ya da
+   * oynat, await'ten dönünce nesil değiştiyse durur: durdurulan senaryo aynı tikteki sonraki adımları uygulamaz,
+   * "tamamlandı" yazmaz (sahne sıfırlaması senaryoyu durdurup figürleri temizledikten sonra asker geri gelmez).
+   */
+  private nesil = 0;
+  /** Son `senaryo` yayınının saati ve o andaki tamamlanan sayısı: oynarken yayın 1 Hz + adım değişiminde (§3-14; eskiden 50 ms'de bir). */
+  private sonYayinZamani = -Infinity;
+  private sonYayinTamamlanan = -1;
+  /** Bu oynatmada senaryonun açtığı sürekli efektler; "Durdur" bunları kapatır (§3-17). */
+  private acilanlar = { catisma: false, izliMermi: false, helikopter: false };
+
+  figurBagla(f: Pick<FigurYoneticisi, "komut">) {
+    this.figur = f;
+  }
+
+  sahneBagla(s: { sifirla(kaynak: SifirlamaKaynagi): unknown }) {
+    this.sahne = s;
+  }
+
+  constructor(
+    private readonly depo: DurumDeposu,
+    private readonly gunluk: Gunluk,
+    private readonly zamanlayici: Zamanlayici = gercekZamanlayici,
+    private readonly tikMs = 50,
+  ) {}
+
+  al(): SenaryoDurumu {
+    return { ...this.durum, tamamlanan: [...this.durum.tamamlanan] };
+  }
+
+  /** Yüklü senaryonun adı (yoksa null). */
+  get yukluAd(): string | null {
+    return this.senaryo?.ad ?? null;
+  }
+
+  dinle(d: Dinleyici): () => void {
+    this.dinleyiciler.add(d);
+    return () => this.dinleyiciler.delete(d);
+  }
+
+  private yayinla() {
+    this.sonYayinZamani = this.zamanlayici.simdi();
+    this.sonYayinTamamlanan = this.durum.tamamlanan.length;
+    const kopya = this.al();
+    for (const d of this.dinleyiciler) d(kopya);
+  }
+
+  yukle(senaryo: Senaryo) {
+    this.dur();
+    this.senaryo = { ...senaryo, adimlar: [...senaryo.adimlar].sort((a, b) => a.gecikmeMs - b.gecikmeMs) };
+    this.durum = {
+      senaryoId: senaryo.id,
+      ad: senaryo.ad,
+      durum: "duruyor",
+      konumMs: 0,
+      toplamMs: this.senaryo.adimlar.reduce((m, a) => Math.max(m, a.gecikmeMs), 0),
+      tamamlanan: [],
+    };
+    this.gunluk.bilgi(`Senaryo yüklendi: ${senaryo.ad} (${senaryo.adimlar.length} adım)`);
+    this.yayinla();
+  }
+
+  async oynat() {
+    if (!this.senaryo) throw new Error("Önce bir senaryo yükleyin");
+    if (this.durum.durum === "oynuyor") return;
+    if (this.durum.durum === "bekliyor") {
+      this.devamEt();
+      return;
+    }
+    const bastan = this.durum.durum === "duruyor";
+    // Baştan başlarken önce temel sahne: elle çağrılmış her şey gider (await yok; sahne yöneticisi içeride `dur(true)`
+    // çağırıp nesli artırır, o yüzden nesil bundan SONRA alınır). Devam ederken (duraklatıldı) sahneye dokunulmaz.
+    if (bastan) this.sahne?.sifirla("senaryo");
+    // Oda değişimini beklerken dur/yükle ya da ikinci bir oynat geldiyse bu çağrı bırakılır (çift zamanlayıcı kurulmaz)
+    const nesil = ++this.nesil;
+    if (bastan) {
+      this.durum.tamamlanan = [];
+      this.duraklatmaKonumu = 0;
+      this.acilanlar = { catisma: false, izliMermi: false, helikopter: false };
+      await this.depo.odaSec(this.senaryo.oda);
+      if (nesil !== this.nesil) return;
+    }
+    this.baslangicZamani = this.zamanlayici.simdi() - this.duraklatmaKonumu;
+    this.durum.durum = "oynuyor";
+    this.gunluk.bilgi(`Senaryo oynatılıyor: ${this.senaryo.ad}`);
+    this.durdur = this.zamanlayici.aralik(() => void this.tik(), this.tikMs);
+    this.yayinla();
+    await this.tik();
+  }
+
+  /**
+   * `bekle_onay` adımından sonra eğitmen "Devam" dedi: bekleme süresi kadar başlangıç kaydırılır, sonraki adımlar
+   * göreli zamanlarını korur (kursiyerin hızına göre ilerleme; crawl–walk–run). "bekliyor" değilse hiçbir şey yapmaz.
+   */
+  devamEt() {
+    if (this.durum.durum !== "bekliyor" || !this.senaryo) return;
+    this.nesil++;
+    this.baslangicZamani = this.zamanlayici.simdi() - this.duraklatmaKonumu;
+    this.durum.durum = "oynuyor";
+    delete this.durum.bekleme;
+    this.gunluk.bilgi("Senaryo devam ediyor (eğitmen onayı)");
+    this.durdur = this.zamanlayici.aralik(() => void this.tik(), this.tikMs);
+    this.yayinla();
+    void this.tik();
+  }
+
+  /** Senaryoyu "bekliyor"a alır (bekle_onay adımı): zamanlayıcı durur, konum saklanır, panel Devam gösterir. */
+  private bekle(adim: SenaryoAdimi, mesaj: string) {
+    this.nesil++;
+    this.duraklatmaKonumu = this.zamanlayici.simdi() - this.baslangicZamani;
+    this.durum.konumMs = this.duraklatmaKonumu;
+    this.durum.durum = "bekliyor";
+    this.durum.bekleme = { adimId: adim.id, mesaj };
+    this.durdur?.();
+    this.durdur = null;
+    this.gunluk.bilgi(`Senaryo eğitmen onayı bekliyor: ${mesaj}`);
+    this.yayinla();
+  }
+
+  duraklat() {
+    if (this.durum.durum !== "oynuyor") return;
+    this.nesil++;
+    this.duraklatmaKonumu = this.zamanlayici.simdi() - this.baslangicZamani;
+    this.durum.konumMs = this.duraklatmaKonumu;
+    this.durum.durum = "duraklatildi";
+    this.durdur?.();
+    this.durdur = null;
+    this.gunluk.bilgi("Senaryo duraklatıldı");
+    this.yayinla();
+  }
+
+  /**
+   * Durdurur ve başa sarar (yüklü senaryo kalır); tamamlanan adım işaretleri silinir (panel 00:00'da adımları "bitti"
+   * göstermesin). `sessiz`: günlüğe yazmaz ve sürekli efektlere dokunmaz (sahne sıfırlaması kendi başına kapatır).
+   * Eğitmen eliyle Durdur'da senaryonun bu oynatmada açtığı çatışma / izli mermi / helikopter de kapanır (§3-17).
+   */
+  dur(sessiz = false) {
+    const oynuyordu = this.durum.durum !== "duruyor";
+    this.nesil++;
+    this.durdur?.();
+    this.durdur = null;
+    this.durum.durum = "duruyor";
+    this.durum.konumMs = 0;
+    this.durum.tamamlanan = [];
+    delete this.durum.bekleme;
+    this.duraklatmaKonumu = 0;
+    if (oynuyordu) {
+      if (!sessiz) {
+        this.gunluk.bilgi("Senaryo durduruldu");
+        const a = this.acilanlar;
+        if ((a.catisma || a.izliMermi || a.helikopter) && this.depo.sureklileriKapat(a)) this.gunluk.bilgi("Senaryonun açtığı sürekli efektler kapatıldı");
+      }
+      this.acilanlar = { catisma: false, izliMermi: false, helikopter: false };
+      this.yayinla();
+    }
+  }
+
+  /**
+   * Belirli bir adımı anında, zaman çizelgesinden bağımsız tetikler (eğitmen müdahalesi). Dönüş: `{tamam, uyari}` —
+   * figür adımı uygulanamadıysa (asker sahnede yok vb.) `tamam: false` ve eğitmene gösterilecek uyarı (§3-9; eskiden
+   * yalnız günlüğe düşüyor, API `{tamam:true}` dönüyordu).
+   */
+  async adimiTetikle(adim: SenaryoAdimi): Promise<{ tamam: boolean; uyari?: string }> {
+    const islem = adim.islem;
+    if (!islem || typeof islem !== "object" || typeof islem.tip !== "string") throw new Error("adımın işlemi eksik ya da bozuk");
+    switch (islem.tip) {
+      case "efekt":
+        await this.depo.efektTetikle(islem.efekt);
+        break;
+      case "ortam":
+        await this.depo.ortamGuncelle(islem.ortam);
+        break;
+      case "bolge":
+        await this.depo.bolgeSec(islem.bolge);
+        break;
+      case "izli_mermi":
+        if (islem.izliMermi?.aktif) this.acilanlar.izliMermi = true;
+        await this.depo.izliMermiGuncelle(islem.izliMermi);
+        break;
+      case "isik":
+        this.depo.isikGuncelle(islem.isik);
+        break;
+      case "oda2":
+        if (islem.oda2?.helikopter && islem.oda2.helikopter !== "yok") this.acilanlar.helikopter = true;
+        await this.depo.oda2Guncelle(islem.oda2);
+        break;
+      case "catisma":
+        if (islem.catisma?.aktif) this.acilanlar.catisma = true;
+        await this.depo.catismaGuncelle(islem.catisma);
+        break;
+      case "oda":
+        await this.depo.odaSec(islem.oda);
+        break;
+      case "safha":
+        this.depo.safhaAyarla(islem.safha);
+        break;
+      case "bekle_onay":
+      case "rastgele_bekle":
+        // Zaman çizelgesinde `tik` bekletir; elle "Şimdi" tetiklenirse bekleyecek bir şey yok
+        break;
+      case "figur": {
+        if (!this.figur) {
+          this.gunluk.uyari("Senaryo figür adımı: figür yöneticisi bağlı değil");
+          return { tamam: false, uyari: "figür yöneticisi bağlı değil" };
+        }
+        try {
+          this.figur.komut(islem.figur);
+        } catch (hata) {
+          const uyari = `Figür adımı uygulanamadı (${adim.aciklama}): ${hata instanceof Error ? hata.message : String(hata)}`;
+          this.gunluk.uyari(uyari);
+          return { tamam: false, uyari };
+        }
+        break;
+      }
+    }
+    return { tamam: true };
+  }
+
+  private isleniyor = false;
+
+  private async tik() {
+    if (!this.senaryo || this.durum.durum !== "oynuyor" || this.isleniyor) return;
+    this.isleniyor = true;
+    const nesil = this.nesil;
+    try {
+      const konum = this.zamanlayici.simdi() - this.baslangicZamani;
+      this.durum.konumMs = konum;
+      for (const adim of this.senaryo.adimlar) {
+        if (adim.gecikmeMs <= konum && !this.durum.tamamlanan.includes(adim.id)) {
+          this.durum.tamamlanan.push(adim.id);
+          this.gunluk.bilgi(`Senaryo adımı: ${adim.aciklama}`);
+          if (adim.islem?.tip === "bekle_onay") {
+            this.bekle(adim, adim.islem.mesaj || adim.aciklama || "Eğitmen onayı");
+            return;
+          }
+          if (adim.islem?.tip === "rastgele_bekle") {
+            // Rastgele bekleme: senaryo "bekliyor"a düşer, süre dolunca kendiliğinden devam eder (eğitmen de erken devam edebilir)
+            const enAz = Math.max(0, adim.islem.enAzMs || 0);
+            const enCok = Math.max(enAz, adim.islem.enCokMs || enAz);
+            const ms = Math.round(enAz + Math.random() * (enCok - enAz));
+            this.bekle(adim, `rastgele bekleme ${Math.round(ms / 1000)} sn (${adim.aciklama})`);
+            const iptal = this.zamanlayici.aralik(() => {
+              iptal();
+              if (this.durum.durum === "bekliyor" && this.durum.bekleme?.adimId === adim.id) this.devamEt();
+            }, Math.max(1, ms));
+            return;
+          }
+          // Bozuk/eksik adım (elle düzenlenmiş senaryolar.json) köprüyü düşürmesin: hata günlüğe, senaryo sürer
+          try {
+            await this.adimiTetikle(adim);
+          } catch (hata) {
+            this.gunluk.hata(`Senaryo adımı uygulanamadı (${adim.aciklama ?? adim.id}): ${hata instanceof Error ? hata.message : String(hata)}`);
+          }
+          // Adımı beklerken durduruldu / duraklatıldı / yenisi yüklendi: kalan adımlar uygulanmaz, "tamamlandı" yazılmaz
+          if (nesil !== this.nesil || this.durum.durum !== "oynuyor") return;
+        }
+      }
+      if (this.durum.tamamlanan.length >= this.senaryo.adimlar.length) {
+        this.durdur?.();
+        this.durdur = null;
+        this.durum.durum = "duruyor";
+        this.durum.konumMs = this.durum.toplamMs;
+        this.gunluk.bilgi(`Senaryo tamamlandı: ${this.senaryo.ad}`);
+        this.yayinla();
+        return;
+      }
+      // Oynarken yayın: adım değiştiyse hemen, değilse saniyede bir (panel konumu kendisi de sayabilir)
+      if (this.durum.tamamlanan.length !== this.sonYayinTamamlanan || konum - (this.sonYayinZamani - this.baslangicZamani) >= 1000) this.yayinla();
+    } finally {
+      this.isleniyor = false;
+    }
+  }
+}

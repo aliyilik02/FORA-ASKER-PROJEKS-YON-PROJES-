@@ -1,0 +1,335 @@
+import { useEffect, useRef, useState } from "react";
+import { api } from "../api";
+import { useArayuz, yonAzimut } from "../arayuz";
+import { sihhiyeBekleyenYarali, vurulabilirAskerler, yoneEnYakin } from "../figurYardimcilari";
+import { FIGUR_POZ_ETIKETLERI, type FigurKomutu, type FigurPozu, type KlipOzeti } from "../tipler";
+import { sifirlamaNesli } from "../useKopru";
+import { Anahtar, Bolum, Ikon, Kaydirici, OnayliDugme, yonMetni } from "./ortak";
+import { GrupSimgesi } from "./Simgeler";
+
+type Calistir = <T>(islem: () => Promise<T>) => Promise<T | undefined>;
+
+const KATEGORI_ETIKETLERI: Record<string, string> = { figur: "Figürler", efekt: "Efekt plakaları", hava: "Hava", diger: "Diğer" };
+/** Panel grupları (manifest `grup`): sıra, başlık ve simge. Yeni Meshy modelleri gruplu gelir; eski yer tutucular `eski`. */
+const GRUPLAR: Array<[string, string]> = [
+  ["asker", "Askerler"],
+  ["sihhiye", "Sıhhiye"],
+  ["yarali", "Yaralılar"],
+  ["tank", "Tanklar"],
+  ["arac", "Araçlar"],
+  ["silah", "Silahlar"],
+  ["nesne", "TCCC ve nesneler"],
+  ["yapi", "Yapılar"],
+  ["heli", "Helikopter"],
+];
+const BOS_KLIP: KlipOzeti = { ad: "", baslik: "", kategori: "diger", dongu: false };
+const grupAdi = (k: KlipOzeti) => k.grup ?? (k.kategori === "figur" ? "nesne" : k.kategori);
+const simgesi = (k: KlipOzeti | undefined) => <GrupSimgesi grup={grupAdi(k ?? BOS_KLIP)} />;
+const MESAFELER: Array<[number, string]> = [
+  [-12, "Yakın · 8 m"],
+  [-7, "Orta · 14 m"],
+  [-4, "Uzak · 24 m"],
+  [-2.5, "Çok uzak · 40 m"],
+];
+
+/**
+ * Birlik: eğitmen yer seçmez. Asker, tank ve cephe tek dokunuşla çağrılır; oynatıcı o panoramanın
+ * hazır mevzi/tank noktalarından seçili yöne en yakın BOŞ olanı kullanır (üst üste binmez).
+ * Elle yerleştirme "Gelişmiş" altında saklı kalır.
+ */
+export function FigurPaneli({ aktifler, calistir, oda = "oda1" }: { aktifler: Array<FigurKomutu & { id: string }>; calistir: Calistir; oda?: "oda1" | "oda2" }) {
+  const { seciliYon, bildir } = useArayuz();
+  const [klipler, setKlipler] = useState<KlipOzeti[]>([]);
+  const [klip, setKlip] = useState("");
+  const [yukseklik, setYukseklik] = useState(-7);
+  const [olcek, setOlcek] = useState(1);
+  const [yansit, setYansit] = useState(false);
+  const [sayac, setSayac] = useState(0);
+  const [eskileriGoster, setEskileriGoster] = useState(false);
+
+  const yenile = () =>
+    void calistir(() => api.klipler()).then((k) => {
+      if (!k) return;
+      setKlipler(k);
+      if (!klip && k.length) setKlip((k.find((x) => x.kategori === "figur") ?? k[0]).ad);
+    });
+  useEffect(yenile, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Yeni modeller öncelikli: eski yer tutucular (manifest `eski`) yalnız hiç yenisi yoksa kullanılır
+  const guncel = klipler.filter((k) => !k.eski);
+  const havuz = guncel.length ? guncel : klipler;
+  const askerler = havuz.filter((k) => grupAdi(k) === "asker" && /_(bekleyen|nisan)$/.test(k.ad)).map((k) => k.ad);
+  const tanklar = havuz.filter((k) => grupAdi(k) === "tank").map((k) => k.ad);
+  const kosanlar = havuz.filter((k) => grupAdi(k) === "asker" && /_(kosan|yuruyen)$/.test(k.ad)).map((k) => k.ad);
+  const yaralilar = havuz.filter((k) => grupAdi(k) === "yarali" && /_yarali$/.test(k.ad)).map((k) => k.ad);
+  const sihhiyeciler = havuz.filter((k) => grupAdi(k) === "sihhiye" && /_sihhiyeci$/.test(k.ad)).map((k) => k.ad);
+  /** Sahnedeki yaralılar; sıhhiyeci en son vurulanın yanına gider. */
+  const yaraliAktifler = aktifler.filter((f) => f.poz === "yarali");
+  /** Gönderilip henüz figür listesine düşmemiş sıhhiyeci görevleri (hızlı art arda dokunuşta aynı yaralı seçilmesin). */
+  const sihhiyeGorevleri = useRef<Array<{ yaraliId: string; zaman: number; figurId: string }>>([]);
+  const sihhiyesizYarali = yaraliAktifler.filter((y) => !aktifler.some((f) => f.yaninda === y.id)).length;
+  const baslik = (ad: string) => klipler.find((k) => k.ad === ad)?.baslik ?? ad;
+  /** Vurulabilecek (ayakta/diz çökmüş, 3B asker) figürler. */
+  const vurulabilir = vurulabilirAskerler(aktifler, klipler);
+
+  const cagir = async (ad: string, sapma = 0, yuk = -7) => {
+    await api.figur({ islem: "oynat", klip: ad, azimut: yonAzimut(seciliYon + sapma), yukseklik: yuk, olcek: 1, yansit: false, dongu: true });
+  };
+  const yaraliCagir = () => {
+    const ad = yaralilar[0];
+    if (!ad) return;
+    // Oda 1: 8 m yakında; Oda 2: sütrenin içinde (3,5 m), kum torbası hattının arkasında kalmasın
+    void calistir(() => cagir(ad, 0, oda === "oda2" ? -26 : -12)).then((r) => r && bildir({ tur: "basari", baslik: "Yaralı yerde", metin: `${yonMetni(seciliYon)} tarafı, ${oda === "oda2" ? "sütrenin içinde" : "yakın mesafe"} · yardım çağırıyor` }));
+  };
+  const pozDegistir = (f: FigurKomutu & { id: string }, poz: FigurPozu) =>
+    void calistir(() => api.figur({ islem: "poz", id: f.id, poz })).then(
+      (r) =>
+        r &&
+        bildir({
+          tur: poz === "yarali" ? "hata" : "basari",
+          baslik: poz === "yarali" ? "Asker vuruldu" : poz === "comelmis" ? "Asker diz çöktü" : poz === "yatmis" ? "Asker yere yattı" : "Asker ayağa kalktı",
+          metin: `${baslik(f.klip ?? "")} · ${yonMetni(((f.azimut ?? 0) + 360) % 360)} tarafı`,
+        }),
+    );
+  /** Sıhhiyeci: başında en az sıhhiyeci olan yaralının yanına diz çöker (her dokunuş başka yaralıya dağıtır). */
+  const sihhiyeciGonder = () => {
+    const ad = sihhiyeciler[0];
+    const simdi = Date.now();
+    sihhiyeGorevleri.current = sihhiyeGorevleri.current.filter((g) => simdi - g.zaman < 4000 && !aktifler.some((f) => f.id === g.figurId));
+    const yarali = sihhiyeBekleyenYarali(aktifler, sihhiyeGorevleri.current.map((g) => g.yaraliId));
+    if (!ad || !yarali) return;
+    const gorev = { yaraliId: yarali.id, zaman: simdi, figurId: "" };
+    sihhiyeGorevleri.current.push(gorev);
+    void calistir(() => api.figur({ islem: "oynat", klip: ad, yaninda: yarali.id, azimut: yarali.azimut, olcek: 1, dongu: true })).then(
+      (r) => r && bildir({ tur: "basari", baslik: "Sıhhiyeci yaralının başında", metin: `${yonMetni(((yarali.azimut ?? 0) + 360) % 360)} tarafı` }),
+    );
+  };
+  /** Tek dokunuş: sahnedeki ayakta askerlerden biri (seçili yöne en yakın) vurulur, yere düşer. */
+  const askerVuruldu = () => {
+    const f = yoneEnYakin(vurulabilir, seciliYon);
+    if (f) pozDegistir(f, "yarali");
+  };
+  const askerCagir = () => {
+    if (!askerler.length) return;
+    const ad = askerler[sayac % askerler.length];
+    setSayac((s) => s + 1);
+    void calistir(() => cagir(ad)).then((r) => r && bildir({ tur: "basari", baslik: "Asker mevziye girdi", metin: `${baslik(ad)} · ${yonMetni(seciliYon)} tarafı` }));
+  };
+  const tankCagir = () => {
+    if (!tanklar.length) return;
+    const ad = tanklar[sayac % tanklar.length];
+    setSayac((s) => s + 1);
+    void calistir(() => cagir(ad, 0, -5)).then((r) => r && bildir({ tur: "basari", baslik: "Tank geldi", metin: `${baslik(ad)} · ${yonMetni(seciliYon)} tarafı` }));
+  };
+  const cepheKur = () =>
+    void calistir(async () => {
+      const secim = askerler.length ? askerler : [klip];
+      const yerler: Array<[number, number]> = [
+        [-22, -7],
+        [0, -9],
+        [22, -7],
+      ];
+      // Adımlar arasında sahne sıfırlandıysa yarıda bırakılır (sıfırlamadan sonra asker gelmesin)
+      const nesil = sifirlamaNesli();
+      for (let i = 0; i < yerler.length; i++) {
+        if (sifirlamaNesli() !== nesil) return false;
+        await cagir(secim[i % secim.length], yerler[i][0], yerler[i][1]);
+      }
+      if (sifirlamaNesli() !== nesil) return false;
+      await api.catisma({ yon: seciliYon });
+      return true;
+    }).then((r) => r && bildir({ tur: "basari", baslik: "Cephe kuruldu", metin: `${yonMetni(seciliYon)} · 3 asker mevzide, düşman yönü ayarlandı` }));
+  const kosanGonder = (sola: boolean) => {
+    const ad = kosanlar.find((k) => /kosan/.test(k)) ?? kosanlar[0];
+    if (!ad) return;
+    void calistir(() => api.figur({ islem: "oynat", klip: ad, azimut: yonAzimut(seciliYon + (sola ? 40 : -40)), yukseklik: -6, olcek: 1, yansit: sola, dongu: true })).then((r) => r &&
+      bildir({ tur: "basari", baslik: sola ? "Asker sola koşuyor" : "Asker sağa koşuyor" }),
+    );
+  };
+
+  const secili = klipler.find((k) => k.ad === klip);
+  const gruplar = Object.entries(
+    klipler
+      .filter((k) => k.kategori !== "efekt" && (eskileriGoster || !k.eski))
+      .reduce<Record<string, KlipOzeti[]>>((g, k) => {
+        (g[grupAdi(k)] ??= []).push(k);
+        return g;
+      }, {}),
+  ).sort(([a], [b]) => {
+    const ia = GRUPLAR.findIndex((g) => g[0] === a);
+    const ib = GRUPLAR.findIndex((g) => g[0] === b);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+  const grupBasligi = (g: string) => GRUPLAR.find((x) => x[0] === g)?.[1] ?? KATEGORI_ETIKETLERI[g] ?? g;
+  const eskiSayisi = klipler.filter((k) => k.eski).length;
+
+  return (
+    <>
+      <Bolum
+        baslik="Birlik çağır"
+        altBaslik="Yer seçmene gerek yok: her sahnenin hazır mevzileri var, seçili tarafa en yakın boş mevzi kullanılır"
+        ikon={<Ikon.figur />}
+        sag={<span className="rozet amber">taraf {yonMetni(seciliYon)}</span>}
+      >
+        {klipler.length === 0 ? (
+          <p className="aciklama">Manifestte figür yok. İçerik klasörüne model ekleyin.</p>
+        ) : (
+          <div className="birlik-dugmeleri">
+            <button type="button" className="birlik asker" disabled={!askerler.length} onClick={askerCagir}>
+              <span className="birlik-ad">Asker çağır</span>
+              <small>Mevziye bir asker</small>
+            </button>
+            <button type="button" className="birlik cephe" disabled={!askerler.length} onClick={cepheKur}>
+              <span className="birlik-ad">Cephe kur</span>
+              <small>3 asker + düşman yönü</small>
+            </button>
+            <button type="button" className="birlik tank" disabled={!tanklar.length} onClick={tankCagir}>
+              <span className="birlik-ad">Tank çağır</span>
+              <small>Açık alana bir tank</small>
+            </button>
+            <button type="button" className="birlik" disabled={!kosanlar.length} onClick={() => kosanGonder(false)}>
+              <span className="birlik-ad">Koşan asker →</span>
+              <small>Soldan sağa geçer</small>
+            </button>
+            <button type="button" className="birlik" disabled={!kosanlar.length} onClick={() => kosanGonder(true)}>
+              <span className="birlik-ad">← Koşan asker</span>
+              <small>Sağdan sola geçer</small>
+            </button>
+            <button type="button" className="birlik yarali" disabled={!yaralilar.length} onClick={yaraliCagir}>
+              <span className="birlik-ad">Yaralı asker</span>
+              <small>Yakında yerde, yardım ister</small>
+            </button>
+            <button type="button" className="birlik vuruldu" disabled={!vurulabilir.length} onClick={askerVuruldu} title="Seçili yöne en yakın ayakta asker vurulur ve yere düşer">
+              <span className="birlik-ad">Asker vuruldu!</span>
+              <small>{vurulabilir.length ? `${vurulabilir.length} asker sahnede` : "Önce asker çağır"}</small>
+            </button>
+            <button type="button" className="birlik sihhiyeci" disabled={!sihhiyeciler.length || !yaraliAktifler.length} onClick={sihhiyeciGonder} title="Başında en az sıhhiyeci olan yaralının yanına diz çöker; her dokunuş sıradaki yaralıya gider">
+              <span className="birlik-ad">Sıhhiyeci gönder</span>
+              <small>{!yaraliAktifler.length ? "Önce yaralı olmalı" : sihhiyesizYarali ? `${sihhiyesizYarali} yaralı sıhhiyeci bekliyor` : "Her yaralının başında sıhhiyeci var"}</small>
+            </button>
+          </div>
+        )}
+        <details className="gelismis">
+          <summary>Gelişmiş: elle yerleştirme</summary>
+          <div className="gelismis-govde">
+            <div className="klip-kartlari">
+              {gruplar.map(([kategori, liste]) => (
+                <div key={kategori} className="klip-grubu">
+                  <span className="klip-grubu-ad">
+                    <GrupSimgesi grup={kategori} /> {grupBasligi(kategori)}
+                  </span>
+                  <div className="klip-grubu-liste">
+                    {liste.map((k) => (
+                      <button key={k.ad} type="button" className={`klip-karti ${klip === k.ad ? "secili" : ""} ${k.eski ? "eski" : ""}`} onClick={() => setKlip(k.ad)} title={k.eski ? "Eski yer tutucu model" : k.baslik}>
+                        <span className="klip-simge" aria-hidden="true">{simgesi(k)}</span>
+                        {k.baslik.replace(/ \(kendi modelimiz[^)]*\)/, "")}
+                        {k.dongu && <small>döngü</small>}
+                        {k.eski && <small>eski</small>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {eskiSayisi > 0 && (
+              <div className="satir">
+                <Anahtar acik={eskileriGoster} onChange={setEskileriGoster} etiket={`Eski modelleri göster (${eskiSayisi})`} aciklama="Quaternius/test yer tutucuları; yeni Meshy modelleri varken gerekmez" />
+              </div>
+            )}
+            <div className="satir">
+              <span className="etiket">Mesafe</span>
+              <div className="secenek-grubu">
+                {MESAFELER.map(([y, ad]) => (
+                  <button key={ad} type="button" className={yukseklik === y ? "secili" : ""} onClick={() => setYukseklik(y)}>
+                    {ad}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="iki-sutun">
+              <Kaydirici etiket="Ölçek" deger={olcek} min={0.5} max={2} adim={0.1} birim="×" onChange={setOlcek} gecikmeMs={0} />
+              <div className="satir" style={{ alignSelf: "end" }}>
+                <Anahtar acik={yansit} onChange={setYansit} etiket="Aynala" aciklama="Yürüyen/koşan figür sola gider" />
+              </div>
+            </div>
+            <button
+              type="button"
+              className="birincil"
+              disabled={!klip}
+              onClick={() =>
+                void calistir(() => api.figur({ islem: "oynat", klip, azimut: yonAzimut(seciliYon), yukseklik, olcek, yansit, dongu: secili?.dongu })).then(
+                  (r) => r && bildir({ tur: "basari", baslik: `${secili?.baslik ?? klip} sahneye kondu`, metin: yonMetni(seciliYon) }),
+                )
+              }
+            >
+              <Ikon.oynat /> Sahneye koy · {yonMetni(seciliYon)}
+            </button>
+            <button type="button" className="kucuk ikincil ikonlu" onClick={yenile} title="Manifest değiştiyse listeyi yenile">
+              <Ikon.yenile /> Listeyi yenile
+            </button>
+          </div>
+        </details>
+      </Bolum>
+
+      <Bolum
+        baslik="Sahnedeki birlik"
+        altBaslik={aktifler.length ? `${aktifler.length} figür` : "Sahne boş"}
+        ikon={<Ikon.figur />}
+        sag={
+          aktifler.length > 0 && (
+            <OnayliDugme sinif="kucuk tehlike" onay="Hepsi çekilsin mi?" onClick={() => void calistir(() => api.figur({ islem: "temizle" }))}>
+              Birliği geri çek
+            </OnayliDugme>
+          )
+        }
+      >
+        {aktifler.length === 0 ? (
+          <p className="aciklama">Henüz figür yok. Yukarıdan asker, cephe ya da tank çağır.</p>
+        ) : (
+          <ul className="liste">
+            {aktifler.map((f) => (
+              <li key={f.id}>
+                <span className="liste-isaret figur">{simgesi(klipler.find((k) => k.ad === f.klip))}</span>
+                <div className="liste-govde">
+                  <strong>{baslik(f.klip ?? "")}</strong>
+                  <small>
+                    {yonMetni(((f.azimut ?? 0) + 360) % 360)} tarafı
+                    {f.yansit ? " · aynalı" : ""}
+                    {f.poz && f.poz !== "ayakta" ? ` · ${FIGUR_POZ_ETIKETLERI[f.poz].toLowerCase()}` : ""}
+                  </small>
+                </div>
+                {["asker", "yarali", "sihhiye"].includes(grupAdi(klipler.find((k) => k.ad === f.klip) ?? BOS_KLIP)) && !/_(kosan|yuruyen|comelerek|surunen)$/.test(f.klip ?? "") && (
+                  <span className="dugme-grubu">
+                    {f.poz !== "yarali" && (
+                      <button type="button" className="kucuk tehlike" onClick={() => pozDegistir(f, "yarali")} title="Vurulur, yere düşer, yardım çağırır">
+                        Vuruldu
+                      </button>
+                    )}
+                    {(f.poz ?? "ayakta") !== "ayakta" && (
+                      <button type="button" className="kucuk ikincil" onClick={() => pozDegistir(f, "ayakta")}>
+                        Kalk
+                      </button>
+                    )}
+                    {f.poz !== "comelmis" && f.poz !== "yarali" && (
+                      <button type="button" className="kucuk ikincil" onClick={() => pozDegistir(f, "comelmis")}>
+                        Diz çök
+                      </button>
+                    )}
+                    {f.poz !== "yatmis" && f.poz !== "yarali" && !/sihhiyeci/.test(f.klip ?? "") && (
+                      <button type="button" className="kucuk ikincil" onClick={() => pozDegistir(f, "yatmis")} title="Yere yatıp ateş pozisyonu">
+                        Yat
+                      </button>
+                    )}
+                  </span>
+                )}
+                <button type="button" className="kucuk ikincil" onClick={() => void calistir(() => api.figur({ islem: "durdur", id: f.id }))}>
+                  Kaldır
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Bolum>
+    </>
+  );
+}
