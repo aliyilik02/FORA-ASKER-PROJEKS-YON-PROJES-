@@ -7582,6 +7582,97 @@
     ]
   },
   "alanlar": {
+    "kirsal_acik_arazi_film": {
+      "_aciklama": "Film görünümü (11 Kasım 2026): kırsal mevzi. Kum torbası yayı ve sandıklar, bahçe duvarı (yıkılabilir), kaya dizileri, tuğla yığını; Kirpi toprak yoldan gelir; düşman köy evlerinden ateş eder. Sketchfab CC-BY taramaları (atıf sketchfab_indirilen/**/*.kaynak.json).",
+      "ekle": [
+        {"dosya":"modeller/alan/sf_kum_torbasi_bariyer.glb","x":-3.4,"z":-6.6,"yonDerece":12},
+        {"dosya":"modeller/alan/sf_kum_torbasi_bariyer.glb","x":2.6,"z":-7,"yonDerece":-10},
+        {"dosya":"modeller/alan/sf_kum_torbasi_kose.glb","x":6.4,"z":-5.4,"yonDerece":-50},
+        {"dosya":"modeller/alan/sf_kum_torbasi_kose.glb","x":-7.2,"z":-4.8,"yonDerece":55},
+        {"dosya":"modeller/alan/sf_cephane_sandigi.glb","x":7.8,"z":-1.2,"yonDerece":20},
+        {"dosya":"modeller/alan/sf_cephane_sandigi.glb","x":-4.8,"z":-1.6,"yonDerece":-70},
+        {"dosya":"modeller/alan/sf_cephane_kutusu.glb","x":8.4,"z":-1.8,"yonDerece":65},
+        {"dosya":"modeller/alan/sf_cephane_kutusu.glb","x":-5.4,"z":-2.1,"yonDerece":10},
+        {"dosya":"modeller/alan/sf_kaya_seti.glb","x":-9,"z":6,"yonDerece":80},
+        {"dosya":"modeller/alan/sf_kaya_seti.glb","x":13,"z":5,"yonDerece":-60},
+        {"dosya":"modeller/alan/sf_kaya_col_olusumu.glb","x":15,"z":-24,"yonDerece":60,"olcek":0.7},
+        {"dosya":"modeller/alan/sf_tugla_yigini.glb","x":12.5,"z":-18.5,"yonDerece":120,"olcek":0.7},
+        {"dosya":"modeller/alan/varil_216.glb","x":-9.5,"z":-9,"yonDerece":0},
+        {"dosya":"modeller/alan/varil_213.glb","x":-10.4,"z":-8.2,"yonDerece":30,"yatirDerece":90}
+      ],
+      "noktalar": [
+        {"ad":"sol kum torbası arkası","azimut":-35.9,"mesafe":5.8,"tur":["asker"]},
+        {"ad":"sağ kum torbası arkası","azimut":27,"mesafe":5.7,"tur":["asker"]},
+        {"ad":"sağ köşe mevzi","azimut":60.3,"mesafe":6.45,"tur":["asker"]},
+        {"ad":"sol köşe mevzi","azimut":-67.9,"mesafe":6.9,"tur":["asker"]},
+        {"ad":"sol torba iç","azimut":-16.3,"mesafe":5,"tur":["asker"]},
+        {"ad":"sağ torba iç","azimut":9.1,"mesafe":5.1,"tur":["asker"]},
+        {"ad":"hat gerisi orta","azimut":0,"mesafe":3.5,"tur":["figur"]},
+        {"ad":"hat gerisi sol","azimut":-47,"mesafe":4.1,"tur":["figur"]},
+        {"ad":"hat gerisi sağ","azimut":47,"mesafe":4.1,"tur":["figur"]},
+        {"ad":"mevzi önü","azimut":14,"mesafe":17,"tur":["patlama","toz"]},
+        {"ad":"sol ön","azimut":-24,"mesafe":19,"tur":["patlama","toz"]},
+        {"ad":"sağ ön","azimut":34,"mesafe":22,"tur":["patlama","toz"]},
+        {"ad":"açık alan","azimut":75,"mesafe":40,"tur":["helikopter"]},
+        {"ad":"araç yolu","azimut":-8,"mesafe":34,"tur":["tank"]}
+      ],
+      "dusmanMevzileri": [{"ad":"köy evi","x":-81.6,"y":3,"z":-33},{"ad":"köy evi 2","x":-66.2,"y":3,"z":-63.9}],
+      "aracRotasi": {"bas":[-3,-100],"dur":[-3,-30]},
+      "yikilabilir": [{"x":8,"z":-17,"yonDerece":10,"en":6,"yukseklik":1.8}],
+      "dokuntu": [
+        {"x":-3,"z":-5,"yaricap":5,"adet":350,"tas":true},
+        {"x":4,"z":-5,"yaricap":5,"adet":350,"tas":true},
+        {"x":9,"z":-17,"yaricap":5,"adet":500,"tugla":0.6}
+      ]
+    },
+    "us_bolgesi_film": {
+      "_aciklama": "Film görünümü (11 Kasım 2026): üs savunma hattı. Kum torbası yayı ve sandıklar, beton bariyerler, gözetleme kulesi ve bayrak, hasarlı yapı, yıkılabilir duvar; Kirpi üs yolundan gelir. Sketchfab CC-BY taramaları (atıf sketchfab_indirilen/**/*.kaynak.json).",
+      "ekle": [
+        {"dosya":"modeller/alan/sf_kum_torbasi_bariyer.glb","x":-3.4,"z":-6.6,"yonDerece":12},
+        {"dosya":"modeller/alan/sf_kum_torbasi_bariyer.glb","x":2.6,"z":-7,"yonDerece":-10},
+        {"dosya":"modeller/alan/sf_kum_torbasi_kose.glb","x":6.4,"z":-5.4,"yonDerece":-50},
+        {"dosya":"modeller/alan/sf_kum_torbasi_kose.glb","x":-7.2,"z":-4.8,"yonDerece":55},
+        {"dosya":"modeller/alan/sf_cephane_sandigi.glb","x":7.8,"z":-1.2,"yonDerece":20},
+        {"dosya":"modeller/alan/sf_cephane_sandigi.glb","x":-4.8,"z":-1.6,"yonDerece":-70},
+        {"dosya":"modeller/alan/sf_cephane_kutusu.glb","x":8.4,"z":-1.8,"yonDerece":65},
+        {"dosya":"modeller/alan/sf_cephane_kutusu.glb","x":-5.4,"z":-2.1,"yonDerece":10},
+        {"dosya":"modeller/alan/bariyer_beton_165.glb","x":-11,"z":-13.5,"yonDerece":8},
+        {"dosya":"modeller/alan/bariyer_beton_184.glb","x":-14.2,"z":-13,"yonDerece":14},
+        {"dosya":"modeller/alan/bariyer_beton_166.glb","x":10.5,"z":-15,"yonDerece":-12},
+        {"dosya":"modeller/alan/sf_gozetleme_kulesi_2.glb","x":-21,"z":-40,"yonDerece":20},
+        {"dosya":"modeller/alan/sf_hasarli_bina_3.glb","x":20,"z":-32,"yonDerece":-20},
+        {"dosya":"modeller/alan/sf_tugla_yigini.glb","x":15,"z":-26,"yonDerece":200,"olcek":0.8},
+        {"dosya":"modeller/alan/varil_216.glb","x":-9,"z":-11.6,"yonDerece":0},
+        {"dosya":"modeller/alan/varil_218.glb","x":-8.2,"z":-12.3,"yonDerece":40},
+        {"dosya":"modeller/alan/sf_kaya_seti.glb","x":14,"z":5,"yonDerece":-60}
+      ],
+      "noktalar": [
+        {"ad":"sol kum torbası arkası","azimut":-35.9,"mesafe":5.8,"tur":["asker"]},
+        {"ad":"sağ kum torbası arkası","azimut":27,"mesafe":5.7,"tur":["asker"]},
+        {"ad":"sağ köşe mevzi","azimut":60.3,"mesafe":6.45,"tur":["asker"]},
+        {"ad":"sol köşe mevzi","azimut":-67.9,"mesafe":6.9,"tur":["asker"]},
+        {"ad":"sol torba iç","azimut":-16.3,"mesafe":5,"tur":["asker"]},
+        {"ad":"sağ torba iç","azimut":9.1,"mesafe":5.1,"tur":["asker"]},
+        {"ad":"hat gerisi orta","azimut":0,"mesafe":3.5,"tur":["figur"]},
+        {"ad":"hat gerisi sol","azimut":-47,"mesafe":4.1,"tur":["figur"]},
+        {"ad":"hat gerisi sağ","azimut":47,"mesafe":4.1,"tur":["figur"]},
+        {"ad":"mevzi önü","azimut":14,"mesafe":17,"tur":["patlama","toz"]},
+        {"ad":"sol ön","azimut":-24,"mesafe":19,"tur":["patlama","toz"]},
+        {"ad":"sağ ön","azimut":34,"mesafe":22,"tur":["patlama","toz"]},
+        {"ad":"açık alan","azimut":-75,"mesafe":40,"tur":["helikopter"]},
+        {"ad":"araç yolu","azimut":-8,"mesafe":34,"tur":["tank"]}
+      ],
+      "dusmanMevzileri": [{"ad":"hasarlı yapı","x":19,"y":3,"z":-30},{"ad":"hasarlı yapı üst","x":21,"y":5,"z":-33}],
+      "aracRotasi": {"bas":[3,-100],"dur":[3,-28]},
+      "yikilabilir": [{"x":-8,"z":-21,"yonDerece":-10,"en":5.2,"yukseklik":2.4}],
+      "bayraklar": [{"x":-15.5,"z":-39,"yukseklik":14,"boy":3}],
+      "dokuntu": [
+        {"x":-3,"z":-5,"yaricap":5,"adet":300},
+        {"x":4,"z":-5,"yaricap":5,"adet":300},
+        {"x":17,"z":-28,"yaricap":6,"adet":700,"tugla":0.5},
+        {"x":-8,"z":-20,"yaricap":4,"adet":300,"tugla":0.5}
+      ]
+    },
     "ormanlik_film": {
       "_aciklama": "Film görünümü (?gorsel=film, 11 Kasım 2026): dereli orman açıklığı. Önde kum torbası mevzi, açıklığı kesen dere (sahne3b/dere.ts), kıyıda yosunlu ve açık renkli kaya taramaları, yıkık duvar, devrilmiş variller. Sketchfab CC-BY (yosunlu kaya 3dhdscan; diğerleri daglik_film ile aynı); atıf sketchfab_indirilen/**/*.kaynak.json.",
       "ekle": [
@@ -8501,6 +8592,10 @@
           ]
         }
       }
+    },
+    "us_bolgesi": {
+      "_aciklama": "Üs bölgesi: sade görünümde 3B yapı yok (panorama); film görünümü us_bolgesi_film ekini bu boş plana ekler.",
+      "ogeler": []
     },
     "kirsal_acik_arazi": {
       "_aciklama": "Kırsal köy (9 Kasım): sol önde 75–120 m düz damlı taş evler ve yıkıntı, elektrik hattı; panoramanın yerleşim planı (≤ 38 m) aynen geçerli. Ön yüzler izleyiciye (yonDerece = -azimut).",
