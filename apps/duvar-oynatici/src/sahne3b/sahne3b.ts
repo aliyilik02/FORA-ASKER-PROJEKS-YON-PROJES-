@@ -1073,7 +1073,7 @@ export class Sahne3B {
       this.sokak.ayarla(alanPlani?.sokak, this.alanKok);
       this.sokak.zemineOturt();
       this.dokuntu.ayarla(alanPlani?.dokuntu);
-      this.yikilan.ayarla(alanPlani?.yikilabilir);
+      this.yikilan.ayarla(alanPlani?.yikilabilir, this.alanKok);
       this.arac?.temizle();
       // Yere oturan mevcut nesneler yeni yüksekliğe (bölge değişti: profil farklı; kip değişti: düz ↔ engebeli)
       this.figurler.zemineOturt();
@@ -1425,7 +1425,7 @@ export class Sahne3B {
     this.flasGuc = Math.max(this.flasGuc, s);
     this.figurler.patlamaOldu(p); // figürler 4 sn oraya bakar (düşman/yaralı yoksa)
     // Yıkılabilir duvar: patlama merkezine yakın tuğlalar savrulur, toz kalkar
-    if (this.yikilan.patlama(new THREE.Vector3(p.x, p.y + 1, p.z), 1.5 + s * 1.1)) this.parcaciklar.tozBulutu(p, 4.5, 1);
+    if (this.yikilan.patlama(new THREE.Vector3(p.x, p.y + 1.1, p.z), 1.3 + s * 0.8)) this.parcaciklar.tozBulutu(p, 4.5, 1);
     // Patlama artığı: kraterde küçük bir yangın 2,5–3,5 sn yanar, sonra 2,5 sn'de söner (alev → seyrek duman);
     // ışığı ve sesi (yangın ses kaynağı) kendiliğinden gelir. Panelin "yangın" efekti ise kalıcıdır.
     this.yanginlar?.ekle(p, (0.25 + 0.2 * Math.min(1, s)) * varyant.yangin, (2.5 + Math.min(1, s)) * (0.85 + 0.3 * Math.random()));
