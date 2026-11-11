@@ -67,9 +67,9 @@ try {
   await bekle(1200);
   await c.cek("h04_kis_patlama_1", "orta");
 
-  // Yaz, alacakaranlık, yangın + toz
+  // Yaz, gece, yangın + toz
   await c.api("POST", "/sahne/sifirla", { kaynak: "panel" });
-  await c.api("PATCH", "/ortam", { mevsim: "yaz", yagis: "yok", sis: 0, bulut: 0.3, saat: 19 });
+  await c.api("PATCH", "/ortam", { mevsim: "yaz", yagis: "yok", sis: 0, bulut: 0.3, saat: 23 });
   console.log("akşam hazır:", await c.hazirBekle());
   await bekle(5000);
   for (const [id, klip, azimut] of [["a1", "komando_bekleyen", -15], ["a2", "komando_bere_bekleyen", 15]]) {

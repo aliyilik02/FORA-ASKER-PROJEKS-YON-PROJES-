@@ -860,14 +860,6 @@ button.birlik.sihhiyeci {
 .bolge-karti.secili small {
   color: #d9c7a3;
 }
-.gun-cizgisi-gunes {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-}
-.hizli-zaman button {
-  min-height: 34px;
-  font-size: 12.5px;
-  background: rgba(255, 255, 255, 0.06);
-}
 /* Klip kartları: daha geniş, tek satır metin; "döngü" rozeti gereksiz (hepsi döngü) */
 .klip-grubu-liste {
   display: grid;
@@ -994,8 +986,7 @@ body {
 /* Tablet (dokunmatik): dokunma hedefleri en az 44 px (WCAG 2.5.5); fare/kalemde kompakt kalır. */
 @media (pointer: coarse) {
   button.kucuk,
-  .secenek-grubu button,
-  .hizli-zaman button {
+  .secenek-grubu button {
     min-height: 44px;
   }
   .bildirim-kapat {

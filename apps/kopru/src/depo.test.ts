@@ -25,6 +25,25 @@ describe("veri deposu", () => {
     expect(liste.map((s) => s.id)).toEqual(["sn_benim", ORNEK_SENARYOLAR[0].id, ...ORNEK_SENARYOLAR.slice(1).map((s) => s.id)]);
   });
 
+  it("açılışta eski saat/mevsim kayıtlarını gündüz/gece ve yaz/kışa indirir (senaryo adımı + ön ayar)", () => {
+    const k = mkdtempSync(join(tmpdir(), "depo-"));
+    const eski = { id: "sn_eski", ad: "Eski", oda: "oda1", adimlar: [
+      { id: "a1", gecikmeMs: 0, aciklama: "x", islem: { tip: "ortam", ortam: { mevsim: "sonbahar", saat: 18.5, sis: 0.2 } } },
+      { id: "a2", gecikmeMs: 1, aciklama: "y", islem: { tip: "ortam", ortam: { saat: 5.75 } } },
+      { id: "a3", gecikmeMs: 2, aciklama: "z", islem: { tip: "ortam", ortam: { bulut: 0.4 } } },
+    ] };
+    writeFileSync(join(k, "senaryolar.json"), JSON.stringify([eski]));
+    writeFileSync(join(k, "on-ayarlar.json"), JSON.stringify([{ id: "oa1", ad: "Akşam", olusturma: "", durum: { ortam: { mevsim: "ilkbahar", saat: 21 } } }]));
+    const uyarilar: string[] = [];
+    const d = new VeriDeposu(k, [], (u) => uyarilar.push(u));
+    const adimlar = d.senaryolar()[0].adimlar.map((x) => (x.islem as { ortam: unknown }).ortam);
+    expect(adimlar).toEqual([{ mevsim: "yaz", saat: 12, sis: 0.2 }, { saat: 23 }, { bulut: 0.4 }]);
+    expect(d.onAyarlar()[0].durum.ortam).toMatchObject({ mevsim: "yaz", saat: 23 });
+    expect(uyarilar).toHaveLength(1);
+    new VeriDeposu(k, [], (u) => uyarilar.push(u));
+    expect(uyarilar).toHaveLength(1); // ikinci açılışta değişecek bir şey yok
+  });
+
   it("örnek senaryoların adım kimlikleri tekil ve figür duruş adımları önce sahneye konan figürü hedefler", () => {
     for (const s of ORNEK_SENARYOLAR) {
       const kimlikler = s.adimlar.map((a) => a.id);

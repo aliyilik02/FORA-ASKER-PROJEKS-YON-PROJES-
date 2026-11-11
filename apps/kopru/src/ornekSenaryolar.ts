@@ -218,7 +218,7 @@ export const ORNEK_SENARYOLAR: Senaryo[] = [
       { id: "k51", gecikmeMs: 195000, aciklama: "Yağmur yangınları söndürür", islem: { tip: "efekt", efekt: { tur: "yangin_sondur", siddet: 1, yon: 0 } } },
       { id: "k52", gecikmeMs: 195500, aciklama: "Yağmur hafifler, fırtına geçer", islem: { tip: "ortam", ortam: { yagis: "hafif_yagmur", simsek: false } } },
       { id: "k53", gecikmeMs: 201000, aciklama: "Safha: taktik tahliye", islem: { tip: "safha", safha: "tahliye" } },
-      { id: "k54", gecikmeMs: 205000, aciklama: "Gündüz: sisli, ıslak sabah", islem: { tip: "ortam", ortam: { saat: 23, sis: 0.3, bulut: 0.5, yagis: "yok", ruzgarSiddeti: 0.2 } } },
+      { id: "k54", gecikmeMs: 205000, aciklama: "Gündüz: sisli, ıslak sabah", islem: { tip: "ortam", ortam: { saat: 12, sis: 0.3, bulut: 0.5, yagis: "yok", ruzgarSiddeti: 0.2 } } },
       { id: "k55", gecikmeMs: 219000, aciklama: "Çağırma: 'Tahliye için hazır!'", islem: { tip: "efekt", efekt: { tur: "cagirma", siddet: 1, yon: 0 } } },
       { id: "k56", gecikmeMs: 227000, aciklama: "Uzaklarda son silah sesleri", islem: { tip: "efekt", efekt: { tur: "uzak_mermi_sesi", siddet: 0.4, yon: 340, mesafe: 1200 } } },
       { id: "k57", gecikmeMs: 238000, aciklama: "Sahne biter", islem: { tip: "ortam", ortam: { ruzgarSiddeti: 0.1 } } },

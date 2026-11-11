@@ -9,7 +9,6 @@ icerik/
   manifest.json
   kirsal_acik_arazi/
     yaz_gunduz.mp4         5760x1080, 60–90 sn kusursuz döngü
-    yaz_alacakaranlik.mp4
     yaz_gece.mp4
     kis_gunduz.mp4 ...
   meskun_mahal/ ormanlik/ daglik/ us_bolgesi/

@@ -523,12 +523,6 @@ export function gunIsigi(saat: number): number {
   return yumusak(-12, 10, gunesKonumu(saat).yukseklik);
 }
 
-/** Alacakaranlık yoğunluğu 0–1 (güneş ufka yakınken 1). */
-export function alacakaranlik(saat: number): number {
-  const e = gunesKonumu(saat).yukseklik;
-  return Math.max(0, 1 - Math.abs(e) / 14);
-}
-
 /** İstenen zaman dilimi: yalnız gündüz ve gece (11 Kasım 2026). */
 export type ZamanDilimi = GunZamani;
 

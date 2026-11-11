@@ -4,6 +4,7 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync, renameSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import type { FigurKomutu, OnAyar, Senaryo, SimulasyonDurumu } from "./tipler.js";
+import { mevsimeIndir, saatiIndir } from "./tipler.js";
 
 /** Köprü kapanıp açılınca sahnenin kaldığı yerden devam etmesi için son durum (bölge, ortam, oda, figürler). */
 export interface SonDurum {
@@ -52,6 +53,31 @@ export function kimlikUret(onek: string): string {
   return `${onek}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 }
 
+/**
+ * Sadeleştirme göçü (11 Kasım 2026): kayıtlı ortam yalnız yaz/kış ve gündüz (12) / gece (23) taşır. Eski ara saatler ve
+ * ilkbahar/sonbahar yerinde indirilir; bir şey değiştiyse true (dosya yeniden yazılır).
+ */
+function ortamAlanlariniIndir(o: unknown): boolean {
+  if (!o || typeof o !== "object") return false;
+  const k = o as { mevsim?: unknown; saat?: unknown };
+  let degisti = false;
+  if (k.mevsim !== undefined) {
+    const m = mevsimeIndir(k.mevsim) ?? "yaz";
+    if (m !== k.mevsim) {
+      k.mevsim = m;
+      degisti = true;
+    }
+  }
+  if (k.saat !== undefined) {
+    const s = saatiIndir(typeof k.saat === "number" && Number.isFinite(k.saat) ? k.saat : 12);
+    if (s !== k.saat) {
+      k.saat = s;
+      degisti = true;
+    }
+  }
+  return degisti;
+}
+
 export class VeriDeposu {
   private readonly onAyarDosyasi: string;
   private readonly senaryoDosyasi: string;
@@ -74,6 +100,28 @@ export class VeriDeposu {
       const mevcut = dosyaOku<Senaryo[]>(this.senaryoDosyasi, [], (u) => this.uyari?.(u));
       const eksik = varsayilanSenaryolar.filter((v) => !mevcut.some((m) => m.id === v.id));
       if (eksik.length) dosyaYaz(this.senaryoDosyasi, [...mevcut, ...eksik]);
+    }
+    this.eskiOrtamlariIndir();
+  }
+
+  /** Kayıtlı senaryo adımları ve ön ayarlardaki eski saat/mevsim değerlerini bir kez indirir (bozuk kayıt atlanır). */
+  private eskiOrtamlariIndir() {
+    try {
+      const senaryolar = this.senaryolar();
+      let n = 0;
+      if (Array.isArray(senaryolar)) {
+        for (const s of senaryolar) for (const a of Array.isArray(s?.adimlar) ? s.adimlar : []) if (a?.islem?.tip === "ortam" && ortamAlanlariniIndir(a.islem.ortam)) n++;
+        if (n) dosyaYaz(this.senaryoDosyasi, senaryolar);
+      }
+      const onAyarlar = this.onAyarlar();
+      let m = 0;
+      if (Array.isArray(onAyarlar)) {
+        for (const o of onAyarlar) if (ortamAlanlariniIndir(o?.durum?.ortam)) m++;
+        if (m) dosyaYaz(this.onAyarDosyasi, onAyarlar);
+      }
+      if (n || m) this.uyari?.(`Eski saat/mevsim kayıtları gündüz/gece ve yaz/kışa indirildi: ${n} senaryo adımı, ${m} ön ayar`);
+    } catch {
+      // Göç isteğe bağlı: okunamayan kayıt çalışma anında (ortamGuncelle, durumuTamamla) zaten indirilir.
     }
   }
 

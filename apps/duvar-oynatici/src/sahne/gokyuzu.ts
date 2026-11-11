@@ -1,7 +1,6 @@
 /** Gökyüzü: saate göre renk, güneş/ay, yıldızlar, bulutlar (rüzgârla sürüklenir). */
 import {
   aciGenisligi,
-  alacakaranlik,
   azimutX,
   gunesKonumu,
   gunIsigi,
@@ -15,8 +14,6 @@ import type { OrtamAyarlari } from "../tipler";
 
 const GUNDUZ_UST: Renk = [66, 128, 205];
 const GUNDUZ_UFUK: Renk = [178, 206, 232];
-const ALACA_UST: Renk = [70, 60, 120];
-const ALACA_UFUK: Renk = [245, 150, 80];
 const GECE_UST: Renk = [4, 7, 22];
 const GECE_UFUK: Renk = [18, 28, 58];
 const BULUT_GRI: Renk = [150, 155, 165];
@@ -29,11 +26,8 @@ export interface GokyuzuRenkleri {
 
 export function gokyuzuRenkleri(ortam: OrtamAyarlari): GokyuzuRenkleri {
   const isik = gunIsigi(ortam.saat);
-  const alaca = alacakaranlik(ortam.saat);
   let ust = karistir(GECE_UST, GUNDUZ_UST, isik);
   let ufuk = karistir(GECE_UFUK, GUNDUZ_UFUK, isik);
-  ust = karistir(ust, ALACA_UST, alaca * 0.7);
-  ufuk = karistir(ufuk, ALACA_UFUK, alaca * 0.85);
   // Bulut örtüsü gökyüzünü griye ve karanlığa çeker.
   const gri = karistir(BULUT_GRI, GECE_UST, 1 - isik);
   ust = karistir(ust, gri, ortam.bulut * 0.75);
@@ -105,7 +99,7 @@ export function gokyuzuCiz(ctx: CanvasRenderingContext2D, y: Yerlesim, ufukY: nu
     hale.addColorStop(1, "rgba(255,200,120,0)");
     ctx.fillStyle = hale;
     ctx.fillRect(gx - r * 4, gy - r * 4, r * 8, r * 8);
-    ctx.fillStyle = `rgba(255,${235 - alacakaranlik(ortam.saat) * 90},${210 - alacakaranlik(ortam.saat) * 150},${1 - ortam.bulut * 0.6})`;
+    ctx.fillStyle = `rgba(255,235,210,${1 - ortam.bulut * 0.6})`;
     ctx.beginPath();
     ctx.arc(gx, gy, r, 0, Math.PI * 2);
     ctx.fill();
