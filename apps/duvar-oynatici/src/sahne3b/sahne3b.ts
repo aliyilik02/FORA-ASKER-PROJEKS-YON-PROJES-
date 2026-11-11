@@ -43,6 +43,7 @@ import { GOZ_YUKSEKLIGI, ZEMIN_Y, azimutYon, derece, radyan, yerKonumu, yuksekli
 import { aciNormalize, birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimPlani, type YerlesimSecimi, type YerlesimTuru } from "./yerlesim";
 import { YanginKatmani } from "./yangin";
 import { FisekKatmani } from "./fisek";
+import { SonIslem } from "./sonIslem";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
 /** Kalite kademeleri: dizüstü/entegre GPU'da "dusuk", sahadaki RTX sınıfı makinede "yuksek". */
@@ -471,6 +472,20 @@ export class Sahne3B {
     return orta ? ufukSatiri(orta, k) : (this.H * (1 + k)) / 2;
   }
 
+  /** Son işlem ("film" görünümü: temas gölgesi, parlama, film tonu; sonIslem.ts). null = eski doğrudan çizim. */
+  sonIslem: SonIslem | null = null;
+  /** `?gorsel=film` açar, `sade` kapatır. Çizici kurulmadan önce de çağrılabilir (kurulunca uygulanır). */
+  gorselAyarla(film: boolean) {
+    if (!film) {
+      this.sonIslem?.birak();
+      this.sonIslem = null;
+      return;
+    }
+    if (this.sonIslem || !this.renderer) return;
+    const ornek = KALITE_AYARLARI[this.kalite].kenarYumusatma ? 4 : 0;
+    this.sonIslem = new SonIslem(Math.max(1, this.W) * this.pikselOrani, Math.max(1, this.H) * this.pikselOrani, ornek);
+  }
+
   /** Arka tampon piksel oranı (1 = CSS pikseli; devicePixelRatio = cihaz). Çizici kurulmadan önce de ayarlanabilir. */
   private pikselOrani = 1;
   pikselOraniAyarla(oran: number) {
@@ -479,6 +494,7 @@ export class Sahne3B {
       this.renderer.setPixelRatio(this.pikselOrani);
       this.renderer.setSize(this.W, this.H, false);
       this.tuvalStiliniAyarla();
+      this.sonIslem?.boyutAyarla(this.W * this.pikselOrani, this.H * this.pikselOrani);
     }
   }
 
@@ -495,6 +511,7 @@ export class Sahne3B {
     this.H = H;
     this.yerlesimler = yerlesimler;
     this.renderer?.setSize(W, H, false);
+    this.sonIslem?.boyutAyarla(W * this.pikselOrani, H * this.pikselOrani);
     this.tuvalStiliniAyarla();
     this.yagis3b.boyutlandir(H);
     this.kameralar = yerlesimler.map(() => new DuvarKamerasi(0.1, 3000));
@@ -1590,13 +1607,28 @@ export class Sahne3B {
     this.sahne.updateMatrixWorld(true);
     this.sahne.matrixWorldAutoUpdate = false;
     try {
+      const si = this.sonIslem;
       this.yerlesimler.forEach((y, i) => {
-        r.setViewport(y.x, 0, y.genislik + ek, this.H + ek);
-        r.setScissor(y.x, 0, y.genislik + ek, this.H + ek);
+        if (si) {
+          // Film görünümü: duvarlar önce HDR hedefe (cihaz pikseli), sonra tek geçişle tuvale
+          const po = this.pikselOrani;
+          si.duvarAlani(Math.floor(y.x * po), Math.ceil(y.genislik * po) + (po === 1 ? 0 : 1));
+          r.setRenderTarget(si.hedef);
+          if (i === 0) r.clear();
+        } else {
+          r.setViewport(y.x, 0, y.genislik + ek, this.H + ek);
+          r.setScissor(y.x, 0, y.genislik + ek, this.H + ek);
+        }
         r.render(this.sahne, this.kameralar[i]);
       });
+      if (si) {
+        r.setScissorTest(false);
+        r.setViewport(0, 0, this.W, this.H);
+        si.bitir(r, this.kameralar[0]);
+      }
     } finally {
       this.sahne.matrixWorldAutoUpdate = true;
+      if (this.sonIslem) r.setRenderTarget(null);
     }
     r.setScissorTest(false);
     this.buKareCizildi = true;

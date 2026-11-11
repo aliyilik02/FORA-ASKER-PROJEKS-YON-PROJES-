@@ -69,6 +69,7 @@ async function main() {
     });
     const sorgu = new URLSearchParams({ dinamik: "0", tohum: "7", kalite: KALITE, hud: "0", gecis: "0" });
     if (FOV) sorgu.set("fov", FOV);
+    sorgu.set("gorsel", arg("gorsel", "sade"));
     await sayfa.goto(`${KOPRU}/oynatici/?${sorgu}`);
     const gpu = await sayfa.evaluate(() => {
       const g = document.createElement("canvas").getContext("webgl2");

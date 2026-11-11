@@ -213,6 +213,11 @@ function araziModuSec(bolge: string): AraziModu {
  * 3B alan (manifest `alanlar`, sahne3b/alan.ts): meskûn mahalde yakın binalar/araçlar 3B, gök ve uzak dağlar başka
  * bölgenin panoramasından. `?alan=kapali` eski panorama görünümüne döner, `?alan=acik` geri açar (yerel kayıtta kalır).
  */
+// Görünüm: `?gorsel=film` son işlem katmanını açar (temas gölgesi, parlama, film tonu; sahne3b/sonIslem.ts),
+// `?gorsel=sade` eski doğrudan çizime döner. Yerel kayıtta kalır; varsayılan sade (deneme aşaması, 11 Kasım 2026).
+const gorselParam = params.get("gorsel");
+if (gorselParam === "film" || gorselParam === "sade") localStorage.setItem("gorsel", gorselParam);
+sahne3b.gorselAyarla((gorselParam ?? localStorage.getItem("gorsel")) === "film");
 const alanParam = params.get("alan");
 if (alanParam === "kapali" || alanParam === "acik") localStorage.setItem("alan", alanParam);
 const alanKapali = (alanParam ?? localStorage.getItem("alan")) === "kapali";
