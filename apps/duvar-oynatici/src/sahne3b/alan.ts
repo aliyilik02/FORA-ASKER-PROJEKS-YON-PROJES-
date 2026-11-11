@@ -43,6 +43,8 @@ export interface AlanOgesi {
   yatirDerece?: number;
   /** Renk tonu (CSS rengi, dokuyla çarpılır): taramanın rengini araziye yaklaştırmak için (turuncu çöl kayası → boz). */
   ton?: string;
+  /** Mat yüzey: taramanın parlak çıkan pürüz değeri yok sayılır (kaya gökyüzünü yansıtıp mavi-beyaz görünüyordu). */
+  mat?: boolean;
 }
 
 export interface AlanPlani {
@@ -312,12 +314,35 @@ export class AlanKatmani {
     });
   }
 
+  /**
+   * Işıksız (KHR_materials_unlit) taramaları ışıklı malzemeye çevirir: bazı fotogrametri modelleri ışığı dokuya
+   * pişirip ışıksız malzemeyle gelir; sahnede gölge almaz, gece parlar, karlanmaz (büyük kaya ve tuğla yığını böyleydi).
+   * Köşe normali yoksa hesaplanır.
+   */
+  private isikliYap(kok: THREE.Object3D) {
+    kok.traverse((c) => {
+      const m = c as THREE.Mesh;
+      if (!m.isMesh) return;
+      if (!m.geometry.getAttribute("normal")) m.geometry.computeVertexNormals();
+      const cevir = (mal: THREE.Material) => {
+        const b = mal as THREE.MeshBasicMaterial;
+        if (!b.isMeshBasicMaterial) return mal;
+        const yeni = new THREE.MeshStandardMaterial({ map: b.map, color: b.color, side: b.side, transparent: b.transparent, alphaTest: b.alphaTest, roughness: 0.95, metalness: 0 });
+        yeni.name = b.name;
+        b.dispose();
+        return yeni;
+      };
+      m.material = Array.isArray(m.material) ? m.material.map(cevir) : cevir(m.material);
+    });
+  }
+
   private yukle(url: string) {
     let p = this.onbellek.get(url);
     if (!p) {
       const sinir = this.dokuSiniri;
       p = this.yukleyici.loadAsync(url).then((g) => {
         if (sinir) dokulariSinirla(g.scene, sinir);
+        this.isikliYap(g.scene);
         this.karlandir(g.scene);
         return g;
       });
@@ -383,12 +408,18 @@ export class AlanKatmani {
       if (!m.isMesh) return;
       m.castShadow = golge;
       m.receiveShadow = true;
-      if (o.ton) {
+      if (o.ton || o.mat) {
         // Ton bu kopyaya özel: malzeme kopyalanır (dokular paylaşılır)
         const tonla = (mal: THREE.Material) => {
           const k = mal.clone() as THREE.MeshStandardMaterial;
           k.userData = { ...k.userData, alanKar: false }; // kopya kar yamasını taşımaz, aşağıda yeniden eklenir
-          k.color?.multiply(new THREE.Color(o.ton));
+          if (o.ton) k.color?.multiply(new THREE.Color(o.ton));
+          if (o.mat) {
+            k.roughness = 1;
+            k.roughnessMap = null;
+            k.metalness = 0;
+            k.metalnessMap = null;
+          }
           return k;
         };
         m.material = Array.isArray(m.material) ? m.material.map(tonla) : tonla(m.material);
