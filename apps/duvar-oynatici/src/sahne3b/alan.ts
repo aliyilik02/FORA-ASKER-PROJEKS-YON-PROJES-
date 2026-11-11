@@ -79,12 +79,14 @@ export interface AlanFilmEki {
   aracRotasi?: AracRotasi;
   yikilabilir?: YikilabilirDuvar[];
   bayraklar?: BayrakPlani[];
+  /** Verilirse temel planın yerleşim noktalarının yerine geçer (yeni düzene göre mevziler). */
+  noktalar?: YerlesimNoktasi[];
 }
 
 export function filmPlani(temel: AlanPlani, ek: AlanFilmEki | undefined): AlanPlani {
   if (!ek) return temel;
   const cikar = ek.cikar ?? [];
-  return { ...temel, ogeler: [...temel.ogeler.filter((o) => !cikar.some((c) => o.dosya.includes(c))), ...(ek.ekle ?? [])], dokuntu: ek.dokuntu, aracRotasi: ek.aracRotasi ?? temel.aracRotasi, yikilabilir: ek.yikilabilir, bayraklar: ek.bayraklar };
+  return { ...temel, ogeler: [...temel.ogeler.filter((o) => !cikar.some((c) => o.dosya.includes(c))), ...(ek.ekle ?? [])], dokuntu: ek.dokuntu, aracRotasi: ek.aracRotasi ?? temel.aracRotasi, yikilabilir: ek.yikilabilir, bayraklar: ek.bayraklar, noktalar: ek.noktalar ?? temel.noktalar };
 }
 
 /** Mermi izinin kestiği öğe kutusu: ince/uzun direk ve lambalar (kutusu çoğunlukla boş hava) ile çatı eşyası hariç. */
@@ -264,12 +266,53 @@ export class AlanKatmani {
     return this.izler.length;
   }
 
+  /** Kar örtüsü (0–1): bütün alan modellerinde ortak (yukarı bakan yüzeyler karlanır). */
+  private readonly uKar = { value: 0 };
+
+  karAyarla(kar: number) {
+    this.uKar.value = kar;
+  }
+
+  /**
+   * Malzemeye kar ekler: dünya-yukarı bakan yüzeyler (çatı, kaya üstü, kum torbası sırtı, araç tavanı) kar rengine
+   * döner ve matlaşır; dik yüzeyler açık kalır. Kışta taranmış modeller çıplak kalıyordu (11 Kasım 2026).
+   */
+  private karEkle(mal: THREE.Material) {
+    if (mal.userData.alanKar) return;
+    mal.userData.alanKar = true;
+    const onceki = mal.onBeforeCompile;
+    mal.onBeforeCompile = (s, r) => {
+      onceki?.call(mal, s, r);
+      if (!s.fragmentShader.includes("#include <normal_fragment_maps>")) return;
+      s.uniforms.uAlanKar = this.uKar;
+      s.fragmentShader =
+        "uniform float uAlanKar;\nfloat gAlanKar;\n" +
+        s.fragmentShader
+          .replace(
+            "#include <normal_fragment_maps>",
+            "#include <normal_fragment_maps>\n  gAlanKar = smoothstep(0.35, 0.7, dot(normal, normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz))) * clamp(uAlanKar, 0.0, 1.0);\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.86, 0.88, 0.92), gAlanKar * 0.92);",
+          )
+          .replace("#include <lights_physical_fragment>", "#include <lights_physical_fragment>\n  material.roughness = mix(material.roughness, 0.9, gAlanKar);");
+    };
+    mal.customProgramCacheKey = () => "alanKar";
+    mal.needsUpdate = true;
+  }
+
+  private karlandir(kok: THREE.Object3D) {
+    kok.traverse((c) => {
+      const m = c as THREE.Mesh;
+      if (!m.isMesh) return;
+      for (const mal of Array.isArray(m.material) ? m.material : [m.material]) this.karEkle(mal);
+    });
+  }
+
   private yukle(url: string) {
     let p = this.onbellek.get(url);
     if (!p) {
       const sinir = this.dokuSiniri;
       p = this.yukleyici.loadAsync(url).then((g) => {
         if (sinir) dokulariSinirla(g.scene, sinir);
+        this.karlandir(g.scene);
         return g;
       });
       this.onbellek.set(url, p);
@@ -338,10 +381,13 @@ export class AlanKatmani {
         // Ton bu kopyaya özel: malzeme kopyalanır (dokular paylaşılır)
         const tonla = (mal: THREE.Material) => {
           const k = mal.clone() as THREE.MeshStandardMaterial;
+          k.userData = { ...k.userData, alanKar: false }; // kopya kar yamasını taşımaz, aşağıda yeniden eklenir
           k.color?.multiply(new THREE.Color(o.ton));
           return k;
         };
         m.material = Array.isArray(m.material) ? m.material.map(tonla) : tonla(m.material);
+        // Kopya malzeme kar yamasını taşımaz (clone onBeforeCompile kopyalamaz)
+        for (const mal of Array.isArray(m.material) ? m.material : [m.material]) this.karEkle(mal);
       }
     });
     const p = ogeKonumu(o);

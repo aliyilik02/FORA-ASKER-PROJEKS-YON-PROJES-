@@ -419,7 +419,7 @@ Teknisyen › Ortam, senaryo editörü). Alacakaranlık panoramaları yalnız ek
 seçeneği ekleme. Ayrıntı docs/duvar-oynatici.md "Yalnız yaz/kış ve gündüz/gece".
 
 **Film görünümü denemesi (11 Kasım; kullanıcı örnek Unreal paketindeki görüntüyü hedef gösterdi, "denemeyi yap" dedi):**
-`?gorsel=film` (yerel kayıtta kalır, varsayılan `sade`; eski görünüm bozulmaz). Karar noktası: bu deneme yetmezse görüntü Unreal'a
+Film görünümü artık **varsayılan** (kullanıcı onayı; `?gorsel=sade` eskiye döner, düşük kalitede kendiliğinden sade; yerel kayıtta kalır). Karar noktası: bu deneme yetmezse görüntü Unreal'a
 taşınır (panel/köprü kalır). İçerik: son işlem katmanı `sahne3b/sonIslem.ts` (temas gölgesi, parlama, ACES film tonu); manifest
 `alanlar.<bolge>_film` eki (`alan.ts filmPlani`: `cikar`/`ekle`/`dokuntu`/`aracRotasi`/`yikilabilir`); Sketchfab CC-BY taramaları
 (`araclar/sketchfab.mjs ara|indir`, anahtar `SKETCHFAB_TOKEN` ortam değişkeni; `glb-onizle.py`, `sketchfab-hazirla.py`,
@@ -429,7 +429,7 @@ açar) ve `duvar_yik` (`yikilanDuvar.ts`), sözleşme 5, Eğitmen ekranında iki
 görüntü `goruntu-al.mjs --gorsel film --bulut 0.55`. GTX 1650 3840×720 başsız: sade 49, film 40 fps. Örnek paketin meskûn haritası
 referans: `araclar/_goruntu/ornek/meskun_2.png`. Açık: Kirpi tekerleği dönmez, duvar düz renkli tuğla, asker noktaları yeni
 düzende denetlenmedi. Dağlıkta da var (`daglik_film`: kum torbası mevzi, cephane sandıkları, taranmış kayalar `ton` ile bozlaştırılmış,
-sırtta gözetleme kulesi ve dalgalanan Türk bayrağı `bayrak.ts`); kışta taranmış modeller karlanmıyor. Yıkılan duvar Poly Haven tuğla
+sırtta gözetleme kulesi ve dalgalanan Türk bayrağı `bayrak.ts`); kışta alan modelleri karlanır (`alan.ts karEkle`: yukarı bakan yüzeyler); dağ mevzi noktaları `daglik_film.noktalar`; senaryolar `sn_film_gorunumu`, `sn_film_dag_mevzii`. Yıkılan duvar Poly Haven tuğla
 dokulu. Görüntü/test **ayrı köprüde** (`--kopru http://127.0.0.1:4100`), kullanıcının sahnesini değiştirme. Meshy üretimi için önce sor.
 
 **Amaç ve sonraki oturum (10 Kasım kapanış):** duvar, odada **gerçek mankenlerle** oynanan vakanın arkasına ortam ve tehdit

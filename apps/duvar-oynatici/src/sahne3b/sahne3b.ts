@@ -1098,6 +1098,7 @@ export class Sahne3B {
     }
     this.arazi.karAyarla(kar);
     this.sokak.karAyarla(kar);
+    this.alan.karAyarla(kar);
     this.uygulananKar = kar;
     return kuruldu;
   }

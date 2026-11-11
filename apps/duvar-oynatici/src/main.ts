@@ -214,10 +214,12 @@ function araziModuSec(bolge: string): AraziModu {
  * bölgenin panoramasından. `?alan=kapali` eski panorama görünümüne döner, `?alan=acik` geri açar (yerel kayıtta kalır).
  */
 // Görünüm: `?gorsel=film` son işlem katmanını açar (temas gölgesi, parlama, film tonu; sahne3b/sonIslem.ts),
-// `?gorsel=sade` eski doğrudan çizime döner. Yerel kayıtta kalır; varsayılan sade (deneme aşaması, 11 Kasım 2026).
+// `?gorsel=sade` eski doğrudan çizime döner. Yerel kayıtta kalır; varsayılan film (kullanıcı onayı, 11 Kasım 2026),
+// yalnız düşük kalitede sade (son işlem geçişleri zayıf ekran kartında pahalı).
 const gorselParam = params.get("gorsel");
 if (gorselParam === "film" || gorselParam === "sade") localStorage.setItem("gorsel", gorselParam);
-const filmGorunum = (gorselParam ?? localStorage.getItem("gorsel")) === "film";
+const gorselSecim = gorselParam ?? localStorage.getItem("gorsel");
+const filmGorunum = gorselSecim === "film" || (gorselSecim !== "sade" && kalite !== "dusuk");
 sahne3b.gorselAyarla(filmGorunum);
 const alanParam = params.get("alan");
 if (alanParam === "kapali" || alanParam === "acik") localStorage.setItem("alan", alanParam);
