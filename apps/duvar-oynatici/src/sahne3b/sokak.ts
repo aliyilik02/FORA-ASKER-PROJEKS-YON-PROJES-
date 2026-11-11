@@ -53,7 +53,12 @@ export class SokakKatmani {
   private malzemeler: THREE.MeshStandardMaterial[] = [];
   private dokular: THREE.Texture[] = [];
   /** Kar (0–1) ve ıslaklık (0–1): bütün sokak malzemelerinde ortak. */
-  private readonly u = { uKar: { value: 0 }, uIslak: { value: 0 } };
+  private readonly u = { uKar: { value: 0 }, uIslak: { value: 0 }, uFilm: { value: 0 } };
+
+  /** Film görünümü: yüzeyde büyük ölçekli kir/toz lekeleri ve su birikintileri (gölgelendiricide). */
+  set film(acik: boolean) {
+    this.u.uFilm.value = acik ? 1 : 0;
+  }
 
   get plan(): SokakPlani | null {
     return this.aktifPlan;
@@ -141,14 +146,20 @@ export class SokakKatmani {
     m.onBeforeCompile = (s) => {
       s.uniforms.uKar = this.u.uKar;
       s.uniforms.uIslak = this.u.uIslak;
+      s.uniforms.uFilm = this.u.uFilm;
+      s.uniforms.uOlcek = { value: OLCEK[ad] };
       s.fragmentShader =
-        "uniform float uKar;\nuniform float uIslak;\n" +
+        "uniform float uKar;\nuniform float uIslak;\nuniform float uFilm;\nuniform float uOlcek;\nfloat gSu;\n" +
+        "float sKarma(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }\n" +
+        "float sGurultu(vec2 p) { vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(sKarma(i), sKarma(i + vec2(1.0, 0.0)), f.x), mix(sKarma(i + vec2(0.0, 1.0)), sKarma(i + vec2(1.0, 1.0)), f.x), f.y); }\n" +
+        "float sFbm(vec2 p) { return sGurultu(p) * 0.55 + sGurultu(p * 2.1 + 4.7) * 0.3 + sGurultu(p * 4.3 + 9.1) * 0.15; }\n" +
         s.fragmentShader
           .replace(
             "#include <map_fragment>",
-            "#include <map_fragment>\n  diffuseColor.rgb *= mix(1.0, 0.68, uIslak * (1.0 - uKar));\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.86, 0.88, 0.92), clamp(uKar, 0.0, 1.0) * 0.85);",
+            "#include <map_fragment>\n  vec2 sDunya = vMapUv * uOlcek;\n  diffuseColor.rgb *= mix(1.0, 0.62 + 0.5 * sFbm(sDunya * 0.3), uFilm);\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.5, 0.46, 0.4), smoothstep(0.55, 0.85, sFbm(sDunya * 0.8 + 7.3)) * 0.2 * uFilm);\n  gSu = smoothstep(0.69, 0.73, sFbm(sDunya * 0.27 + 3.1)) * uFilm * (1.0 - uKar);\n  diffuseColor.rgb *= mix(1.0, 0.32, gSu);\n  diffuseColor.rgb *= mix(1.0, 0.68, uIslak * (1.0 - uKar));\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.86, 0.88, 0.92), clamp(uKar, 0.0, 1.0) * 0.85);",
           )
-          .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = mix(roughnessFactor, roughnessFactor * 0.3, uIslak * (1.0 - uKar));");
+          .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = mix(roughnessFactor, roughnessFactor * 0.3, uIslak * (1.0 - uKar));\n  roughnessFactor = mix(roughnessFactor, 0.04, gSu);")
+          .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n  normal = normalize(mix(normal, nonPerturbedNormal, gSu));");
     };
     this.malzemeler.push(m);
     return m;

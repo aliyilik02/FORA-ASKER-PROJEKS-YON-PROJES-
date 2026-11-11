@@ -74,12 +74,14 @@ void main() {
   float z = yakin * uzak / (uzak - d0 * (uzak - yakin));
   // Ekrandaki yarıçap uzaklıkla küçülür; çok yakında 48 pikselle sınırlı (doku önbelleği dostu)
   float r = clamp(aoYaricap * odak / z, 2.0, 48.0);
-  float aci = karma(gl_FragCoord.xy) * 3.14159;
+  // Dönüş 4×4 pikselde yinelenir; birleştirmedeki 4×4 kutu yumuşatma deseni tam siler (nokta nokta gürültü kalmaz)
+  vec2 hucre = mod(floor(gl_FragCoord.xy), 4.0);
+  float aci = (hucre.x + hucre.y * 4.0) / 16.0 * 3.14159;
   float sinir = aoYaricap * 2.5;
   float kapali = 0.0;
   for (int i = 0; i < 8; i++) {
     float a = aci + float(i) * 0.3927;
-    float k = (float(i) + 0.5 + karma(gl_FragCoord.yx + float(i))) / 8.0;
+    float k = (float(i) + 0.5 + fract(aci * 2.3 + float(i) * 0.618)) / 8.0;
     vec2 o = vec2(cos(a), sin(a)) * r * k * piksel;
     float za = uzaklik(vUv + o);
     float zb = uzaklik(vUv - o);
@@ -115,9 +117,9 @@ vec3 aces(vec3 x) {
 void main() {
   vec3 c = texture2D(tRenk, vUv).rgb;
   if (aoGuc > 0.0) {
-    vec2 p = piksel * 2.5;
-    float t = texture2D(tTemas, vUv).r * 0.28;
-    t += (texture2D(tTemas, vUv + vec2(p.x, p.y)).r + texture2D(tTemas, vUv + vec2(-p.x, p.y)).r + texture2D(tTemas, vUv + vec2(p.x, -p.y)).r + texture2D(tTemas, vUv + vec2(-p.x, -p.y)).r) * 0.18;
+    // Yarım çözünürlüklü dokuda ±1 doku pikseli (= 2 tam piksel) kaydırılmış dört çift doğrusal örnek: 4×4 kutu
+    vec2 p = piksel * 2.0;
+    float t = (texture2D(tTemas, vUv + vec2(p.x, p.y)).r + texture2D(tTemas, vUv + vec2(-p.x, p.y)).r + texture2D(tTemas, vUv + vec2(p.x, -p.y)).r + texture2D(tTemas, vUv + vec2(-p.x, -p.y)).r) * 0.25;
     c *= mix(1.0, t, aoGuc);
   }
   c += texture2D(tParlama, vUv).rgb * parlamaGuc;

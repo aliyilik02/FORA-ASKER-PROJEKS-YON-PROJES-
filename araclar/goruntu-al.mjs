@@ -80,7 +80,7 @@ async function main() {
     if (/SwiftShader|Basic Render/i.test(gpu)) console.log("  ! yazılımsal çizim: görüntü ve süre gerçeği yansıtmaz");
 
     for (const s of sahneler) {
-      await api("PATCH", "/ortam", { mevsim: s.mevsim, saat: s.saat, yagis: "yok", sis: 0, bulut: 0.2, simsek: false });
+      await api("PATCH", "/ortam", { mevsim: s.mevsim, saat: s.saat, yagis: "yok", sis: Number(arg("sis", "0")), bulut: Number(arg("bulut", "0.2")), simsek: false });
       await api("PUT", "/bolge", { bolge: s.bolge });
       const bas = Date.now();
       await bekle(1500);

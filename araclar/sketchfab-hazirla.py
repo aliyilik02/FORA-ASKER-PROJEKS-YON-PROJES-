@@ -20,7 +20,7 @@ for m in yap["modeller"]:
     ad = m["ad"]
     if secili and ad not in secili: continue
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.gltf(filepath=os.path.join(kok, yap["ham"], ad + ".glb"))
+    bpy.ops.import_scene.gltf(filepath=os.path.join(kok, m.get("ham", yap["ham"]), ad + ".glb"))
     aglar = [o for o in bpy.context.scene.objects if o.type == "MESH"]
     # Hiyerarşiyi çöz (dünya dönüşümü kalsın), boş düğümleri at: tek düzeyde ağlar
     for o in aglar:

@@ -44,6 +44,7 @@ import { aciNormalize, birlikNoktasiSec, noktaSec, yasaktanKacin, type YerlesimP
 import { YanginKatmani } from "./yangin";
 import { FisekKatmani } from "./fisek";
 import { SonIslem } from "./sonIslem";
+import { DokuntuKatmani } from "./dokuntu";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
 /** Kalite kademeleri: dizüstü/entegre GPU'da "dusuk", sahadaki RTX sınıfı makinede "yuksek". */
@@ -217,6 +218,8 @@ export class Sahne3B {
   private readonly alan = new AlanKatmani();
   /** Alanın asfalt yolu, kaldırımı, meydanı (plan `sokak`); alanla birlikte kurulur, kraterle çöker. */
   private readonly sokak = new SokakKatmani();
+  /** Saçılmış küçük döküntü (film görünümü; plan `dokuntu`). */
+  private readonly dokuntu = new DokuntuKatmani();
   private alanPlanlari: Record<string, AlanPlani> = {};
   private alanKok = "";
   private catismaSesleri: CatismaSesleri = { carpma: () => undefined, atis: () => undefined };
@@ -342,7 +345,7 @@ export class Sahne3B {
     this.gokyuzu.baglan(r, this.pmrem);
 
     this.sahne.add(this.gokOrtusu.kutu, this.yagis3b.grup);
-    this.sahne.add(this.arazi.grup, this.alan.grup, this.sokak.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
+    this.sahne.add(this.arazi.grup, this.alan.grup, this.sokak.grup, this.dokuntu.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
 
     if (hataAyiklama) {
       this.gunesIsareti = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffee55 }));
@@ -476,6 +479,7 @@ export class Sahne3B {
   sonIslem: SonIslem | null = null;
   /** `?gorsel=film` açar, `sade` kapatır. Çizici kurulmadan önce de çağrılabilir (kurulunca uygulanır). */
   gorselAyarla(film: boolean) {
+    this.sokak.film = film;
     if (!film) {
       this.sonIslem?.birak();
       this.sonIslem = null;
@@ -720,6 +724,7 @@ export class Sahne3B {
       this.sutre.zemineOturt();
       this.alan.zemineOturt();
       this.sokak?.zemineOturt();
+      this.dokuntu?.zemineOturt();
     }
     this.yonelimUygula();
     // İniş noktası yeni plandan, panelin son yönüyle (havadaki helikopter pas geçer ya da rotasını kurar)
@@ -1055,6 +1060,7 @@ export class Sahne3B {
       this.alan.ayarla(alanPlani, this.alanKok);
       this.sokak.ayarla(alanPlani?.sokak, this.alanKok);
       this.sokak.zemineOturt();
+      this.dokuntu.ayarla(alanPlani?.dokuntu);
       // Yere oturan mevcut nesneler yeni yüksekliğe (bölge değişti: profil farklı; kip değişti: düz ↔ engebeli)
       this.figurler.zemineOturt();
       this.sutre.zemineOturt();
@@ -1071,6 +1077,7 @@ export class Sahne3B {
       this.sutre.zemineOturt();
       this.alan.zemineOturt();
       this.sokak?.zemineOturt();
+      this.dokuntu?.zemineOturt();
     }
     this.arazi.karAyarla(kar);
     this.sokak.karAyarla(kar);

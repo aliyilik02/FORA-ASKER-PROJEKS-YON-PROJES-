@@ -15,6 +15,7 @@
 import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { radyan, yerKonumu, zeminY } from "./uzay";
+import type { DokuntuObegi } from "./dokuntu";
 import type { SokakPlani } from "./sokak";
 import type { YasakAralik, YerlesimNoktasi } from "./yerlesim";
 
@@ -34,6 +35,8 @@ export interface AlanOgesi {
   olcek?: number;
   /** Gölge düşürür mü (varsayılan evet). */
   golge?: boolean;
+  /** Öne doğru yatırma (derece, yerel x ekseni): duvara yaslanmış saç levha, devrilmiş pano. */
+  yatirDerece?: number;
 }
 
 export interface AlanPlani {
@@ -53,18 +56,21 @@ export interface AlanPlani {
   dusmanMevzileri?: Array<{ x: number; y: number; z: number; ad?: string }>;
   /** Asfalt yol, bordürlü kaldırım, parke meydan, orta çizgi (sahne3b/sokak.ts). */
   sokak?: SokakPlani;
+  /** Saçılmış küçük döküntü öbekleri (sahne3b/dokuntu.ts; film görünümü). */
+  dokuntu?: DokuntuObegi[];
 }
 
 /** Film görünümü eki (manifest `alanlar.<bolge>_film`): temel plandan dosya adı `cikar`dakilerden birini içerenler atılır, `ekle` eklenir. */
 export interface AlanFilmEki {
   cikar?: string[];
   ekle?: AlanOgesi[];
+  dokuntu?: DokuntuObegi[];
 }
 
 export function filmPlani(temel: AlanPlani, ek: AlanFilmEki | undefined): AlanPlani {
   if (!ek) return temel;
   const cikar = ek.cikar ?? [];
-  return { ...temel, ogeler: [...temel.ogeler.filter((o) => !cikar.some((c) => o.dosya.includes(c))), ...(ek.ekle ?? [])] };
+  return { ...temel, ogeler: [...temel.ogeler.filter((o) => !cikar.some((c) => o.dosya.includes(c))), ...(ek.ekle ?? [])], dokuntu: ek.dokuntu };
 }
 
 /** Mermi izinin kestiği öğe kutusu: ince/uzun direk ve lambalar (kutusu çoğunlukla boş hava) ile çatı eşyası hariç. */
@@ -317,7 +323,9 @@ export class AlanKatmani {
     });
     const p = ogeKonumu(o);
     nesne.position.set(p.x, 0, p.z);
+    nesne.rotation.order = "YXZ";
     nesne.rotation.y = radyan(o.yonDerece ?? 0);
+    if (o.yatirDerece) nesne.rotation.x = radyan(o.yatirDerece);
     if (o.olcek && o.olcek > 0) nesne.scale.setScalar(o.olcek);
     nesne.userData.alanDosya = o.dosya;
     this.grup.add(nesne);
