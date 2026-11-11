@@ -156,7 +156,7 @@ export class SokakKatmani {
         s.fragmentShader
           .replace(
             "#include <map_fragment>",
-            "#include <map_fragment>\n  vec2 sDunya = vMapUv * uOlcek;\n  diffuseColor.rgb *= mix(1.0, 0.62 + 0.5 * sFbm(sDunya * 0.3), uFilm);\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.5, 0.46, 0.4), smoothstep(0.55, 0.85, sFbm(sDunya * 0.8 + 7.3)) * 0.2 * uFilm);\n  gSu = smoothstep(0.69, 0.73, sFbm(sDunya * 0.27 + 3.1)) * uFilm * (1.0 - uKar);\n  diffuseColor.rgb *= mix(1.0, 0.32, gSu);\n  diffuseColor.rgb *= mix(1.0, 0.68, uIslak * (1.0 - uKar));\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.86, 0.88, 0.92), clamp(uKar, 0.0, 1.0) * 0.85);",
+            "#include <map_fragment>\n  vec2 sDunya = vMapUv * uOlcek;\n  diffuseColor.rgb *= mix(1.0, 0.62 + 0.5 * sFbm(sDunya * 0.3), uFilm);\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.5, 0.46, 0.4), smoothstep(0.55, 0.85, sFbm(sDunya * 0.8 + 7.3)) * 0.2 * uFilm);\n  gSu = smoothstep(0.72, 0.76, sFbm(sDunya * 0.27 + 3.1)) * uFilm * (1.0 - uKar);\n  diffuseColor.rgb *= mix(1.0, 0.32, gSu);\n  diffuseColor.rgb *= mix(1.0, 0.68, uIslak * (1.0 - uKar));\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.86, 0.88, 0.92), clamp(uKar, 0.0, 1.0) * 0.85);",
           )
           .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = mix(roughnessFactor, roughnessFactor * 0.3, uIslak * (1.0 - uKar));\n  roughnessFactor = mix(roughnessFactor, 0.04, gSu);")
           .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n  normal = normalize(mix(normal, nonPerturbedNormal, gSu));");

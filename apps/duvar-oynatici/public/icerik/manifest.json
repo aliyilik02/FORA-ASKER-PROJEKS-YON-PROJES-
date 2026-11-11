@@ -7603,8 +7603,12 @@
         {"dosya":"modeller/alan/sf_beton_parcalari.glb","x":5.8,"z":-3,"yonDerece":300,"olcek":0.7},
         {"dosya":"modeller/alan/sf_beton_parcalari.glb","x":-5.7,"z":-2.2,"yonDerece":120,"olcek":0.6},
         {"dosya":"modeller/alan/sf_sac_levha.glb","x":-9.3,"z":-7.4,"yonDerece":90,"yatirDerece":-20,"olcek":0.8},
-        {"dosya":"modeller/alan/sf_sac_levha.glb","x":9.5,"z":-4.4,"yonDerece":-90,"yatirDerece":-24,"olcek":0.7},
-        {"dosya":"modeller/alan/sf_kirpi_bmc.glb","x":-2.6,"z":-24,"yonDerece":-15}
+        {"dosya":"modeller/alan/sf_sac_levha.glb","x":9.5,"z":-4.4,"yonDerece":-90,"yatirDerece":-24,"olcek":0.7}
+      ],
+      "aracRotasi": {"bas":[-1.5,-72],"dur":[-1.5,-23]},
+      "yikilabilir": [
+        {"x":6.4,"z":-15.5,"yonDerece":15,"en":5.2,"yukseklik":2.6},
+        {"x":10.6,"z":1.2,"yonDerece":-80,"en":4.4,"yukseklik":2.4}
       ],
       "dokuntu": [
         {"x":-9,"z":-11,"yaricap":5,"adet":900,"tugla":0.6},

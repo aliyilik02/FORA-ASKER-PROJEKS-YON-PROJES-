@@ -291,6 +291,8 @@ export function EgitmenEkrani({
             <D k="yangin_sondur" ad="Yangını söndür" alt="Bütün yangınlar söner" onClick={() => efekt("yangin_sondur", "Yangınlar söndü")} />
             <D k="toz_duman" ad="Toz bulutu" alt="Görüşü kapatır" onClick={() => efekt("toz_duman", "Toz bulutu", 0.8)} />
             <D k="fisek" ad="Aydınlatma fişeği" alt="Geceyi aydınlatır" onClick={() => efekt("fisek", "Fişek atıldı")} />
+            <D k="duvar_yik" ad="Duvarı patlat" alt="Duvar tuğla tuğla yıkılır" onClick={() => efekt("duvar_yik", "Duvar yıkıldı")} />
+            <D k="zirhli_arac" ad="Zırhlı araç gelsin" alt="Gelir, durur, ateş açar" onClick={() => efekt("zirhli_arac", "Zırhlı araç geliyor")} />
           </Konu>
         )}
 

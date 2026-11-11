@@ -193,7 +193,7 @@ export class DurumDeposu {
     }
     this.gunluk.bilgi(`Efekt tetiklendi: ${istek.tur} (şiddet ${istek.siddet})`);
     await this.unreal.efektTetikle(istek);
-    if (istek.tur === "patlama" && this.durum.isik.senaryoyaBagli) {
+    if ((istek.tur === "patlama" || istek.tur === "duvar_yik") && this.durum.isik.senaryoyaBagli) {
       this.artnet.patlamaFlasi(istek.siddet ?? 1);
     }
     // Havan: oda ışığı ıslık bitince (patlama anında) çakar

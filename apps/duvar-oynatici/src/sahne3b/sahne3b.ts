@@ -45,6 +45,8 @@ import { YanginKatmani } from "./yangin";
 import { FisekKatmani } from "./fisek";
 import { SonIslem } from "./sonIslem";
 import { DokuntuKatmani } from "./dokuntu";
+import { AracOlayi } from "./aracOlayi";
+import { YikilanDuvarKatmani } from "./yikilanDuvar";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
 /** Kalite kademeleri: dizüstü/entegre GPU'da "dusuk", sahadaki RTX sınıfı makinede "yuksek". */
@@ -220,6 +222,9 @@ export class Sahne3B {
   private readonly sokak = new SokakKatmani();
   /** Saçılmış küçük döküntü (film görünümü; plan `dokuntu`). */
   private readonly dokuntu = new DokuntuKatmani();
+  /** Zırhlı araç olayı (efekt `zirhli_arac`) ve patlamayla yıkılan duvarlar (efekt `duvar_yik`). */
+  private arac: AracOlayi | null = null;
+  private readonly yikilan = new YikilanDuvarKatmani();
   private alanPlanlari: Record<string, AlanPlani> = {};
   private alanKok = "";
   private catismaSesleri: CatismaSesleri = { carpma: () => undefined, atis: () => undefined };
@@ -284,10 +289,15 @@ export class Sahne3B {
       },
       topAtisi: (azimut) => this.catismaSesleri.topAtisi?.(azimut),
     });
+    this.arac = new AracOlayi(this.parcaciklar, (namlu, konum) => {
+      // Hedef: düşman mevzilerinden biri (pencere/çatı), birkaç saniyede bir değişir; mevzi yoksa düşman yönü
+      const m = this.alan.dusmanMevzileri();
+      this.catisma.aracAtisi(namlu, konum, m.length ? m[Math.floor(performance.now() / 2600) % m.length] : undefined);
+    });
     this.catisma.dostlar = () => this.figurler.silahliKonumlar();
     this.catisma.atisNoktalari = () => this.figurler.atisNoktalari();
     this.catisma.dostAtisOldu = (id) => this.figurler.atisOldu(id);
-    this.figurler.engel = (p) => this.sutre.doluMu(p, 0.3) || this.alan.doluMu(p, 0.3);
+    this.figurler.engel = (p) => this.sutre.doluMu(p, 0.3) || this.alan.doluMu(p, 0.3) || this.yikilan.doluMu(p, 0.3);
     // 3B alan: düşman pencere/çatı mevzilerinden ateş eder, izler binaya/araca çarpıp biter, helikopter binaları aşar
     this.catisma.mevziler = () => this.alan.dusmanMevzileri();
     this.catisma.engelKesisimi = (x0, y0, z0, x1, y1, z1) => (this.alan.ogeSayisi ? this.alan.kesisim(x0, y0, z0, x1, y1, z1) : -1);
@@ -345,7 +355,7 @@ export class Sahne3B {
     this.gokyuzu.baglan(r, this.pmrem);
 
     this.sahne.add(this.gokOrtusu.kutu, this.yagis3b.grup);
-    this.sahne.add(this.arazi.grup, this.alan.grup, this.sokak.grup, this.dokuntu.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
+    this.sahne.add(this.arazi.grup, this.alan.grup, this.sokak.grup, this.dokuntu.grup, this.yikilan.grup, this.arac!.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
 
     if (hataAyiklama) {
       this.gunesIsareti = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffee55 }));
@@ -905,6 +915,8 @@ export class Sahne3B {
     this.figurler.temizle();
     this.yanginlar?.temizle(); // testler Sahne3B'yi kısmi kurar
     this.fisekler?.temizle();
+    this.arac?.temizle();
+    this.yikilan?.yenidenKur();
     this.sahneyiSifirla();
   }
 
@@ -1061,6 +1073,8 @@ export class Sahne3B {
       this.sokak.ayarla(alanPlani?.sokak, this.alanKok);
       this.sokak.zemineOturt();
       this.dokuntu.ayarla(alanPlani?.dokuntu);
+      this.yikilan.ayarla(alanPlani?.yikilabilir);
+      this.arac?.temizle();
       // Yere oturan mevcut nesneler yeni yüksekliğe (bölge değişti: profil farklı; kip değişti: düz ↔ engebeli)
       this.figurler.zemineOturt();
       this.sutre.zemineOturt();
@@ -1372,7 +1386,27 @@ export class Sahne3B {
     }
     // Yerleşim planı: patlama her zaman hazır bir noktaya düşer (yön yalnız tercih); plan yoksa serbest
     const secim = this.patlamaYeri(azimut, 30 - 16 * s);
-    const p = yerKonumu(secim.azimut, secim.mesafe);
+    this.patlamaKonumda(yerKonumu(secim.azimut, secim.mesafe), s, plakaVar);
+  }
+
+  /** Zırhlı araç olayı: alan planının rotasında (yoksa seçilen yönde 110 m'den 26 m'ye) gelir, durur, ateş açar. */
+  zirhliArac(azimut: number) {
+    const rota = this.alan.plan?.aracRotasi;
+    const bas = yerKonumu(azimut, 110);
+    const dur = yerKonumu(azimut, 26);
+    this.arac?.baslat(`${this.alanKok}modeller/alan/sf_kirpi_bmc.glb`, rota ?? { bas: [bas.x, bas.z], dur: [dur.x, dur.z] });
+  }
+
+  /** Seçilen yöne en yakın ayakta duvarda patlama; yıkılabilir duvar yoksa olağan patlama. */
+  duvarYik(azimut: number, siddet: number) {
+    const hedef = this.yikilan.enYakin(yerKonumu(azimut, 15));
+    if (!hedef) return this.patlama(azimut, siddet);
+    hedef.y = zeminY(hedef.x, hedef.z);
+    this.patlamaKonumda(hedef, Math.max(0.7, Math.min(1.5, siddet)), false);
+  }
+
+  /** Verilen noktada yakın patlama: ateş/toprak, krater, ışık, artık yangın; yakındaki yıkılabilir duvar çöker. */
+  private patlamaKonumda(p: THREE.Vector3, s: number, plakaVar: boolean) {
     const r = 1.2 + s * 2.4;
     const varyant = this.parcaciklar.patlamaVaryantiSec();
     // Gerçek çekilmiş plaka 2B katmanda oynuyorsa 3B ateş topu çizilmez; krater, moloz ve ışık yine eklenir.
@@ -1390,6 +1424,8 @@ export class Sahne3B {
     this.flas.position.set(p.x, p.y + r, p.z);
     this.flasGuc = Math.max(this.flasGuc, s);
     this.figurler.patlamaOldu(p); // figürler 4 sn oraya bakar (düşman/yaralı yoksa)
+    // Yıkılabilir duvar: patlama merkezine yakın tuğlalar savrulur, toz kalkar
+    if (this.yikilan.patlama(new THREE.Vector3(p.x, p.y + 1, p.z), 1.5 + s * 1.1)) this.parcaciklar.tozBulutu(p, 4.5, 1);
     // Patlama artığı: kraterde küçük bir yangın 2,5–3,5 sn yanar, sonra 2,5 sn'de söner (alev → seyrek duman);
     // ışığı ve sesi (yangın ses kaynağı) kendiliğinden gelir. Panelin "yangın" efekti ise kalıcıdır.
     this.yanginlar?.ekle(p, (0.25 + 0.2 * Math.min(1, s)) * varyant.yangin, (2.5 + Math.min(1, s)) * (0.85 + 0.3 * Math.random()));
@@ -1572,6 +1608,8 @@ export class Sahne3B {
     this.havaGuncelle(dt);
     this.yagis3b.guncelle(dt);
     this.catisma.guncelle(dt);
+    this.arac?.guncelle(dt);
+    this.yikilan.guncelle(dt);
     // Rüzgâr (yangın dumanı sürüklenir) ve duman aydınlatması (güneş yönü) — parçacık güncellemesinden önce
     this.yanginlar.ruzgar.set(Math.sin(radyan(this.ruzgarYonu)), 0, -Math.cos(radyan(this.ruzgarYonu))).multiplyScalar(this.ruzgarSiddeti * 6);
     this.parcaciklar.duman.ruzgar.copy(this.yanginlar.ruzgar); // toz ve duman topakları da sürüklenir (`surukle`)

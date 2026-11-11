@@ -456,6 +456,17 @@ function efektUygula(e: EfektIstegi, sesCalindi = false) {
       if (!sesCalindi) void ses.patlama(azimut, siddet);
       break;
     }
+    case "duvar_yik":
+      // Duvarda patlama: tuğlalar savrulur, toz kalkar; duvar yoksa (başka bölge, 3B kapalı) olağan patlama
+      if (uc) {
+        sahne3b.duvarYik(azimut, siddet);
+        efektler.flasVeSarsinti(siddet);
+      } else efektler.patlama(azimut, siddet, yerlesimler, ufuk(), H);
+      if (!sesCalindi) void ses.patlama(azimut, siddet);
+      break;
+    case "zirhli_arac":
+      if (uc) sahne3b.zirhliArac(azimut);
+      break;
     case "havan": {
       // Telegraf → temas: düşen ıslık HAVAN_ISLIK_MS boyunca, sonra aynı yönde patlama (sahne sıfırlanırsa patlama gelmez)
       ses.havanIsligi(azimut, HAVAN_ISLIK_MS / 1000);

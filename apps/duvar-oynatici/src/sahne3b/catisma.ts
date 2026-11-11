@@ -493,6 +493,17 @@ export class CatismaSistemi {
     this.sesler.atis(sesAzimutu(konum), false);
   }
 
+  /** Araç üstü silah (zırhlı araç olayı): namludan `hedef`e (yoksa düşman yönüne) izli atış, namlu alevi, ses. */
+  aracAtisi(namlu: THREE.Vector3, konum: THREE.Vector3, hedef?: THREE.Vector3) {
+    this.parcaciklar.parlama(namlu, 0.7);
+    const h = hedef
+      ? hedef.clone().add(new THREE.Vector3(rnd(-0.9, 0.9), rnd(-0.7, 0.7), rnd(-0.9, 0.9)))
+      : azimutYon(this.ayar.azimut + rnd(-8, 8)).multiplyScalar(rnd(160, 240)).setY(ZEMIN_Y + rnd(0, 4));
+    const v = h.sub(namlu).normalize().multiplyScalar(rnd(170, 210));
+    this.izEkle(namlu.clone(), v, true, false, true);
+    this.sesler.atis(sesAzimutu(konum), false);
+  }
+
   /** Tank top atışı: büyük parlama + namlu dumanı + hızlı parlak mermi; düşman hattında patlama ile biter. */
   private topAtisi(t: AgirSilahKonumu) {
     const yonDuz = t.yon.clone().setY(0).normalize();

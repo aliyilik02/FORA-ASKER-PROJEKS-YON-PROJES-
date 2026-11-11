@@ -127,7 +127,11 @@ export type EfektTuru =
   /** Havan mermisi: önce düşen ıslık (telegraf, HAVAN_ISLIK_MS), sonra seçilen yönde patlama. Kursiyere siper alma penceresi. */
   | "havan"
   /** Aydınlatma fişeği: seçilen yönde paraşütlü yıldız fişeği, ~28 sn yanar, salınan sert ışık (gece eğitimi). */
-  | "fisek";
+  | "fisek"
+  /** Zırhlı araç caddeden gelir, durur, tavan silahıyla ateş açar (oynatıcı sahne3b/aracOlayi.ts). */
+  | "zirhli_arac"
+  /** Seçilen yöne en yakın yıkılabilir duvarda patlama: duvar tuğla tuğla çöker (sahne3b/yikilanDuvar.ts). */
+  | "duvar_yik";
 
 /** Havan ıslığının süresi (ms): ıslık başlar, bu süre sonunda patlama ve DMX flaşı (köprü ve oynatıcı aynı değeri kullanır). */
 export const HAVAN_ISLIK_MS = 1400;
@@ -231,7 +235,7 @@ export interface OnAyar {
  * mesajında gönderir; panel kendi değeriyle karşılaştırır, uyuşmazlıkta "köprü eski sürüm, yeniden başlat" şeridi gösterir
  * (yeni derlenmiş panel + eski çalışan köprü = her yeni düğme "İşlem başarısız").
  */
-export const SOZLESME_SURUMU = 4;
+export const SOZLESME_SURUMU = 5;
 
 export interface BaglantiDurumu {
   /** Köprünün sözleşme sürümü (SOZLESME_SURUMU); eski köprüde alan yok. */
@@ -525,6 +529,8 @@ export const EFEKT_ETIKETLERI: Record<EfektTuru, string> = {
   yangin_sondur: "Yangınları söndür",
   havan: "Havan mermisi (ıslık → patlama)",
   fisek: "Aydınlatma fişeği",
+  zirhli_arac: "Zırhlı araç gelir, ateş açar",
+  duvar_yik: "Duvar patlar ve yıkılır",
 };
 
 export function varsayilanDurum(): SimulasyonDurumu {

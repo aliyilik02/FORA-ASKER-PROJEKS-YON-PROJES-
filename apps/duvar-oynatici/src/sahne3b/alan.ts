@@ -16,6 +16,8 @@ import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { radyan, yerKonumu, zeminY } from "./uzay";
 import type { DokuntuObegi } from "./dokuntu";
+import type { AracRotasi } from "./aracOlayi";
+import type { YikilabilirDuvar } from "./yikilanDuvar";
 import type { SokakPlani } from "./sokak";
 import type { YasakAralik, YerlesimNoktasi } from "./yerlesim";
 
@@ -58,6 +60,10 @@ export interface AlanPlani {
   sokak?: SokakPlani;
   /** Saçılmış küçük döküntü öbekleri (sahne3b/dokuntu.ts; film görünümü). */
   dokuntu?: DokuntuObegi[];
+  /** Zırhlı araç olayının rotası (sahne3b/aracOlayi.ts). */
+  aracRotasi?: AracRotasi;
+  /** Patlamayla yıkılan tuğla duvarlar (sahne3b/yikilanDuvar.ts). */
+  yikilabilir?: YikilabilirDuvar[];
 }
 
 /** Film görünümü eki (manifest `alanlar.<bolge>_film`): temel plandan dosya adı `cikar`dakilerden birini içerenler atılır, `ekle` eklenir. */
@@ -65,12 +71,14 @@ export interface AlanFilmEki {
   cikar?: string[];
   ekle?: AlanOgesi[];
   dokuntu?: DokuntuObegi[];
+  aracRotasi?: AracRotasi;
+  yikilabilir?: YikilabilirDuvar[];
 }
 
 export function filmPlani(temel: AlanPlani, ek: AlanFilmEki | undefined): AlanPlani {
   if (!ek) return temel;
   const cikar = ek.cikar ?? [];
-  return { ...temel, ogeler: [...temel.ogeler.filter((o) => !cikar.some((c) => o.dosya.includes(c))), ...(ek.ekle ?? [])], dokuntu: ek.dokuntu };
+  return { ...temel, ogeler: [...temel.ogeler.filter((o) => !cikar.some((c) => o.dosya.includes(c))), ...(ek.ekle ?? [])], dokuntu: ek.dokuntu, aracRotasi: ek.aracRotasi ?? temel.aracRotasi, yikilabilir: ek.yikilabilir };
 }
 
 /** Mermi izinin kestiği öğe kutusu: ince/uzun direk ve lambalar (kutusu çoğunlukla boş hava) ile çatı eşyası hariç. */
