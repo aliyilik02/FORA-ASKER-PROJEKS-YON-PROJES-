@@ -428,7 +428,9 @@ taşınır (panel/köprü kalır). İçerik: son işlem katmanı `sahne3b/sonIsl
 açar) ve `duvar_yik` (`yikilanDuvar.ts`), sözleşme 5, Eğitmen ekranında iki düğme. Test `araclar/oyun-testi/film-olaylar.mjs`,
 görüntü `goruntu-al.mjs --gorsel film --bulut 0.55`. GTX 1650 3840×720 başsız: sade 49, film 40 fps. Örnek paketin meskûn haritası
 referans: `araclar/_goruntu/ornek/meskun_2.png`. Açık: Kirpi tekerleği dönmez, duvar düz renkli tuğla, asker noktaları yeni
-düzende denetlenmedi, yalnız meskûn mahalde. Meshy üretimi için önce kullanıcıya sor.
+düzende denetlenmedi. Dağlıkta da var (`daglik_film`: kum torbası mevzi, cephane sandıkları, taranmış kayalar `ton` ile bozlaştırılmış,
+sırtta gözetleme kulesi ve dalgalanan Türk bayrağı `bayrak.ts`); kışta taranmış modeller karlanmıyor. Yıkılan duvar Poly Haven tuğla
+dokulu. Görüntü/test **ayrı köprüde** (`--kopru http://127.0.0.1:4100`), kullanıcının sahnesini değiştirme. Meshy üretimi için önce sor.
 
 **Amaç ve sonraki oturum (10 Kasım kapanış):** duvar, odada **gerçek mankenlerle** oynanan vakanın arkasına ortam ve tehdit
 hissi verir (eğitimin kendisi değil); öneri ve öncelikler buna göre. Kullanıcı sesleri ekleyecek, sonra birlikte test.

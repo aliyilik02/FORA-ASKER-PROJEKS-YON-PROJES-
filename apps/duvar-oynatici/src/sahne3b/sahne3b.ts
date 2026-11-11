@@ -47,6 +47,7 @@ import { SonIslem } from "./sonIslem";
 import { DokuntuKatmani } from "./dokuntu";
 import { AracOlayi } from "./aracOlayi";
 import { YikilanDuvarKatmani } from "./yikilanDuvar";
+import { BayrakKatmani } from "./bayrak";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
 /** Kalite kademeleri: dizüstü/entegre GPU'da "dusuk", sahadaki RTX sınıfı makinede "yuksek". */
@@ -225,6 +226,7 @@ export class Sahne3B {
   /** Zırhlı araç olayı (efekt `zirhli_arac`) ve patlamayla yıkılan duvarlar (efekt `duvar_yik`). */
   private arac: AracOlayi | null = null;
   private readonly yikilan = new YikilanDuvarKatmani();
+  private readonly bayraklar = new BayrakKatmani();
   private alanPlanlari: Record<string, AlanPlani> = {};
   private alanKok = "";
   private catismaSesleri: CatismaSesleri = { carpma: () => undefined, atis: () => undefined };
@@ -355,7 +357,7 @@ export class Sahne3B {
     this.gokyuzu.baglan(r, this.pmrem);
 
     this.sahne.add(this.gokOrtusu.kutu, this.yagis3b.grup);
-    this.sahne.add(this.arazi.grup, this.alan.grup, this.sokak.grup, this.dokuntu.grup, this.yikilan.grup, this.arac!.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
+    this.sahne.add(this.arazi.grup, this.alan.grup, this.sokak.grup, this.dokuntu.grup, this.yikilan.grup, this.bayraklar.grup, this.arac!.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
 
     if (hataAyiklama) {
       this.gunesIsareti = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffee55 }));
@@ -1074,6 +1076,7 @@ export class Sahne3B {
       this.sokak.zemineOturt();
       this.dokuntu.ayarla(alanPlani?.dokuntu);
       this.yikilan.ayarla(alanPlani?.yikilabilir, this.alanKok);
+      this.bayraklar.ayarla(alanPlani?.bayraklar);
       this.arac?.temizle();
       // Yere oturan mevcut nesneler yeni yüksekliğe (bölge değişti: profil farklı; kip değişti: düz ↔ engebeli)
       this.figurler.zemineOturt();
@@ -1610,6 +1613,7 @@ export class Sahne3B {
     this.catisma.guncelle(dt);
     this.arac?.guncelle(dt);
     this.yikilan.guncelle(dt);
+    this.bayraklar.guncelle(dt);
     // Rüzgâr (yangın dumanı sürüklenir) ve duman aydınlatması (güneş yönü) — parçacık güncellemesinden önce
     this.yanginlar.ruzgar.set(Math.sin(radyan(this.ruzgarYonu)), 0, -Math.cos(radyan(this.ruzgarYonu))).multiplyScalar(this.ruzgarSiddeti * 6);
     this.parcaciklar.duman.ruzgar.copy(this.yanginlar.ruzgar); // toz ve duman topakları da sürüklenir (`surukle`)

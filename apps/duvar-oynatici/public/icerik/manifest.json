@@ -7582,6 +7582,38 @@
     ]
   },
   "alanlar": {
+    "daglik_film": {
+      "_aciklama": "Film görünümü (?gorsel=film, 11 Kasım 2026): dağ mevzii. Kum torbası mevzi ve cephane sandıkları önde, taranmış kaya oluşumları yakın ve orta mesafede, sırtta gözetleme kulesi ve bayrak. Sketchfab CC-BY (kayalar doron_altaratz, 3dhdscan, perz_scans; kule zachari-blinn; sandık Geoffroy.Sainte.Catherine, lumoize; kum torbası G4AGamingLabs); atıf sketchfab_indirilen/**/*.kaynak.json.",
+      "ekle": [
+        {"dosya":"modeller/alan/sf_kum_torbasi_bariyer.glb","x":-3.4,"z":-6.6,"yonDerece":12},
+        {"dosya":"modeller/alan/sf_kum_torbasi_bariyer.glb","x":2.6,"z":-7,"yonDerece":-10},
+        {"dosya":"modeller/alan/sf_kum_torbasi_kose.glb","x":6.4,"z":-5.4,"yonDerece":-50},
+        {"dosya":"modeller/alan/sf_kum_torbasi_kose.glb","x":-7.2,"z":-4.8,"yonDerece":55},
+        {"dosya":"modeller/alan/sf_cephane_sandigi.glb","x":1.6,"z":-4.9,"yonDerece":20},
+        {"dosya":"modeller/alan/sf_cephane_sandigi.glb","x":-5.2,"z":-3.6,"yonDerece":-70},
+        {"dosya":"modeller/alan/sf_cephane_kutusu.glb","x":2.4,"z":-5.4,"yonDerece":65},
+        {"dosya":"modeller/alan/sf_cephane_kutusu.glb","x":-4.3,"z":-4.1,"yonDerece":10},
+        {"dosya":"modeller/alan/sf_kaya_col_olusumu.glb","x":10,"z":-12,"yonDerece":30,"ton":"#8f8a80"},
+        {"dosya":"modeller/alan/sf_kaya_col_olusumu.glb","x":-12,"z":-10,"yonDerece":200,"olcek":0.8,"ton":"#8f8a80"},
+        {"dosya":"modeller/alan/sf_kaya_col_olusumu.glb","x":3,"z":-24,"yonDerece":110,"olcek":1.2,"ton":"#8f8a80"},
+        {"dosya":"modeller/alan/sf_kaya_stranska.glb","x":-30,"z":-30,"yonDerece":70,"olcek":1.5},
+        {"dosya":"modeller/alan/sf_kaya_stranska.glb","x":27,"z":-40,"yonDerece":-40,"olcek":1.2},
+        {"dosya":"modeller/alan/sf_kaya_ucurum_tarla.glb","x":4,"z":-66,"yonDerece":10},
+        {"dosya":"modeller/alan/sf_kaya_seti.glb","x":-8,"z":7,"yonDerece":80},
+        {"dosya":"modeller/alan/sf_kaya_seti.glb","x":13,"z":5,"yonDerece":-60},
+        {"dosya":"modeller/alan/sf_gozetleme_kulesi_2.glb","x":-14,"z":-52,"yonDerece":15}
+      ],
+      "bayraklar": [{"x":-8.5,"z":-51,"yukseklik":14,"boy":3}],
+      "dokuntu": [
+        {"x":-3,"z":-5,"yaricap":5,"adet":500,"tas":true},
+        {"x":4,"z":-5,"yaricap":5,"adet":500,"tas":true},
+        {"x":10,"z":-12,"yaricap":6,"adet":600,"tas":true},
+        {"x":-12,"z":-10,"yaricap":6,"adet":600,"tas":true},
+        {"x":3,"z":-22,"yaricap":7,"adet":500,"tas":true},
+        {"x":-7,"z":6,"yaricap":5,"adet":400,"tas":true},
+        {"x":12,"z":5,"yaricap":5,"adet":400,"tas":true}
+      ]
+    },
     "meskun_mahal_film": {
       "_aciklama": "Film görünümü (?gorsel=film, 11 Kasım 2026 denemesi): temel meskun_mahal planından 'cikar' adlı dosyalar atılır, 'ekle' eklenir, 'dokuntu' küçük parça öbekleri saçılır (sahne3b/dokuntu.ts). Sketchfab CC-BY taramaları (savaş hasarlı binalar local.yany, kum torbası G4AGamingLabs, tuğla yığını axonite, çatı molozu perz_scans, beton parçaları matousekfoto, saç sousinho, BMC Kirpi 42manako); atıf sketchfab_indirilen/**/*.kaynak.json.",
       "cikar": ["bina_insaat_385","bina_insaat_377","bariyer_beton_165","bariyer_beton_184","bariyer_beton_166","duvar_yikik_265"],

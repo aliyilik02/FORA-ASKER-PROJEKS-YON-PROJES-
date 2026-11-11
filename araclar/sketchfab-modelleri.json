@@ -13,6 +13,13 @@
     { "ad": "kum_torbasi_bariyer", "ham": "sketchfab_indirilen/meskun2" },
     { "ad": "tugla_yigini", "ham": "sketchfab_indirilen/meskun2", "boy": 5.5, "ucgen": 60000 },
     { "ad": "moloz_cati", "ham": "sketchfab_indirilen/meskun2", "boy": 5 },
-    { "ad": "beton_parcalari", "ham": "sketchfab_indirilen/meskun2", "boy": 2.2, "ucgen": 20000 }
+    { "ad": "beton_parcalari", "ham": "sketchfab_indirilen/meskun2", "boy": 2.2, "ucgen": 20000 },
+    { "ad": "kaya_col_olusumu", "ham": "sketchfab_indirilen/daglik", "boy": 9, "ucgen": 80000 },
+    { "ad": "kaya_stranska", "ham": "sketchfab_indirilen/daglik", "boy": 26 },
+    { "ad": "kaya_ucurum_tarla", "ham": "sketchfab_indirilen/daglik", "boy": 34 },
+    { "ad": "kaya_seti", "ham": "sketchfab_indirilen/daglik", "boy": 11 },
+    { "ad": "gozetleme_kulesi_2", "ham": "sketchfab_indirilen/daglik", "boy": 9, "eksen": "yukseklik" },
+    { "ad": "cephane_sandigi", "ham": "sketchfab_indirilen/daglik", "boy": 1 },
+    { "ad": "cephane_kutusu", "ham": "sketchfab_indirilen/daglik", "boy": 0.32 }
   ]
 }

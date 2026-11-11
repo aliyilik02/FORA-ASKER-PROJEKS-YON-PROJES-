@@ -17,6 +17,8 @@ export interface DokuntuObegi {
   adet: number;
   /** Tuğla kırığı oranı 0–1 (kalanı beton/sıva grisi); varsayılan 0,35. */
   tugla?: number;
+  /** Dağ taşı kırığı (boz/bej, biraz iri): tuğla ve beton yerine. */
+  tas?: boolean;
 }
 
 /** Zemine oturan asfalt/parke payı: parçalar yüzeyin üstünde dursun. */
@@ -79,10 +81,10 @@ export class DokuntuKatmani {
         const a = r() * Math.PI * 2;
         const x = o.x + Math.cos(a) * d;
         const z = o.z + Math.sin(a) * d;
-        const tugla = r() < tuglaOrani;
+        const tugla = !o.tas && r() < tuglaOrani;
         // Çoğu küçük kırıntı, az sayıda iri parça
         const iri = r();
-        const boy = tugla ? 0.07 + r() * 0.09 : iri > 0.97 ? 0.18 + r() * 0.2 : 0.03 + r() * 0.09;
+        const boy = (tugla ? 0.07 + r() * 0.09 : iri > 0.97 ? 0.18 + r() * 0.2 : 0.03 + r() * 0.09) * (o.tas ? 0.75 : 1);
         const en = boy * (tugla ? 0.5 : 0.5 + r() * 0.6);
         const kalin = tugla ? boy * 0.3 : boy * (0.18 + r() * 0.4);
         e.set((r() - 0.5) * 0.5, r() * Math.PI * 2, (r() - 0.5) * 0.5);
@@ -95,7 +97,8 @@ export class DokuntuKatmani {
         ag.setMatrixAt(k, m4);
         const ton = 0.75 + r() * 0.4;
         // Doğrusal renk: asfalttan biraz açık gri, soluk tuğla; parlak beyaz parça oyuncak gibi duruyordu
-        if (tugla) renk.setRGB(0.2 * ton, 0.1 * ton, 0.075 * ton);
+        if (o.tas) renk.setRGB(0.13 * ton, 0.115 * ton, 0.095 * ton).multiplyScalar(r() < 0.3 ? 0.55 : 1);
+        else if (tugla) renk.setRGB(0.2 * ton, 0.1 * ton, 0.075 * ton);
         else if (r() < 0.3) renk.setRGB(0.05 * ton, 0.05 * ton, 0.048 * ton);
         else renk.setRGB(0.19 * ton, 0.18 * ton, 0.165 * ton);
         ag.setColorAt(k, renk);

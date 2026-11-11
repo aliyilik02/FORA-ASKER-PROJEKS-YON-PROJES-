@@ -18,6 +18,7 @@ import { radyan, yerKonumu, zeminY } from "./uzay";
 import type { DokuntuObegi } from "./dokuntu";
 import type { AracRotasi } from "./aracOlayi";
 import type { YikilabilirDuvar } from "./yikilanDuvar";
+import type { BayrakPlani } from "./bayrak";
 import type { SokakPlani } from "./sokak";
 import type { YasakAralik, YerlesimNoktasi } from "./yerlesim";
 
@@ -39,6 +40,8 @@ export interface AlanOgesi {
   golge?: boolean;
   /** Öne doğru yatırma (derece, yerel x ekseni): duvara yaslanmış saç levha, devrilmiş pano. */
   yatirDerece?: number;
+  /** Renk tonu (CSS rengi, dokuyla çarpılır): taramanın rengini araziye yaklaştırmak için (turuncu çöl kayası → boz). */
+  ton?: string;
 }
 
 export interface AlanPlani {
@@ -64,6 +67,8 @@ export interface AlanPlani {
   aracRotasi?: AracRotasi;
   /** Patlamayla yıkılan tuğla duvarlar (sahne3b/yikilanDuvar.ts). */
   yikilabilir?: YikilabilirDuvar[];
+  /** Direkte dalgalanan bayraklar (sahne3b/bayrak.ts). */
+  bayraklar?: BayrakPlani[];
 }
 
 /** Film görünümü eki (manifest `alanlar.<bolge>_film`): temel plandan dosya adı `cikar`dakilerden birini içerenler atılır, `ekle` eklenir. */
@@ -73,12 +78,13 @@ export interface AlanFilmEki {
   dokuntu?: DokuntuObegi[];
   aracRotasi?: AracRotasi;
   yikilabilir?: YikilabilirDuvar[];
+  bayraklar?: BayrakPlani[];
 }
 
 export function filmPlani(temel: AlanPlani, ek: AlanFilmEki | undefined): AlanPlani {
   if (!ek) return temel;
   const cikar = ek.cikar ?? [];
-  return { ...temel, ogeler: [...temel.ogeler.filter((o) => !cikar.some((c) => o.dosya.includes(c))), ...(ek.ekle ?? [])], dokuntu: ek.dokuntu, aracRotasi: ek.aracRotasi ?? temel.aracRotasi, yikilabilir: ek.yikilabilir };
+  return { ...temel, ogeler: [...temel.ogeler.filter((o) => !cikar.some((c) => o.dosya.includes(c))), ...(ek.ekle ?? [])], dokuntu: ek.dokuntu, aracRotasi: ek.aracRotasi ?? temel.aracRotasi, yikilabilir: ek.yikilabilir, bayraklar: ek.bayraklar };
 }
 
 /** Mermi izinin kestiği öğe kutusu: ince/uzun direk ve lambalar (kutusu çoğunlukla boş hava) ile çatı eşyası hariç. */
@@ -328,6 +334,15 @@ export class AlanKatmani {
       if (!m.isMesh) return;
       m.castShadow = golge;
       m.receiveShadow = true;
+      if (o.ton) {
+        // Ton bu kopyaya özel: malzeme kopyalanır (dokular paylaşılır)
+        const tonla = (mal: THREE.Material) => {
+          const k = mal.clone() as THREE.MeshStandardMaterial;
+          k.color?.multiply(new THREE.Color(o.ton));
+          return k;
+        };
+        m.material = Array.isArray(m.material) ? m.material.map(tonla) : tonla(m.material);
+      }
     });
     const p = ogeKonumu(o);
     nesne.position.set(p.x, 0, p.z);
