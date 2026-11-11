@@ -48,6 +48,7 @@ import { DokuntuKatmani } from "./dokuntu";
 import { AracOlayi } from "./aracOlayi";
 import { YikilanDuvarKatmani } from "./yikilanDuvar";
 import { BayrakKatmani } from "./bayrak";
+import { DereKatmani } from "./dere";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
 /** Kalite kademeleri: dizüstü/entegre GPU'da "dusuk", sahadaki RTX sınıfı makinede "yuksek". */
@@ -227,6 +228,7 @@ export class Sahne3B {
   private arac: AracOlayi | null = null;
   private readonly yikilan = new YikilanDuvarKatmani();
   private readonly bayraklar = new BayrakKatmani();
+  private readonly dereler = new DereKatmani();
   private alanPlanlari: Record<string, AlanPlani> = {};
   private alanKok = "";
   private catismaSesleri: CatismaSesleri = { carpma: () => undefined, atis: () => undefined };
@@ -296,10 +298,12 @@ export class Sahne3B {
       const m = this.alan.dusmanMevzileri();
       this.catisma.aracAtisi(namlu, konum, m.length ? m[Math.floor(performance.now() / 2600) % m.length] : undefined);
     });
+    this.arac.modelHazir = (kok) => this.alan.karlandir(kok);
+    this.alan.karEkle(this.yikilan.malzeme);
     this.catisma.dostlar = () => this.figurler.silahliKonumlar();
     this.catisma.atisNoktalari = () => this.figurler.atisNoktalari();
     this.catisma.dostAtisOldu = (id) => this.figurler.atisOldu(id);
-    this.figurler.engel = (p) => this.sutre.doluMu(p, 0.3) || this.alan.doluMu(p, 0.3) || this.yikilan.doluMu(p, 0.3);
+    this.figurler.engel = (p) => this.sutre.doluMu(p, 0.3) || this.alan.doluMu(p, 0.3) || this.yikilan.doluMu(p, 0.3) || this.dereler.icindeMi(p.x, p.z, 0.2);
     // 3B alan: düşman pencere/çatı mevzilerinden ateş eder, izler binaya/araca çarpıp biter, helikopter binaları aşar
     this.catisma.mevziler = () => this.alan.dusmanMevzileri();
     this.catisma.engelKesisimi = (x0, y0, z0, x1, y1, z1) => (this.alan.ogeSayisi ? this.alan.kesisim(x0, y0, z0, x1, y1, z1) : -1);
@@ -357,7 +361,7 @@ export class Sahne3B {
     this.gokyuzu.baglan(r, this.pmrem);
 
     this.sahne.add(this.gokOrtusu.kutu, this.yagis3b.grup);
-    this.sahne.add(this.arazi.grup, this.alan.grup, this.sokak.grup, this.dokuntu.grup, this.yikilan.grup, this.bayraklar.grup, this.arac!.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
+    this.sahne.add(this.arazi.grup, this.alan.grup, this.sokak.grup, this.dokuntu.grup, this.yikilan.grup, this.bayraklar.grup, this.dereler.grup, this.arac!.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
 
     if (hataAyiklama) {
       this.gunesIsareti = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffee55 }));
@@ -1077,6 +1081,7 @@ export class Sahne3B {
       this.dokuntu.ayarla(alanPlani?.dokuntu);
       this.yikilan.ayarla(alanPlani?.yikilabilir, this.alanKok);
       this.bayraklar.ayarla(alanPlani?.bayraklar);
+      this.dereler.ayarla(alanPlani?.dereler);
       this.arac?.temizle();
       // Yere oturan mevcut nesneler yeni yüksekliğe (bölge değişti: profil farklı; kip değişti: düz ↔ engebeli)
       this.figurler.zemineOturt();
@@ -1099,6 +1104,7 @@ export class Sahne3B {
     this.arazi.karAyarla(kar);
     this.sokak.karAyarla(kar);
     this.alan.karAyarla(kar);
+    this.dokuntu.karAyarla(kar);
     this.uygulananKar = kar;
     return kuruldu;
   }
@@ -1615,6 +1621,7 @@ export class Sahne3B {
     this.arac?.guncelle(dt);
     this.yikilan.guncelle(dt);
     this.bayraklar.guncelle(dt);
+    this.dereler.guncelle(dt);
     // Rüzgâr (yangın dumanı sürüklenir) ve duman aydınlatması (güneş yönü) — parçacık güncellemesinden önce
     this.yanginlar.ruzgar.set(Math.sin(radyan(this.ruzgarYonu)), 0, -Math.cos(radyan(this.ruzgarYonu))).multiplyScalar(this.ruzgarSiddeti * 6);
     this.parcaciklar.duman.ruzgar.copy(this.yanginlar.ruzgar); // toz ve duman topakları da sürüklenir (`surukle`)

@@ -175,7 +175,7 @@ export class YikilanDuvarKatmani {
   readonly grup = new THREE.Group();
   private aktif: YikilabilirDuvar[] | null = null;
   private duvarlar: Duvar[] = [];
-  private readonly malzeme = new THREE.MeshStandardMaterial({ roughness: 0.92, metalness: 0 });
+  readonly malzeme = new THREE.MeshStandardMaterial({ roughness: 0.92, metalness: 0 });
   private readonly geometri = new THREE.BoxGeometry(TUGLA.en, TUGLA.boy, TUGLA.kalin);
   private dokular: THREE.Texture[] = [];
 

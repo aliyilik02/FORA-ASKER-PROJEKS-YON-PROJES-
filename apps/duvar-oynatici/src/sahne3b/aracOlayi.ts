@@ -39,6 +39,8 @@ export class AracOlayi {
   private atisSayaci = 0;
   private araSayaci = 0;
   private nesil = 0;
+  /** Model ilk yüklendiğinde (kar yaması gibi malzeme işleri için). */
+  modelHazir: ((kok: THREE.Object3D) => void) | null = null;
 
   /**
    * @param atis namlu ucundan (dünya) bir atış: iz, namlu alevi ve ses çağıranda (çatışma sistemi) üretilir.
@@ -89,6 +91,7 @@ export class AracOlayi {
           if (m.isMesh) m.castShadow = m.receiveShadow = true;
         });
         this.yuklenen = url;
+        this.modelHazir?.(g.scene);
         hazir(g.scene);
       },
       undefined,

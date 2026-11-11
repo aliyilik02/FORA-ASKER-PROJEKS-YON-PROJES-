@@ -111,6 +111,11 @@ export class DokuntuKatmani {
     this.zemineOturt();
   }
 
+  /** Kış: küçük kırıntı kar altında kalır (karın üstünde koyu leke gibi duruyordu). */
+  karAyarla(kar: number) {
+    this.grup.visible = kar < 0.5;
+  }
+
   /** Parçaları (yeni) zemine oturtur: yarı kalınlıkları kadar yukarıda. */
   zemineOturt() {
     const m4 = new THREE.Matrix4();

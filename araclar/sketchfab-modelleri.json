@@ -20,6 +20,7 @@
     { "ad": "kaya_seti", "ham": "sketchfab_indirilen/daglik", "boy": 11 },
     { "ad": "gozetleme_kulesi_2", "ham": "sketchfab_indirilen/daglik", "boy": 9, "eksen": "yukseklik" },
     { "ad": "cephane_sandigi", "ham": "sketchfab_indirilen/daglik", "boy": 1 },
-    { "ad": "cephane_kutusu", "ham": "sketchfab_indirilen/daglik", "boy": 0.32 }
+    { "ad": "cephane_kutusu", "ham": "sketchfab_indirilen/daglik", "boy": 0.32 },
+    { "ad": "kaya_yosunlu", "ham": "sketchfab_indirilen/orman", "boy": 3.4, "ucgen": 40000 }
   ]
 }

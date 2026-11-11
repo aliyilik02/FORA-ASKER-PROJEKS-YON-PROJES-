@@ -7582,6 +7582,49 @@
     ]
   },
   "alanlar": {
+    "ormanlik_film": {
+      "_aciklama": "Film görünümü (?gorsel=film, 11 Kasım 2026): dereli orman açıklığı. Önde kum torbası mevzi, açıklığı kesen dere (sahne3b/dere.ts), kıyıda yosunlu ve açık renkli kaya taramaları, yıkık duvar, devrilmiş variller. Sketchfab CC-BY (yosunlu kaya 3dhdscan; diğerleri daglik_film ile aynı); atıf sketchfab_indirilen/**/*.kaynak.json.",
+      "ekle": [
+        {"dosya":"modeller/alan/sf_kum_torbasi_kose.glb","x":-4.6,"z":-6,"yonDerece":30},
+        {"dosya":"modeller/alan/sf_kum_torbasi_kose.glb","x":4.8,"z":-6.2,"yonDerece":-30},
+        {"dosya":"modeller/alan/sf_cephane_sandigi.glb","x":6.2,"z":-3.2,"yonDerece":35},
+        {"dosya":"modeller/alan/sf_cephane_kutusu.glb","x":6.8,"z":-3.8,"yonDerece":-20},
+        {"dosya":"modeller/alan/sf_kaya_yosunlu.glb","x":-9,"z":-9.5,"yonDerece":40,"ton":"#b4ae98"},
+        {"dosya":"modeller/alan/sf_kaya_yosunlu.glb","x":8.5,"z":-9,"yonDerece":210,"olcek":0.8,"ton":"#b4ae98"},
+        {"dosya":"modeller/alan/sf_kaya_yosunlu.glb","x":1.5,"z":-19,"yonDerece":120,"olcek":1.3,"ton":"#b4ae98"},
+        {"dosya":"modeller/alan/sf_kaya_col_olusumu.glb","x":14,"z":-22,"yonDerece":30,"ton":"#74776f"},
+        {"dosya":"modeller/alan/sf_kaya_col_olusumu.glb","x":-16,"z":-25,"yonDerece":200,"olcek":0.9,"ton":"#74776f"},
+        {"dosya":"modeller/alan/sf_kaya_seti.glb","x":-3,"z":-12.5,"yonDerece":20,"ton":"#b5b5ad"},
+        {"dosya":"modeller/alan/sf_kaya_seti.glb","x":20,"z":-10,"yonDerece":100,"ton":"#b5b5ad"},
+        {"dosya":"modeller/alan/duvar_yikik_265.glb","x":7,"z":-20.5,"yonDerece":15},
+        {"dosya":"modeller/alan/sf_beton_parcalari.glb","x":9.5,"z":-18.5,"yonDerece":60},
+        {"dosya":"modeller/alan/varil_213.glb","x":3,"z":-10.2,"yonDerece":40,"yatirDerece":90},
+        {"dosya":"modeller/alan/varil_216.glb","x":10.5,"z":-13.5,"yonDerece":10},
+        {"dosya":"modeller/alan/varil_218.glb","x":-6.5,"z":-15.5,"yonDerece":0,"yatirDerece":90}
+      ],
+      "dereler": [{"yol":[[-46,-30],[-28,-21],[-14,-15],[-2,-11.5],[8,-11],[18,-13],[30,-10],[46,-4]],"genislik":6}],
+      "noktalar": [
+        {"ad":"sol kum torbası arkası","azimut":-42,"mesafe":6.1,"tur":["asker"]},
+        {"ad":"sağ kum torbası arkası","azimut":42,"mesafe":6.3,"tur":["asker"]},
+        {"ad":"sol yosunlu kaya arkası","azimut":-47,"mesafe":10.4,"tur":["asker"]},
+        {"ad":"sağ yosunlu kaya arkası","azimut":46,"mesafe":10.2,"tur":["asker"]},
+        {"ad":"hat gerisi orta","azimut":0,"mesafe":4,"tur":["figur"]},
+        {"ad":"hat gerisi sol","azimut":-36,"mesafe":4.3,"tur":["figur"]},
+        {"ad":"hat gerisi sağ","azimut":36,"mesafe":4.3,"tur":["figur"]},
+        {"ad":"dere ötesi orta","azimut":0,"mesafe":25,"tur":["patlama","toz"]},
+        {"ad":"dere ötesi sol","azimut":-30,"mesafe":27,"tur":["patlama","toz"]},
+        {"ad":"dere ötesi sağ","azimut":38,"mesafe":30,"tur":["patlama","toz"]},
+        {"ad":"açıklık","azimut":-75,"mesafe":38,"tur":["helikopter","tank"]}
+      ],
+      "dusmanMevzileri": [{"ad":"büyük kaya sağ","x":14,"y":3.5,"z":-24},{"ad":"büyük kaya sol","x":-16,"y":3,"z":-27},{"ad":"yıkık duvar","x":7,"y":1.2,"z":-21.5}],
+      "dokuntu": [
+        {"x":-14,"z":-18,"yaricap":5,"adet":500,"tas":true},
+        {"x":-2,"z":-14.5,"yaricap":5,"adet":600,"tas":true},
+        {"x":8,"z":-13.5,"yaricap":5,"adet":600,"tas":true},
+        {"x":18,"z":-15.5,"yaricap":5,"adet":500,"tas":true},
+        {"x":8,"z":-19.5,"yaricap":4,"adet":300}
+      ]
+    },
     "daglik_film": {
       "_aciklama": "Film görünümü (?gorsel=film, 11 Kasım 2026): dağ mevzii. Kum torbası mevzi ve cephane sandıkları önde, taranmış kaya oluşumları yakın ve orta mesafede, sırtta gözetleme kulesi ve bayrak. Sketchfab CC-BY (kayalar doron_altaratz, 3dhdscan, perz_scans; kule zachari-blinn; sandık Geoffroy.Sainte.Catherine, lumoize; kum torbası G4AGamingLabs); atıf sketchfab_indirilen/**/*.kaynak.json.",
       "ekle": [
@@ -7606,8 +7649,8 @@
       "noktalar": [
         {"ad":"sol kum torbası arkası","azimut":-32.7,"mesafe":6.3,"tur":["asker"]},
         {"ad":"sağ kum torbası arkası","azimut":24.5,"mesafe":6.3,"tur":["asker"]},
-        {"ad":"sağ köşe mevzi","azimut":56.3,"mesafe":7.2,"tur":["asker"]},
-        {"ad":"sol köşe mevzi","azimut":-62,"mesafe":7.5,"tur":["asker"]},
+        {"ad":"sağ köşe mevzi","azimut":60.3,"mesafe":6.45,"tur":["asker"]},
+        {"ad":"sol köşe mevzi","azimut":-67.9,"mesafe":6.9,"tur":["asker"]},
         {"ad":"sol torba iç","azimut":-15.5,"mesafe":5.6,"tur":["asker"]},
         {"ad":"sağ torba iç","azimut":7.9,"mesafe":5.9,"tur":["asker"]},
         {"ad":"hat gerisi orta","azimut":0,"mesafe":3.5,"tur":["figur"]},
@@ -7618,6 +7661,7 @@
         {"ad":"sağ ön düzlük","azimut":22,"mesafe":21.5,"tur":["patlama","toz"]},
         {"ad":"sağ düzlük","azimut":70,"mesafe":38,"tur":["helikopter","tank"]}
       ],
+      "dusmanMevzileri": [{"ad":"uzak kayalık sol","x":-2,"y":6,"z":-62},{"ad":"uzak kayalık sağ","x":11,"y":5,"z":-64},{"ad":"sağ kaya yüzü","x":24,"y":6,"z":-40},{"ad":"orta kaya","x":3,"y":4,"z":-26}],
       "bayraklar": [{"x":-8.5,"z":-51,"yukseklik":14,"boy":3}],
       "dokuntu": [
         {"x":-3,"z":-5,"yaricap":5,"adet":500,"tas":true},

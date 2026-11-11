@@ -19,6 +19,7 @@ import type { DokuntuObegi } from "./dokuntu";
 import type { AracRotasi } from "./aracOlayi";
 import type { YikilabilirDuvar } from "./yikilanDuvar";
 import type { BayrakPlani } from "./bayrak";
+import type { DerePlani } from "./dere";
 import type { SokakPlani } from "./sokak";
 import type { YasakAralik, YerlesimNoktasi } from "./yerlesim";
 
@@ -69,6 +70,8 @@ export interface AlanPlani {
   yikilabilir?: YikilabilirDuvar[];
   /** Direkte dalgalanan bayraklar (sahne3b/bayrak.ts). */
   bayraklar?: BayrakPlani[];
+  /** Dere yatağı (sahne3b/dere.ts). */
+  dereler?: DerePlani[];
 }
 
 /** Film görünümü eki (manifest `alanlar.<bolge>_film`): temel plandan dosya adı `cikar`dakilerden birini içerenler atılır, `ekle` eklenir. */
@@ -81,12 +84,15 @@ export interface AlanFilmEki {
   bayraklar?: BayrakPlani[];
   /** Verilirse temel planın yerleşim noktalarının yerine geçer (yeni düzene göre mevziler). */
   noktalar?: YerlesimNoktasi[];
+  dusmanMevzileri?: AlanPlani["dusmanMevzileri"];
+  /** Dere yatağı (sahne3b/dere.ts). */
+  dereler?: DerePlani[];
 }
 
 export function filmPlani(temel: AlanPlani, ek: AlanFilmEki | undefined): AlanPlani {
   if (!ek) return temel;
   const cikar = ek.cikar ?? [];
-  return { ...temel, ogeler: [...temel.ogeler.filter((o) => !cikar.some((c) => o.dosya.includes(c))), ...(ek.ekle ?? [])], dokuntu: ek.dokuntu, aracRotasi: ek.aracRotasi ?? temel.aracRotasi, yikilabilir: ek.yikilabilir, bayraklar: ek.bayraklar, noktalar: ek.noktalar ?? temel.noktalar };
+  return { ...temel, ogeler: [...temel.ogeler.filter((o) => !cikar.some((c) => o.dosya.includes(c))), ...(ek.ekle ?? [])], dokuntu: ek.dokuntu, aracRotasi: ek.aracRotasi ?? temel.aracRotasi, yikilabilir: ek.yikilabilir, bayraklar: ek.bayraklar, noktalar: ek.noktalar ?? temel.noktalar, dusmanMevzileri: ek.dusmanMevzileri ?? temel.dusmanMevzileri, dereler: ek.dereler };
 }
 
 /** Mermi izinin kestiği öğe kutusu: ince/uzun direk ve lambalar (kutusu çoğunlukla boş hava) ile çatı eşyası hariç. */
@@ -277,7 +283,7 @@ export class AlanKatmani {
    * Malzemeye kar ekler: dünya-yukarı bakan yüzeyler (çatı, kaya üstü, kum torbası sırtı, araç tavanı) kar rengine
    * döner ve matlaşır; dik yüzeyler açık kalır. Kışta taranmış modeller çıplak kalıyordu (11 Kasım 2026).
    */
-  private karEkle(mal: THREE.Material) {
+  karEkle(mal: THREE.Material) {
     if (mal.userData.alanKar) return;
     mal.userData.alanKar = true;
     const onceki = mal.onBeforeCompile;
@@ -298,7 +304,7 @@ export class AlanKatmani {
     mal.needsUpdate = true;
   }
 
-  private karlandir(kok: THREE.Object3D) {
+  karlandir(kok: THREE.Object3D) {
     kok.traverse((c) => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
