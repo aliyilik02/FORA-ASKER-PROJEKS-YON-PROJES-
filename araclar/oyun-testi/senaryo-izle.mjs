@@ -5,7 +5,7 @@ import { baslat, bekle } from "./cekirdek.mjs";
 const arg = (ad, v) => (process.argv.includes(`--${ad}`) ? process.argv[process.argv.indexOf(`--${ad}`) + 1] : v);
 const id = arg("id", "sn_meskun_kusatma");
 const kareler = arg("kareler", "20,40,60").split(",").map(Number).sort((a, b) => a - b);
-const c = await baslat();
+const c = await baslat(arg("gorsel", "") ? { sorgu: { gorsel: arg("gorsel", "") } } : {});
 try {
   await c.api("POST", "/sahne/sifirla", { kaynak: "panel" });
   await c.hazirBekle();
