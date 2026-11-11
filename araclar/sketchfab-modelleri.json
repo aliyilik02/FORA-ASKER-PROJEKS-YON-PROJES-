@@ -1,0 +1,18 @@
+{
+  "_aciklama": "Sketchfab modelleri (CC-BY; atıf sketchfab_indirilen/**/<ad>.kaynak.json) → oynatıcı. Ham: sketchfab_indirilen/meskun/<ad>.glb (depo dışı, araclar/sketchfab.mjs indir). Hazırlama: blender -b -P araclar/sketchfab-hazirla.py -- araclar/sketchfab-modelleri.json. boy = en uzun yatay kenar ya da (eksen 'yukseklik') yükseklik, metre; verilmezse özgün ölçü. Çıktı tabanı y=0, yatayda ortalı.",
+  "ham": "sketchfab_indirilen/meskun",
+  "cikti": "apps/duvar-oynatici/public/icerik/modeller/alan/sf_{ad}.glb",
+  "modeller": [
+    { "ad": "hasarli_bina_1" },
+    { "ad": "hasarli_bina_2" },
+    { "ad": "hasarli_bina_3" },
+    { "ad": "hasarli_ev" },
+    { "ad": "kirpi_bmc", "boy": 7.1 },
+    { "ad": "kum_torbasi_duvar" },
+    { "ad": "kum_torbasi_kose", "boy": 2.4 },
+    { "ad": "moloz_1", "boy": 4.2 },
+    { "ad": "beton_dokuntu" },
+    { "ad": "sac_levha", "boy": 2.6, "eksen": "yukseklik" },
+    { "ad": "bariyer_varil_cit", "boy": 12 }
+  ]
+}

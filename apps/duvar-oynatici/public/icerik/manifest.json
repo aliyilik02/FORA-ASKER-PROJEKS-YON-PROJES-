@@ -7582,6 +7582,28 @@
     ]
   },
   "alanlar": {
+    "meskun_mahal_film": {
+      "_aciklama": "Film görünümü (?gorsel=film, 11 Kasım 2026 denemesi): temel meskun_mahal planından 'cikar' adlı dosyalar atılır, 'ekle' eklenir. Sketchfab CC-BY taramaları (savaş hasarlı binalar local.yany, kum torbası ahmagh2e/G4AGamingLabs, moloz GameDevNick, beton kemsui, saç sousinho, BMC Kirpi 42manako); atıf sketchfab_indirilen/meskun/*.kaynak.json.",
+      "cikar": ["bina_insaat_385","bina_insaat_377","bariyer_beton_165","bariyer_beton_184","bariyer_beton_166","duvar_yikik_265"],
+      "ekle": [
+        {"dosya":"modeller/alan/sf_hasarli_bina_1.glb","x":-17.5,"z":-11,"yonDerece":90},
+        {"dosya":"modeller/alan/sf_hasarli_bina_2.glb","x":15.5,"z":-12,"yonDerece":-90},
+        {"dosya":"modeller/alan/sf_hasarli_ev.glb","x":-13.5,"z":6,"yonDerece":90},
+        {"dosya":"modeller/alan/sf_hasarli_bina_3.glb","x":14,"z":7,"yonDerece":-90},
+        {"dosya":"modeller/alan/sf_kum_torbasi_duvar.glb","x":-3,"z":-7.1,"yonDerece":0},
+        {"dosya":"modeller/alan/sf_kum_torbasi_kose.glb","x":4.6,"z":-8.3,"yonDerece":0},
+        {"dosya":"modeller/alan/sf_kum_torbasi_kose.glb","x":-7.6,"z":-5.2,"yonDerece":60},
+        {"dosya":"modeller/alan/sf_moloz_1.glb","x":9.4,"z":-9,"yonDerece":20},
+        {"dosya":"modeller/alan/sf_moloz_1.glb","x":-10.2,"z":-12.5,"yonDerece":200,"olcek":1.15},
+        {"dosya":"modeller/alan/sf_moloz_1.glb","x":6.2,"z":-16,"yonDerece":110,"olcek":0.8},
+        {"dosya":"modeller/alan/sf_moloz_1.glb","x":-9.6,"z":-2.5,"yonDerece":300,"olcek":0.9},
+        {"dosya":"modeller/alan/sf_beton_dokuntu.glb","x":10.2,"z":-17,"yonDerece":40},
+        {"dosya":"modeller/alan/sf_beton_dokuntu.glb","x":-9.8,"z":-19,"yonDerece":250},
+        {"dosya":"modeller/alan/sf_sac_levha.glb","x":9.2,"z":-4.2,"yonDerece":15,"golge":true},
+        {"dosya":"modeller/alan/sf_sac_levha.glb","x":-9.4,"z":-8,"yonDerece":170},
+        {"dosya":"modeller/alan/sf_kirpi_bmc.glb","x":-2.6,"z":-24,"yonDerece":-15}
+      ]
+    },
     "meskun_mahal": {
       "_aciklama": "3B meskûn mahal (9 Kasım, Meshy topluluk modelleri CC0): 18 m cadde, iki yanda apartmanlar, sonunda yıkık kule. Figür/efekt yerleşimi v2: askerler kontrol noktası bariyerlerinin, T-duvarların ve kulübenin arkasında (4–7 m), tank açık orta şeritte (31 m), helikopter 58,5 m'de boş iniş alanında, patlama/toz açık cadde ve meydanlarda (nesnelerden ≥ 2,5 m); düşman cephelerin pencere/çatı mevzilerinden ve kule/otobüs barikatından ateş eder. Denetim: node araclar/alan-plan-denetle.mjs. Konumlar sahne koordinatında (ileri -z, sağ +x); yonDerece ön yüzün (+z) dönüşü.",
       "arkaPlanBolge": "daglik",

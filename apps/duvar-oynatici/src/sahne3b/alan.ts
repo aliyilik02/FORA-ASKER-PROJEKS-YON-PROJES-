@@ -55,6 +55,18 @@ export interface AlanPlani {
   sokak?: SokakPlani;
 }
 
+/** Film görünümü eki (manifest `alanlar.<bolge>_film`): temel plandan dosya adı `cikar`dakilerden birini içerenler atılır, `ekle` eklenir. */
+export interface AlanFilmEki {
+  cikar?: string[];
+  ekle?: AlanOgesi[];
+}
+
+export function filmPlani(temel: AlanPlani, ek: AlanFilmEki | undefined): AlanPlani {
+  if (!ek) return temel;
+  const cikar = ek.cikar ?? [];
+  return { ...temel, ogeler: [...temel.ogeler.filter((o) => !cikar.some((c) => o.dosya.includes(c))), ...(ek.ekle ?? [])] };
+}
+
 /** Mermi izinin kestiği öğe kutusu: ince/uzun direk ve lambalar (kutusu çoğunlukla boş hava) ile çatı eşyası hariç. */
 export function carpismaKutusuMu(kutu: THREE.Box3, catiEsyasi: boolean): boolean {
   if (catiEsyasi) return false;

@@ -42,7 +42,7 @@ import { oda2OnPlanCiz } from "./sahne/oda2";
 import { PanoramaKatmani } from "./panorama";
 import { type Kalite, type PanoramaKaynagi, Sahne3B } from "./sahne3b/sahne3b";
 import type { AraziModu } from "./sahne3b/arazi";
-import type { AlanPlani } from "./sahne3b/alan";
+import { filmPlani, type AlanFilmEki, type AlanPlani } from "./sahne3b/alan";
 import { arkaPlanKarari } from "./sahne3b/panoramaGecisi";
 import { adimlariCalistir, hataOzeti, temelDurum } from "./sahneTemizligi";
 import { figurYolu } from "./figurYonlendirme";
@@ -217,12 +217,16 @@ function araziModuSec(bolge: string): AraziModu {
 // `?gorsel=sade` eski doğrudan çizime döner. Yerel kayıtta kalır; varsayılan sade (deneme aşaması, 11 Kasım 2026).
 const gorselParam = params.get("gorsel");
 if (gorselParam === "film" || gorselParam === "sade") localStorage.setItem("gorsel", gorselParam);
-sahne3b.gorselAyarla((gorselParam ?? localStorage.getItem("gorsel")) === "film");
+const filmGorunum = (gorselParam ?? localStorage.getItem("gorsel")) === "film";
+sahne3b.gorselAyarla(filmGorunum);
 const alanParam = params.get("alan");
 if (alanParam === "kapali" || alanParam === "acik") localStorage.setItem("alan", alanParam);
 const alanKapali = (alanParam ?? localStorage.getItem("alan")) === "kapali";
 function alanPlani(bolge: string): AlanPlani | undefined {
-  return alanKapali || testPanorama ? undefined : video.manifest.alanlar?.[bolge];
+  if (alanKapali || testPanorama) return undefined;
+  const temel = video.manifest.alanlar?.[bolge];
+  // Film görünümünde bölgenin yıkıntı eki de uygulanır (manifest `<bolge>_film`)
+  return temel && filmGorunum ? filmPlani(temel, video.manifest.alanlar?.[`${bolge}_film`] as AlanFilmEki | undefined) : temel;
 }
 const ucAktifOlabilir = ucBoyut && sahne3b.destekli;
 // Çatışma sesleri sahne azimutuyla (derece) gelir; ses motoru stereo / çok kanala kendisi yerleştirir
@@ -536,7 +540,7 @@ function durumUygula(d: SimulasyonDurumu) {
   panoramayiGuncelle();
   if (bolgeDegisti) sahne3b.bolgeDegisti(); // kraterler ve duman bölgeyle birlikte gider (takasta)
   if (sahne3b.destekli) {
-    sahne3b.alanPlanlariAyarla(alanKapali || testPanorama ? undefined : video.manifest.alanlar, video.kok);
+    sahne3b.alanPlanlariAyarla(alanKapali || testPanorama ? undefined : Object.fromEntries(Object.keys(video.manifest.alanlar ?? {}).filter((b) => !b.endsWith("_film")).map((b) => [b, alanPlani(b)!])), video.kok);
     sahne3b.araziAyarla(araziModuSec(d.bolge), d.bolge, d.ortam.mevsim, video.kok);
   }
   // İzli mermi ve çatışma: 3B sahne açıkken 3B izler, değilse 2B çizgiler
