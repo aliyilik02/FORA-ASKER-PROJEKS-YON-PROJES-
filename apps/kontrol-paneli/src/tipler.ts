@@ -235,7 +235,7 @@ export interface OnAyar {
  * mesajında gönderir; panel kendi değeriyle karşılaştırır, uyuşmazlıkta "köprü eski sürüm, yeniden başlat" şeridi gösterir
  * (yeni derlenmiş panel + eski çalışan köprü = her yeni düğme "İşlem başarısız").
  */
-export const SOZLESME_SURUMU = 5;
+export const SOZLESME_SURUMU = 6;
 
 export interface BaglantiDurumu {
   /** Köprünün sözleşme sürümü (SOZLESME_SURUMU); eski köprüde alan yok. */
@@ -289,7 +289,13 @@ export type IstemciMesaji =
   /** Oynatıcıdan uyarı/hata (model yüklenemedi, WebGL yok...); köprü günlüğüne "Oynatıcı:" önekiyle düşer. */
   | { tip: "gunluk"; seviye: "uyari" | "hata"; mesaj: string }
   /** Oynatıcıdan: yürüyen/koşan figür duvarın ucundan çıktı; köprü listeden düşürür, `durdur` yayınlar. */
-  | { tip: "figur"; islem: "bitti"; id: string };
+  | { tip: "figur"; islem: "bitti"; id: string }
+  /**
+   * Oynatıcıdan: asker çatışmada mevzi değiştirdi (yeni sahne azimutu). Köprü aktif listedeki yönü günceller ve
+   * `konum` komutuyla yayınlar: panelin duvar şeridindeki işaret askerin yeni yerine geçer; yeniden bağlanan oynatıcı
+   * figürü yeni yerinde kurar.
+   */
+  | { tip: "figur"; islem: "konum"; id: string; azimut: number };
 
 /** Köprünün Unreal Engine'e gönderdiği bir Remote Control çağrısının kaydı (panelde canlı izlenir). */
 export interface UnrealIstekKaydi {
@@ -320,8 +326,12 @@ export type FigurPozu = "ayakta" | "comelmis" | "yatmis" | "yarali";
 export const FIGUR_POZ_ETIKETLERI: Record<FigurPozu, string> = { ayakta: "Ayakta", comelmis: "Diz çökmüş", yatmis: "Yere yatmış", yarali: "Yaralı (yerde)" };
 
 export interface FigurKomutu {
-  /** `poz`: sahnedeki figürün duruşunu değiştirir (vurulma → yere düşme, diz çökme, ayağa kalkma). */
-  islem: "oynat" | "durdur" | "temizle" | "poz";
+  /**
+   * `poz`: sahnedeki figürün duruşunu değiştirir (vurulma → yere düşme, diz çökme, ayağa kalkma). `konum`: yalnız
+   * köprüden çıkar (oynatıcının mevzi değiştirme bildirimi üzerine): aktif listedeki yön güncellendi; oynatıcılar yok
+   * sayar (figürü yeniden kurmaz), paneller listeyi yeniler. API'den gönderilemez.
+   */
+  islem: "oynat" | "durdur" | "temizle" | "poz" | "konum";
   /** Örnek (instance) kimliği; verilmezse köprü üretir. */
   id?: string;
   /** Duruş; `oynat` ile başlangıç duruşu, `poz` ile değişiklik. Varsayılan ayakta. */

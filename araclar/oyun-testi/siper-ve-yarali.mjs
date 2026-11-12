@@ -3,7 +3,8 @@
 //   node araclar/oyun-testi/siper-ve-yarali.mjs
 import { baslat, bekle, cozumle } from "./cekirdek.mjs";
 
-const c = await baslat();
+// Mevzi değiştirme kapalı: bu test yerinde siper davranışını ölçer (sıçramalar mevzi-degistirme.mjs testinde)
+const c = await baslat({ sorgu: { hareket: "kapali" } });
 const durumlar = () => c.js(() => window.duvar.sahne3b.figurler.aktifler?.map?.((a) => ({ id: a.id, poz: a.poz, siper: a.siper?.mod ?? null, ates: a.atesPozu, x: +a.nesne.position.x.toFixed(2), z: +a.nesne.position.z.toFixed(2) })) ?? null);
 /** Yaralının izleyiciden görünürlüğü: öndeki figürlerin, yaralının uzaklığına izdüşürülmüş en küçük sapması (m). */
 const gorus = (liste, yaraliId) => {

@@ -267,6 +267,8 @@ ornek.dinle((o) => herkeseGonder({ tip: "ornek", ornek: o }));
 figur.dinle((komut, aktifler) => {
   herkeseGonder({ tip: "figur", komut, aktifler });
   sonDurumuKaydet();
+  // Mevzi değiştirme bildirimi (oynatıcıdan): yalnız liste güncellenir, tatbikat günlüğüne satır düşmez
+  if (komut.islem === "konum") return;
   const ozet =
     komut.islem === "oynat"
       ? `Figür: ${komut.klip} @ ${komut.azimut ?? 0}°${komut.poz && komut.poz !== "ayakta" ? ` (${komut.poz})` : ""}${komut.yaninda ? ` → ${komut.yaninda} yanına` : ""}`
@@ -310,6 +312,8 @@ wss.on("connection", (ws: WebSocket) => {
       panellereGonder({ tip: "onizleme", veri: mesaj.veri, zaman: Date.now(), bilgi: typeof mesaj.bilgi === "string" ? mesaj.bilgi.slice(0, 200) : undefined });
     } else if (mesaj?.tip === "figur" && mesaj.islem === "bitti" && istemciRolleri.get(ws) === "oynatici" && typeof mesaj.id === "string") {
       figur.bittiBildir(mesaj.id);
+    } else if (mesaj?.tip === "figur" && mesaj.islem === "konum" && istemciRolleri.get(ws) === "oynatici" && typeof mesaj.id === "string") {
+      figur.konumBildir(mesaj.id, mesaj.azimut);
     } else if (mesaj?.tip === "gunluk" && istemciRolleri.get(ws) === "oynatici" && typeof mesaj.mesaj === "string") {
       // Oynatıcı günlüğü: saniyede en çok 2 satır (hata döngüsü köprüyü boğmasın)
       const simdi = Date.now();

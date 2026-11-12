@@ -454,8 +454,18 @@ mermilerinin yarısı, dost mermilerinin üçte biri izli (izsiz mermi de çarpa
 Askerler çatışmada 14–34 sn'de bir yakındaki boş mevziye koşar (`figurler3b sicramayiGuncelle`, aynı anda tek asker,
 yol önceden engel/figürden açık seçilir; `sahne3b.mevziAdaylari`); `?hareket=kapali` kapatır. Bu işte bulunan animasyon
 hataları: çapraz geçiş bitmeden nişan geçişi (→ `atesGecikmesi`), ayaktan doğrudan yere yatış (→ önce diz). Testler:
-`araclar/oyun-testi/iz-gorunumu.mjs` (kare kare iz çekimi, önce/sonra), `mevzi-degistirme.mjs`. Kullanıcıya sorulan açık
-seçenek: düşman izi yeşil. Ayrıntı docs "Mermi izi yenilemesi ve askerlerin mevzi değiştirmesi".
+`araclar/oyun-testi/iz-gorunumu.mjs` (kare kare iz çekimi, önce/sonra), `mevzi-degistirme.mjs`. **Düşman izi yeşil
+yapılmayacak (kullanıcı kararı).** Koşu eğiktir (`EGIK_KOSU`: gövde öne, prosedürel), son 1,1 m'de sipere dalar (koşudan
+doğrudan diz çökme, siper kararı o anda). Varışta oynatıcı köprüye yeni yönü bildirir (`figur/konum`,
+`FigurYoneticisi.konumBildir`; **sözleşme 6**): panelin duvar şeridindeki işaret askeri izler. Ayrıntı docs "Mermi izi
+yenilemesi ve askerlerin mevzi değiştirmesi".
+
+**Temas gölgesi (12 Kasım, kullanıcı fotoğrafları: "askerlerin etrafında siyah buğu", "dumanın arkası tuhaf"):**
+`sonIslem.ts` AO yeniden yazıldı: normal derinlikten, örnek 3B'ye açılır, gölge 3B uzaklıkla söner (eski çift-ortalama
+yöntemi duvarın 1–2 m önündeki figürü tam güçte gölge sayıp hale bırakıyordu). Duman/toz parçacıkları hedef alfasına
+geçirgenlik yazar (`CustomBlending`), birleştirme gölgeyi onunla söndürür (eskiden arkadaki gölgeler dumanın üstüne
+basılıyordu). **Yeni saydam katman eklerken:** olağan karışımlı ve geniş alan örtüyorsa aynı alfa kuralını kullan. Denetim
+`araclar/oyun-testi/golge-duman.mjs`. Ayrıntı docs "Temas gölgesi halesi ve dumanın arkası".
 
 **Amaç ve sonraki oturum (10 Kasım kapanış):** duvar, odada **gerçek mankenlerle** oynanan vakanın arkasına ortam ve tehdit
 hissi verir (eğitimin kendisi değil); öneri ve öncelikler buna göre. Kullanıcı sesleri ekleyecek, sonra birlikte test.

@@ -145,6 +145,21 @@ export class FigurYoneticisi {
     return true;
   }
 
+  /**
+   * Oynatıcı bildirdi: asker mevzi değiştirdi. Aktif listedeki yön güncellenir ve `konum` komutu yayınlanır (paneller
+   * listeyi yeniler, oynatıcılar yok sayar). Sahnede olmayan kimlik, sayı olmayan ya da değişmeyen (< 1°) yön: false.
+   */
+  konumBildir(id: string, azimut: number): boolean {
+    const f = this.aktifler.get(id);
+    if (!f || typeof azimut !== "number" || !Number.isFinite(azimut)) return false;
+    const yeni = Math.round((((azimut % 360) + 540) % 360) - 180);
+    if (Math.abs(yeni - (f.azimut ?? 0)) < 1) return false;
+    f.azimut = yeni;
+    const liste = this.aktifListe();
+    for (const d of this.dinleyiciler) d({ islem: "konum", id, azimut: yeni }, liste);
+    return true;
+  }
+
   /** Manifestte klibe tanımlı başlangıç duruşu (`poz`), yoksa undefined. */
   klipPozu(ad: string): FigurPozu | undefined {
     const t = this.manifestKlipleri()[ad];

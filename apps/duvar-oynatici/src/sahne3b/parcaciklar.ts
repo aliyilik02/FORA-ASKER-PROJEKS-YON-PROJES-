@@ -194,7 +194,14 @@ export class ParcacikGrubu {
       transparent: true,
       depthWrite: false,
       depthTest: true,
-      blending: karisim === "katki" ? THREE.AdditiveBlending : THREE.NormalBlending,
+      // Duman/toz (olağan karışım): renk eskisi gibi (alfa × renk + (1 − alfa) × arka), alfa kanalına ise geçirgenlik
+      // yazılır (hedef alfa × (1 − alfa)). Film görünümünde son işlem bununla dumanın örttüğü yerde temas gölgesini
+      // söndürür (sonIslem.ts BIRLESTIR). Sade görünümde tuvalin alfası kullanılmaz, fark etmez.
+      blending: karisim === "katki" ? THREE.AdditiveBlending : THREE.CustomBlending,
+      blendSrc: THREE.SrcAlphaFactor,
+      blendDst: THREE.OneMinusSrcAlphaFactor,
+      blendSrcAlpha: THREE.ZeroFactor,
+      blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
       fog: true, // sahne.fog (doğrusal) uniformları three tarafından yenilenir
       side: THREE.DoubleSide, // kart yönü ne olursa olsun çizilsin (yüz ayıklaması parçacığı yutmasın)
     });

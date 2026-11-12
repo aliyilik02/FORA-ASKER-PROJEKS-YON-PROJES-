@@ -1564,6 +1564,10 @@ export class Sahne3B {
     }
     return adaylar;
   }
+  /** Asker mevzi değiştirince (yeni sahne azimutu) çağrılır; main.ts köprüye bildirir (panel işaretleri). */
+  figurKonumAyarla(f: (id: string, azimut: number) => void) {
+    this.figurler.konumOlayi = f;
+  }
   /** Mevzi değiştirme açık/kapalı (`?hareket=kapali`). */
   mevziDegistirmeAyarla(acik: boolean) {
     this.figurler.mevziDegistir = acik;

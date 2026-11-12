@@ -34,6 +34,11 @@ const KOSU_HIZI = 3.4;
 const SICRAMA_ARALIGI: [number, number] = [14, 34];
 const SICRAMA_ILK: [number, number] = [6, 22];
 const SICRAMA_ARASI = 4.5;
+/**
+ * Eğik koşu eğimleri (derece, figürün sağ ekseni çevresinde; artı = öne): bel ve göğüs öne eğilir, baş geriye kalkıp
+ * ileri bakar. Konsoldan ayar: `window.duvar.egikKosu`.
+ */
+export const EGIK_KOSU = { govde: 20, gogus: 14, bas: -22 };
 
 /**
  * Hareket kliplerinin DOĞAL hızı (m/sn, 1,8 m boy): yerdeki ayağın köke göre hızı; oynatıcıda ölçüldü
@@ -364,7 +369,10 @@ export interface Aktif {
   safhaBekliyor: boolean;
   yanindaHedef: { konum: THREE.Vector3; donus: number } | null;
   /** Süren yürüyüş (hedefe, varınca `donus`a dönüp bekleme klibine). */
-  yuruyus: { hedef: THREE.Vector3; donus: number; eylem: THREE.AnimationAction | null; hiz: number } | null;
+  /** `inis`: mevzi değiştirme koşusunun son metresi (sipere dalış başladı: diz çökme geçişi oynuyor, hız düşüyor). */
+  yuruyus: { hedef: THREE.Vector3; donus: number; eylem: THREE.AnimationAction | null; hiz: number; inis?: boolean } | null;
+  /** Eğik koşu (0–1): mevzi değiştirirken gövde öne eğilir, baş ileri bakar (durusuUygula). */
+  egik: number;
   /**
    * Mevzi değiştirme (çatışmada canlılık; `sicramayiGuncelle`): `sonraki` bir sonraki sıçramanın sahne saati (0: çatışma
    * dışı, henüz kurulmadı); `kosuyor` asker yeni mevziye koşuyor (siper davranışı o sürede karışmaz).
@@ -454,6 +462,8 @@ export class FigurKatmani {
   mevziDegistir = true;
   mevziAdaylari: ((konum: THREE.Vector3, id: string) => THREE.Vector3[]) | null = null;
   private sonSicrama = -100;
+  /** Asker mevzi değiştirdi (yeni sahne azimutu): main.ts köprüye bildirir, panelin duvar şeridindeki işaret yer değiştirir. */
+  konumOlayi: ((id: string, azimut: number) => void) | null = null;
   private gorusDenetimi = 0;
   /** TCCC safhası (durum.safha); "ates_altinda"da sıhhiyeci yaralıya gitmez, siperde bekler. */
   safha: Safha = "taktik_saha";
@@ -1075,6 +1085,7 @@ export class FigurKatmani {
       safhaBekliyor,
       yanindaHedef,
       yuruyus: null,
+      egik: 0,
       sicrama: { sonraki: 0, kosuyor: false },
       kopyaMalzemeler,
       tepki: null,
@@ -1217,7 +1228,21 @@ export class FigurKatmani {
       a.yuruyus = null;
       return;
     }
-    const adim = Math.min(uzaklik, y.hiz * dt);
+    // Sipere dalış (mevzi değiştirme koşusu): son 1,1 m'de koşudan doğrudan diz çökmeye geçer, yavaşlayarak mevziye
+    // kayar; siper kararı o anda verilir (sütre arkasıysa inip kalkar; açıktaysa diz çöker, yere yatar ya da ayakta
+    // varır). Önceden mevziye dimdik varıp bir iki saniye sonra çöküyordu.
+    if (a.sicrama.kosuyor && !y.inis && uzaklik < 1.1) {
+      y.inis = true;
+      const zar = rastgele();
+      const mod = this.sutreArkasinda(a, y.hedef) ? "inKalk" : zar < 0.45 ? "diz" : zar < 0.75 && a.eylemPoz.yatmis ? "yat" : "ayakta";
+      if (mod !== "ayakta" && a.eylemPoz.comelmis && a.siper?.mod !== "elle") {
+        const kosu = y.eylem;
+        y.eylem = null; // varışta bekleme klibine geçilmez: diz çökme geçişi sürüyor
+        this.pozUygula(a, "comelmis", false, kosu);
+        a.siper = { mod, sonraki: mod === "inKalk" ? this.saat + 3 + rastgele() * 4 : mod === "yat" ? this.saat + 1.5 : Infinity, otoComeldi: true };
+      }
+    }
+    const adim = Math.min(uzaklik, y.hiz * (y.inis ? Math.max(0.3, uzaklik / 1.1) : 1) * dt);
     d.normalize();
     // Yolda başka figür/sütre varsa yana dolanır (hedefin kendisi hariç; yanındaId hedef figürdür)
     const yanEksen = new THREE.Vector3(-d.z, 0, d.x);
@@ -1397,7 +1422,9 @@ export class FigurKatmani {
       s.kosuyor = false;
       s.sonraki = this.saat + SICRAMA_ARALIGI[0] + rastgele() * (SICRAMA_ARALIGI[1] - SICRAMA_ARALIGI[0]);
       a.azimut = konumAzimutu(a.nesne.position);
-      if (a.siper?.mod !== "elle") a.siper = null;
+      // Siper kararı dalışta verildiyse (çökmüş vardı) kalır; ayakta vardıysa yerinde yeniden verilir
+      if (a.siper?.mod !== "elle" && a.poz === "ayakta") a.siper = null;
+      this.konumOlayi?.(a.id, a.azimut);
       return;
     }
     const tehdit = this.dusmanAzimutu !== null && this.siperAl && this.mevziDegistir && this.mevziAdaylari !== null;
@@ -1442,6 +1469,7 @@ export class FigurKatmani {
     hedef.y = zeminY(hedef.x, hedef.z);
     this.sonSicrama = this.saat;
     s.kosuyor = true;
+    if (a.siper?.mod !== "elle") a.siper = null;
     // Varınca düşmana dönük (guncelle'deki düşmana dönüş zaten sürdürür)
     this.yuruyusBaslat(a, hedef, Math.PI - radyan(this.dusmanAzimutu!), true);
   }
@@ -1461,10 +1489,10 @@ export class FigurKatmani {
   }
 
   /** Figürden düşman yönüne 0,6–2,4 m içinde sabit engel (bariyer, kum torbası, HESCO, duvar) var mı? */
-  private sutreArkasinda(a: Aktif): boolean {
+  private sutreArkasinda(a: Aktif, konum: THREE.Vector3 = a.nesne.position): boolean {
     if (this.dusmanAzimutu === null) return false;
     const yon = azimutYon(this.dusmanAzimutu);
-    for (let d = 0.6; d <= 2.4; d += 0.3) if (this.engel(a.nesne.position.clone().addScaledVector(yon, d))) return true;
+    for (let d = 0.6; d <= 2.4; d += 0.3) if (this.engel(konum.clone().addScaledVector(yon, d))) return true;
     return false;
   }
 
@@ -1610,7 +1638,8 @@ export class FigurKatmani {
     }
   }
 
-  private pozUygula(a: Aktif, poz: FigurPozu, aninda: boolean) {
+  /** `kaynakEylem`: o an gövdeyi yazan eylem bilinen dışındaysa (koşu klibi: sipere dalış) çapraz geçiş ondan yapılır. */
+  private pozUygula(a: Aktif, poz: FigurPozu, aninda: boolean, kaynakEylem?: THREE.AnimationAction | null) {
     if (a.poz === poz) return;
     if (poz !== "yarali") this.mudahaleyiBirak(a);
     const onceki = a.poz;
@@ -1653,7 +1682,7 @@ export class FigurKatmani {
     const klipli = pozKlibi !== null || a.aktifPoz !== null || a.gecis !== null;
     const gecisKlip = aninda ? null : this.gecisKlibi(a, onceki, poz);
     // O an gövdeyi yazan eylem: süren geçiş > yerde kalan düşme klibi > duruş klibi > ateş/bekleme
-    const kaynak: THREE.AnimationAction | null = a.gecis?.eylem ?? (onceki === "yarali" ? (a.eylemDusme ?? a.eylemVurulma ?? null) : (a.aktifPoz ?? (a.atesPozu ? a.eylemAtes : a.eylemBekle)));
+    const kaynak: THREE.AnimationAction | null = kaynakEylem ?? a.gecis?.eylem ?? (onceki === "yarali" ? (a.eylemDusme ?? a.eylemVurulma ?? null) : (a.aktifPoz ?? (a.atesPozu ? a.eylemAtes : a.eylemBekle)));
     a.gecis = null;
     // Yerdeyse kalk: silahı al, gövdeyi düzelt; düşme klibi geçiş klibine çapraz geçecekse henüz durdurulmaz
     if (onceki === "yarali") {
@@ -1849,6 +1878,16 @@ export class FigurKatmani {
     if ((a.poz === "comelmis" || a.poz === "yatmis") && a.asama === "normal") {
       const t = this.saat - a.sonAtis;
       if (t >= 0 && t < 0.1) dondur(k.gogus, radyan(2.4) * (1 - t / 0.1));
+    }
+    // Eğik koşu: mevzi değiştirirken gövde öne eğik, baş ileri bakar (ateş altında dimdik koşulmaz). Koşu klibi diktir;
+    // eğim kemiklere eklenir, 0,25 sn'de girer/çıkar; sipere dalışta (inis) doğrulur
+    const egikHedef = a.sicrama.kosuyor && a.yuruyus && !a.yuruyus.inis ? 1 : 0;
+    if (a.egik !== egikHedef) a.egik += Math.sign(egikHedef - a.egik) * Math.min(Math.abs(egikHedef - a.egik), dt / 0.25);
+    if (a.egik > 0 && a.asama === "normal") {
+      const e = a.egik * a.egik * (3 - 2 * a.egik);
+      dondur(k.govde, radyan(EGIK_KOSU.govde) * e);
+      dondur(k.gogus, radyan(EGIK_KOSU.gogus) * e);
+      dondur(k.bas, radyan(EGIK_KOSU.bas) * e);
     }
     // İrkilme: 1,1 sn'de gövde ve baş öne eğilir, kalça biraz iner, toparlanır (yarım sinüs zarfı)
     if (a.tepki && a.asama === "normal" && a.poz !== "yarali") {

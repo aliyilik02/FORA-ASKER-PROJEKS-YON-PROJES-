@@ -2,8 +2,11 @@
  * Son işlem ("film" görünümü, 11 Kasım 2026 denemesi; `?gorsel=film`).
  *
  * Üç duvar önce yarım-kayan-noktalı (HDR) bir hedefe çizilir, sonra tek tam ekran geçişle tuvale aktarılır:
- *  - temas gölgesi (AO): yalnız derinlikten; karşılıklı komşu çiftlerinin ortalaması merkezden yakınsa girinti
- *    sayılır (duvar dibi, moloz arası, araç altı). Normal gerekmez, düz eğik yüzey kendini karartmaz.
+ *  - temas gölgesi (AO): yalnız derinlikten. Yüzey yönü (normal) komşu derinliklerden çıkarılır; her örnek noktası
+ *    yüzeyin teğet düzleminin üstündeyse VE 3B uzaklığı yarıçapın içindeyse gölge sayılır (duvar dibi, moloz arası,
+ *    araç altı). Eski yöntem (karşılıklı çift ortalaması, 1,75 m derinlik menzili) duvarın 1–2 m önündeki askeri de
+ *    tam güçte gölge sayıyor, figürün çevresinde koyu bir hale ("siyah buğu") bırakıyordu (12 Kasım 2026).
+ *    Duman/toz örttüğü yerde gölge söner (parçacıklar hedefin alfasına geçirgenlik yazar; bkz. BIRLESTIR).
  *  - parlama (bloom): parlak bölgeler çeyrek çözünürlükte bulanıklaştırılıp eklenir (gök, ateş, namlu alevi).
  *  - film tonu: ACES eğrisi + pozlama, hafif kontrast/doygunluk, bantlanmaya karşı titreme.
  *
@@ -65,6 +68,19 @@ float karma(vec2 p) {
   return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
 }
 
+/**
+ * Bir örneğin gölge payı. o: piksel kayması; örnek noktası merkez pikselin ışını eksen alınarak 3B'ye açılır
+ * (yanal = piksel × derinlik / odak). Teğet düzlemin üstündeki yüksekliğin uzaklığa oranı (yükseliş açısının sinüsü)
+ * gölgedir; 3B uzaklık yarıçapa yaklaştıkça söner: 1 m ötedeki asker duvara gölge düşürmez, dibindeki kum torbası düşürür.
+ */
+float ornek(vec2 o, float z, vec3 n) {
+  float zs = uzaklik(vUv + o * piksel);
+  vec3 v = vec3(o * zs / odak, zs - z);
+  float d = length(v);
+  float yukseklik = dot(n, v) - 0.02 - 0.004 * z; // pay: derinlik çözünürlüğü ve normal hatası (düz yüzey kendini karartmasın)
+  return clamp(yukseklik / (d + 0.0001), 0.0, 1.0) * (1.0 - smoothstep(aoYaricap * 0.3, aoYaricap, d));
+}
+
 void main() {
   float d0 = texture2D(tDerinlik, vUv).x;
   if (d0 >= 0.99999) {
@@ -72,26 +88,31 @@ void main() {
     return;
   }
   float z = yakin * uzak / (uzak - d0 * (uzak - yakin));
+  // Yüzey normali derinlikten: her eksende derinliği merkeze yakın olan komşu (silüet kenarında öbür yüzeyi almamak için).
+  // Eksenler: x sağ, y yukarı (ekran), z uzaklık; normal izleyiciye bakar (z < 0)
+  float e = 2.0;
+  float zr = uzaklik(vUv + vec2(e * piksel.x, 0.0));
+  float zl = uzaklik(vUv - vec2(e * piksel.x, 0.0));
+  float zu = uzaklik(vUv + vec2(0.0, e * piksel.y));
+  float zd = uzaklik(vUv - vec2(0.0, e * piksel.y));
+  vec3 dx = abs(zr - z) < abs(z - zl) ? vec3(e * zr / odak, 0.0, zr - z) : vec3(e * zl / odak, 0.0, z - zl);
+  vec3 dy = abs(zu - z) < abs(z - zd) ? vec3(0.0, e * zu / odak, zu - z) : vec3(0.0, e * zd / odak, z - zd);
+  vec3 n = normalize(cross(dy, dx));
   // Ekrandaki yarıçap uzaklıkla küçülür; çok yakında 48 pikselle sınırlı (doku önbelleği dostu)
   float r = clamp(aoYaricap * odak / z, 2.0, 48.0);
   // Dönüş 4×4 pikselde yinelenir; birleştirmedeki 4×4 kutu yumuşatma deseni tam siler (nokta nokta gürültü kalmaz)
   vec2 hucre = mod(floor(gl_FragCoord.xy), 4.0);
   float aci = (hucre.x + hucre.y * 4.0) / 16.0 * 3.14159;
-  float sinir = aoYaricap * 2.5;
   float kapali = 0.0;
   for (int i = 0; i < 8; i++) {
     float a = aci + float(i) * 0.3927;
     float k = (float(i) + 0.5 + fract(aci * 2.3 + float(i) * 0.618)) / 8.0;
-    vec2 o = vec2(cos(a), sin(a)) * r * k * piksel;
-    float za = uzaklik(vUv + o);
-    float zb = uzaklik(vUv - o);
-    // Biri bile menzil dışındaysa çift atılır: eğik yüzeyde (zemin, uzayan duvar) tek taraflı örnek sahte gölge yapardı
-    if (abs(za - z) > sinir || abs(zb - z) > sinir) continue;
-    kapali += clamp((z - 0.5 * (za + zb)) / (aoYaricap * 0.35) - 0.08, 0.0, 1.0);
+    vec2 o = vec2(cos(a), sin(a)) * r * k;
+    kapali += ornek(o, z, n) + ornek(-o, z, n);
   }
   // Uzakta (yarıçap 2 pikselin altına inince) söner
   float sonme = smoothstep(1.5, 4.0, aoYaricap * odak / z);
-  gl_FragColor = vec4(vec3(1.0 - sonme * min(1.0, kapali / 8.0 * 2.2)), 1.0);
+  gl_FragColor = vec4(vec3(1.0 - sonme * min(1.0, kapali / 16.0 * 3.2)), 1.0);
 }`;
 
 const BIRLESTIR = /* glsl */ `
@@ -115,12 +136,17 @@ vec3 aces(vec3 x) {
 }
 
 void main() {
-  vec3 c = texture2D(tRenk, vUv).rgb;
+  vec4 renk = texture2D(tRenk, vUv);
+  vec3 c = renk.rgb;
+  // Hedefin alfası: önündeki duman/tozun geçirgenliği (1 açık, 0 tümüyle duman; parçacıklar yazar, parcaciklar.ts).
+  // Temas gölgesi derinlikten gelir, duman derinlik yazmaz: örtülen yerde gölge sönmezse arkadaki binanın gölge
+  // çizgileri dumanın ÜSTÜNE basılır (duman bantlı, "arkası tuhaf" görünürdü)
+  float acik = clamp(renk.a, 0.0, 1.0);
   if (aoGuc > 0.0) {
     // Yarım çözünürlüklü dokuda ±1 doku pikseli (= 2 tam piksel) kaydırılmış dört çift doğrusal örnek: 4×4 kutu
     vec2 p = piksel * 2.0;
     float t = (texture2D(tTemas, vUv + vec2(p.x, p.y)).r + texture2D(tTemas, vUv + vec2(-p.x, p.y)).r + texture2D(tTemas, vUv + vec2(p.x, -p.y)).r + texture2D(tTemas, vUv + vec2(-p.x, -p.y)).r) * 0.25;
-    c *= mix(1.0, t, aoGuc);
+    c *= mix(1.0, t, aoGuc * acik);
   }
   c += texture2D(tParlama, vUv).rgb * parlamaGuc;
   c = aces(c * pozlama);

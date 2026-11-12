@@ -32,6 +32,28 @@ describe("figür yöneticisi – ayakta ve bitti", () => {
     expect(olaylar).toHaveLength(sayi);
   });
 
+  it("konumBildir: mevzi değiştiren askerin yönü listede güncellenir, konum komutu yayınlanır; figür yeniden kurulmaz", () => {
+    const f = new FigurYoneticisi(new Gunluk(), []);
+    const olaylar: Array<{ islem: string; id: string; azimut?: number; liste: number[] }> = [];
+    f.dinle((k, liste) => olaylar.push({ islem: k.islem, id: k.id, azimut: k.azimut, liste: liste.map((x) => x.azimut ?? 0) }));
+    const a = f.komut({ islem: "oynat", klip: "komando_nisan", azimut: -20 });
+    const b = f.komut({ islem: "oynat", klip: "komando_nisan", azimut: 30 });
+    expect(f.konumBildir(a.id, 12.4)).toBe(true);
+    expect(olaylar.at(-1)).toEqual({ islem: "konum", id: a.id, azimut: 12, liste: [12, 30] });
+    expect(f.aktifListe().find((x) => x.id === a.id)?.klip).toBe("komando_nisan");
+    // Değişmeyen yön, bilinmeyen kimlik, bozuk sayı: yayın yok
+    const sayi = olaylar.length;
+    expect(f.konumBildir(a.id, 12.3)).toBe(false);
+    expect(f.konumBildir("yok", 5)).toBe(false);
+    expect(f.konumBildir(b.id, Number.NaN)).toBe(false);
+    expect(olaylar).toHaveLength(sayi);
+    // ±180 sarması
+    expect(f.konumBildir(b.id, 190)).toBe(true);
+    expect(f.aktifListe().find((x) => x.id === b.id)?.azimut).toBe(-170);
+    // API "konum" kabul etmez (yalnız oynatıcı bildirimiyle)
+    expect(() => f.komut({ islem: "konum", id: a.id, azimut: 0 })).toThrow();
+  });
+
   it("tekSeferlikleriKaldir ayakta duruşlu tek seferlik figürü de kaldırır", () => {
     const f = new FigurYoneticisi(new Gunluk(), []);
     f.komut({ islem: "oynat", klip: "komando_bomba", azimut: 0, poz: "ayakta", dongu: false });

@@ -1252,7 +1252,7 @@ Kullanıcı gözlemi: "askerler durduğu yerde çömelip kalkıyor, sahne canlı
 - **Namlu alevi:** yuvarlak parıltı parçacığının yanında namludan atış yönüne 50 ms'lik kısa, kalın ışık kapsülü
   (`namluAlevi`): aleve yön verir; uzak düşman namlusunda mesafeyle büyür.
 - Renkler: düşman kızıl-turuncu, dost sarı (hale); çekirdek ikisinde de beyaza yakın. Gündüz parlaklık 0,55, gece 1.
-  **Seçenek (yapılmadı, kullanıcıya soruldu):** düşman izi yeşil (Doğu menşeli mühimmat), dost kırmızı.
+  Düşman izi yeşil yapılmadı (kullanıcı kararı, 12 Kasım: "yeşil olmasın").
 
 ### Mevzi değiştirme (`figurler3b.ts sicramayiGuncelle`)
 
@@ -1270,12 +1270,42 @@ Kullanıcı gözlemi: "askerler durduğu yerde çömelip kalkıyor, sahne canlı
   (`atesGecikmesi`; `gecisBitti` ve yürüyüş varışı). (2) Ayaktan yere yatış iki adım: önce diz, 1,3 sn sonra yat
   ("Crouch To Prone" çömelik başlar; doğrudan geçişte kalça 3 m/sn düşüyordu; eski `siper-ve-yarali` testindeki a4
   sıçraması buydu). (3) Duruş geçişi bittikten 0,45 sn sonra koşu başlar.
-- `?hareket=kapali` askerleri yerinde tutar (yerel kayıtta kalır). Panel işaretleri (Eğitmen ekranı duvar şeridi)
-  askerin çağrıldığı yeri gösterir, sıçramayı izlemez (köprü konum bilmez).
+- **Eğik koşu:** koşu klibi ("Rifle Run") diktir; mevzi değiştirirken gövde öne eğilir, baş ileri bakar (kemiklere
+  eklenen eğim: bel 20°, göğüs 14°, baş −22°; `EGIK_KOSU`, konsoldan `window.duvar.egikKosu`; 0,25 sn'de girer/çıkar).
+- **Sipere dalış:** son 1,1 m'de asker koşudan doğrudan diz çökmeye geçer ("Rifle Stand To Kneel", koşu klibinden
+  çapraz geçiş: `pozUygula(…, kaynakEylem)`), yavaşlayarak mevziye kayar. Siper kararı o anda verilir: sütre arkasıysa
+  inip kalkar; açıktaysa %45 diz çöker, %30 diz çöküp 1,5 sn sonra yere yatar, %25 ayakta varır. Önceden mevziye
+  dimdik varıp bir iki saniye sonra çöküyordu.
+- **Panel işaretleri:** asker varınca oynatıcı köprüye yeni yönünü bildirir (`IstemciMesaji` `figur/konum`); köprü
+  aktif listedeki `azimut`u günceller (`FigurYoneticisi.konumBildir`) ve `konum` komutuyla yayınlar: paneller
+  listeyi yeniler (Eğitmen ekranı duvar şeridi, yön seçici), oynatıcılar komutu yok sayar; yeniden bağlanan oynatıcı
+  figürü yeni yerinde kurar. Tatbikat günlüğüne satır düşmez. Sözleşme sürümü 6.
+- `?hareket=kapali` askerleri yerinde tutar (yerel kayıtta kalır).
 - **Test:** `KOPRU=… node araclar/oyun-testi/mevzi-degistirme.mjs [bolge] [--sure 90] [--asker 5]`. Meskûn, 5 asker,
   90 sn: 12 sıçrama, aynı anda en çok 1 koşan, ortalama 3,18 m/sn, engel içinde 0 kare, koşarken en yakın asker ≥ 1 m,
   belirgin animasyon sıçraması yok; kare hızı değişmedi (38–40 fps başsız 3840×720).
 
-**Açık:** duvarda gözle bakılmadı. Koşu hep düz hat ve ayakta ("eğik koşu" klibi yok); varışta önce ayakta durup sonra
-çöker (doğrudan sipere dalış yok). Düşman atıcılar yer değiştirirken görünmez (mevziden mevziye geçiş çizilmez). Çarpma
-tozu ve şarjör değiştirme gibi ek canlılık öğeleri yapılmadı.
+**Açık:** duvarda gözle bakılmadı. Koşu düz hattır (engel dolanma yok: yolu kapalı mevzi seçilmez); eğik koşu
+prosedüreldir (gerçek eğik koşu klibi yok, bacaklar dik koşu klibinden). Düşman atıcılar yer değiştirirken görünmez.
+Çarpma tozu ve şarjör değiştirme gibi ek canlılık öğeleri yapılmadı. `siper-ve-yarali.mjs` testinde a4'ün sol eli diz
+çökme geçişinde 9,1–9,2 m/sn (eşik 9) ölçülüyor: eskiden beri sınırda, bu işten bağımsız.
+
+## Temas gölgesi halesi ve dumanın arkası (12 Kasım 2026)
+
+Kullanıcı gözlemi (fotoğraflı): "askerlerin etrafında siyah bir buğu" ve "duman atılınca arka kısım bir değişik
+görünüyor, tam duman gibi değil". İkisi de film görünümünün temas gölgesinden (`sonIslem.ts`, AO).
+
+- **Hale:** eski yöntem karşılıklı örnek çiftinin ortalaması merkezden yakınsa "girinti" sayıyor, 1,75 m derinlik
+  menzili içindeki her şeyi tam güçte gölge yapıyordu. Duvarın 0,3–1,7 m önündeki asker için duvardaki piksellerde bir
+  örnek figüre (yakın), öbürü duvara düşer: ortalama yakın çıkar, askerin çevresinde ~0,7 m'lik koyu hale oluşur.
+  **Yeni yöntem:** yüzey yönü (normal) komşu derinliklerden çıkarılır (her eksende derinliği merkeze yakın komşu); her
+  örnek merkez pikselin ışını eksen alınarak 3B'ye açılır; teğet düzlemin üstündeki yüksekliğin uzaklığa oranı gölgedir
+  ve **3B uzaklık** yarıçapa (0,7 m) yaklaştıkça söner (`1 − smoothstep(0,3R, R, d)`). Duvar dibi, kum torbası altı,
+  moloz arası gölgeli kalır; 0,5–1 m ötedeki asker duvara gölge düşürmez. 16 + 4 derinlik örneği, yarım çözünürlük.
+- **Duman:** temas gölgesi derinlikten gelir, duman/toz derinlik yazmaz: arkadaki binanın pencere/kat gölgeleri
+  dumanın ÜSTÜNE basılıyor, duman bantlı görünüyordu. Duman parçacıkları artık hedefin alfa kanalına geçirgenlik yazar
+  (`parcaciklar.ts`: `CustomBlending`, renk eskisi gibi, alfa = hedef alfa × (1 − parçacık alfası)); birleştirme
+  geçişi gölgeyi bununla çarpar (`aoGuc × acik`). Dumanın örttüğü yerde gölge söner, bulut düzgün örter.
+- **Denetim:** `KOPRU=… node araclar/oyun-testi/golge-duman.mjs [bolge] --ad sonra` (duvar/bariyer dibinde altı asker
+  + iki toz bulutu; yakın planlar `araclar/_goruntu/golge/`). Önce/sonra: `karsilastirma_asker.png`,
+  `karsilastirma_duman.png`, `karsilastirma_orta.png` (genel görünüm korunuyor).

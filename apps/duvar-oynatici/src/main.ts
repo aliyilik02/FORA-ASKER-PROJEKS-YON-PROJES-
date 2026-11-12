@@ -34,6 +34,7 @@ import { OlayKuyrugu } from "./olayKuyrugu";
 import { tohum, tohumAyarla } from "./rastgele";
 import { KlipKatmani } from "./klipler";
 import { silahHizala } from "./sahne3b/silahHizalama";
+import { EGIK_KOSU } from "./sahne3b/figurler3b";
 import { duvarYerlesimleri, duvarlariOlustur, geometriOzeti, odaDuvarlari, odaGeometrisiCoz, odaGeometrisiYaz, type OdaGeometrisi, ufukSatiri, type Yerlesim, xAzimut, yonAzimut, zamanDilimi, type ZamanDilimi } from "./projeksiyon";
 import { araziCiz, araziGuncelle, ufukY as bolgeUfukY } from "./sahne/arazi";
 import { gokyuzuCiz, gokyuzuGuncelle, gokyuzuRenkleri } from "./sahne/gokyuzu";
@@ -261,6 +262,8 @@ sahne3b.figurSesleriAyarla((tur, azimut) => {
   THREE,
   gecis,
   arkaPlan: () => sonArkaPlan,
+  // Eğik koşu eğimleri (derece): window.duvar.egikKosu.govde = 25 gibi canlı ayar
+  egikKosu: EGIK_KOSU,
   // Düşman atıcıları: window.duvar.dusman.durum() / .ozet() / .tanilama(true) (mevzi doğrulama)
   dusman: sahne3b.dusmanKatmani,
   // Yerleşim/çarpışma denetimi: window.duvar.figurler() → [{id, x, z, hiz, poz}]
@@ -876,6 +879,8 @@ if (dprUyarisi) {
 }
 // Yürüyen/koşan figür duvarın ucundan çıktı: köprü listeden düşürsün (panel listesi şişmesin, yeniden bağlanınca baştan koşmasın)
 sahne3b.figurBittiAyarla((id) => kopru.gonder({ tip: "figur", islem: "bitti", id }));
+// Asker mevzi değiştirdi: köprü aktif listedeki yönü günceller, panelin duvar şeridindeki işaret yeni yere geçer
+sahne3b.figurKonumAyarla((id, azimut) => kopru.gonder({ tip: "figur", islem: "konum", id, azimut: Math.round(azimut) }));
 if (sahne3b.hata) kopru.gonder({ tip: "gunluk", seviye: "hata", mesaj: `3B katman açılamadı: ${sahne3b.hata}` });
 /**
  * Otomatik kalite seçimi köprü günlüğüne bir kez: bağlandıktan bir yoklama sonra (köprü oynatıcı günlüğünü 500 ms'de

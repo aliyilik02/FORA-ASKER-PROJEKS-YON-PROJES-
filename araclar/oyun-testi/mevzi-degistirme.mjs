@@ -86,10 +86,11 @@ try {
     await bekle(120);
     const kosan = await c.js(() => window.duvar.sahne3b.figurler.aktifler.filter((a) => a.sicrama.kosuyor).map((a) => a.id));
     if (kosan.length && cekim < 5) {
-      await bekle(350); // koşunun ortası
-      const kutu = await c.figurKutusu(kosan[0], 0.9);
-      await c.cek(`md_${bolge}_${++cekim}`);
+      await bekle(300); // koşunun ortası
+      const kutu = await c.figurKutusu(kosan[0], 1.4);
+      cekim++;
       if (kutu && !kutu.hata) await c.cek(`md_${bolge}_${cekim}_yakin`, kutu);
+      await c.cek(`md_${bolge}_${cekim}`);
       await bekle(2500);
     }
   }
@@ -139,6 +140,12 @@ try {
   kosul("koşarken başka askerin içinden geçmedi (≥ 0,5 m)", Object.values(o.yakin).every((u) => u >= 0.5));
   kosul("sıçramalar ≤ 9,5 m (örnekleme koşunun başını kaçırabilir: alt sınır 1,2 m)", sicramalar.every((s) => s.yol >= 1.2 && s.yol <= 9.5));
   kosul("askerler izleyiciden 3,5–8 m bandında kaldı", son.every((f) => Math.hypot(f.x, f.z) >= 3.4 && Math.hypot(f.x, f.z) <= 8.2));
+  // Panel işaretleri: köprünün aktif figür listesindeki yön, askerin sahnedeki yerine uymalı (mevzi değiştirme bildirimi)
+  const liste = await c.api("GET", "/figurler");
+  const kopruYonleri = Object.fromEntries((liste.aktifler ?? liste.figurler ?? liste).map((f) => [f.id, f.azimut]));
+  const farklar = son.map((f) => { const az = (Math.atan2(f.x, -f.z) * 180) / Math.PI; const fark = Math.abs(((az - (kopruYonleri[f.id] ?? 999) + 540) % 360) - 180); return { id: f.id, sahne: Math.round(az), kopru: kopruYonleri[f.id], fark: Math.round(fark) }; });
+  console.log("  köprüdeki yönler:", JSON.stringify(farklar));
+  kosul("sıçrayan askerlerin köprüdeki yönü sahnedekiyle aynı (≤ 3°)", farklar.filter((f) => sicramalar.some((s) => s.id === f.id) && !son.find((x) => x.id === f.id)?.kosu).every((f) => f.fark <= 3));
   const fps = await c.fps(3);
   console.log("  kare hızı:", JSON.stringify(fps));
   if (c.konsol.size) console.log("konsol:", [...c.konsol.entries()].slice(0, 8));
