@@ -1246,9 +1246,14 @@ Kullanıcı gözlemi: "askerler durduğu yerde çömelip kalkıyor, sahne canlı
   uzakta en az 0,75 px yarıçap (≈ 1,5 px; eski kural) ve bu sınır artık gölgelendiricide **duvar başına** hesaplanır
   (`uCozunurluk` her duvarın görüş alanından; işlemcide piksel açısı ölçümü kalktı). Değerler HDR: film görünümünde son
   işlem parlaması çekirdeği ışıldatır. Kuyruk namlunun gerisine uzamaz (iz namludan çıkarken büyür).
-- **Her mermi izli değil:** çatışmada düşman mermilerinin yarısı (salvonun ilki hep), dost mermilerinin üçte biri,
-  zırhlı aracınkilerin yarısı iz bırakır; izsiz mermi de uçar, çarpar, toz kaldırır, "çat" eder. Panelin izli mermi
-  akışında her mermi izlidir. (`DUSMAN_IZLI_ARALIGI`, `DOST_IZLI_ARALIGI`.)
+- **Çatışmada iz çizilmez (kullanıcı kararı, 12 Kasım akşam: "silahtan çıkıp giden ışık süzmelerini kaldır, yerden
+  gelen efektler dursun"):** `CatismaSistemi.izKipi` varsayılan `"kapali"`: düşman, dost, zırhlı araç ve top mermisi
+  iz bırakmaz; mermi yine uçar, çarpar, toz ve kıvılcım kaldırır, "çat" eder, uzak isabet tozu kalkar. Görünenler: namlu
+  parıltısı ve alevi, çarpma tozu/kıvılcımı, yerden seken parçanın kısa izi (yer efekti sayıldı) ve panelin **izli
+  mermi akışı** (eğitmenin açıkça açtığı efekt; şartname maddesi; her mermisi izli). `?iz=dusman` yalnız gelen düşman
+  mermilerinin yarısını (salvonun ilki hep), `?iz=acik` dost mermilerinin üçte birini, aracınkilerin yarısını ve top
+  mermisini de izli gösterir (`DUSMAN_IZLI_ARALIGI`, `DOST_IZLI_ARALIGI`); `?iz=kapali` varsayılana döner (yerel
+  kayıtta kalır).
 - **Namlu alevi:** yuvarlak parıltı parçacığının yanında namludan atış yönüne 50 ms'lik kısa, kalın ışık kapsülü
   (`namluAlevi`): aleve yön verir; uzak düşman namlusunda mesafeyle büyür.
 - Renkler: düşman kızıl-turuncu, dost sarı (hale); çekirdek ikisinde de beyaza yakın. Gündüz parlaklık 0,55, gece 1.

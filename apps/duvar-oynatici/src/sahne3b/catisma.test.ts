@@ -72,8 +72,39 @@ describe("mermi izi çizimi", () => {
     }
   });
 
-  it("çatışmada düşman mermilerinin yarısı izlidir (salvonun ilki hep izli); izli akışta hepsi", () => {
+  it("varsayılan kipte çatışma mermisi iz bırakmaz ama uçar ve çarpar; seken parça ve izli akış görünür", () => {
     const sistem = kur();
+    const ic = sistem as unknown as Ic;
+    expect(sistem.izKipi).toBe("kapali");
+    ic.salvoIlkAtis = true;
+    for (let i = 0; i < 12; i++) ic.dusmanAtis(0, 30);
+    for (let i = 0; i < 9; i++) ic.dostAtis(new THREE.Vector3(2, -1.7, -5));
+    expect(ic.eklenecek.length).toBe(21);
+    expect(ic.eklenecek.some((e) => e.gorunur)).toBe(false);
+    sistem.guncelle(1 / 120);
+    // Uçuşta 21 mermi var; çizilen yalnız 9 namlu alevi
+    expect(ic.izler.length).toBe(21);
+    expect(sistem.cizici.sayi).toBe(9);
+    // Yalnız düşman kipi: gelen mermilerin yarısı izli, dost mermisi izsiz
+    const d = kur();
+    d.izKipi = "dusman";
+    const dic = d as unknown as Ic;
+    dic.salvoIlkAtis = true;
+    for (let i = 0; i < 12; i++) dic.dusmanAtis(0, 30);
+    for (let i = 0; i < 9; i++) dic.dostAtis(new THREE.Vector3(2, -1.7, -5));
+    expect(dic.eklenecek.filter((e) => e.gorunur && !e.dost).length).toBeGreaterThanOrEqual(6);
+    expect(dic.eklenecek.some((e) => e.gorunur && e.dost)).toBe(false);
+    // İzli mermi akışı (panel) her kipte izli
+    const akis = kur();
+    akis.izliAyarla({ aktif: true, azimut: 0, yon: 0, siklik: 600 });
+    akis.guncelle(1 / 60);
+    expect((akis as unknown as Ic).izler.length).toBeGreaterThan(5);
+    expect((akis as unknown as Ic).izler.every((z) => z.gorunur)).toBe(true);
+  });
+
+  it("açık kipte düşman mermilerinin yarısı izlidir (salvonun ilki hep izli); izli akışta hepsi", () => {
+    const sistem = kur();
+    sistem.izKipi = "acik";
     const ic = sistem as unknown as Ic;
     ic.salvoIlkAtis = true;
     for (let i = 0; i < 20; i++) ic.dusmanAtis(0, 30);
@@ -92,8 +123,9 @@ describe("mermi izi çizimi", () => {
     expect((akis as unknown as Ic).izler.every((z) => z.gorunur)).toBe(true);
   });
 
-  it("dost ateşinde üç mermide bir izli; namlu alevi atışla çıkar ve 50 ms'de söner", () => {
+  it("açık kipte dost ateşinde üç mermide bir izli; namlu alevi atışla çıkar ve 50 ms'de söner", () => {
     const sistem = kur();
+    sistem.izKipi = "acik";
     const ic = sistem as unknown as Ic;
     for (let i = 0; i < 9; i++) ic.dostAtis(new THREE.Vector3(2, -1.7, -5));
     expect(ic.eklenecek.filter((e) => e.gorunur).length).toBe(3);

@@ -449,8 +449,11 @@ bakılmadı. Ayrıntı `docs/duvar-oynatici.md` "Düşman silueti".
 
 **Mermi izi + mevzi değiştirme (12 Kasım, kullanıcı gözlemi: "askerler durduğu yerde çömelip kalkıyor", "mermi efektleri
 kaba"):** izler artık ekran uzayında yumuşak kapsül (`sahne3b/izCizimi.ts` `IzCizici`: sıcak çekirdek + hale, incelen
-kuyruk, uzakta ≥ 1,5 px gölgelendiricide duvar başına); eski örneklenmiş kutu ("çubuk") kalktı. Çatışmada düşman
-mermilerinin yarısı, dost mermilerinin üçte biri izli (izsiz mermi de çarpar); izli akışta hepsi. Namlu alevi yönlü kapsül.
+kuyruk, uzakta ≥ 1,5 px gölgelendiricide duvar başına); eski örneklenmiş kutu ("çubuk") kalktı. **Çatışmada iz
+çizilmiyor (kullanıcı kararı 12 Kasım akşam: yeni izi de beğenmedi, "silahtan çıkıp giden ışık süzmelerini kaldır, yerden
+gelen efektler dursun"):** `CatismaSistemi.izKipi` varsayılan "kapali"; mermi uçar, çarpar, toz/kıvılcım kaldırır, namlu
+parıltısı ve yerden seken iz görünür. `?iz=dusman|acik` geri açar. Panelin izli mermi akışı her kipte izli (şartname
+maddesi; kullanıcı onu da istemezse sor). Namlu alevi yönlü kapsül.
 Askerler çatışmada 14–34 sn'de bir yakındaki boş mevziye koşar (`figurler3b sicramayiGuncelle`, aynı anda tek asker,
 yol önceden engel/figürden açık seçilir; `sahne3b.mevziAdaylari`); `?hareket=kapali` kapatır. Bu işte bulunan animasyon
 hataları: çapraz geçiş bitmeden nişan geçişi (→ `atesGecikmesi`), ayaktan doğrudan yere yatış (→ önce diz). Testler:

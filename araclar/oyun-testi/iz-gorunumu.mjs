@@ -2,7 +2,7 @@
 // çarpmaların tam karesini çeker; önce/sonra karşılaştırması için. Sayfa saati test denetiminde (cekirdek saat: true).
 //
 //   KOPRU=http://127.0.0.1:4100 node araclar/oyun-testi/iz-gorunumu.mjs [bolge] [--saat 12] [--ad on_ek] [--izli]
-//        [--kare 6] [--asker 4] [--siddet 0.8] [--yon 0] [--genislik 3840]
+//        [--kare 6] [--asker 4] [--siddet 0.8] [--yon 0] [--genislik 3840] [--iz kapali|dusman|acik]
 //
 // Çıktı: araclar/_goruntu/iz/<ad>_<n>.png (tam tuval) ve <ad>_<n>_orta.png (orta duvar).
 import { baslat, bekle } from "./cekirdek.mjs";
@@ -18,7 +18,7 @@ const kareSayisi = Number(arg("kare", "6"));
 const askerSayisi = Number(arg("asker", "4"));
 const yon = Number(arg("yon", "0"));
 
-const t = await baslat({ genislik: Number(arg("genislik", "3840")), cikti: "araclar/_goruntu/iz", sorgu: { gorsel: arg("gorsel", "film") }, saat: true });
+const t = await baslat({ genislik: Number(arg("genislik", "3840")), cikti: "araclar/_goruntu/iz", sorgu: { gorsel: arg("gorsel", "film"), ...(arg("iz", "") ? { iz: arg("iz", "") } : {}) }, saat: true });
 try {
   await t.api("POST", "/sahne/sifirla", { kaynak: "panel" });
   await t.api("PATCH", "/ortam", { mevsim: "yaz", saat: Number(arg("saat", "12")), yagis: "yok", sis: 0, bulut: 0.2, simsek: false });
@@ -45,7 +45,7 @@ try {
       cekilen++;
       await t.cek(`${onEk}_${cekilen}`);
       await t.cek(`${onEk}_${cekilen}_orta`, "orta");
-      console.log(`  kare ${k}: ${iz} iz → ${onEk}_${cekilen}.png`);
+      console.log(`  kare ${k}: uçuşta ${iz} mermi, çizilen ışık çizgisi ${await t.js(() => window.duvar.sahne3b.cizilenIzSayisi)} → ${onEk}_${cekilen}.png`);
     }
   }
   await t.sayfa.clock.resume();

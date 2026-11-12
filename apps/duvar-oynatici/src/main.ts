@@ -236,6 +236,13 @@ const dusmanKapali = (dusmanParam ?? localStorage.getItem("dusman")) === "kapali
 const hareketParam = params.get("hareket");
 if (hareketParam === "kapali" || hareketParam === "acik") localStorage.setItem("hareket", hareketParam);
 sahne3b.mevziDegistirmeAyarla((hareketParam ?? localStorage.getItem("hareket")) !== "kapali");
+// Çatışmada mermi izi: varsayılan kapalı (kullanıcı kararı 12 Kasım 2026: silahtan çıkıp uçan ışık çizgileri kalktı;
+// çarpma tozu, kıvılcım, namlu parıltısı ve panelin izli mermi akışı durur). `?iz=dusman` yalnız gelen düşman
+// mermilerini, `?iz=acik` dost mermilerini de izli gösterir; `?iz=kapali` varsayılana döner (yerel kayıtta kalır).
+const izParam = params.get("iz");
+if (izParam === "kapali" || izParam === "dusman" || izParam === "acik") localStorage.setItem("iz", izParam);
+const izKipi = izParam ?? localStorage.getItem("iz");
+sahne3b.izKipiAyarla(izKipi === "acik" || izKipi === "dusman" ? izKipi : "kapali");
 function alanPlani(bolge: string): AlanPlani | undefined {
   if (alanKapali || testPanorama) return undefined;
   const temel = video.manifest.alanlar?.[bolge];

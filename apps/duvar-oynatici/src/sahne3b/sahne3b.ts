@@ -1689,6 +1689,14 @@ export class Sahne3B {
   get izSayisi() {
     return this.catisma.aktifIzSayisi;
   }
+  /** Çatışma mermilerinin izi (`?iz=kapali|dusman|acik`; CatismaSistemi.izKipi). */
+  izKipiAyarla(kip: "kapali" | "dusman" | "acik") {
+    this.catisma.izKipi = kip;
+  }
+  /** Tanı/test: o an çizilen ışık çizgisi (iz + namlu alevi) sayısı. */
+  get cizilenIzSayisi() {
+    return this.catisma.cizici.sayi;
+  }
 
   guncelle(dt: number) {
     if (!this.renderer) return;

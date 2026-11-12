@@ -14,9 +14,10 @@
  *  - Başın ~6 m yakınından geçen düşman mermisi bir kez ses hızı üstü "çat" sesi verir. İzli akışın çarpma/"çat"
  *    sesleri saniyede en çok ~1,5 (görüntü aynı).
  * İzler ekran uzayında yumuşak kapsüllerdir (izCizimi.ts: sıcak çekirdek + renkli hale, başta parlak nokta, incelip
- * sönen kuyruk; uzakta en az ~1,5 px). Her mermi izli değildir: çatışmada düşman mermilerinin yarısı, dost mermilerinin
- * üçte biri iz bırakır (gerçekte şeritte 4–5 mermide bir izli vardır); izsiz mermi de çarpar, toz kaldırır, "çat" eder.
- * İzli mermi akışının (panel) her mermisi izlidir.
+ * sönen kuyruk; uzakta en az ~1,5 px). Çatışmada silahtan çıkıp uçan iz ÇİZİLMEZ (`izKipi` "kapali", kullanıcı kararı
+ * 12 Kasım 2026: "ışık süzmelerini kaldır"): mermi yine uçar, çarpar, toz ve kıvılcım kaldırır, "çat" eder; namlu
+ * parıltısı ve yerden seken kıvılcım izi görünür. `izKipi` "dusman": yalnız gelen düşman mermilerinin yarısı izli;
+ * "acik": dost mermilerinin üçte biri ve top mermisi de. İzli mermi akışının (panelin açık düğmesi) her mermisi her kipte izlidir.
  */
 import * as THREE from "three";
 import { IzCizici } from "./izCizimi";
@@ -163,6 +164,12 @@ export class CatismaSistemi {
   private alevHavuzu: Alev[] = [];
   private dusmanAtisNo = 0;
   private dostAtisNo = 0;
+  /**
+   * Çatışma mermilerinin izi (`?iz=`): "kapali" (varsayılan) silahtan çıkıp uçan çizgi çizilmez; "dusman" yalnız gelen
+   * düşman mermileri; "acik" dost ve top mermileri de. Çarpma tozu, kıvılcım, seken iz, namlu parıltısı ve panelin
+   * izli mermi akışı kipten bağımsızdır.
+   */
+  izKipi: "kapali" | "dusman" | "acik" = "kapali";
   private izler: Iz[] = [];
   private ayar: CatismaAyari = { aktif: false, siddet: 0.5, azimut: 0, dostAtes: true };
   private izli: IzliAyari = { aktif: false, azimut: 0, yon: 0, siklik: 3 };
@@ -404,7 +411,7 @@ export class CatismaSistemi {
       if (this.sirtaTasi()) kaynak.set(this.yol.sx, this.yol.sy, this.yol.sz);
     }
     const v = hedef.clone().sub(kaynak).normalize().multiplyScalar(rnd(140, 190));
-    const izli = this.salvoIlkAtis || this.dusmanAtisNo % DUSMAN_IZLI_ARALIGI === 0;
+    const izli = this.izKipi !== "kapali" && (this.salvoIlkAtis || this.dusmanAtisNo % DUSMAN_IZLI_ARALIGI === 0);
     this.dusmanAtisNo++;
     this.izEkle(kaynak, v, false, false, false, 0, izli);
     if (atici?.siluet) {
@@ -584,7 +591,7 @@ export class CatismaSistemi {
     this.parcaciklar.parlama(namlu, 0.3);
     this.namluAlevi(namlu, dusman, 1);
     this.sesler.atis(sesAzimutu(konum), false);
-    const izli = this.dostAtisNo++ % DOST_IZLI_ARALIGI === 0;
+    const izli = this.dostAtisNo++ % DOST_IZLI_ARALIGI === 0 && this.izKipi === "acik";
     // Mevzi tutan düşman atıcısı varsa (ve askerin baktığı yönün ±28°'sindeyse) ona nişan alınır: izler o pencerede
     // toplanır, isabet tozu kalkar, ara sıra atıcıyı sindirir. Yoksa eski genel düşman yönü.
     const atici = this.dostHedefi?.() ?? null;
@@ -621,7 +628,7 @@ export class CatismaSistemi {
   aracAtisi(namlu: THREE.Vector3, konum: THREE.Vector3, hedef?: THREE.Vector3) {
     this.parcaciklar.parlama(namlu, 0.5);
     this.sesler.atis(sesAzimutu(konum), false);
-    const izli = this.dostAtisNo++ % 2 === 0;
+    const izli = this.dostAtisNo++ % 2 === 0 && this.izKipi === "acik";
     if (hedef) {
       this.namluAlevi(namlu, _yon.copy(hedef).sub(namlu), 1.5);
       this.hedefliAtis(namlu, hedef, 0.9, rnd(170, 210), true, izli);
@@ -694,7 +701,7 @@ export class CatismaSistemi {
     const v = yonDuz.clone().multiplyScalar(320);
     v.y = 2;
     this.mermiler.push({ p: t.namlu.clone(), v, kalan: rnd(0.55, 0.8), hedefAz });
-    this.izEkle(t.namlu, v, true);
+    this.izEkle(t.namlu, v, true, false, false, 0, this.izKipi === "acik");
     this.sesler.topAtisi?.(sesAzimutu(t.konum));
   }
 
@@ -735,7 +742,8 @@ export class CatismaSistemi {
         v.x += rnd(-40, 40);
         v.z += rnd(-40, 40);
         v.setLength(iz.v.length() * rnd(0.4, 0.7));
-        this.izEkle(_sekmeKonum.set(p.x, zeminY(p.x, p.z) + 0.05, p.z), v, false, true, iz.izli, 0, iz.gorunur);
+        // Seken parça yerden çıkan kıvılcım izidir (yer efekti): ana mermi izsiz olsa da görünür
+        this.izEkle(_sekmeKonum.set(p.x, zeminY(p.x, p.z) + 0.05, p.z), v, false, true, iz.izli, 0, true);
       }
     }
   }
