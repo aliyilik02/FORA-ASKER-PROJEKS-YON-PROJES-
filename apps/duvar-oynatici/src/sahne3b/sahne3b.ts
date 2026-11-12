@@ -50,6 +50,7 @@ import { YikilanDuvarKatmani } from "./yikilanDuvar";
 import { BayrakKatmani } from "./bayrak";
 import { DereKatmani } from "./dere";
 import { DusmanKatmani, type DusmanModeli } from "./dusman";
+import { YurunebilirZemin, type EngelKutusu } from "./yurunebilir";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
 /** Kalite kademeleri: dizüstü/entegre GPU'da "dusuk", sahadaki RTX sınıfı makinede "yuksek". */
@@ -333,6 +334,7 @@ export class Sahne3B {
     this.catisma.agirSilahlar = () => this.figurler.agirSilahlar();
     // Çatışmada asker ara sıra yakındaki boş mevziye koşar (figurler3b sicramayiGuncelle)
     this.figurler.mevziAdaylari = (konum, id) => this.mevziAdaylari(konum, id);
+    this.figurler.zemin = () => this.yurunebilirZemin();
     if (!r) return;
     this.renderer = r;
     // Bağlam kaybı/geri gelişi (C-20): kayıpta çizim durur (three kendi durumunu sıfırlar, dokular kaynaktan geri gelir);
@@ -1105,6 +1107,8 @@ export class Sahne3B {
       this.sokak.zemineOturt();
       this.dokuntu.ayarla(alanPlani?.dokuntu);
       this.yikilan.ayarla(alanPlani?.yikilabilir, this.alanKok);
+      // Zırhlı araç bu bölgede çağrılabilir (planda rota var): modeli şimdiden yükle ve ısıt, ilk çağrıda donmasın
+      if (this.alan.plan?.aracRotasi) this.arac?.hazirla(`${this.alanKok}modeller/alan/sf_kirpi_bmc.glb`);
       this.bayraklar.ayarla(alanPlani?.bayraklar);
       this.dereler.ayarla(alanPlani?.dereler);
       // Dost yapılarının (bayrak direği, gözetleme kulesi) 16 m çevresi düşman mevzisi olmaz. Meskûn mahaldeki nöbetçi
@@ -1564,6 +1568,31 @@ export class Sahne3B {
     }
     return adaylar;
   }
+  private zeminOnbellek: { zemin: YurunebilirZemin; imza: string; denetim: number } | null = null;
+  /**
+   * Tek yürünebilir zemin (yurunebilir.ts): alan yapıları, sütre eşyaları, ayakta yıkılabilir duvarlar, dere ve dik
+   * yamaçlardan kurulan ızgara. İstendikçe verilir; engeller en çok 1,5 sn'de bir yeniden toplanır ve imza (kutu
+   * sayısı + köşe toplamı + birkaç zemin örneği) değiştiyse ızgara yeniden kurulur (bölge/alan/sütre değişimi, yıkılan
+   * duvar, arazi kipi). Kurulum ~16 bin hücre: birkaç ms.
+   */
+  yurunebilirZemin(): YurunebilirZemin {
+    const simdi = performance.now();
+    const o = this.zeminOnbellek;
+    if (o && simdi - o.denetim < 1500) return o.zemin;
+    const kutular: EngelKutusu[] = [...this.alan.engelKutulari(), ...this.sutre.engelKutulari(), ...this.yikilan.engelKutulari()];
+    let toplam = 0;
+    for (const k of kutular) toplam += k.minX * 1.3 + k.maxX * 2.1 + k.minZ * 3.7 + k.maxZ * 5.3 + k.boy;
+    for (const [x, z] of [[0, -8], [10, -14], [-10, -14], [0, -24], [18, -6], [-18, -6]]) toplam += zeminY(x, z) * 7.9;
+    const imza = `${kutular.length}:${toplam.toFixed(2)}:${this.dereler.sayi}`;
+    if (o && o.imza === imza) {
+      o.denetim = simdi;
+      return o.zemin;
+    }
+    const zemin = new YurunebilirZemin(kutular, this.dereler.sayi ? (x, z) => this.dereler.icindeMi(x, z, 0.2) : null, (x, z) => zeminY(x, z));
+    this.zeminOnbellek = { zemin, imza, denetim: simdi };
+    return zemin;
+  }
+
   /** Asker mevzi değiştirince (yeni sahne azimutu) çağrılır; main.ts köprüye bildirir (panel işaretleri). */
   figurKonumAyarla(f: (id: string, azimut: number) => void) {
     this.figurler.konumOlayi = f;

@@ -7646,7 +7646,7 @@
       ]
     },
     "us_bolgesi_film": {
-      "_aciklama": "Film görünümü (11 Kasım 2026): üs savunma hattı. Kum torbası yayı ve sandıklar, beton bariyerler, gözetleme kulesi ve bayrak, hasarlı yapı, yıkılabilir duvar; Kirpi üs yolundan gelir. Sketchfab CC-BY taramaları (atıf sketchfab_indirilen/**/*.kaynak.json).",
+      "_aciklama": "Film görünümü (11 Kasım 2026): üs savunma hattı. Kum torbası yayı ve sandıklar, beton bariyerler, gözetleme kulesi ve bayrak, hasarlı yapı, yıkılabilir duvar; Kirpi üs yolundan gelir. 12 Kasım: üssün dışında 55–80 m’de düşmanın tutacağı yıkıntılar (hasarlı bina, köy yıkıntısı, hasarlı ev, yıkık duvar, kaya). Sketchfab CC-BY taramaları (atıf sketchfab_indirilen/**/*.kaynak.json).",
       "ekle": [
         {"dosya":"modeller/alan/sf_kum_torbasi_bariyer.glb","x":-3.4,"z":-6.6,"yonDerece":12},
         {"dosya":"modeller/alan/sf_kum_torbasi_bariyer.glb","x":2.6,"z":-7,"yonDerece":-10},
@@ -7664,7 +7664,12 @@
         {"dosya":"modeller/alan/sf_tugla_yigini.glb","x":15,"z":-26,"yonDerece":200,"olcek":0.8},
         {"dosya":"modeller/alan/varil_216.glb","x":-9,"z":-11.6,"yonDerece":0},
         {"dosya":"modeller/alan/varil_218.glb","x":-8.2,"z":-12.3,"yonDerece":40},
-        {"dosya":"modeller/alan/sf_kaya_seti.glb","x":14,"z":5,"yonDerece":-60}
+        {"dosya":"modeller/alan/sf_kaya_seti.glb","x":14,"z":5,"yonDerece":-60},
+        {"dosya":"modeller/alan/sf_hasarli_bina_1.glb","x":-50,"z":-55,"yonDerece":42},
+        {"dosya":"modeller/alan/koy_yikinti_427.glb","x":-12,"z":-80,"yonDerece":9},
+        {"dosya":"modeller/alan/sf_hasarli_ev.glb","x":40,"z":-62,"yonDerece":-33},
+        {"dosya":"modeller/alan/duvar_yikik_265.glb","x":17,"z":-57,"yonDerece":-17},
+        {"dosya":"modeller/alan/sf_kaya_col_olusumu.glb","x":-58,"z":-38,"yonDerece":57}
       ],
       "noktalar": [
         {"ad":"sol kum torbası arkası","azimut":-35.9,"mesafe":5.8,"tur":["asker"]},
@@ -7683,6 +7688,15 @@
         {"ad":"araç yolu","azimut":-8,"mesafe":34,"tur":["tank"]}
       ],
       "dusmanMevzileri": [
+        {"ad":"kaya col olusumu üst 4 m","x":-59.23,"z":-36.8,"y":4.02,"siluet":true},
+        {"ad":"kaya col olusumu pencere 1 m","x":-57.6,"z":-36.27,"y":0.79,"siluet":true},
+        {"ad":"kaya col olusumu üst 1 m","x":-57.6,"z":-41.65,"y":1.41,"siluet":true},
+        {"ad":"hasarli bina 1 üst 6 m","x":-48.45,"z":-49.28,"y":5.78,"siluet":true},
+        {"ad":"hasarli bina 1 üst 6 m","x":-45.27,"z":-52.12,"y":5.93,"siluet":true},
+        {"ad":"hasarli bina 1 pencere 4 m","x":-45.27,"z":-57.05,"y":4.22,"siluet":true},
+        {"ad":"koy yikinti 427 üst 2 m","x":-14.33,"z":-79.86,"y":1.8,"siluet":true},
+        {"ad":"koy yikinti 427 üst 4 m","x":-11.09,"z":-86.06,"y":3.54,"siluet":true},
+        {"ad":"duvar yikik 265 üst 2 m","x":17.73,"z":-58.97,"y":2.22,"siluet":true},
         {"ad":"hasarli bina 3 üst 4 m","x":18.9,"z":-32.39,"y":4.49,"siluet":true}
       ],
       "aracRotasi": {"bas":[3,-100],"dur":[3,-28]},

@@ -34,6 +34,30 @@ export class HasarKatmani {
   constructor(dokular: THREE.Texture[], private readonly parcaciklar: ParcacikSistemi, enCokDuman = 320) {
     this.dokular = dokular;
     this.enCokDuman = enCokDuman;
+    this.isit();
+  }
+
+  /**
+   * Isınma: moloz (örneklemeli MeshStandard) ve krater çıkartması programları ilk patlamada derleniyor, o karede
+   * 0,25–0,3 sn takılma oluyordu (12 Kasım ölçümü: program 64 → 65, en uzun kare 424 ms; sonraki patlamalar olağan).
+   * Yerin altında, görüş alanının içinde birer milimetrelik kalıcı örnek tutulur: program sahne yüklenirken derlenir ve
+   * hep kullanımda kalır (three son kullanıcısı giden programı siler; sıfırlamadan sonraki ilk patlama da takılmasın).
+   */
+  private isit() {
+    const moloz = new THREE.InstancedMesh(MOLOZ_GEOMETRI, MOLOZ_MALZEME, 1);
+    moloz.setMatrixAt(0, new THREE.Matrix4().compose(new THREE.Vector3(0, -3, -9), new THREE.Quaternion(), new THREE.Vector3(0.001, 0.001, 0.001)));
+    moloz.castShadow = moloz.receiveShadow = true;
+    moloz.frustumCulled = false;
+    const cikartma = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.002, 0.002),
+      new THREE.MeshStandardMaterial({ map: this.dokular[0] ?? null, transparent: true, roughness: 1, metalness: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
+    );
+    cikartma.rotation.x = -Math.PI / 2;
+    cikartma.position.set(0, -3, -9);
+    cikartma.receiveShadow = true;
+    cikartma.frustumCulled = false;
+    moloz.name = cikartma.name = "isinma";
+    this.grup.add(moloz, cikartma);
   }
 
   dokulariAyarla(dokular: THREE.Texture[]) {

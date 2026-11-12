@@ -473,6 +473,16 @@ export class AlanKatmani {
     return false;
   }
 
+  /** Yürünebilir zemin için engel kutuları (çatı eşyası hariç); boy = tepenin kutu merkezindeki zeminden yüksekliği. */
+  engelKutulari(): Array<{ minX: number; maxX: number; minZ: number; maxZ: number; boy: number }> {
+    const liste: Array<{ minX: number; maxX: number; minZ: number; maxZ: number; boy: number }> = [];
+    for (const { kutu, y } of this.izler) {
+      if (typeof y === "number" || kutu.isEmpty()) continue;
+      liste.push({ minX: kutu.min.x, maxX: kutu.max.x, minZ: kutu.min.z, maxZ: kutu.max.z, boy: kutu.max.y - zeminY((kutu.min.x + kutu.max.x) / 2, (kutu.min.z + kutu.max.z) / 2) });
+    }
+    return liste;
+  }
+
   /** (x, z)'den en yakın zemin öğesinin taban izine yatay uzaklık (m; içindeyse 0, öğe yoksa Infinity). Krater boyu için. */
   enYakinMesafe(konum: THREE.Vector3): number {
     let enAz = Infinity;

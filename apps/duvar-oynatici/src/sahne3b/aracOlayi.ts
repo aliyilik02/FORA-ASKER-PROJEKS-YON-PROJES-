@@ -2,12 +2,14 @@
  * Zırhlı araç olayı (11 Kasım 2026 denemesi; efekt `zirhli_arac`): Kirpi caddenin ucundan gelir, yavaşlayıp durur,
  * tavandaki silahla düşman mevzilerine (pencere/çatı) kısa diziler hâlinde ateş açar, sonra yerinde bekler.
  *
- * Model: Sketchfab BMC Kirpi (42manako, CC-BY), `modeller/alan/sf_kirpi_bmc.glb` (ön yüz +z, 7,1 m). Tekerlek dönmez
- * (model tek parça); hareket hissi fren dalışı, hafif sarsıntı ve tekerlek tozundan gelir.
+ * Model: Sketchfab BMC Kirpi (42manako, CC-BY), `modeller/alan/sf_kirpi_bmc.glb` (ön yüz +z, 7,1 m). Tekerlekler modelde
+ * tek ağdadır ("wheels" malzemesi: dört tekerlek + yedek); yüklenince aks başına ayrılır (tekerlek.ts) ve gidilen yola
+ * göre döner. Hareket hissi ayrıca fren dalışı, hafif sarsıntı ve tekerlek tozundan gelir.
  */
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { ParcacikSistemi } from "./parcaciklar";
+import { tekerlekleriAyir, type AyrilmisTekerlekler } from "./tekerlek";
 import { zeminY } from "./uzay";
 
 export interface AracRotasi {
@@ -22,6 +24,8 @@ const HIZ = 9; // m/sn seyir
 const FREN_MESAFESI = 16; // m: bu kadar kala yavaşlamaya başlar
 const ATES_SURESI = 26; // sn
 const ATIS_ARALIGI = 0.11; // sn (≈ 550 atım/dk)
+/** Kirpi'nin tekerlekleri (model kökünde ölçüldü: çap 1,15 m, akslar z = 2,25 ve −1,94). */
+const TEKERLEK = { malzeme: "wheels", yaricap: 0.575, y: 0.58, akslar: [2.25, -1.94], enAzX: 0.85 };
 /** Tavan silahının namlu ucu, araç yerel uzayında (ön +z). */
 const NAMLU = new THREE.Vector3(0, 3.05, 0.9);
 
@@ -29,6 +33,7 @@ export class AracOlayi {
   readonly grup = new THREE.Group();
   private readonly yukleyici = new GLTFLoader();
   private model: THREE.Object3D | null = null;
+  private tekerlekler: AyrilmisTekerlekler | null = null;
   private yuklenen = "";
   private asama: Asama = "yok";
   private rota: AracRotasi = { bas: [0, -90], dur: [0, -24] };
@@ -39,6 +44,13 @@ export class AracOlayi {
   private atisSayaci = 0;
   private araSayaci = 0;
   private nesil = 0;
+  /**
+   * Isınma: model yüklendikten sonra kaç GERÇEK çizim daha (milimetrik, yer altında) yapılacak; 0 = ısınma yok. Kare
+   * değil çizim sayılır: sahne geçişi sürerken `guncelle` çağrılır ama 3B sahne çizilmez, kare sayınca model hiç
+   * çizilmeden gizleniyordu.
+   */
+  private isinma = 0;
+  private isinmaAgi: THREE.Mesh | null = null;
   /** Model ilk yüklendiğinde (kar yaması gibi malzeme işleri için). */
   modelHazir: ((kok: THREE.Object3D) => void) | null = null;
 
@@ -61,6 +73,74 @@ export class AracOlayi {
     return this.asama === "yok" || this.asama === "yukleniyor" ? null : this.grup.position;
   }
 
+  /**
+   * Ön yükleme + ısınma: model bölge kurulurken yüklenir, dokuları ekran kartına çıkar, programları derlenir. Yoksa ilk
+   * çağrıda GLB çözme + 6 doku + 6 program tek karede geliyor, görüntü 0,5–1,6 sn donuyordu (12 Kasım ölçümü). Model
+   * birkaç kare milimetrik ölçekte, yerin altında ama görüş alanında çizilir (görünmez), sonra gizlenir.
+   */
+  hazirla(url: string) {
+    if (this.yuklenen === url || this.asama !== "yok" || this.onYukleme === url) return;
+    this.onYukleme = url;
+    this.yukleyici.load(
+      url,
+      (g) => {
+        this.onYukleme = "";
+        if (this.yuklenen === url) return;
+        this.modeliKur(g.scene, url);
+        // Arada araç çağrıldıysa o yükleme kendi modelini kurar; ısınma gerekmez. Sahne/bölge temizliği (temizle)
+        // ön yüklemeyi iptal etmez: bölge kurulurken hemen ardından çağrılır, model yine ısınmalıdır
+        if (this.asama !== "yok") return;
+        if (this.model) this.grup.remove(this.model);
+        this.model = g.scene;
+        this.grup.add(g.scene);
+        this.grup.scale.setScalar(0.001);
+        this.grup.position.set(0, zeminY(0, -30) - 3, -30);
+        this.grup.rotation.set(0, 0, 0);
+        this.grup.visible = true;
+        // Görüş alanı ayıklaması kapalı: yer altındaki nokta duvarın alt kenarının dışında kalabilir, çizilmezse
+        // program derlenmez (ilk denemede 9 m'de ayıklanıyordu)
+        this.ayiklama(false);
+        this.isinma = 9; // üç duvar × üç kare
+        g.scene.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh && !this.isinmaAgi) this.isinmaAgi = m;
+        });
+        if (this.isinmaAgi) this.isinmaAgi.onBeforeRender = () => {
+          if (this.isinma > 1) this.isinma--;
+          else this.isinmaBitti = true;
+        };
+      },
+      undefined,
+      () => {
+        this.onYukleme = "";
+      },
+    );
+  }
+  private onYukleme = "";
+  private isinmaBitti = false;
+  private isinmayiBitir() {
+    if (this.isinmaAgi) delete (this.isinmaAgi as { onBeforeRender?: unknown }).onBeforeRender;
+    this.isinmaAgi = null;
+    this.isinmaBitti = false;
+    this.isinma = 0;
+    this.ayiklama(true);
+  }
+  private ayiklama(acik: boolean) {
+    this.grup.traverse((o) => {
+      if ((o as THREE.Mesh).isMesh) o.frustumCulled = acik;
+    });
+  }
+
+  private modeliKur(kok: THREE.Object3D, url: string) {
+    kok.traverse((c) => {
+      const m = c as THREE.Mesh;
+      if (m.isMesh) m.castShadow = m.receiveShadow = true;
+    });
+    this.yuklenen = url;
+    this.tekerlekler = tekerlekleriAyir(kok, TEKERLEK);
+    this.modelHazir?.(kok);
+  }
+
   baslat(url: string, rota: AracRotasi) {
     this.temizle();
     this.rota = rota;
@@ -78,6 +158,8 @@ export class AracOlayi {
       this.kalan = Math.hypot(dx, dz);
       this.grup.position.set(rota.bas[0], zeminY(rota.bas[0], rota.bas[1]), rota.bas[1]);
       this.grup.rotation.set(0, Math.atan2(dx, dz), 0);
+      this.grup.scale.setScalar(1);
+      if (this.isinma > 0) this.isinmayiBitir();
       this.grup.visible = true;
       this.t = 0;
       this.asama = "geliyor";
@@ -86,12 +168,9 @@ export class AracOlayi {
     this.yukleyici.load(
       url,
       (g) => {
-        g.scene.traverse((c) => {
-          const m = c as THREE.Mesh;
-          if (m.isMesh) m.castShadow = m.receiveShadow = true;
-        });
-        this.yuklenen = url;
-        this.modelHazir?.(g.scene);
+        // Ön yükleme arada bitirdiyse aynı model kullanılır (iki kopya kurulmaz)
+        if (this.yuklenen === url && this.model) return hazir(this.model);
+        this.modeliKur(g.scene, url);
         hazir(g.scene);
       },
       undefined,
@@ -102,6 +181,11 @@ export class AracOlayi {
   }
 
   guncelle(dt: number) {
+    if (this.isinma > 0 && this.asama === "yok" && this.isinmaBitti) {
+      this.isinmayiBitir();
+      this.grup.visible = false;
+      this.grup.scale.setScalar(1);
+    }
     if (this.asama === "yok" || this.asama === "yukleniyor") return;
     const g = this.grup;
     this.t += dt;
@@ -113,6 +197,8 @@ export class AracOlayi {
       if (yon.lengthSq() > 1e-6) g.position.addScaledVector(yon.normalize(), adim);
       this.kalan -= adim;
       g.position.y = zeminY(g.position.x, g.position.z);
+      // Tekerlekler gidilen yol kadar döner (kaymadan yuvarlanma: açı = yol / yarıçap)
+      if (this.tekerlekler) for (const aks of this.tekerlekler.akslar) aks.rotation.x += adim / this.tekerlekler.yaricap;
       // Yol sarsıntısı ve fren dalışı (burun aşağı)
       const fren = 1 - Math.min(1, this.kalan / FREN_MESAFESI);
       g.rotation.x = 0.035 * fren * (hiz / HIZ + 0.3) + Math.sin(this.t * 9) * 0.004 * (hiz / HIZ);
@@ -173,6 +259,9 @@ export class AracOlayi {
   temizle() {
     this.nesil++;
     this.asama = "yok";
+    // Süren ısınma kesilmez (model milimetrik ve yer altında; guncelle bitirince gizler)
+    if (this.isinma > 0) return;
+    this.grup.scale.setScalar(1);
     this.grup.visible = false;
   }
 }

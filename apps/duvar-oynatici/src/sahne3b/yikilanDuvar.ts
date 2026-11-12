@@ -257,6 +257,19 @@ export class YikilanDuvarKatmani {
     return oldu;
   }
 
+  /** Yürünebilir zemin için engel kutuları: ayakta duran duvarların (dönük dikdörtgen) eksenlere hizalı kutusu. */
+  engelKutulari(): Array<{ minX: number; maxX: number; minZ: number; maxZ: number; boy: number }> {
+    const liste: Array<{ minX: number; maxX: number; minZ: number; maxZ: number; boy: number }> = [];
+    for (const d of this.duvarlar) {
+      if (d.yikildi) continue;
+      const yon = radyan(d.plan.yonDerece ?? 0);
+      const yx = (Math.abs(Math.cos(yon)) * d.plan.en) / 2 + (Math.abs(Math.sin(yon)) * TUGLA.kalin) / 2;
+      const yz = (Math.abs(Math.sin(yon)) * d.plan.en) / 2 + (Math.abs(Math.cos(yon)) * TUGLA.kalin) / 2;
+      liste.push({ minX: d.plan.x - yx, maxX: d.plan.x + yx, minZ: d.plan.z - yz, maxZ: d.plan.z + yz, boy: d.plan.yukseklik ?? 2 });
+    }
+    return liste;
+  }
+
   /** Mermi/parçacık/figür için dolu mu: ayakta duran duvarın taban izi. */
   doluMu(konum: THREE.Vector3, pay = 0.4): boolean {
     for (const d of this.duvarlar) {

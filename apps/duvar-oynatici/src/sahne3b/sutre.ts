@@ -165,6 +165,18 @@ export class SutreKatmani {
     return false;
   }
 
+  /** Yürünebilir zemin için engel kutuları (her sütre eşyasının dünya kutusu; boy = tepenin zeminden yüksekliği). */
+  engelKutulari(): Array<{ minX: number; maxX: number; minZ: number; maxZ: number; boy: number }> {
+    const liste: Array<{ minX: number; maxX: number; minZ: number; maxZ: number; boy: number }> = [];
+    for (const c of this.grup.children) {
+      this.kutu.setFromObject(c);
+      if (this.kutu.isEmpty()) continue;
+      const k = this.kutu;
+      liste.push({ minX: k.min.x, maxX: k.max.x, minZ: k.min.z, maxZ: k.max.z, boy: k.max.y - zeminY((k.min.x + k.max.x) / 2, (k.min.z + k.max.z) / 2) });
+    }
+    return liste;
+  }
+
   /**
    * Tek torba modellerinden örülen kum torbası duvarı: `sira` kat, her kat yarım torba şaşırtmalı, çeşitler ve
    * küçük dönüşler rastgele (tohum yerleşimden: her açılışta aynı duvar). `kavis` > 0 ise uçlar izleyiciye kıvrılır.

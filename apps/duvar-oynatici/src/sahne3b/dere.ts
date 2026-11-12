@@ -107,6 +107,11 @@ export class DereKatmani {
     this.grup.add(ag);
   }
 
+  /** Sahnede dere var mı (yürünebilir zemin: yoksa su denetimi atlanır). */
+  get sayi(): number {
+    return this.aktif?.length ?? 0;
+  }
+
   /** (x, z) derenin içinde mi (figür/efekt yerleşimi suya düşmesin). */
   icindeMi(x: number, z: number, pay = 0.5): boolean {
     for (const d of this.aktif ?? []) {

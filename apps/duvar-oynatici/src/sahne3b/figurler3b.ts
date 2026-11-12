@@ -10,6 +10,7 @@ import { azimutYon, derece, izleyiciyeDonus, konumAzimutu, radyan, yanaDonus, ye
 import { bakisAcilari, yumusat } from "./bakis";
 import { rastgele } from "../rastgele";
 import type { Safha } from "../tipler";
+import type { YurunebilirZemin } from "./yurunebilir";
 
 /**
  * Duruş geçiş klipleri (8 Kasım, B-9): GLB'de varsa ani kesme yerine önce geçiş klibi (LoopOnce), bitince hedef döngüye
@@ -461,6 +462,8 @@ export class FigurKatmani {
    */
   mevziDegistir = true;
   mevziAdaylari: ((konum: THREE.Vector3, id: string) => THREE.Vector3[]) | null = null;
+  /** Tek yürünebilir zemin (yurunebilir.ts; sahne3b sağlar). 12 Kasım: sağlayıcı bağlı, figür hareketi henüz kullanmıyor (yol bulma ve derinlemesine mevzi değiştirme sıradaki iş). */
+  zemin: (() => YurunebilirZemin | null) | null = null;
   private sonSicrama = -100;
   /** Asker mevzi değiştirdi (yeni sahne azimutu): main.ts köprüye bildirir, panelin duvar şeridindeki işaret yer değiştirir. */
   konumOlayi: ((id: string, azimut: number) => void) | null = null;
