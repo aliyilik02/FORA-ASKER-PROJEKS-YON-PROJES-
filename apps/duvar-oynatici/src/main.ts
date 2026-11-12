@@ -230,6 +230,11 @@ const alanKapali = (alanParam ?? localStorage.getItem("alan")) === "kapali";
 const dusmanParam = params.get("dusman");
 if (dusmanParam === "kapali" || dusmanParam === "acik") localStorage.setItem("dusman", dusmanParam);
 const dusmanKapali = (dusmanParam ?? localStorage.getItem("dusman")) === "kapali";
+// Mevzi değiştirme: çatışmada askerler ara sıra yakındaki boş mevziye koşar (figurler3b). `?hareket=kapali` askerleri
+// yerinde tutar (yalnız inip kalkarlar), `?hareket=acik` geri açar (yerel kayıtta kalır).
+const hareketParam = params.get("hareket");
+if (hareketParam === "kapali" || hareketParam === "acik") localStorage.setItem("hareket", hareketParam);
+sahne3b.mevziDegistirmeAyarla((hareketParam ?? localStorage.getItem("hareket")) !== "kapali");
 function alanPlani(bolge: string): AlanPlani | undefined {
   if (alanKapali || testPanorama) return undefined;
   const temel = video.manifest.alanlar?.[bolge];

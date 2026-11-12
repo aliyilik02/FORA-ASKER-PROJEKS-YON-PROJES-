@@ -1231,3 +1231,51 @@ değişince (yapı ekleme/taşıma) bulucu o bölge için yeniden koşulmalı.**
 asıl ipucu parıltı ve izdir). Ayrı düşman modeli yok (kendi askerimizin koyu kopyası; Meshy ile üretilebilir, kredi
 ister). Atıcı yalnız doğrulup çöker: pencereden pencereye geçiş, vurulunca düşme animasyonu yok. Üs bölgesinde yapı
 mevzisi tek. İlk patlamada ~230–270 ms'lik tek kare (film görünümü; siluet kapalıyken de var, bu işten bağımsız).
+
+## Mermi izi yenilemesi ve askerlerin mevzi değiştirmesi (12 Kasım 2026)
+
+Kullanıcı gözlemi: "askerler durduğu yerde çömelip kalkıyor, sahne canlı değil" ve "mermi efektleri kaba".
+
+### Mermi izi (`sahne3b/izCizimi.ts`)
+
+- **Sorun (karede ölçüldü, `araclar/oyun-testi/iz-gorunumu.mjs`):** iz örneklenmiş bir kutuydu: kare kesitli, düz renkli,
+  keskin kenarlı çubuk; parlama, incelme, sıcak çekirdek yok. Yakından "uçan sopa", gece turuncu çizgi.
+- **Çözüm:** her iz ekran uzayında bir kapsül (`IzCizici`: örnek başına baş/kuyruk/renk/yarıçap). Parçalayıcıda sıcak
+  çekirdek (beyaza yakın, dar) + renkli hale, başta parlak nokta (yanan iz bileşiği), kuyruğa doğru incelme ve sönme.
+  İzleyiciye doğru gelen izde şerit noktaya kısalır, yuvarlak parıltı kalır. Çekirdek 1,1–1,3 cm (yakında birkaç piksel),
+  uzakta en az 0,75 px yarıçap (≈ 1,5 px; eski kural) ve bu sınır artık gölgelendiricide **duvar başına** hesaplanır
+  (`uCozunurluk` her duvarın görüş alanından; işlemcide piksel açısı ölçümü kalktı). Değerler HDR: film görünümünde son
+  işlem parlaması çekirdeği ışıldatır. Kuyruk namlunun gerisine uzamaz (iz namludan çıkarken büyür).
+- **Her mermi izli değil:** çatışmada düşman mermilerinin yarısı (salvonun ilki hep), dost mermilerinin üçte biri,
+  zırhlı aracınkilerin yarısı iz bırakır; izsiz mermi de uçar, çarpar, toz kaldırır, "çat" eder. Panelin izli mermi
+  akışında her mermi izlidir. (`DUSMAN_IZLI_ARALIGI`, `DOST_IZLI_ARALIGI`.)
+- **Namlu alevi:** yuvarlak parıltı parçacığının yanında namludan atış yönüne 50 ms'lik kısa, kalın ışık kapsülü
+  (`namluAlevi`): aleve yön verir; uzak düşman namlusunda mesafeyle büyür.
+- Renkler: düşman kızıl-turuncu, dost sarı (hale); çekirdek ikisinde de beyaza yakın. Gündüz parlaklık 0,55, gece 1.
+  **Seçenek (yapılmadı, kullanıcıya soruldu):** düşman izi yeşil (Doğu menşeli mühimmat), dost kırmızı.
+
+### Mevzi değiştirme (`figurler3b.ts sicramayiGuncelle`)
+
+- Çatışmada (Siper al açıkken) her asker 14–34 sn'de bir (ilk kez 6–22 sn sonra) bulunduğu yerden 2,2–9 m ötedeki boş
+  bir mevziye koşar ("Rifle Run", ≈ 3,2 m/sn; diz çökmüşse 0,3 sn'de doğrularak), varınca düşmana döner ve siper kararını
+  orada yeniden verir (sütre arkasıysa inip kalkar, açıktaysa diz çöker / yatar / ayakta kalır).
+- **Kademeli:** aynı anda tek asker koşar, iki sıçrama arası ≥ 4,5 sn (biri koşarken ötekiler ateş eder).
+- **Mevzi adayları** (`sahne3b.mevziAdaylari`): 2,2–9 m içindeki boş asker/figür plan noktaları (4–7 m bandına çekilmiş);
+  yoksa aynı halkada 2,5–5,5 m sağa/sola. **Yol** düz hattır ve önceden denetlenir (`yolAcik`): omuz genişliğinde
+  koridorda sabit engel yok, başka asker hattan ≥ 1 m; koşuda dolanma yapılmaz (dolanırken kum torbasına sürtünüyordu).
+- Yatan asker önce kalkar (geçiş klibi), sonra koşar; yaralı, sıhhiyeci, ağır silah ve eğitmenin duruş verdiği figür
+  yerinde kalır. Koşarken gelen duruş komutu (vuruldu) koşuyu orada bitirir.
+- **Animasyon düzeltmeleri (ölçümle bulundu):** (1) varışta ve yerden kalkışta bir çapraz geçiş bitmeden nişan geçişi
+  başlıyor, ağırlıklar üst üste binip kalça/el tek karede sıçrıyordu → nişana dönüş 0,3–0,38 sn ertelenir
+  (`atesGecikmesi`; `gecisBitti` ve yürüyüş varışı). (2) Ayaktan yere yatış iki adım: önce diz, 1,3 sn sonra yat
+  ("Crouch To Prone" çömelik başlar; doğrudan geçişte kalça 3 m/sn düşüyordu; eski `siper-ve-yarali` testindeki a4
+  sıçraması buydu). (3) Duruş geçişi bittikten 0,45 sn sonra koşu başlar.
+- `?hareket=kapali` askerleri yerinde tutar (yerel kayıtta kalır). Panel işaretleri (Eğitmen ekranı duvar şeridi)
+  askerin çağrıldığı yeri gösterir, sıçramayı izlemez (köprü konum bilmez).
+- **Test:** `KOPRU=… node araclar/oyun-testi/mevzi-degistirme.mjs [bolge] [--sure 90] [--asker 5]`. Meskûn, 5 asker,
+  90 sn: 12 sıçrama, aynı anda en çok 1 koşan, ortalama 3,18 m/sn, engel içinde 0 kare, koşarken en yakın asker ≥ 1 m,
+  belirgin animasyon sıçraması yok; kare hızı değişmedi (38–40 fps başsız 3840×720).
+
+**Açık:** duvarda gözle bakılmadı. Koşu hep düz hat ve ayakta ("eğik koşu" klibi yok); varışta önce ayakta durup sonra
+çöker (doğrudan sipere dalış yok). Düşman atıcılar yer değiştirirken görünmez (mevziden mevziye geçiş çizilmez). Çarpma
+tozu ve şarjör değiştirme gibi ek canlılık öğeleri yapılmadı.

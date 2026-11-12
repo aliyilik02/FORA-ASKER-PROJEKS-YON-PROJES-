@@ -27,6 +27,13 @@ const GECIS_KLIPLERI: Record<string, string[]> = {
 /** Safha geçişinde sıhhiyecinin yaralıya yürüyüşü için klip adayları (ilk bulunan). */
 const YURUYUS_KLIPLERI = ["Rifle Walk", "Walking", "Walk", "Rifle Crouch Walk", "Crouched Walking"];
 const YURUYUS_HIZI = 1.5;
+/** Mevzi değiştirme koşusu: klipler ve istenen hız (hareketUyumu klibin doğal hızına çeker: Rifle Run ≈ 3,2 m/sn). */
+const KOSU_KLIPLERI = ["Rifle Run", "Running", "Run"];
+const KOSU_HIZI = 3.4;
+/** Mevzi değiştirme: figür başına aralık (sn), çatışma başladıktan sonraki ilk bekleme, iki sıçrama arası en az süre. */
+const SICRAMA_ARALIGI: [number, number] = [14, 34];
+const SICRAMA_ILK: [number, number] = [6, 22];
+const SICRAMA_ARASI = 4.5;
 
 /**
  * Hareket kliplerinin DOĞAL hızı (m/sn, 1,8 m boy): yerdeki ayağın köke göre hızı; oynatıcıda ölçüldü
@@ -358,6 +365,11 @@ export interface Aktif {
   yanindaHedef: { konum: THREE.Vector3; donus: number } | null;
   /** Süren yürüyüş (hedefe, varınca `donus`a dönüp bekleme klibine). */
   yuruyus: { hedef: THREE.Vector3; donus: number; eylem: THREE.AnimationAction | null; hiz: number } | null;
+  /**
+   * Mevzi değiştirme (çatışmada canlılık; `sicramayiGuncelle`): `sonraki` bir sonraki sıçramanın sahne saati (0: çatışma
+   * dışı, henüz kurulmadı); `kosuyor` asker yeni mevziye koşuyor (siper davranışı o sürede karışmaz).
+   */
+  sicrama: { sonraki: number; kosuyor: boolean };
   /** Haki boya için kopyalanan malzemeler: figür kaldırılınca bırakılır (önbellekteki glTF malzemeleri paylaşımlı, bırakılmaz). */
   kopyaMalzemeler: THREE.Material[];
   /** Yakın patlamaya irkilme (D-22): başlangıç saati ve güç 0..1; 1,1 sn'de gövde ve baş öne eğilip toparlanır. */
@@ -434,6 +446,14 @@ export class FigurKatmani {
   dusmanAzimutu: number | null = null;
   /** Çatışmada siper alma davranışı (panel Efektler › Çatışma › Siper al). */
   siperAl = true;
+  /**
+   * Mevzi değiştirme: çatışmada (siper alma açıkken) asker ara sıra kalkıp yakındaki boş mevziye koşar, oradan ateşe
+   * devam eder. Aynı anda tek asker hareket eder (birlik kademeli sıçrar), iki sıçrama arası ≥ 4,5 sn. `?hareket=kapali`
+   * kapatır. `mevziAdaylari` (sahne3b): askerin yakınındaki boş mevziler (plan noktaları, yoksa yanal yerler).
+   */
+  mevziDegistir = true;
+  mevziAdaylari: ((konum: THREE.Vector3, id: string) => THREE.Vector3[]) | null = null;
+  private sonSicrama = -100;
   private gorusDenetimi = 0;
   /** TCCC safhası (durum.safha); "ates_altinda"da sıhhiyeci yaralıya gitmez, siperde bekler. */
   safha: Safha = "taktik_saha";
@@ -1055,6 +1075,7 @@ export class FigurKatmani {
       safhaBekliyor,
       yanindaHedef,
       yuruyus: null,
+      sicrama: { sonraki: 0, kosuyor: false },
       kopyaMalzemeler,
       tepki: null,
       atesGecikmesi: null,
@@ -1137,20 +1158,24 @@ export class FigurKatmani {
     a.gecis = null;
     g.hedef.reset().setEffectiveWeight(1).play();
     g.eylem.crossFadeTo(g.hedef, 0.25, false);
+    // Nişan/ateş duruşuna dönüş bu çapraz geçiş bittikten sonra (pozuGuncelle): hemen ardından ikinci bir çapraz geçiş
+    // başlarsa ağırlıklar üst üste biner, kalça ve el tek karede sıçrar (yerden kalkıp ateşe dönen askerde ölçüldü)
+    a.atesGecikmesi = Math.max(a.atesGecikmesi ?? 0, this.saat + 0.3);
   }
 
   /** Hedefe yürüyüş başlat (safha geçişi): yürüyüş klibi varsa çapraz geç; duruş klipleri ve prosedürel ofsetler kapanır. */
-  private yuruyusBaslat(a: Aktif, hedef: THREE.Vector3, donus: number) {
+  private yuruyusBaslat(a: Aktif, hedef: THREE.Vector3, donus: number, kosu = false) {
     this.mudahaleyiBirak(a);
     let eylem: THREE.AnimationAction | null = null;
-    let hiz = YURUYUS_HIZI;
+    const istenen = kosu ? KOSU_HIZI : YURUYUS_HIZI;
+    let hiz = istenen;
     if (a.karistirici) {
-      for (const ad of YURUYUS_KLIPLERI) {
+      for (const ad of kosu ? [...KOSU_KLIPLERI, ...YURUYUS_KLIPLERI] : YURUYUS_KLIPLERI) {
         const k = klipBul(a.klipler, ad);
         if (!k) continue;
         eylem = a.karistirici.clipAction(k);
         eylem.setLoop(THREE.LoopRepeat, Infinity);
-        const uyum = hareketUyumu(k.name, YURUYUS_HIZI, a.boy);
+        const uyum = hareketUyumu(k.name, istenen, a.boy);
         hiz = uyum.hiz;
         eylem.timeScale = uyum.zamanOlcegi;
         break;
@@ -1186,6 +1211,8 @@ export class FigurKatmani {
         a.eylemBekle.reset().setEffectiveWeight(1).play();
         // Sıhhiyeci ayakta yürüyüşten diz çökmeye iner (kalça 0,5 m): 0,3 sn'de çöküş sıçrama gibiydi
         y.eylem.crossFadeTo(a.eylemBekle, a.mudahale ? 0.7 : 0.3, false);
+        // Nişana dönüş koşu → bekleme geçişi bitince (bkz. gecisBitti)
+        a.atesGecikmesi = Math.max(a.atesGecikmesi ?? 0, this.saat + 0.38);
       }
       a.yuruyus = null;
       return;
@@ -1194,7 +1221,8 @@ export class FigurKatmani {
     d.normalize();
     // Yolda başka figür/sütre varsa yana dolanır (hedefin kendisi hariç; yanındaId hedef figürdür)
     const yanEksen = new THREE.Vector3(-d.z, 0, d.x);
-    const sapma = uzaklik > 1.2 ? this.kacinmaSapmasi(a, d, yanEksen) : 0;
+    // Mevzi değiştirme koşusunda dolanma yok: yol önceden figür ve engelden açık seçildi (yolAcik)
+    const sapma = uzaklik > 1.2 && !a.sicrama.kosuyor ? this.kacinmaSapmasi(a, d, yanEksen) : 0;
     if (sapma !== 0) d.addScaledVector(yanEksen, sapma * 0.6).normalize();
     a.nesne.position.addScaledVector(d, adim);
     a.nesne.position.y = zeminY(a.nesne.position.x, a.nesne.position.z);
@@ -1323,10 +1351,110 @@ export class FigurKatmani {
     }
   }
 
+  /**
+   * Yol açık mı: düz hat ve iki yanındaki 0,35 m'lik paralellerde (omuz genişliğinde koridor; uçların 0,7 m'si hariç)
+   * sabit engel (sütre, bina, araç, yıkılabilir duvar, dere) yok; `haric` dışındaki figürler hattan ≥ 1 m uzakta
+   * (koşan asker kimsenin içinden geçmez, dolanmak zorunda kalmaz: dolanırken kum torbasına sürtünüyordu).
+   */
+  private yolAcik(bas: THREE.Vector3, son: THREE.Vector3, haric?: Aktif): boolean {
+    const d = son.clone().sub(bas);
+    d.y = 0;
+    const uzunluk = d.length();
+    if (uzunluk < 1.5) return true;
+    d.multiplyScalar(1 / uzunluk);
+    for (const b of this.aktifler) {
+      if (b === haric) continue;
+      const bx = b.nesne.position.x - bas.x;
+      const bz = b.nesne.position.z - bas.z;
+      const ileri = Math.max(0, Math.min(uzunluk, bx * d.x + bz * d.z));
+      if (Math.hypot(bx - d.x * ileri, bz - d.z * ileri) < 1) return false;
+    }
+    const p = new THREE.Vector3();
+    for (let m = 0.7; m <= uzunluk - 0.7; m += 0.4) {
+      for (const yan of [0, 0.35, -0.35]) {
+        p.copy(bas).addScaledVector(d, m);
+        p.x += -d.z * yan;
+        p.z += d.x * yan;
+        if (this.engel(p)) return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Mevzi değiştirme ("ateş ve hareket"): çatışmada asker hep aynı yerde inip kalkmasın. Figür başına 14–34 sn'de bir
+   * (ilk kez 6–22 sn sonra) asker bulunduğu yerden 2–9 m ötedeki boş bir mevziye koşar (Rifle Run, ≈ 3,2 m/sn; diz
+   * çökmüşse koşuya 0,3 sn'de doğrularak geçer), varınca düşmana döner ve siper kararını orada yeniden verir (sütre
+   * arkasıysa çöküp doğrulur, açıktaysa diz çöker / ayakta kalır). Kurallar: aynı anda tek asker koşar ve iki sıçrama
+   * arası ≥ 4,5 sn (birlik kademeli hareket eder, biri koşarken ötekiler ateş eder); yolu sabit engelden geçen mevzi
+   * seçilmez; yatan asker önce ayağa kalkar; yaralı, sıhhiyeci, ağır silah, eğitmenin duruş verdiği figür yerinde kalır.
+   */
+  private sicramayiGuncelle(a: Aktif) {
+    const s = a.sicrama;
+    if (s.kosuyor) {
+      if (a.yuruyus) return;
+      // Vardı (ya da yürüyüşü başka bir şey kesti): siper kararı yeni yerde baştan
+      s.kosuyor = false;
+      s.sonraki = this.saat + SICRAMA_ARALIGI[0] + rastgele() * (SICRAMA_ARALIGI[1] - SICRAMA_ARALIGI[0]);
+      a.azimut = konumAzimutu(a.nesne.position);
+      if (a.siper?.mod !== "elle") a.siper = null;
+      return;
+    }
+    const tehdit = this.dusmanAzimutu !== null && this.siperAl && this.mevziDegistir && this.mevziAdaylari !== null;
+    const uygun = a.silah && !a.agirSilah && a.hiz === 0 && !a.yaninda && a.poz !== "yarali" && a.asama === "normal" && a.siper?.mod !== "elle";
+    if (!tehdit) {
+      s.sonraki = 0;
+      return;
+    }
+    if (!uygun || a.yuruyus) return;
+    // Duruş geçişi sürerken (diz çöküyor, yerden kalkıyor) koşu başlamaz; geçiş bittikten 0,45 sn sonra (kalkış klibi
+    // biter bitmez koşuya geçince sol el tek karede 15 m/sn sıçrıyordu)
+    if (a.gecis) {
+      if (s.sonraki !== 0) s.sonraki = Math.max(s.sonraki, this.saat + 0.45);
+      return;
+    }
+    if (s.sonraki === 0) {
+      s.sonraki = this.saat + SICRAMA_ILK[0] + rastgele() * (SICRAMA_ILK[1] - SICRAMA_ILK[0]);
+      return;
+    }
+    if (this.saat < s.sonraki) return;
+    // Kademeli: başka asker koşarken ya da az önce sıçramışken bekle (kısa süre sonra yeniden dene)
+    if (this.saat - this.sonSicrama < SICRAMA_ARASI || this.aktifler.some((b) => b.sicrama.kosuyor)) {
+      s.sonraki = this.saat + 1 + rastgele() * 2;
+      return;
+    }
+    const adaylar = this.mevziAdaylari!(a.nesne.position, a.id).filter((p) => this.yolAcik(a.nesne.position, p, a));
+    if (!adaylar.length) {
+      s.sonraki = this.saat + 8 + rastgele() * 8;
+      // Sıçramak için kalkmış ama gidecek yer kalmamışsa siper kararını yerinde yeniden verir
+      if (a.poz === "ayakta" && a.siper && a.siper.mod !== "elle") a.siper = null;
+      return;
+    }
+    if (a.poz === "yatmis") {
+      // Yatan asker önce kalkar (geçiş klibi, ~4 sn); kalkınca hemen koşar. Yoksa yere yatan bir daha kalkmaz, zamanla
+      // bütün birlik yatıp kalırdı
+      this.sonSicrama = this.saat;
+      s.sonraki = this.saat;
+      this.pozUygula(a, "ayakta", false);
+      return;
+    }
+    const hedef = adaylar[Math.floor(rastgele() * adaylar.length)];
+    hedef.y = zeminY(hedef.x, hedef.z);
+    this.sonSicrama = this.saat;
+    s.kosuyor = true;
+    // Varınca düşmana dönük (guncelle'deki düşmana dönüş zaten sürdürür)
+    this.yuruyusBaslat(a, hedef, Math.PI - radyan(this.dusmanAzimutu!), true);
+  }
+
   /** Panel komutu: figürün duruşunu değiştir (vuruldu → yere düşer; diz çök; ayağa kalk). */
   pozAyarla(id: string, poz: FigurPozu) {
     const a = this.aktifler.find((x) => x.id === id);
     if (!a) return;
+    // Koşarken duruş komutu (vuruldu, diz çök…): koşu orada biter
+    if (a.yuruyus && a.sicrama.kosuyor) {
+      a.yuruyus.eylem?.fadeOut(0.2);
+      a.yuruyus = null;
+    }
     // Eğitmen duruş verdi: çatışma bitene dek siper davranışı bu figüre karışmaz
     if (this.dusmanAzimutu !== null && poz !== "yarali") a.siper = { mod: "elle", sonraki: Infinity, otoComeldi: false };
     this.pozUygula(a, poz, false);
@@ -1349,7 +1477,7 @@ export class FigurKatmani {
   private siperiGuncelle(a: Aktif) {
     const tehdit = this.dusmanAzimutu !== null;
     const uygun = a.silah && !a.agirSilah && a.hiz === 0 && !a.yaninda && a.poz !== "yarali" && a.asama === "normal" && Boolean(a.eylemPoz.comelmis);
-    if (!uygun) return;
+    if (!uygun || a.sicrama.kosuyor) return;
     if (!tehdit || !this.siperAl) {
       if (!a.siper) return;
       if (!a.siper.otoComeldi || a.siper.mod === "elle" || a.poz === "ayakta") {
@@ -1380,8 +1508,13 @@ export class FigurKatmani {
     if (s.mod === "elle" || s.mod === "ayakta" || this.saat < s.sonraki || a.gecis || a.yuruyus) return;
     if (a.poz === "ayakta") {
       s.otoComeldi = true;
-      s.sonraki = s.mod === "inKalk" ? this.saat + 3 + rastgele() * 4 : Infinity;
-      this.pozUygula(a, s.mod === "yat" ? "yatmis" : "comelmis", false);
+      // Yere yatış iki adım: önce diz çöker, 1,3 sn sonra yatar ("Crouch To Prone" çömelik başlar; ayaktan doğrudan
+      // geçişte kalça tek karede 3 m/sn düşüyordu)
+      s.sonraki = s.mod === "inKalk" ? this.saat + 3 + rastgele() * 4 : s.mod === "yat" ? this.saat + 1.3 : Infinity;
+      this.pozUygula(a, "comelmis", false);
+    } else if (a.poz === "comelmis" && s.mod === "yat") {
+      s.sonraki = Infinity;
+      this.pozUygula(a, "yatmis", false);
     } else if (a.poz === "comelmis" && s.mod === "inKalk") {
       s.sonraki = this.saat + 3.5 + rastgele() * 2.5;
       this.pozUygula(a, "ayakta", false);
@@ -1944,6 +2077,7 @@ export class FigurKatmani {
       this.gorusHatlariniAc();
     }
     for (const a of this.aktifler) {
+      this.sicramayiGuncelle(a);
       this.siperiGuncelle(a);
       this.mudahaleyiGuncelle(a, dt);
       this.pozuGuncelle(a);

@@ -447,6 +447,16 @@ hesaplanır. `?dusman=kapali` yalnız parıltı. Tuzaklar: yapı kutusu duvarın
 sesinde mesafe gecikmesi hiç uygulanmıyordu (sahne3b sarmalayıcısı `mesafe`yi düşürüyordu), düzeltildi. Duvarda gözle
 bakılmadı. Ayrıntı `docs/duvar-oynatici.md` "Düşman silueti".
 
+**Mermi izi + mevzi değiştirme (12 Kasım, kullanıcı gözlemi: "askerler durduğu yerde çömelip kalkıyor", "mermi efektleri
+kaba"):** izler artık ekran uzayında yumuşak kapsül (`sahne3b/izCizimi.ts` `IzCizici`: sıcak çekirdek + hale, incelen
+kuyruk, uzakta ≥ 1,5 px gölgelendiricide duvar başına); eski örneklenmiş kutu ("çubuk") kalktı. Çatışmada düşman
+mermilerinin yarısı, dost mermilerinin üçte biri izli (izsiz mermi de çarpar); izli akışta hepsi. Namlu alevi yönlü kapsül.
+Askerler çatışmada 14–34 sn'de bir yakındaki boş mevziye koşar (`figurler3b sicramayiGuncelle`, aynı anda tek asker,
+yol önceden engel/figürden açık seçilir; `sahne3b.mevziAdaylari`); `?hareket=kapali` kapatır. Bu işte bulunan animasyon
+hataları: çapraz geçiş bitmeden nişan geçişi (→ `atesGecikmesi`), ayaktan doğrudan yere yatış (→ önce diz). Testler:
+`araclar/oyun-testi/iz-gorunumu.mjs` (kare kare iz çekimi, önce/sonra), `mevzi-degistirme.mjs`. Kullanıcıya sorulan açık
+seçenek: düşman izi yeşil. Ayrıntı docs "Mermi izi yenilemesi ve askerlerin mevzi değiştirmesi".
+
 **Amaç ve sonraki oturum (10 Kasım kapanış):** duvar, odada **gerçek mankenlerle** oynanan vakanın arkasına ortam ve tehdit
 hissi verir (eğitimin kendisi değil); öneri ve öncelikler buna göre. Kullanıcı sesleri ekleyecek, sonra birlikte test.
 Ardından sıra: (1) düşman silueti (pencere/çatı, namlu parıltısıyla) — **12 Kasım'da yapıldı**, (2) tehdit baskısı (yakın

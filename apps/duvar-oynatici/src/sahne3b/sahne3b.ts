@@ -331,6 +331,8 @@ export class Sahne3B {
     // Toz, duman, ateş, kıvılcım ve rotor tozu yapıların içinden geçmez, etrafından ve üstünden akar
     this.parcaciklar.engelAyarla((p) => this.alan.parcacikIt(p));
     this.catisma.agirSilahlar = () => this.figurler.agirSilahlar();
+    // Çatışmada asker ara sıra yakındaki boş mevziye koşar (figurler3b sicramayiGuncelle)
+    this.figurler.mevziAdaylari = (konum, id) => this.mevziAdaylari(konum, id);
     if (!r) return;
     this.renderer = r;
     // Bağlam kaybı/geri gelişi (C-20): kayıpta çizim durur (three kendi durumunu sıfırlar, dokular kaynaktan geri gelir);
@@ -1533,6 +1535,38 @@ export class Sahne3B {
     // Alan yapısının (bina, araç) içindeyse izleyiciye doğru: binalar sokağı çevreler, sokak izleyicinin önündedir
     while (mesafe > 4 && this.alan.doluMu(yerKonumu(azimut, mesafe))) mesafe -= 1.5;
     void this.figurler.oynat(tanim, { ...s, azimut, mesafe }, kok).then((ok) => ok || this.uyari?.(`Figür yüklenemedi: ${tanim.dosya}`));
+  }
+  /**
+   * Mevzi değiştirme adayları: askerin 2,2–9 m çevresindeki boş asker/figür plan noktaları (askerlerin durduğu 4–7 m
+   * bandına çekilmiş hâliyle; başka figür, sütre ve alan yapısı olmayan). Plan noktası yoksa ya da hepsi doluysa aynı
+   * uzaklık halkasında 2,5–5,5 m sağa/sola. Yolun açıklığını figür katmanı denetler.
+   */
+  private mevziAdaylari(konum: THREE.Vector3, _id: string): THREE.Vector3[] {
+    const k = this.kaynak?.yawKaydirma ?? 0;
+    const bos = (p: THREE.Vector3) => !this.figurler.doluMu(p, 1.8) && !this.sutre.doluMu(p) && !this.alan.doluMu(p) && !this.yikilan.doluMu(p, 0.4) && !this.dereler.icindeMi(p.x, p.z, 0.3);
+    const uygun = (p: THREE.Vector3) => {
+      const d = Math.hypot(p.x - konum.x, p.z - konum.z);
+      return d >= 2.2 && d <= 9 && bos(p);
+    };
+    const adaylar: THREE.Vector3[] = [];
+    for (const n of this.kaynak?.plan?.noktalar ?? []) {
+      if (n.tur && !n.tur.includes("asker") && !n.tur.includes("figur")) continue;
+      const p = yerKonumu(panoramadanSahneAzimutu(n.azimut, k), Math.min(ASKER_EN_UZAK, Math.max(ASKER_EN_YAKIN, n.mesafe)));
+      if (uygun(p)) adaylar.push(p);
+    }
+    if (adaylar.length) return adaylar;
+    // Plan noktası yok: aynı halkada yana (izleyiciye uzaklık 4–7 m bandında kalır)
+    const r = Math.min(ASKER_EN_UZAK, Math.max(ASKER_EN_YAKIN, Math.hypot(konum.x, konum.z)));
+    const az = derece(Math.atan2(konum.x, -konum.z));
+    for (const yay of [2.5, -2.5, 4, -4, 5.5, -5.5]) {
+      const p = yerKonumu(az + derece(yay / r), Math.min(ASKER_EN_UZAK, Math.max(ASKER_EN_YAKIN, r + (Math.random() - 0.5) * 1.2)));
+      if (uygun(p)) adaylar.push(p);
+    }
+    return adaylar;
+  }
+  /** Mevzi değiştirme açık/kapalı (`?hareket=kapali`). */
+  mevziDegistirmeAyarla(acik: boolean) {
+    this.figurler.mevziDegistir = acik;
   }
   figurDurdur(id: string) {
     this.figurler.durdur(id);
