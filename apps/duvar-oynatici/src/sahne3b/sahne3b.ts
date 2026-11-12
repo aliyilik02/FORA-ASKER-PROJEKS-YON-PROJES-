@@ -49,6 +49,7 @@ import { AracOlayi } from "./aracOlayi";
 import { YikilanDuvarKatmani } from "./yikilanDuvar";
 import { BayrakKatmani } from "./bayrak";
 import { DereKatmani } from "./dere";
+import { DusmanKatmani, type DusmanModeli } from "./dusman";
 
 export type Kalite = "dusuk" | "orta" | "yuksek";
 /** Kalite kademeleri: dizüstü/entegre GPU'da "dusuk", sahadaki RTX sınıfı makinede "yuksek". */
@@ -229,6 +230,8 @@ export class Sahne3B {
   private readonly yikilan = new YikilanDuvarKatmani();
   private readonly bayraklar = new BayrakKatmani();
   private readonly dereler = new DereKatmani();
+  /** Düşman atıcıları: alan planının mevzilerinde (pencere, çatı, kaya) görünen silahlı figürler (dusman.ts). */
+  private readonly dusman = new DusmanKatmani();
   private alanPlanlari: Record<string, AlanPlani> = {};
   private alanKok = "";
   private catismaSesleri: CatismaSesleri = { carpma: () => undefined, atis: () => undefined };
@@ -286,7 +289,8 @@ export class Sahne3B {
     // Ses geri çağrıları sahne azimutuyla (derece, AzimutDerece): pan değil, ses motoru yerleştirir
     this.catisma = new CatismaSistemi(this.parcaciklar, {
       carpma: (azimut) => this.catismaSesleri.carpma(azimut),
-      atis: (azimut, uzak) => this.catismaSesleri.atis(azimut, uzak),
+      // mesafe iletilir: uzak namlu sesi parıltıdan mesafe/343 sn sonra (önceden burada düşüyor, gecikme hiç uygulanmıyordu)
+      atis: (azimut, uzak, mesafe) => this.catismaSesleri.atis(azimut, uzak, mesafe),
       uzakPatlama: (azimut) => {
         this.patlama(azimut, 0.7, true, false);
         this.catismaSesleri.uzakPatlama?.(azimut);
@@ -294,7 +298,14 @@ export class Sahne3B {
       topAtisi: (azimut) => this.catismaSesleri.topAtisi?.(azimut),
     });
     this.arac = new AracOlayi(this.parcaciklar, (namlu, konum) => {
-      // Hedef: düşman mevzilerinden biri (pencere/çatı), birkaç saniyede bir değişir; mevzi yoksa düşman yönü
+      // Hedef: mevzi tutan düşman atıcısı (ateş altında kalan atıcı ara sıra siner); yoksa mevzilerden biri (birkaç
+      // saniyede bir değişir); mevzi de yoksa düşman yönü
+      const atici = this.dusman.hedefNoktasi();
+      if (atici) {
+        this.catisma.aracAtisi(namlu, konum, atici);
+        if (Math.random() < 0.12) this.dusman.baskila(atici, 1.5, 2.5 + Math.random() * 3);
+        return;
+      }
       const m = this.alan.dusmanMevzileri();
       this.catisma.aracAtisi(namlu, konum, m.length ? m[Math.floor(performance.now() / 2600) % m.length] : undefined);
     });
@@ -304,8 +315,17 @@ export class Sahne3B {
     this.catisma.atisNoktalari = () => this.figurler.atisNoktalari();
     this.catisma.dostAtisOldu = (id) => this.figurler.atisOldu(id);
     this.figurler.engel = (p) => this.sutre.doluMu(p, 0.3) || this.alan.doluMu(p, 0.3) || this.yikilan.doluMu(p, 0.3) || this.dereler.icindeMi(p.x, p.z, 0.2);
-    // 3B alan: düşman pencere/çatı mevzilerinden ateş eder, izler binaya/araca çarpıp biter, helikopter binaları aşar
-    this.catisma.mevziler = () => this.alan.dusmanMevzileri();
+    // 3B alan: düşman pencere/çatı mevzilerindeki atıcılardan ateş eder (dusman.ts: siluet, kalıcı mevzi), dost ateşi
+    // o atıcıya nişan alır; izler binaya/araca çarpıp biter, helikopter binaları aşar
+    this.catisma.aticiIste = (azimut, aci, taraf, kanal, yogunluk) => this.dusman.aticiIste(azimut, aci, taraf, kanal, yogunluk);
+    this.catisma.aticiAtisOldu = (no) => this.dusman.atisOldu(no);
+    this.catisma.dostHedefi = () => this.dusman.hedefNoktasi();
+    this.catisma.dusmanBaskisi = (p) => this.dusman.baskila(p, 1.5, 2 + Math.random() * 2.5);
+    this.dusman.uyari = (m) => this.uyari?.(m);
+    // Plan mevzisi olmayan yönde sırt gerisi arazi mevzileri: yalnız 3B arazi açıkken, görünür yarıçapın içinde; göz
+    // hattı alan yapısına (köy evi) takılan yer mevzi olmaz
+    this.dusman.araziBilgisi = () => (this.arazi.aktif ? { yaricap: this.arazi.yaricap } : null);
+    this.dusman.gorusEngeli = (x, y, z) => this.alan.ogeSayisi > 0 && this.alan.kesisim(0, 0, 0, x, y, z) >= 0;
     this.catisma.engelKesisimi = (x0, y0, z0, x1, y1, z1) => (this.alan.ogeSayisi ? this.alan.kesisim(x0, y0, z0, x1, y1, z1) : -1);
     this.heli.engelUstu = (x, z) => this.alan.tepeYuksekligi(x, z);
     // Toz, duman, ateş, kıvılcım ve rotor tozu yapıların içinden geçmez, etrafından ve üstünden akar
@@ -331,6 +351,8 @@ export class Sahne3B {
     r.shadowMap.type = THREE.PCFShadowMap;
     // Gölge haritası yöne bağlı (güneş), kameraya değil: üç duvar için üç kez değil karede bir kez çizilir
     r.shadowMap.autoUpdate = false;
+    // Düşman figürü örtü çizgisinin altında çizilmez (malzeme başına kesme düzlemi, dusman.ts)
+    r.localClippingEnabled = true;
     // Varsayılan 1: Iris Xe'de güç bütçesi; `?dpr=cihaz` (pikselOraniAyarla) Windows ölçeğinde keskin görüntü için
     r.setPixelRatio(this.pikselOrani);
     this.pmrem = new THREE.PMREMGenerator(r);
@@ -361,7 +383,7 @@ export class Sahne3B {
     this.gokyuzu.baglan(r, this.pmrem);
 
     this.sahne.add(this.gokOrtusu.kutu, this.yagis3b.grup);
-    this.sahne.add(this.arazi.grup, this.alan.grup, this.sokak.grup, this.dokuntu.grup, this.yikilan.grup, this.bayraklar.grup, this.dereler.grup, this.arac!.grup, this.hasar.grup, this.figurler.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
+    this.sahne.add(this.arazi.grup, this.alan.grup, this.sokak.grup, this.dokuntu.grup, this.yikilan.grup, this.bayraklar.grup, this.dereler.grup, this.arac!.grup, this.hasar.grup, this.figurler.grup, this.dusman.grup, this.heli.grup, this.catisma.grup, this.sutre.grup, this.parcaciklar.grup);
 
     if (hataAyiklama) {
       this.gunesIsareti = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffee55 }));
@@ -896,6 +918,7 @@ export class Sahne3B {
     this.hasar.temizle();
     this.parcaciklar.temizle();
     this.catisma.temizle();
+    this.dusman?.temizle(); // testler Sahne3B'yi kısmi kurar
     this.flasGuc = 0;
     this.flas.intensity = 0;
     if (this.arazi.kraterleriTemizle()) {
@@ -1082,6 +1105,14 @@ export class Sahne3B {
       this.yikilan.ayarla(alanPlani?.yikilabilir, this.alanKok);
       this.bayraklar.ayarla(alanPlani?.bayraklar);
       this.dereler.ayarla(alanPlani?.dereler);
+      // Dost yapılarının (bayrak direği, gözetleme kulesi) 16 m çevresi düşman mevzisi olmaz. Meskûn mahaldeki nöbetçi
+      // kulübesi sayılmaz: kontrol noktasına bakan komşu çatılar (20 m) tam da düşmanın tutacağı yerdir
+      const dostYapilar = [
+        ...(alanPlani?.bayraklar ?? []).map((b) => ({ x: b.x, z: b.z, yaricap: 16 })),
+        ...(alanPlani?.ogeler ?? []).filter((o) => /gozetleme/i.test(o.dosya)).map((o) => ({ ...ogeKonumu(o), yaricap: 16 })),
+      ].map((d) => ({ x: d.x, z: d.z, yaricap: d.yaricap }));
+      this.dusman.mevzileriAyarla(alanPlani?.dusmanMevzileri, dostYapilar);
+      this.dusman.araziDegisti();
       this.arac?.temizle();
       // Yere oturan mevcut nesneler yeni yüksekliğe (bölge değişti: profil farklı; kip değişti: düz ↔ engebeli)
       this.figurler.zemineOturt();
@@ -1434,6 +1465,8 @@ export class Sahne3B {
     this.flas.position.set(p.x, p.y + r, p.z);
     this.flasGuc = Math.max(this.flasGuc, s);
     this.figurler.patlamaOldu(p); // figürler 4 sn oraya bakar (düşman/yaralı yoksa)
+    // Yakınındaki düşman mevzileri 25–45 sn susar (eğitmenin patlaması tehdidi bastırır)
+    this.dusman?.patlamaOldu(p, 7 + s * 5);
     // Yıkılabilir duvar: patlama merkezine yakın tuğlalar savrulur, toz kalkar
     if (this.yikilan.patlama(new THREE.Vector3(p.x, p.y + 1.1, p.z), 1.3 + s * 0.8)) this.parcaciklar.tozBulutu(p, 4.5, 1);
     // Patlama artığı: kraterde küçük bir yangın 2,5–3,5 sn yanar, sonra 2,5 sn'de söner (alev → seyrek duman);
@@ -1527,6 +1560,19 @@ export class Sahne3B {
     this.figurler.onYukle(url);
   }
 
+  /**
+   * Düşman atıcısının modeli (manifest `dusman`; dusman.ts). Model figür katmanının önbelleğinden yüklenir (aynı GLB
+   * dost asker olarak da kullanılıyorsa bir kez iner). `siluet` false: figür çizilmez, yalnız parıltı (`?dusman=kapali`).
+   */
+  dusmanModeliAyarla(tanim: DusmanModeli | null, kok: string, siluet = true) {
+    this.dusman.siluetAcik = siluet;
+    this.dusman.modelAyarla(tanim, kok, (url) => this.figurler.modelYukle(url));
+  }
+  /** Tanı/test: düşman katmanı (window.duvar.dusman). */
+  get dusmanKatmani() {
+    return this.dusman;
+  }
+
   /** Tanı/hizalama: kimliğe göre aktif figür kaydı (silahHizalama.ts). */
   /** Tanı/test: figür konumları (window.duvar.figurler()). */
   figurKonumlari() {
@@ -1618,6 +1664,7 @@ export class Sahne3B {
     this.havaGuncelle(dt);
     this.yagis3b.guncelle(dt);
     this.catisma.guncelle(dt);
+    this.dusman.guncelle(dt);
     this.arac?.guncelle(dt);
     this.yikilan.guncelle(dt);
     this.bayraklar.guncelle(dt);

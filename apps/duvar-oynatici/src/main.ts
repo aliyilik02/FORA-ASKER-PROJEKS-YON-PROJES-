@@ -43,6 +43,7 @@ import { PanoramaKatmani } from "./panorama";
 import { type Kalite, type PanoramaKaynagi, Sahne3B } from "./sahne3b/sahne3b";
 import type { AraziModu } from "./sahne3b/arazi";
 import { filmPlani, type AlanFilmEki, type AlanPlani } from "./sahne3b/alan";
+import type { DusmanModeli } from "./sahne3b/dusman";
 import { arkaPlanKarari } from "./sahne3b/panoramaGecisi";
 import { adimlariCalistir, hataOzeti, temelDurum } from "./sahneTemizligi";
 import { figurYolu } from "./figurYonlendirme";
@@ -224,6 +225,11 @@ sahne3b.gorselAyarla(filmGorunum);
 const alanParam = params.get("alan");
 if (alanParam === "kapali" || alanParam === "acik") localStorage.setItem("alan", alanParam);
 const alanKapali = (alanParam ?? localStorage.getItem("alan")) === "kapali";
+// Düşman silueti (sahne3b/dusman.ts): mevzilerde silahlı figür görünür. `?dusman=kapali` yalnız namlu parıltısına döner,
+// `?dusman=acik` geri açar (yerel kayıtta kalır).
+const dusmanParam = params.get("dusman");
+if (dusmanParam === "kapali" || dusmanParam === "acik") localStorage.setItem("dusman", dusmanParam);
+const dusmanKapali = (dusmanParam ?? localStorage.getItem("dusman")) === "kapali";
 function alanPlani(bolge: string): AlanPlani | undefined {
   if (alanKapali || testPanorama) return undefined;
   const temel = video.manifest.alanlar?.[bolge];
@@ -250,6 +256,8 @@ sahne3b.figurSesleriAyarla((tur, azimut) => {
   THREE,
   gecis,
   arkaPlan: () => sonArkaPlan,
+  // Düşman atıcıları: window.duvar.dusman.durum() / .ozet() / .tanilama(true) (mevzi doğrulama)
+  dusman: sahne3b.dusmanKatmani,
   // Yerleşim/çarpışma denetimi: window.duvar.figurler() → [{id, x, z, hiz, poz}]
   figurler: () => sahne3b.figurKonumlari(),
   // Silah soketi ölçümü: await window.duvar.silahHizala("<figür id>", ["Rifle Idle", "Rifle Walk"], 0.95) → manifest konum/donus
@@ -820,6 +828,13 @@ void video.yukle().then((m) => {
   // 3B modeller: ön yükleme; "helikopter" adlı model Oda 2 helikopteri olur
   if (ucAktifOlabilir) {
     sahne3b.dokulariYukle(video.kok);
+    // Düşman atıcısı: manifest `dusman` → `klip`in modeli ve tüfek soketi (kendi askerimizin koyu tonlu kopyası)
+    const dm = m.dusman;
+    const dk = (dm?.klip ? klipler.tumTanimlar[dm.klip] : undefined) as (Partial<DusmanModeli> & { dosya: string }) | undefined;
+    const dusmanDosyasi = dm?.dosya ?? dk?.dosya;
+    if (dm && dusmanDosyasi) {
+      sahne3b.dusmanModeliAyarla({ dosya: dusmanDosyasi, boy: dm.boy ?? dk?.boy, animasyon: dm.animasyon, ton: dm.ton, silahModeli: dm.silahModeli ?? dk?.silahModeli }, video.kok, !dusmanKapali);
+    }
     // Tembel GLB (C-21): manifest sırasıyla ilk ON_YUKLEME_SINIRI güncel model (eski işaretliler hariç) önden yüklenir,
     // kalanı ilk komutta gelir (önbellekli; o figür ilk kez birkaç yüz ms geç çıkar). ?onyukle=hepsi gösterim öncesi ısınma.
     const hepsi = params.get("onyukle") === "hepsi";

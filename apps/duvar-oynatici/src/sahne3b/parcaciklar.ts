@@ -124,6 +124,11 @@ export interface Parcacik {
   golge?: number;
   /** Rüzgâr payı 0–1 (0 yok): sürtünme havaya göre uygulanır, topak zamanla grubun `ruzgar` hızının bu katına kapılır. */
   surukle?: number;
+  /**
+   * Katı engel uygulanmaz: yapı kutusunun içinde ama gerçek duvarın dışında doğan parçacık (pencere içindeki düşmanın
+   * namlu parıltısı ve dumanı, cepheye isabet tozu). Kutu duvardan 1–4 m öndedir; itme parıltıyı figürden koparırdı.
+   */
+  engelsiz?: boolean;
 }
 
 export type Karisim = "normal" | "katki";
@@ -224,6 +229,7 @@ export class ParcacikGrubu {
       p.kare = undefined;
       p.golge = undefined;
       p.surukle = undefined;
+      p.engelsiz = undefined;
       return p;
     }
     return { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, boyut: 0, buyume: 0, alfa: 0, aci: 0, donus: 0, t: 0, sure: 1, renk: [1, 1, 1], yercekimi: 0, surtunme: 0 };
@@ -294,7 +300,7 @@ export class ParcacikGrubu {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.z += p.vz * dt;
-      if (this.engel) this.engel(p);
+      if (this.engel && !p.engelsiz) this.engel(p);
       p.boyut += p.buyume * dt;
       p.aci += p.donus * dt;
       canli[n++] = p;
@@ -888,8 +894,8 @@ export class ParcacikSistemi {
     }
   }
 
-  /** Namlu alevi / küçük parlama (tek kare). */
-  parlama(p: THREE.Vector3, boyut: number) {
-    this.ates.ekle({ x: p.x, y: p.y, z: p.z, vx: 0, vy: 0, vz: 0, boyut, buyume: boyut * 4, alfa: 1, aci: rnd(0, 6.28), donus: 0, t: 0, sure: 0.08, renk: [1, 0.9, 0.7], yercekimi: 0, surtunme: 0 });
+  /** Namlu alevi / küçük parlama (tek kare). `engelsiz`: yapı kutusunun içindeki mevziden (pencere) çıkan parıltı yerinde kalır. */
+  parlama(p: THREE.Vector3, boyut: number, engelsiz = false) {
+    this.ates.ekle({ x: p.x, y: p.y, z: p.z, vx: 0, vy: 0, vz: 0, boyut, buyume: boyut * 4, alfa: 1, aci: rnd(0, 6.28), donus: 0, t: 0, sure: 0.08, renk: [1, 0.9, 0.7], yercekimi: 0, surtunme: 0, engelsiz });
   }
 }

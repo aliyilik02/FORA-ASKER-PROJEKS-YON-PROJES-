@@ -104,8 +104,11 @@ for (const n of noktalar) {
     console.log(`  SORUN ${n.ad ?? ""} [${tur.join(",")}] (${n.x.toFixed(1)}, ${n.z.toFixed(1)}) ← ${carpan.map((c) => c.ad).join(", ")} (pay ${pay} m)`);
   }
 }
-// Mevzi bir yapının hacmi içindeyse namlu parıltısı görünmez (cephenin önünde olmalı)
+// Eski (siluetsiz) mevzi bir yapının hacmi içindeyse namlu parıltısı görünmez (cephenin önünde olmalı). Siluetli mevzi
+// bilerek yapının içindedir (figür pencere boşluğunun / çatı kenarının arkasında durur); görünürlüğü
+// `araclar/oyun-testi/dusman-mevzi-bul.mjs` ışınlarla doğrular, `dusman-siluet.mjs` gözle gösterir.
 for (const m of plan.dusmanMevzileri ?? []) {
+  if (m.siluet) continue;
   const ic = yer.filter((i) => m.x > i.minX && m.x < i.maxX && m.z > i.minZ && m.z < i.maxZ && m.y < i.yukseklik);
   if (ic.length) {
     sorun++;

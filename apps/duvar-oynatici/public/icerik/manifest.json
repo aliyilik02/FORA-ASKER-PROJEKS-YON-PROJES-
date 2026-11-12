@@ -7581,6 +7581,11 @@
       }
     ]
   },
+  "dusman": {
+    "_aciklama": "Düşman atıcısı (sahne3b/dusman.ts): alan planlarının siluetli mevzilerinde görünen silahlı figür. klip: modeli ve tüfek soketi alınacak figür klibi (kendi askerimiz); ton: koyulaştırma rengi (dokuyla çarpılır). ?dusman=kapali yalnız namlu parıltısına döner.",
+    "klip": "komando_bere_nisan",
+    "ton": "#8a8074"
+  },
   "alanlar": {
     "kirsal_acik_arazi_film": {
       "_aciklama": "Film görünümü (11 Kasım 2026): kırsal mevzi. Kum torbası yayı ve sandıklar, bahçe duvarı (yıkılabilir), kaya dizileri, tuğla yığını; Kirpi toprak yoldan gelir; düşman köy evlerinden ateş eder. Sketchfab CC-BY taramaları (atıf sketchfab_indirilen/**/*.kaynak.json).",
@@ -7616,7 +7621,22 @@
         {"ad":"açık alan","azimut":75,"mesafe":40,"tur":["helikopter"]},
         {"ad":"araç yolu","azimut":-8,"mesafe":34,"tur":["tank"]}
       ],
-      "dusmanMevzileri": [{"ad":"köy evi","x":-81.6,"y":3,"z":-33},{"ad":"köy evi 2","x":-66.2,"y":3,"z":-63.9}],
+      "dusmanMevzileri": [
+        {"ad":"koy yikinti 427 üst 2 m","x":-75.87,"z":-5.59,"y":1.81,"siluet":true},
+        {"ad":"koy yikinti 427 üst 2 m","x":-75.87,"z":-9.11,"y":1.74,"siluet":true},
+        {"ad":"koy evi 420 üst 3 m","x":-97.39,"z":-18.31,"y":3.28,"siluet":true},
+        {"ad":"koy evi 420 üst 3 m","x":-92.17,"z":-18.92,"y":2.84,"siluet":true},
+        {"ad":"koy evi 420 üst 2 m","x":-92.17,"z":-22.95,"y":1.92,"siluet":true},
+        {"ad":"koy evi 425 üst 5 m","x":-79.37,"z":-36.86,"y":4.68,"siluet":true},
+        {"ad":"koy evi 426 üst 2 m","x":-94.33,"z":-48.52,"y":2.1,"siluet":true},
+        {"ad":"koy evi 426 üst 3 m","x":-90.79,"z":-48.52,"y":2.88,"siluet":true},
+        {"ad":"koy evi 426 üst 3 m","x":-88.13,"z":-55.28,"y":2.76,"siluet":true},
+        {"ad":"koy evi 433 pencere 3 m","x":-95.52,"z":-71.37,"y":3.28,"siluet":true},
+        {"ad":"koy evi 433 üst 7 m","x":-91.28,"z":-72.09,"y":6.68,"siluet":true},
+        {"ad":"koy evi 349 üst 6 m","x":-68.57,"z":-62.12,"y":5.64,"siluet":true},
+        {"ad":"koy evi 349 pencere 3 m","x":-66.28,"z":-65.01,"y":3.08,"siluet":true},
+        {"ad":"kaya col olusumu üst 3 m","x":14.8,"z":-24.44,"y":3.04,"siluet":true}
+      ],
       "aracRotasi": {"bas":[-3,-100],"dur":[-3,-30]},
       "yikilabilir": [{"x":8,"z":-17,"yonDerece":10,"en":6,"yukseklik":1.8}],
       "dokuntu": [
@@ -7662,7 +7682,9 @@
         {"ad":"açık alan","azimut":-75,"mesafe":40,"tur":["helikopter"]},
         {"ad":"araç yolu","azimut":-8,"mesafe":34,"tur":["tank"]}
       ],
-      "dusmanMevzileri": [{"ad":"hasarlı yapı","x":19,"y":3,"z":-30},{"ad":"hasarlı yapı üst","x":21,"y":5,"z":-33}],
+      "dusmanMevzileri": [
+        {"ad":"hasarli bina 3 üst 4 m","x":18.9,"z":-32.39,"y":4.49,"siluet":true}
+      ],
       "aracRotasi": {"bas":[3,-100],"dur":[3,-28]},
       "yikilabilir": [{"x":-8,"z":-21,"yonDerece":-10,"en":5.2,"yukseklik":2.4}],
       "bayraklar": [{"x":-15.5,"z":-39,"yukseklik":14,"boy":3}],
@@ -7707,7 +7729,12 @@
         {"ad":"dere ötesi sağ","azimut":38,"mesafe":30,"tur":["patlama","toz"]},
         {"ad":"açıklık","azimut":-75,"mesafe":38,"tur":["helikopter","tank"]}
       ],
-      "dusmanMevzileri": [{"ad":"büyük kaya sağ","x":14,"y":3.5,"z":-24},{"ad":"büyük kaya sol","x":-16,"y":3,"z":-27},{"ad":"yıkık duvar","x":7,"y":1.2,"z":-21.5}],
+      "dusmanMevzileri": [
+        {"ad":"kaya col olusumu üst 3 m","x":-14.64,"z":-26.28,"y":3.12,"siluet":true},
+        {"ad":"duvar yikik 265 üst 2 m","x":7.77,"z":-21.6,"y":2.14,"siluet":true},
+        {"ad":"kaya col olusumu üst 1 m","x":12.7,"z":-24.79,"y":1.1,"siluet":true},
+        {"ad":"kaya col olusumu üst 4 m","x":12.7,"z":-22.18,"y":3.67,"siluet":true}
+      ],
       "dokuntu": [
         {"x":-14,"z":-18,"yaricap":5,"adet":500,"tas":true},
         {"x":-2,"z":-14.5,"yaricap":5,"adet":600,"tas":true},
@@ -7752,7 +7779,14 @@
         {"ad":"sağ ön düzlük","azimut":22,"mesafe":21.5,"tur":["patlama","toz"]},
         {"ad":"sağ düzlük","azimut":70,"mesafe":38,"tur":["helikopter","tank"]}
       ],
-      "dusmanMevzileri": [{"ad":"uzak kayalık sol","x":-2,"y":6,"z":-62},{"ad":"uzak kayalık sağ","x":11,"y":5,"z":-64},{"ad":"sağ kaya yüzü","x":24,"y":6,"z":-40},{"ad":"orta kaya","x":3,"y":4,"z":-26}],
+      "dusmanMevzileri": [
+        {"ad":"koy yikinti 416 üst 2 m","x":-62.11,"z":-64.17,"y":1.84,"siluet":true},
+        {"ad":"koy yikinti 416 üst 2 m","x":-56.52,"z":-65.6,"y":1.86,"siluet":true},
+        {"ad":"kaya stranska üst 5 m","x":-10.78,"z":-32.58,"y":5.12,"siluet":true},
+        {"ad":"kaya col olusumu üst 3 m","x":3.83,"z":-21.95,"y":2.74,"siluet":true},
+        {"ad":"koy evi 428 üst 1 m","x":32.06,"z":-67.67,"y":1.22,"siluet":true},
+        {"ad":"koy evi 428 üst 4 m","x":36.24,"z":-62.84,"y":4.32,"siluet":true}
+      ],
       "bayraklar": [{"x":-8.5,"z":-51,"yukseklik":14,"boy":3}],
       "dokuntu": [
         {"x":-3,"z":-5,"yaricap":5,"adet":500,"tas":true},
@@ -7801,6 +7835,40 @@
         {"x":-11,"z":3,"yaricap":4,"adet":500,"tugla":0.5},
         {"x":11,"z":4,"yaricap":4,"adet":500},
         {"x":0,"z":-22,"yaricap":8,"adet":500}
+      ],
+      "dusmanMevzileri": [
+        {"ad":"hasarli bina 1 üst 7 m","x":-21.49,"z":-7.98,"y":6.62,"siluet":true},
+        {"ad":"insaat 376 üst 21 m","x":-45,"z":-27.5,"y":21.21,"siluet":true},
+        {"ad":"insaat 376 üst 21 m","x":-40.42,"z":-27.5,"y":21.25,"siluet":true},
+        {"ad":"insaat 376 pencere 19 m","x":-33.99,"z":-29.43,"y":18.72,"siluet":true},
+        {"ad":"yikik 44 pencere 11 m","x":-12.8,"z":-19.22,"y":10.53,"siluet":true},
+        {"ad":"yikik 44 pencere 4 m","x":-12.8,"z":-19.22,"y":3.53,"siluet":true},
+        {"ad":"yikik 392 üst 16 m","x":-15.28,"z":-39.63,"y":16.12,"siluet":true},
+        {"ad":"yikik 44 üst 13 m","x":-11.32,"z":-31.95,"y":13.01,"siluet":true},
+        {"ad":"yikik 65 üst 20 m","x":-18.73,"z":-56.47,"y":20.37,"siluet":true},
+        {"ad":"yikik 392 üst 1 m","x":-11.73,"z":-39.63,"y":1,"siluet":true},
+        {"ad":"yikik 392 üst 1 m","x":-14.04,"z":-50.7,"y":0.97,"siluet":true},
+        {"ad":"yikik 65 pencere 2 m","x":-14.48,"z":-59.37,"y":1.72,"siluet":true},
+        {"ad":"yikik 65 üst 20 m","x":-14.48,"z":-64.55,"y":20.11,"siluet":true},
+        {"ad":"ayakta 414 üst 21 m","x":-12.86,"z":-73.22,"y":20.8,"siluet":true},
+        {"ad":"ayakta 414 üst 22 m","x":-11.44,"z":-77.32,"y":21.76,"siluet":true},
+        {"ad":"yikik 45 pencere 27 m","x":-8.62,"z":-103.86,"y":27.12,"siluet":true},
+        {"ad":"yikik 45 üst 31 m","x":1.43,"z":-103.86,"y":30.94,"siluet":true},
+        {"ad":"yikik 45 pencere 15 m","x":10.47,"z":-103.86,"y":15.13,"siluet":true},
+        {"ad":"ayakta 406 üst 11 m","x":12.87,"z":-91.93,"y":11.31,"siluet":true},
+        {"ad":"ayakta 406 pencere 8 m","x":11.82,"z":-83.39,"y":8.39,"siluet":true},
+        {"ad":"yikik 370 üst 12 m","x":11.83,"z":-77.97,"y":12.32,"siluet":true},
+        {"ad":"yikik 51 üst 14 m","x":12.51,"z":-56.09,"y":13.87,"siluet":true},
+        {"ad":"yikik 51 pencere 8 m","x":12.51,"z":-52.45,"y":7.84,"siluet":true},
+        {"ad":"yikik 51 üst 14 m","x":12.51,"z":-51.93,"y":13.79,"siluet":true},
+        {"ad":"yikik 69 üst 13 m","x":10.33,"z":-38.98,"y":12.76,"siluet":true},
+        {"ad":"yikik 69 pencere 8 m","x":10.33,"z":-26.89,"y":7.53,"siluet":true},
+        {"ad":"yikik 69 pencere 5 m","x":10.33,"z":-22.69,"y":4.62,"siluet":true},
+        {"ad":"hasarli bina 2 üst 10 m","x":13.29,"z":-16.39,"y":9.57,"siluet":true},
+        {"ad":"hasarli bina 2 üst 10 m","x":19.39,"z":-6.62,"y":10.19,"siluet":true},
+        {"ad":"ayakta 400 üst 12 m","x":22.04,"z":0.23,"y":12.38,"siluet":true},
+        {"ad":"ayakta 400 pencere 9 m","x":22.04,"z":13.28,"y":9.42,"siluet":true},
+        {"ad":"ayakta 400 pencere 4 m","x":22.04,"z":20.7,"y":4.12,"siluet":true}
       ]
     },
     "meskun_mahal": {
@@ -8392,156 +8460,35 @@
         }
       ],
       "dusmanMevzileri": [
-        {
-          "ad": "sol 44 pencere",
-          "x": -8.5,
-          "y": 7,
-          "z": -24
-        },
-        {
-          "ad": "sol 44 üst kat",
-          "x": -8.5,
-          "y": 10.5,
-          "z": -29
-        },
-        {
-          "ad": "sol 392 pencere",
-          "x": -8.5,
-          "y": 4.5,
-          "z": -42
-        },
-        {
-          "ad": "sol 392 üst kat",
-          "x": -8.5,
-          "y": 10.5,
-          "z": -47
-        },
-        {
-          "ad": "sol 65 pencere",
-          "x": -8.5,
-          "y": 7.5,
-          "z": -58
-        },
-        {
-          "ad": "sol 65 çatı",
-          "x": -8.5,
-          "y": 14,
-          "z": -66
-        },
-        {
-          "ad": "sol 414 pencere",
-          "x": -8.5,
-          "y": 10,
-          "z": -80
-        },
-        {
-          "ad": "sol 414 üst kat",
-          "x": -8.5,
-          "y": 16.5,
-          "z": -84
-        },
-        {
-          "ad": "sağ 69 pencere",
-          "x": 8.5,
-          "y": 4.5,
-          "z": -31
-        },
-        {
-          "ad": "sağ 69 üst kat",
-          "x": 8.5,
-          "y": 10,
-          "z": -36
-        },
-        {
-          "ad": "sağ 51 pencere",
-          "x": 8.5,
-          "y": 7,
-          "z": -47
-        },
-        {
-          "ad": "sağ 51 üst kat",
-          "x": 8.5,
-          "y": 11,
-          "z": -55
-        },
-        {
-          "ad": "sağ 370 pencere",
-          "x": 8.5,
-          "y": 4.5,
-          "z": -70
-        },
-        {
-          "ad": "sağ 370 çatı",
-          "x": 8.5,
-          "y": 8,
-          "z": -75
-        },
-        {
-          "ad": "sağ 406 pencere",
-          "x": 8.5,
-          "y": 7,
-          "z": -88
-        },
-        {
-          "ad": "kule sol",
-          "x": -6,
-          "y": 12,
-          "z": -96.6
-        },
-        {
-          "ad": "kule sağ",
-          "x": 5,
-          "y": 18,
-          "z": -96.6
-        },
-        {
-          "ad": "kule tepe",
-          "x": 0,
-          "y": 27,
-          "z": -96.6
-        },
-        {
-          "ad": "otobüs barikatı sol",
-          "x": -3,
-          "y": 1.6,
-          "z": -89
-        },
-        {
-          "ad": "otobüs barikatı sağ",
-          "x": 3,
-          "y": 1.6,
-          "z": -89
-        },
-        {
-          "ad": "sol meydan binası",
-          "x": -19.2,
-          "y": 7,
-          "z": 4
-        },
-        {
-          "ad": "sol meydan üst kat",
-          "x": -19.2,
-          "y": 13,
-          "z": 12
-        },
-        {
-          "ad": "sağ meydan binası",
-          "x": 20,
-          "y": 4.5,
-          "z": 2
-        },
-        {
-          "ad": "sağ meydan üst kat",
-          "x": 20,
-          "y": 10,
-          "z": 10
-        },
-        {
-          "ad": "sağ meydan çatı",
-          "x": 20,
-          "y": 13.5,
-          "z": 20
-        }
+        {"ad":"insaat 376 üst 21 m","x":-45,"z":-27.5,"y":21.21,"siluet":true},
+        {"ad":"insaat 376 üst 21 m","x":-40.42,"z":-27.5,"y":21.25,"siluet":true},
+        {"ad":"insaat 376 pencere 19 m","x":-33.99,"z":-29.43,"y":18.72,"siluet":true},
+        {"ad":"yikik 44 pencere 11 m","x":-12.8,"z":-19.22,"y":10.53,"siluet":true},
+        {"ad":"yikik 44 pencere 4 m","x":-12.8,"z":-19.22,"y":3.53,"siluet":true},
+        {"ad":"yikik 392 üst 16 m","x":-15.28,"z":-39.63,"y":16.12,"siluet":true},
+        {"ad":"yikik 44 üst 13 m","x":-11.32,"z":-31.95,"y":13.01,"siluet":true},
+        {"ad":"yikik 65 üst 20 m","x":-18.73,"z":-56.47,"y":20.37,"siluet":true},
+        {"ad":"yikik 392 üst 1 m","x":-11.73,"z":-39.63,"y":1,"siluet":true},
+        {"ad":"yikik 392 üst 1 m","x":-14.04,"z":-50.7,"y":0.97,"siluet":true},
+        {"ad":"yikik 65 pencere 2 m","x":-14.48,"z":-59.37,"y":1.72,"siluet":true},
+        {"ad":"yikik 65 üst 20 m","x":-14.48,"z":-64.55,"y":20.11,"siluet":true},
+        {"ad":"ayakta 414 üst 21 m","x":-12.86,"z":-73.22,"y":20.8,"siluet":true},
+        {"ad":"ayakta 414 üst 22 m","x":-11.44,"z":-77.32,"y":21.76,"siluet":true},
+        {"ad":"yikik 45 pencere 27 m","x":-8.62,"z":-103.86,"y":27.12,"siluet":true},
+        {"ad":"yikik 45 üst 31 m","x":1.43,"z":-103.86,"y":30.94,"siluet":true},
+        {"ad":"yikik 45 pencere 15 m","x":10.47,"z":-103.86,"y":15.13,"siluet":true},
+        {"ad":"ayakta 406 üst 11 m","x":12.87,"z":-91.93,"y":11.31,"siluet":true},
+        {"ad":"ayakta 406 pencere 8 m","x":11.82,"z":-83.39,"y":8.39,"siluet":true},
+        {"ad":"yikik 370 üst 12 m","x":11.83,"z":-77.97,"y":12.32,"siluet":true},
+        {"ad":"yikik 51 üst 14 m","x":12.51,"z":-56.09,"y":13.87,"siluet":true},
+        {"ad":"yikik 51 pencere 8 m","x":12.51,"z":-52.45,"y":7.84,"siluet":true},
+        {"ad":"yikik 51 üst 14 m","x":12.51,"z":-51.93,"y":13.79,"siluet":true},
+        {"ad":"yikik 69 üst 13 m","x":10.33,"z":-38.98,"y":12.76,"siluet":true},
+        {"ad":"yikik 69 pencere 8 m","x":10.33,"z":-26.89,"y":7.53,"siluet":true},
+        {"ad":"yikik 69 pencere 5 m","x":10.33,"z":-22.69,"y":4.62,"siluet":true},
+        {"ad":"ayakta 400 üst 12 m","x":22.04,"z":0.23,"y":12.38,"siluet":true},
+        {"ad":"ayakta 400 pencere 9 m","x":22.04,"z":13.28,"y":9.42,"siluet":true},
+        {"ad":"ayakta 400 pencere 4 m","x":22.04,"z":20.7,"y":4.12,"siluet":true}
       ],
       "sokak": {
         "asfalt": [
@@ -8595,7 +8542,8 @@
     },
     "us_bolgesi": {
       "_aciklama": "Üs bölgesi: sade görünümde 3B yapı yok (panorama); film görünümü us_bolgesi_film ekini bu boş plana ekler.",
-      "ogeler": []
+      "ogeler": [],
+      "dusmanMevzileri": []
     },
     "kirsal_acik_arazi": {
       "_aciklama": "Kırsal köy (9 Kasım): sol önde 75–120 m düz damlı taş evler ve yıkıntı, elektrik hattı; panoramanın yerleşim planı (≤ 38 m) aynen geçerli. Ön yüzler izleyiciye (yonDerece = -azimut).",
@@ -8648,6 +8596,21 @@
           "mesafe": 72,
           "yonDerece": 55
         }
+      ],
+      "dusmanMevzileri": [
+        {"ad":"koy yikinti 427 üst 2 m","x":-75.87,"z":-5.59,"y":1.81,"siluet":true},
+        {"ad":"koy yikinti 427 üst 2 m","x":-75.87,"z":-9.11,"y":1.74,"siluet":true},
+        {"ad":"koy evi 420 üst 3 m","x":-97.39,"z":-18.31,"y":3.28,"siluet":true},
+        {"ad":"koy evi 420 üst 3 m","x":-92.17,"z":-18.92,"y":2.84,"siluet":true},
+        {"ad":"koy evi 420 üst 2 m","x":-92.17,"z":-22.95,"y":1.92,"siluet":true},
+        {"ad":"koy evi 425 üst 5 m","x":-79.37,"z":-36.86,"y":4.68,"siluet":true},
+        {"ad":"koy evi 426 üst 2 m","x":-94.33,"z":-48.52,"y":2.1,"siluet":true},
+        {"ad":"koy evi 426 üst 3 m","x":-90.79,"z":-48.52,"y":2.88,"siluet":true},
+        {"ad":"koy evi 426 üst 3 m","x":-88.13,"z":-55.28,"y":2.76,"siluet":true},
+        {"ad":"koy evi 433 pencere 3 m","x":-95.52,"z":-71.37,"y":3.28,"siluet":true},
+        {"ad":"koy evi 433 üst 7 m","x":-91.28,"z":-72.09,"y":6.68,"siluet":true},
+        {"ad":"koy evi 349 üst 6 m","x":-68.57,"z":-62.12,"y":5.64,"siluet":true},
+        {"ad":"koy evi 349 pencere 3 m","x":-66.28,"z":-65.01,"y":3.08,"siluet":true}
       ]
     },
     "daglik": {
@@ -8665,6 +8628,12 @@
           "mesafe": 88,
           "yonDerece": 42
         }
+      ],
+      "dusmanMevzileri": [
+        {"ad":"koy yikinti 416 üst 2 m","x":-62.11,"z":-64.17,"y":1.84,"siluet":true},
+        {"ad":"koy yikinti 416 üst 2 m","x":-56.52,"z":-65.6,"y":1.86,"siluet":true},
+        {"ad":"koy evi 428 üst 1 m","x":32.06,"z":-67.67,"y":1.22,"siluet":true},
+        {"ad":"koy evi 428 üst 4 m","x":36.24,"z":-62.84,"y":4.32,"siluet":true}
       ]
     },
     "ormanlik": {
@@ -8672,7 +8641,8 @@
       "arkaPlanBolge": "daglik",
       "arazi": "hibrit",
       "araziYaricap": 110,
-      "ogeler": []
+      "ogeler": [],
+      "dusmanMevzileri": []
     }
   }
 }

@@ -20,6 +20,7 @@ import type { AracRotasi } from "./aracOlayi";
 import type { YikilabilirDuvar } from "./yikilanDuvar";
 import type { BayrakPlani } from "./bayrak";
 import type { DerePlani } from "./dere";
+import type { DusmanMevzisi } from "./dusman";
 import type { SokakPlani } from "./sokak";
 import type { YasakAralik, YerlesimNoktasi } from "./yerlesim";
 
@@ -58,10 +59,11 @@ export interface AlanPlani {
   noktalar?: YerlesimNoktasi[];
   yasak?: YasakAralik[];
   /**
-   * Düşman ateş mevzileri (sahne x/z, y zemin üstü m): pencere ve çatı ağızları, barikat arkası. Çatışma ve izli mermi
-   * düşman yönünün ±30°'sinde mevzi varsa uzak arazi yerine buradan ateş eder (catisma.ts).
+   * Düşman ateş mevzileri (sahne x/z, y zemin üstü m): pencere, çatı kenarı, kaya, yıkık duvar. Çatışma ve izli mermi
+   * düşman yönünün ±30°'sinde mevzi varsa uzak arazi yerine buradaki atıcıdan ateş eder; `siluet` mevzide silahlı
+   * figür görünür (dusman.ts; mevziler `araclar/oyun-testi/dusman-mevzi-bul.mjs` ile yapı geometrisinden çıkarılır).
    */
-  dusmanMevzileri?: Array<{ x: number; y: number; z: number; ad?: string }>;
+  dusmanMevzileri?: DusmanMevzisi[];
   /** Asfalt yol, bordürlü kaldırım, parke meydan, orta çizgi (sahne3b/sokak.ts). */
   sokak?: SokakPlani;
   /** Saçılmış küçük döküntü öbekleri (sahne3b/dokuntu.ts; film görünümü). */
@@ -532,8 +534,8 @@ export class AlanKatmani {
     return enAz;
   }
 
-  /** Planın düşman mevzileri, dünya koordinatında (y = zemin + mevzi yüksekliği). */
+  /** Planın düşman mevzilerinin ateş noktaları, dünya koordinatında (siluetli mevzide örtü çizgisinin 0,5 m üstü). */
   dusmanMevzileri(): THREE.Vector3[] {
-    return (this.aktifPlan?.dusmanMevzileri ?? []).map((m) => new THREE.Vector3(m.x, zeminY(m.x, m.z) + m.y, m.z));
+    return (this.aktifPlan?.dusmanMevzileri ?? []).map((m) => new THREE.Vector3(m.x, zeminY(m.x, m.z) + m.y + (m.siluet ? 0.5 : 0), m.z));
   }
 }

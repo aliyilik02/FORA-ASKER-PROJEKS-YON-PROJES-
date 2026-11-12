@@ -7,6 +7,7 @@ import type { SesManifesti } from "./ses";
 import type { Bolge, Mevsim } from "./tipler";
 import type { ZamanDilimi } from "./projeksiyon";
 import type { AlanPlani } from "./sahne3b/alan";
+import type { DusmanModeli } from "./sahne3b/dusman";
 
 /**
  * İçeriğin çekildiği zaman. Sahne yalnız gündüz/gece ister; alacakaranlık çekimleri seçilemez, yalnız eksik gece
@@ -59,6 +60,11 @@ export interface Manifest {
   sutreler?: Record<string, Array<{ dosya?: string; tip?: "model" | "hesco"; adet?: number; hucre?: [number, number]; azimut: number; mesafe: number; yonDerece?: number; boy?: number; renk?: string }>>;
   /** Bölge başına 3B yapı/araç dizilimi ve sokağa özel yerleşim planı (sahne3b/alan.ts). */
   alanlar?: Record<string, AlanPlani>;
+  /**
+   * Düşman atıcısının modeli (sahne3b/dusman.ts): `klip` bir model klibinin adı (dosyası, boyu ve tüfek soketi ondan),
+   * `ton` koyulaştırma rengi; `dosya`/`silahModeli` doğrudan da verilebilir.
+   */
+  dusman?: Partial<DusmanModeli> & { klip?: string };
   sesler?: SesManifesti;
 }
 

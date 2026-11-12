@@ -9,6 +9,8 @@
  *    ±90: kaynak komşu duvarın yönüne kayar, mermiler seçilen duvarın önünden yandan geçer).
  *  - Uzak kaynak sırt/tepe arkasında kalırsa kaynak sınırlı yükselir (yerden ≤ 12 m, o yöndeki arazi ufkunun ≤ 1,5°
  *    üstü; düşman ateşinde de): mermi gökten gelmez; doğru yine kapalıysa mermi yamaca çarpar.
+ *  - 3B alanda düşman mevzilerdeki atıcılardan ateş eder (pencere, çatı, kaya; dusman.ts): salvonun tamamı aynı
+ *    atıcıdan, atıcı aynı mevzide birkaç salvo kalır; dost ateşi ve zırhlı araç o atıcıya nişan alır.
  *  - Başın ~6 m yakınından geçen düşman mermisi bir kez ses hızı üstü "çat" sesi verir. İzli akışın çarpma/"çat"
  *    sesleri saniyede en çok ~1,5 (görüntü aynı).
  * İzler tek bir instanced kutu mesh'idir (katkı karışımı, parlak; baş beyazımsı, kuyruk sönük); yön hız
@@ -31,6 +33,22 @@ interface Iz {
   catladi: boolean;
   /** Klasik izli mermi akışından (ya da onun sekmesi): çarpma/"çat" sesi hız sınırına tabi. */
   izli: boolean;
+  /**
+   * Düşman mevzisine nişanlı dost mermisi: yapı kutusuna takılmaz (kutu cepheden 1–2 m öndedir, iz havada biterdi),
+   * ömrü hedefe varış süresidir ve bittiği yerde isabet tozu kalkar (uzakIsabet).
+   */
+  hedefli: boolean;
+}
+
+/** Mevzideki düşman atıcısı (sahne3b → DusmanKatmani.aticiIste; dusman.ts AticiYaniti ile aynı biçim). */
+export interface MevziAticisi {
+  /** Namlu ucu (dünya); çağıran kopyalar. */
+  konum: THREE.Vector3;
+  /** Atıcı doğruldu, ateş edebilir. */
+  hazir: boolean;
+  no: number;
+  /** Figür görünüyor: parıltı namlu boyunda, her atışta; telegraf figürün doğrulmasıdır. */
+  siluet: boolean;
 }
 
 /**
@@ -124,6 +142,7 @@ const _kaynak = new THREE.Vector3();
 const _hiz = new THREE.Vector3();
 const _sekmeKonum = new THREE.Vector3();
 const _sekmeHiz = new THREE.Vector3();
+const _hedef = new THREE.Vector3();
 const _gorunum = new THREE.Vector4();
 const KAPASITE = 320;
 const DUSMAN_RENK = new THREE.Color(1.0, 0.5, 0.18);
@@ -148,6 +167,8 @@ export class CatismaSistemi {
   private readonly ufuk = new AraziUfku();
   /** İzli akış ses jetonları (çarpma/"çat"; bkz. IZLI_SES_HIZI). */
   private izliSesJetonu = IZLI_SES_KOVASI;
+  /** Uzak isabet tozu jetonları (saniyede 6, birikim 4; uzakIsabet). */
+  private isabetJetonu = 4;
   /** Bir pikselin açısı (radyan); son karede çizilen duvarların en büyüğü. Uzak izin kalınlığı buna göre. */
   private pikselAcisi = VARSAYILAN_PIKSEL_ACISI;
   /** Bu karede çizilen duvarlardan ölçülen en büyük piksel açısı (0: henüz ölçülmedi); guncelle devralır. */
@@ -168,8 +189,19 @@ export class CatismaSistemi {
   private dostSalvolari = new Map<string, { kalan: number; seri: number }>();
   /** Ağır silahlar (tank): namlu ucu ve yönüyle. */
   agirSilahlar: () => AgirSilahKonumu[] = () => [];
-  /** 3B alanın düşman mevzileri (dünya konumu; pencere, çatı, barikat): varsa düşman ve izli mermi buradan ateş eder. */
-  mevziler: () => THREE.Vector3[] = () => [];
+  /**
+   * 3B alanın düşman mevzilerindeki atıcı (pencere, çatı, kaya; sahne3b → DusmanKatmani.aticiIste): yönün ±`aci`
+   * derecesinde mevzi varsa düşman ve izli mermi oradaki atıcıdan ateş eder. "sustu": mevzi var ama susturulmuş ya da
+   * baskı altında (ateş yok); null: o yönde mevzi yok (uzak arazi kaynağı). `taraf`: +1 sağ, −1 sol cephe, 0 hepsi.
+   * Salvo kanalında salvo başına bir kez, izli kanalında her mermide çağrılır.
+   */
+  aticiIste: ((azimut: number, aci: number, taraf: number, kanal: "salvo" | "izli", yogunluk: number) => MevziAticisi | "sustu" | null) | null = null;
+  /** Atıcı ateş etti (figür parlar, geri teper). false: atıcı artık ateş edemiyor (susturuldu): salvo kesilir. */
+  aticiAtisOldu: ((no: number) => boolean) | null = null;
+  /** Dost ateşinin nişan alacağı düşman atıcısı (namlu ucu, dünya); yoksa null: eski genel düşman yönü. */
+  dostHedefi: (() => THREE.Vector3 | null) | null = null;
+  /** Dost ateşi düşman atıcısının üstüne düştü: atıcı birkaç saniye başını kaldıramaz (sahne3b → DusmanKatmani.baskila). */
+  dusmanBaskisi: ((p: THREE.Vector3) => void) | null = null;
   /** Mermi izi parçasının ilk çarptığı alan yapısının parametresi (0–1) ya da -1 (sahne3b → AlanKatmani.kesisim). */
   engelKesisimi: ((x0: number, y0: number, z0: number, x1: number, y1: number, z1: number) => number) | null = null;
   /** Son düşman kaynağı bir alan mevzisi mi: yükseklik ve sırt düzeltmesi uygulanmaz (pencereden ateş eder). */
@@ -230,16 +262,17 @@ export class CatismaSistemi {
     this.izli = a;
   }
 
-  private izEkle(p: THREE.Vector3, v: THREE.Vector3, dost: boolean, sekti = false, izli = false) {
-    const iz = this.havuz.pop() ?? { p: new THREE.Vector3(), v: new THREE.Vector3(), kalan: 0, renk: DUSMAN_RENK, dost: false, sekti: false, catladi: false, izli: false };
+  private izEkle(p: THREE.Vector3, v: THREE.Vector3, dost: boolean, sekti = false, izli = false, hedefeSure = 0) {
+    const iz = this.havuz.pop() ?? { p: new THREE.Vector3(), v: new THREE.Vector3(), kalan: 0, renk: DUSMAN_RENK, dost: false, sekti: false, catladi: false, izli: false, hedefli: false };
     iz.p.copy(p);
     iz.v.copy(v);
-    iz.kalan = 3;
+    iz.kalan = hedefeSure > 0 ? hedefeSure : 3;
     iz.renk = dost ? DOST_RENK : DUSMAN_RENK;
     iz.dost = dost;
     iz.sekti = sekti;
     iz.catladi = false;
     iz.izli = izli;
+    iz.hedefli = hedefeSure > 0;
     this.eklenecek.push(iz);
   }
 
@@ -260,13 +293,8 @@ export class CatismaSistemi {
     this.eklenecek.length = 0;
   }
 
-  /** Düşman tarafından bir atış: uzak kaynaktan hedefe doğru. */
-  /** Düşman ateş kaynağı: seçilen yönün ±10°'sinde, 150–260 m'de, zeminin 0,8–4 m üstünde. */
-  private dusmanKaynagi(kaynakAzimut: number): THREE.Vector3 {
-    // 3B alan (meskûn mahal): uzak arazi kaynağı caddenin sonundaki binaların arkasında kalırdı; pencere/çatı mevzisi
-    const mevzi = this.mevziSec(kaynakAzimut, 30);
-    this.kaynakMevzi = Boolean(mevzi);
-    if (mevzi) return mevzi;
+  /** Uzak arazi kaynağı: seçilen yönün ±10°'sinde, 150–260 m'de, zeminin 0,8–4 m üstünde. */
+  private uzakKaynak(kaynakAzimut: number): THREE.Vector3 {
     const kaynakYon = azimutYon(kaynakAzimut + rnd(-10, 10));
     const kaynak = kaynakYon.clone().multiplyScalar(rnd(150, 260));
     kaynak.y = Math.max(ZEMIN_Y, zeminY(kaynak.x, kaynak.z)) + rnd(0.8, 4);
@@ -274,26 +302,83 @@ export class CatismaSistemi {
   }
 
   /**
-   * Yönün `aci` derece içindeki alan mevzilerinden biri (izleyiciden ≥ 15 m), küçük titremeyle; yoksa null.
-   * `taraf` verilirse yalnız o yandakiler (+1 sağ cephe, -1 sol cephe; çaprazlama izli mermi).
+   * Salvonun kaynağı (salvo başına bir kez). 3B alanda (meskûn mahal) uzak arazi kaynağı caddenin sonundaki binaların
+   * arkasında kalırdı: yönün ±30°'sinde mevzi varsa salvonun tamamı oradaki atıcıdan çıkar (`salvoAtici`; atıcı aynı
+   * mevzide birkaç salvo kalır, dusman.ts). Mevzi yoksa uzak arazi. null: mevziler susturulmuş, salvo atılmaz.
    */
-  private mevziSec(azimut: number, aci: number, taraf = 0): THREE.Vector3 | null {
-    const adaylar = this.mevziler().filter((m) => {
-      if (Math.hypot(m.x, m.z) < 15) return false;
-      if (taraf && Math.sign(m.x) !== taraf) return false;
-      const fark = ((((konumAzimutu(m) - azimut) % 360) + 540) % 360) - 180;
-      return Math.abs(fark) <= aci;
-    });
-    if (!adaylar.length) return null;
-    const m = adaylar[Math.floor(rastgele() * adaylar.length)];
-    return m.clone().add(_yakin.set(rnd(-0.4, 0.4), rnd(-0.3, 0.3), rnd(-0.4, 0.4)));
+  private dusmanKaynagi(kaynakAzimut: number): THREE.Vector3 | null {
+    const a = this.aticiIste?.(kaynakAzimut, 30, 0, "salvo", this.ayar.siddet) ?? null;
+    this.salvoAtici = null;
+    this.kaynakMevzi = a !== null;
+    if (a === "sustu") return null;
+    if (a) {
+      this.salvoAtici = { no: a.no, siluet: a.siluet, konum: a.konum.clone() };
+      return this.mevziNamlusu(this.salvoAtici);
+    }
+    return this.uzakKaynak(kaynakAzimut);
   }
 
-  /** Salvo telegrafında belirlenen kaynak: ilk iz oradan çıkar (parıltıyla aynı yer). */
+  /** Atıcının bu atıştaki namlu ucu: siluetli atıcıda sabit (figürün tüfeği), eski mevzide küçük titremeyle. */
+  private mevziNamlusu(a: { siluet: boolean; konum: THREE.Vector3 }): THREE.Vector3 {
+    const k = a.konum.clone();
+    return a.siluet ? k : k.add(_yakin.set(rnd(-0.4, 0.4), rnd(-0.3, 0.3), rnd(-0.4, 0.4)));
+  }
+
+  /**
+   * Siluetli atıcının namlu parıltısı ve sesi: parıltı namlu boyunda (25 m'de ~0,6 m, 90 m'de ~1,2 m; eski mevzi
+   * parıltısı 1,5–2,5 m'ydi, figürü örterdi), her atışta; ses mesafe gecikmesiyle (`ilk` her zaman, sonrakiler %35).
+   */
+  private aticiParlamasi(kaynak: THREE.Vector3, ilk: boolean) {
+    const mesafe = Math.hypot(kaynak.x, kaynak.z);
+    this.parcaciklar.parlama(kaynak, Math.max(0.5, Math.min(1.6, 0.35 + mesafe * 0.009)) * rnd(0.85, 1.2), true);
+    if (ilk || rastgele() < 0.35) this.sesler.atis(sesAzimutu(kaynak), true, mesafe);
+    // Namlu dumanı: salvodan sonra mevzinin önünde 1–2 sn asılı kalan açık gri bulut (ateşin geldiği yer parıltı
+    // söndükten sonra da okunur); atışların üçte birinde tek topak
+    if (rastgele() < 0.33) {
+      const olcek = Math.max(0.7, Math.min(2.2, mesafe / 35));
+      this.parcaciklar.duman.ekle({
+        x: kaynak.x,
+        y: kaynak.y,
+        z: kaynak.z,
+        vx: (-kaynak.x / mesafe) * rnd(0.3, 0.9),
+        vy: rnd(0.25, 0.6),
+        vz: (-kaynak.z / mesafe) * rnd(0.3, 0.9),
+        boyut: rnd(0.2, 0.32) * olcek,
+        buyume: rnd(0.35, 0.6) * olcek,
+        alfa: rnd(0.16, 0.28),
+        aci: rnd(0, 6.28),
+        donus: rnd(-0.8, 0.8),
+        t: 0,
+        sure: rnd(1.1, 2.1),
+        renk: [0.78, 0.77, 0.74],
+        yercekimi: 0,
+        surtunme: 1.4,
+        engelsiz: true,
+      });
+    }
+  }
+
+  /** Salvo telegrafında belirlenen uzak kaynak: ilk iz oradan çıkar (parıltıyla aynı yer). */
   private salvoKaynak: THREE.Vector3 | null = null;
+  /** Salvoyu atan mevzi atıcısı (salvo boyunca aynı); null: uzak arazi kaynağı. */
+  private salvoAtici: { no: number; siluet: boolean; konum: THREE.Vector3 } | null = null;
+  private salvoIlkAtis = false;
 
   private dusmanAtis(kaynakAzimut: number, hedefAzimutYayilim: number) {
-    const kaynak = this.salvoKaynak ?? this.dusmanKaynagi(kaynakAzimut);
+    const atici = this.salvoAtici;
+    let kaynak: THREE.Vector3;
+    if (atici) {
+      // Atıcı susturulduysa (patlama, baskı ateşi) salvo yarıda kesilir
+      if (this.aticiAtisOldu && !this.aticiAtisOldu(atici.no)) {
+        this.dusmanSalvoKalan = 0;
+        return;
+      }
+      kaynak = this.mevziNamlusu(atici);
+      this.kaynakMevzi = true;
+    } else {
+      kaynak = this.salvoKaynak ?? this.uzakKaynak(kaynakAzimut);
+      this.kaynakMevzi = false;
+    }
     this.salvoKaynak = null;
     // Hedef: dost figürlerin yakını (%50, figür varsa), izleyici önündeki zemin; %15'i üstten/yandan geçer
     const dostlar = this.dostlar();
@@ -324,6 +409,11 @@ export class CatismaSistemi {
     }
     const v = hedef.clone().sub(kaynak).normalize().multiplyScalar(rnd(140, 190));
     this.izEkle(kaynak, v, false);
+    if (atici?.siluet) {
+      this.aticiParlamasi(kaynak, this.salvoIlkAtis);
+      this.salvoIlkAtis = false;
+      return;
+    }
     // Düşman hattında namlu parıltısı (uzak, kısa) ve uzak atış sesi
     if (rastgele() < 0.6) this.parcaciklar.parlama(kaynak, rnd(1.5, 2.5));
     if (rastgele() < 0.35) this.sesler.atis(sesAzimutu(kaynak), true, Math.hypot(kaynak.x, kaynak.z));
@@ -424,10 +514,14 @@ export class CatismaSistemi {
    * duvarın ±45°'sinde. Uygun mevzi yoksa false: klasik uzak akış.
    */
   private izliMevziAtis(kaynakAzimut: number, yon: number): boolean {
-    if (!this.mevziler().length) return false;
+    if (!this.aticiIste) return false;
     const duz = Math.abs(yon) < 20;
-    const kaynak = duz ? this.mevziSec(kaynakAzimut, 30) : this.mevziSec(kaynakAzimut, 45, Math.sign(yon));
-    if (!kaynak) return false;
+    const a = this.aticiIste(kaynakAzimut, duz ? 30 : 45, duz ? 0 : Math.sign(yon), "izli", this.izli.siklik);
+    if (!a) return false;
+    // Makineli susturulmuş, baskı altında ya da henüz doğruluyor: bu mermi atılmaz (akışta doğal boşluk)
+    if (a === "sustu" || !a.hazir) return true;
+    if (this.aticiAtisOldu && !this.aticiAtisOldu(a.no)) return true;
+    const kaynak = this.mevziNamlusu(a);
     const hedef = new THREE.Vector3();
     if (duz) {
       const dostlar = this.dostlar();
@@ -458,8 +552,11 @@ export class CatismaSistemi {
     _hiz.multiplyScalar(hiz / mesafe);
     _hiz.y += 0.5 * IZ_DUSUSU * (mesafe / hiz);
     this.izEkle(kaynak, _hiz, false, false, true);
-    if (rastgele() < 0.6) this.parcaciklar.parlama(kaynak, rnd(1.5, 2.5));
-    if (rastgele() < 0.35) this.sesler.atis(sesAzimutu(kaynak), true, Math.hypot(kaynak.x, kaynak.z));
+    if (a.siluet) this.aticiParlamasi(kaynak, false);
+    else {
+      if (rastgele() < 0.6) this.parcaciklar.parlama(kaynak, rnd(1.5, 2.5));
+      if (rastgele() < 0.35) this.sesler.atis(sesAzimutu(kaynak), true, Math.hypot(kaynak.x, kaynak.z));
+    }
     return true;
   }
 
@@ -486,22 +583,83 @@ export class CatismaSistemi {
       namlu.addScaledVector(dusman, 0.6);
     }
     this.parcaciklar.parlama(namlu, 0.45);
+    this.sesler.atis(sesAzimutu(konum), false);
+    // Mevzi tutan düşman atıcısı varsa (ve askerin baktığı yönün ±28°'sindeyse) ona nişan alınır: izler o pencerede
+    // toplanır, isabet tozu kalkar, ara sıra atıcıyı sindirir. Yoksa eski genel düşman yönü.
+    const atici = this.dostHedefi?.() ?? null;
+    if (atici) {
+      const fark = ((((derece(Math.atan2(atici.x - namlu.x, -(atici.z - namlu.z))) - this.ayar.azimut) % 360) + 540) % 360) - 180;
+      if (Math.abs(fark) <= 28) {
+        this.hedefliAtis(namlu, atici, 1.3, rnd(160, 200), false);
+        if (rastgele() < 0.05) this.dusmanBaskisi?.(atici);
+        return;
+      }
+    }
     const hedef = dusman.clone().multiplyScalar(rnd(160, 240));
     hedef.y = ZEMIN_Y + rnd(0, 3);
     const v = hedef.sub(namlu).normalize().multiplyScalar(rnd(160, 200));
     this.izEkle(namlu, v, true);
-    this.sesler.atis(sesAzimutu(konum), false);
+  }
+
+  /**
+   * Bilinen bir noktaya (düşman atıcısı) nişanlı dost izi: `yayilim` metre dağılımla, hedefe varınca biter ve isabet
+   * tozu kalkar. Yapı kutusu denetimi atlanır (bkz. Iz.hedefli).
+   */
+  private hedefliAtis(namlu: THREE.Vector3, hedef: THREE.Vector3, yayilim: number, hiz: number, izli: boolean) {
+    const h = _hedef.set(hedef.x + rnd(-yayilim, yayilim), hedef.y + rnd(-yayilim * 0.7, yayilim * 0.7), hedef.z + rnd(-yayilim, yayilim));
+    _hiz.copy(h).sub(namlu);
+    const mesafe = _hiz.length();
+    if (mesafe < 1) return;
+    _hiz.multiplyScalar(hiz / mesafe);
+    // Hafif düşüş önceden karşılanır (sekmemiş iz 0,15 g): iz hedef noktasında biter
+    _hiz.y += 0.5 * IZ_DUSUSU * (mesafe / hiz);
+    this.izEkle(namlu, _hiz, true, false, izli, mesafe / hiz);
   }
 
   /** Araç üstü silah (zırhlı araç olayı): namludan `hedef`e (yoksa düşman yönüne) izli atış, namlu alevi, ses. */
   aracAtisi(namlu: THREE.Vector3, konum: THREE.Vector3, hedef?: THREE.Vector3) {
     this.parcaciklar.parlama(namlu, 0.7);
-    const h = hedef
-      ? hedef.clone().add(new THREE.Vector3(rnd(-0.9, 0.9), rnd(-0.7, 0.7), rnd(-0.9, 0.9)))
-      : azimutYon(this.ayar.azimut + rnd(-8, 8)).multiplyScalar(rnd(160, 240)).setY(ZEMIN_Y + rnd(0, 4));
+    this.sesler.atis(sesAzimutu(konum), false);
+    if (hedef) {
+      this.hedefliAtis(namlu, hedef, 0.9, rnd(170, 210), true);
+      return;
+    }
+    const h = azimutYon(this.ayar.azimut + rnd(-8, 8)).multiplyScalar(rnd(160, 240)).setY(ZEMIN_Y + rnd(0, 4));
     const v = h.sub(namlu).normalize().multiplyScalar(rnd(170, 210));
     this.izEkle(namlu.clone(), v, true, false, true);
-    this.sesler.atis(sesAzimutu(konum), false);
+  }
+
+  /**
+   * Uzaktaki yapıya (düşman mevzisine) isabet: küçük toz/sıva bulutu, saniyede en çok ~6 (jeton). Yakın çarpmanın
+   * (`carpma`) kıvılcımı ve sesi yok: 25–100 m'den yalnız toz seçilir.
+   */
+  private uzakIsabet(p: THREE.Vector3) {
+    if (this.isabetJetonu < 1) return;
+    this.isabetJetonu -= 1;
+    const mesafe = p.length();
+    const olcek = Math.max(0.6, Math.min(2.2, mesafe / 35));
+    for (let i = 0; i < 2; i++) {
+      this.parcaciklar.duman.ekle({
+        x: p.x + rnd(-0.15, 0.15),
+        y: p.y + rnd(-0.1, 0.1),
+        z: p.z + rnd(-0.15, 0.15),
+        // Toz izleyiciye doğru (cepheden dışarı) ve hafif yukarı savrulur
+        vx: (-p.x / mesafe) * rnd(0.4, 1.4) + rnd(-0.3, 0.3),
+        vy: rnd(0.2, 0.9),
+        vz: (-p.z / mesafe) * rnd(0.4, 1.4) + rnd(-0.3, 0.3),
+        boyut: rnd(0.3, 0.5) * olcek,
+        buyume: rnd(0.7, 1.2) * olcek,
+        alfa: rnd(0.3, 0.5),
+        aci: rnd(0, 6.28),
+        donus: rnd(-1, 1),
+        t: 0,
+        sure: rnd(0.7, 1.4),
+        renk: [0.68, 0.64, 0.58],
+        yercekimi: 0.25,
+        surtunme: 1.6,
+        engelsiz: true,
+      });
+    }
   }
 
   /** Tank top atışı: büyük parlama + namlu dumanı + hızlı parlak mermi; düşman hattında patlama ile biter. */
@@ -581,6 +739,7 @@ export class CatismaSistemi {
   guncelle(dt: number) {
     this.ufuk.ilerlet(dt);
     this.izliSesJetonu = Math.min(IZLI_SES_KOVASI, this.izliSesJetonu + dt * IZLI_SES_HIZI);
+    this.isabetJetonu = Math.min(4, this.isabetJetonu + dt * 6);
     // --- Düşman ateşi: çatışma salvoları ---
     if (this.ayar.aktif && this.ayar.siddet > 0.02) {
       const s = this.ayar.siddet;
@@ -607,10 +766,20 @@ export class CatismaSistemi {
           // Telegraf (C-18): salvo kaynağı önce belirlenir, namlu parıltısı hemen görünür, ilk iz 0,25–0,45 sn sonra çıkar,
           // atış sesi mesafe gecikmesiyle gelir (crack–thump) → ışık → iz → ses sırası; eğitmen "önce parıltıyı gör" öğretir
           const kaynak = this.dusmanKaynagi(this.ayar.azimut);
-          this.salvoKaynak = kaynak;
-          this.parcaciklar.parlama(kaynak, rnd(2.8, 3.8));
-          this.sesler.atis(sesAzimutu(kaynak), true, Math.hypot(kaynak.x, kaynak.z));
-          this.dusmanAtisSayac = rnd(0.25, 0.45);
+          this.salvoIlkAtis = true;
+          if (!kaynak) {
+            // Yöndeki mevziler susturulmuş (patlama) ya da baskı altında: bu salvo atılmaz
+            this.dusmanSalvoKalan = 0;
+          } else if (this.salvoAtici?.siluet) {
+            // Siluetli atıcı: telegraf figürün doğrulmasıdır (0,3 sn); parıltı ve ses ilk mermiyle birlikte namludan
+            this.salvoKaynak = null;
+            this.dusmanAtisSayac = rnd(0.42, 0.6);
+          } else {
+            this.salvoKaynak = kaynak;
+            this.parcaciklar.parlama(kaynak, rnd(2.8, 3.8));
+            this.sesler.atis(sesAzimutu(kaynak), true, Math.hypot(kaynak.x, kaynak.z));
+            this.dusmanAtisSayac = rnd(0.25, 0.45);
+          }
         }
       }
       // --- Tank top atışları (7–16 sn arayla, şiddete göre) ---
@@ -698,6 +867,16 @@ export class CatismaSistemi {
         this.havuz.push(iz);
         continue;
       }
+      // Düşman mevzisine nişanlı dost izi: hedefe varınca biter, isabet tozu kalkar
+      if (iz.hedefli) {
+        iz.p.y = yeniY;
+        if (iz.kalan > 0) izler[canli++] = iz;
+        else {
+          this.uzakIsabet(iz.p);
+          this.havuz.push(iz);
+        }
+        continue;
+      }
       // 3B alan yapısına (bina, araç, bariyer) çarpma: iz o noktada biter, yakınsa toz/kıvılcım (carpma)
       if (this.engelKesisimi) {
         const t = this.engelKesisimi(x0, y0, z0, iz.p.x, yeniY, iz.p.z);
@@ -755,6 +934,8 @@ export class CatismaSistemi {
     this.dusmanSalvoKalan = 0;
     this.dusmanSalvoSayac = 0;
     this.dusmanAtisSayac = 0;
+    this.salvoAtici = null;
+    this.salvoKaynak = null;
     this.uzakPatlamaSayac = 20;
     this.dostSayaclar.clear();
     this.dostSalvolari.clear();

@@ -432,10 +432,25 @@ düzende denetlenmedi. Dağlıkta da var (`daglik_film`: kum torbası mevzi, cep
 sırtta gözetleme kulesi ve dalgalanan Türk bayrağı `bayrak.ts`); kışta alan modelleri karlanır (`alan.ts karEkle`: yukarı bakan yüzeyler); dağ mevzi noktaları `daglik_film.noktalar`; senaryolar `sn_film_gorunumu`, `sn_film_dag_mevzii`, `sn_film_dereli_orman`. Ormanlıkta da var (`ormanlik_film`: dere `dere.ts`, kaya taramaları, yıkık duvar, variller, mevzi; 3840×720 GTX 1650 25–28 fps, en ağır bölge). Beş bölgenin hepsinde film eki var (`kirsal_acik_arazi_film`, `us_bolgesi_film`: ortak kum torbası yayı + noktalar, yıkılabilir duvar, Kirpi rotası; üs için boş temel plan). **Tuzaklar:** Sketchfab taramaları ışıksız (KHR_materials_unlit) gelebilir, `alan.ts isikliYap` çevirir; yerleşim noktası alan öğesinin izine 0,6 m'den yakınsa figür başka noktaya düşer (`film-kis.mjs` ile ölç); parlak çıkan taramada öğeye `mat`. Kirpi ve yıkılan duvar da karlanır, döküntü kışta gizlenir; `goruntu-al.mjs` varsayılanı film. Yıkılan duvar Poly Haven tuğla
 dokulu. Görüntü/test **ayrı köprüde** (`--kopru http://127.0.0.1:4100`), kullanıcının sahnesini değiştirme. Meshy üretimi için önce sor.
 
+**Düşman silueti (12 Kasım):** mevzilerde silahlı figür görünür (`sahne3b/dusman.ts` + saf hesap `dusmanYerlesimi.ts`):
+atıcı örtü çizgisinin (denizlik, çatı kenarı, kaya tepesi) arkasından 0,3 sn'de doğrulur, salvo atar (namlu parıltısı figürü
+aydınlatır, iz tüfekten çıkar), çöker; çizginin altı kesme düzlemiyle hiç çizilmez. Şiddete göre 2–4 atıcı birer mevziyi
+3–6 salvo tutar, sonra yer değiştirir; izli akışı 1–2 makineli besler. Patlama yakındaki mevziyi 25–45 sn susturur, dost
+ateşi ve Kirpi atıcıya nişan alır. Model kendi askerimizin koyu + soluk kopyası (manifest `dusman: {klip, ton}`; ayrı düşman
+modeli yok). **Mevziler elle yazılmaz:** `araclar/oyun-testi/dusman-mevzi-bul.mjs <bolge>` yapı geometrisini ışınlarla tarar
+(pencere boşluğu, çatı kenarı; figür binanın **içinde**), görüşü doğrular → `dusman-siluet.mjs --mevziler` ile gözle bak →
+`dusman-mevzi-yaz.mjs` manifeste yazar (`{ad,x,z,y,siluet:true}`, `y` = örtü çizgisi). **Alan planı değişince o bölgede
+bulucuyu yeniden koş.** Plan mevzisi olmayan yönde 3B araziden sırt gerisi (40–140 m) ve açık arazi (55–95 m) mevzileri
+hesaplanır. `?dusman=kapali` yalnız parıltı. Tuzaklar: yapı kutusu duvarın 1–4 m önünde (parçacık itmesi için
+`Parcacik.engelsiz`); kesme düzlemli program ancak gerçek çizimde derlenir (figür ısınması); `compile` yetmez. Test
+`dusman-siluet.mjs` (`--catisma`, `--an` kare kare: `cekirdek.mjs baslat({saat:true})`). Bu işte bulunan hata: çatışma
+sesinde mesafe gecikmesi hiç uygulanmıyordu (sahne3b sarmalayıcısı `mesafe`yi düşürüyordu), düzeltildi. Duvarda gözle
+bakılmadı. Ayrıntı `docs/duvar-oynatici.md` "Düşman silueti".
+
 **Amaç ve sonraki oturum (10 Kasım kapanış):** duvar, odada **gerçek mankenlerle** oynanan vakanın arkasına ortam ve tehdit
 hissi verir (eğitimin kendisi değil); öneri ve öncelikler buna göre. Kullanıcı sesleri ekleyecek, sonra birlikte test.
-Ardından sıra: (1) düşman silueti (pencere/çatı, namlu parıltısıyla), (2) tehdit baskısı (yakın mermi tozu, havan ıslığında
-siper alma), (3) figür durum makinesi + klip ölçümünün içerik hattına alınması + tek yürünebilir zemin (askerler derinlemesine
+Ardından sıra: (1) düşman silueti (pencere/çatı, namlu parıltısıyla) — **12 Kasım'da yapıldı**, (2) tehdit baskısı (yakın
+mermi tozu, havan ıslığında siper alma), (3) figür durum makinesi + klip ölçümünün içerik hattına alınması + tek yürünebilir zemin (askerler derinlemesine
 hareket etsin), (4) duvarda yaralıyı sipere sürükleme. Sahne gerçeğini köprüye taşıma şimdilik yapılmayacak (kazancı düşük).
 
 ## Sıradaki işler (öncelik sırasıyla)

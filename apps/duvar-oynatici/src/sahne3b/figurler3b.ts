@@ -719,6 +719,11 @@ export class FigurKatmani {
     return p;
   }
 
+  /** Önbellekli model (düşman katmanı aynı GLB'yi paylaşır: bir kez iner, dokuları bir kez yüklenir). */
+  modelYukle(url: string): Promise<GLTF> {
+    return this.yukle(url);
+  }
+
   /** Modeli önceden yükle (manifest okununca çağrılır; ilk gösterim gecikmesin). */
   onYukle(url: string) {
     void this.yukle(url).catch(() => undefined);

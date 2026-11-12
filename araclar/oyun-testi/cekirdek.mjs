@@ -8,7 +8,7 @@ import { chromium } from "playwright";
 
 export const bekle = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export async function baslat({ kopru = process.env.KOPRU ?? "http://127.0.0.1:4000", genislik = 3840, kalite = "yuksek", cikti = "araclar/_goruntu/oyun", sorgu = {}, goster = false } = {}) {
+export async function baslat({ kopru = process.env.KOPRU ?? "http://127.0.0.1:4000", genislik = 3840, kalite = "yuksek", cikti = "araclar/_goruntu/oyun", sorgu = {}, goster = false, saat = false } = {}) {
   const yukseklik = Math.round((genislik * 9) / 48);
   const klasor = path.resolve(cikti);
   fs.mkdirSync(klasor, { recursive: true });
@@ -30,6 +30,9 @@ export async function baslat({ kopru = process.env.KOPRU ?? "http://127.0.0.1:40
   sayfa.on("console", (m) => {
     if (m.type() === "error" || (m.type() === "warning" && !/X4122|Program Info Log/.test(m.text()))) ekle(`${m.type()} ${m.text().slice(0, 300)}`);
   });
+  // saat: sayfanın saati Playwright denetiminde (sayfa.clock): sahne hazır olana dek gerçek hızda akar, sonra test
+  // pauseAt / runFor ile kare kare ilerletip anlık olayları (namlu parıltısı, 80 ms) tam karesinde çekebilir
+  if (saat) await sayfa.clock.install();
   const s = new URLSearchParams({ dinamik: "0", tohum: "7", kalite, hud: "0", gecis: "0", ...sorgu });
   await sayfa.goto(`${kopru}/oynatici/?${s}`);
 

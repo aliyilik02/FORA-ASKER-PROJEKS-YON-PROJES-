@@ -954,10 +954,11 @@ inşaat, düz damlı köy evi, 90'lar sedanı, dolmuş; Amerikan banliyö evi, o
 - **Patlama/yangın** plan noktasına yapışır; `patlamaYeri` artık alan nesnesinin 2 m, sütrenin 1 m yakınını dolu sayar;
   krater en yakın alan nesnesine kadar küçülür (araç/bariyer havada kalmasın). **Toz** nesne içine düşerse izleyiciye kayar.
   Patlama/toz noktaları açık cadde ve meydanlarda, nesnelerden ≥ 2,5 m.
-- **Düşman ateşi:** manifest `dusmanMevzileri` (25: cephelerin 0,5 m önünde pencere/çatı yükseklikleri, kule, otobüs
-  barikatı, yan duvar binaları). Çatışmada düşman yönünün ±30°'sinde mevzi varsa kaynak odur (yükseklik/sırt düzeltmesi
-  yok); izli mermide düz akış mevziden izleyiciye, yan akış (yön ±) caddenin o yanındaki cepheden karşı kaldırıma
-  çaprazlar. Mevzi yoksa eski uzak arazi kaynağı. Uzak kaynak kulenin arkasında kalıyor, izler kuleden çıkıyordu.
+- **Düşman ateşi:** manifest `dusmanMevzileri`. Çatışmada düşman yönünün ±30°'sinde mevzi varsa kaynak oradaki
+  atıcıdır (yükseklik/sırt düzeltmesi yok); izli mermide düz akış mevziden izleyiciye, yan akış (yön ±) caddenin o
+  yanındaki cepheden karşı kaldırıma çaprazlar. Mevzi yoksa eski uzak arazi kaynağı. **12 Kasım:** mevziler yapı
+  geometrisinden yeniden çıkarıldı (32 mevzi, figür binanın içinde), mevzide silahlı figür görünür, atıcı aynı mevzide
+  kalır; bkz. "Düşman silueti".
 - **Mermi izi çarpması:** her iz karesinde parça alan kutularına bakılır (`AlanKatmani.kesisim`; direk/lamba ve çatı eşyası
   hariç, izin başladığı kutu yok sayılır): bina, araç ya da bariyere çarpınca orada biter, yakınsa toz/kıvılcım.
 - **Denetim:** `node araclar/alan-plan-denetle.mjs meskun_mahal [--json çıktı]` noktaları GLB'lerin gerçek taban izlerine
@@ -1142,3 +1143,91 @@ bellek 4–6 kat az) — `toktx` gerektirir, yapılmadı.
 **Pişirme hattı düzeltmeleri** (`model-pisir.py`, ileride kullanılırsa): sadeleştirmeden sonra açı sınırlı yumuşak
 gölge (`--aci`, varsayılan 40°; ağaçlardaki "kristal" düz gölgenin kaynağıydı), `--voksel-yok` (bina/araçta hacimden
 yeniden ağ kenarları eritir); `alan-modelleri-hazirla.mjs` yapılandırmada `vokselYok`, `aci`.
+
+## Düşman silueti: mevzilerde görünen atıcılar (12 Kasım 2026)
+
+Amaç tehdidin **yerini** göstermek: kursiyer ateşin hangi pencereden, hangi çatıdan geldiğini görür; eğitmen "saat 11,
+çatı" diyebilir. Önceden mevziden yalnız namlu parıltısı çıkıyor, her salvo (izli akışta her mermi) başka bir mevziden
+geliyordu.
+
+- **Kod:** `sahne3b/dusman.ts` (`DusmanKatmani`: figür havuzu, doğrulma/çökme, parıltı), `sahne3b/dusmanYerlesimi.ts`
+  (saf hesap: mevzi seçimi, sırt gerisi ve açık arazi mevzileri), `catisma.ts` (salvo ve izli akış atıcıdan çıkar),
+  `sahne3b.ts` (bağlantı). Testler `dusmanYerlesimi.test.ts`, `catismaMevzi.test.ts`.
+- **Mevzi biçimi** (manifest `alanlar.<bolge>[_film].dusmanMevzileri`): `{ad, x, z, y, siluet: true}`. `x`/`z` figürün
+  durduğu yer (binanın **içi**: pencere boşluğunun ya da çatı kenarının arkası; kaya tepesinin gerisi), `y` **örtü
+  çizgisinin** zemin üstü yüksekliği (izleyicinin göz hattının o noktada yapıya takıldığı yer: denizlik, çatı kenarı,
+  kaya tepesi). Figür çizginin altında saklanır, ateş için doğrulur: namlu çizginin 0,5 m, baş ~0,85 m üstünde (göğüs
+  üstü görünür). Çizginin altı hiç çizilmez (malzemede kesme düzlemi, `renderer.localClippingEnabled`): bacaklar alt
+  kat penceresinden ya da çatı altından görünmez, çökünce figür tümüyle kaybolur. `siluet` olmayan eski biçim
+  (`y` = ateş noktası) yalnız parıltı verir.
+- **Model:** manifest `dusman: {klip, ton}`. Ayrı düşman modeli yok: kendi askerimizin (`komando_bere_nisan`: iskelet,
+  "Rifle Aiming Idle", elde tüfek) kopyası koyulaştırılır (`ton` dokuyla çarpılır) ve gölgelendiricide soldurulur
+  (doygunluğun %30'u): kamuflaj deseni ve bordo bere seçilmez, koyu giysili silahlı biri kalır. GLB figür katmanının
+  önbelleğinden gelir (`FigurKatmani.modelYukle`: bir kez iner). Gölge düşürmez, gölge alır. Kalçadan öne eğilir
+  (yukarıdaki atıcı caddeye nişan alır). Namlu ucu ilk figürde tüfeğin ucundan ölçülür; iz ve parıltı oradan çıkar.
+- **Döngü:** salvo istenince figür 0,3 sn'de doğrulur (telegraf), ilk mermi 0,42–0,6 sn sonra çıkar; her atışta namlu
+  parıltısı (boyu mesafeye göre 0,5–1,6 m; eski 1,5–2,5 m'lik parıltı figürü örterdi), figür kendi dokusuyla 70 ms
+  aydınlanır (gece siluet yalnız o anda seçilir), hafif geri teper; üçte bir atışta namlu dumanı 1–2 sn asılı kalır.
+  Son atıştan 0,5–0,75 sn sonra çöker. Salvonun bütün mermileri aynı atıcıdan çıkar.
+- **Kalıcılık:** şiddete göre 2–4 atıcı (`aticiSayisi`) birer mevzi tutar, sırayla ateş eder, 3–6 salvodan sonra başka
+  mevziye geçer (dolu mevzilerden açıca ayrık ve yakın olan hafif öncelikli, az önce bırakılan seçilmez). İzli mermi
+  akışını 1 makineli (saniyede 4,5 mermiden çoksa 2) besler: 14–26 sn aynı mevzide, akış sürdükçe ayakta; yer
+  değiştirirken ~0,6 sn boşluk. Aynı anda en çok 6 figür (havuz).
+- **Geri bildirim:** eğitmenin patlaması yatay 7–12 m içindeki mevzileri 25–45 sn susturur (atıcı geriye yıkılır);
+  yöndeki bütün mevziler susmuşsa o yönden ateş gelmez (uzak kaynağa da düşülmez). Dost ateşi (askerler, zırhlı araç)
+  mevzi tutan atıcıya nişan alır: izler o pencerede toplanır, isabet tozu kalkar, ara sıra atıcıyı 2–5 sn sindirir.
+- **Arazi mevzileri** (plan mevzisi olmayan yön, 3B arazi açıkken; ilk ateş isteğinde yön dilimi başına bir kez):
+  `araziMevzileriBul` her yön hattında arazinin oluşturduğu ufku izler, zeminin göz hattının 0,85–1,2 m altında
+  kaldığı ilk yeri (sırtın en çok 15 m gerisi) mevzi yapar; 40–140 m, arazinin kenar sisinden önce. Yönde üçten az
+  mevzi kalırsa `acikAraziMevzileriBul` görünen yamaçta 55–95 m'de yedek mevzi verir (atıcı otların içinden diz çöker
+  gibi doğrulur). Göz hattı alan yapısına takılan ve dost yapısına (bayrak direği, gözetleme kulesi) 16 m'den yakın
+  yer mevzi olmaz. Çaprazlama izli mermi (yön ±) arazi mevzisi kullanmaz.
+- **Parçacık istisnası:** yapı kutusu gerçek duvarın 1–4 m önündedir; "duman yapıdan geçmez" itmesi pencere içindeki
+  parıltıyı figürden koparıyordu. `Parcacik.engelsiz` (namlu parıltısı, namlu dumanı, isabet tozu) itmeden muaf.
+- **Isınma:** kesme düzlemli iskelet programı ancak gerçek çizimde derlenir; figür üretilince izleyicinin 60 m altında
+  birkaç kare çizilir, sonra gizlenir (derleme sahne yüklenirken olur, ilk doğrulmada takılma yok).
+- **Düzeltme:** `sahne3b` çatışma ses sarmalayıcısı `mesafe`yi düşürüyordu; uzak namlu sesinin mesafe gecikmesi
+  (crack–thump, C-17) çatışmada hiç uygulanmıyordu. Artık iletiliyor.
+- **`?dusman=kapali`** figürü kapatır (yalnız parıltı; mevzi kalıcılığı yine geçerli), `?dusman=acik` geri açar.
+
+### Mevzi bulucu: yapı geometrisinden mevzi (`araclar/oyun-testi/dusman-mevzi-bul.mjs`)
+
+Mevziyi elle yazmak tutmadı: Meshy binalarının duvarı sınır kutusunun 1–4 m gerisinde, pencereleri gerçek boşluk; eski
+25 mevzi "cephenin 0,5 m önü" diye yazılmıştı, figür havada kalıyordu. Araç Playwright ile sahneyi açıp ışınlar atar:
+
+1. **Tarama:** her yapının izleyiciye bakan kutu yüzünden içeri yatay ışınlar (0,5 × 0,25 m) → derinlik haritası
+   (bina başına ~1 dk; `araclar/_goruntu/dusman/derinlik_<bolge>.json` önbelleği).
+2. **Aday:** duvar düzleminden ≥ 1 m derin hücre öbekleri = pencere / yıkık boşluk; sütunların duvar tepesi = çatı kenarı
+   / kaya tepesi. Figür duvarın 0,5 m gerisine, göz hattı boşluğun ortasından geçecek yere konur.
+3. **Doğrulama:** gözden figürün düşey hattına ışınlar → örtü çizgisi ve görünür bant (≥ 0,8 m); namlu, baş ve en az
+   bir omuz görünmeli; baş duvar kameralarının görüş alanında olmalı (yakın yüksek çatı ekranın üstünde kalır).
+   Yıkılabilir tuğla duvar ve sütre de örtü sayılır.
+4. **Seçim:** izleyiciden ≥ 20 m, ≥ 2,2 m yüksek yapı, araç ve dost yapısı değil (`--haric`), örtü zeminden ≥ 0,75 m;
+   yapılar sırayla birer aday alır (uzak binalar da pay alır), aynı yapıda farklı tür/kat öne geçer.
+
+```
+KOPRU=http://127.0.0.1:4100 node araclar/oyun-testi/dusman-mevzi-bul.mjs <bolge>     # tarama + doğrulama + seçim
+node araclar/oyun-testi/dusman-mevzi-bul.mjs <bolge> --secim                          # yalnız seçim (önbellekten)
+KOPRU=… node araclar/oyun-testi/dusman-siluet.mjs <bolge> --mevziler araclar/_goruntu/dusman/mevziler_<bolge>.json
+node araclar/oyun-testi/dusman-mevzi-yaz.mjs <bolge>                                  # manifeste yaz (film + temel)
+```
+
+Sonuç (film planları): meskûn mahal 32 (pencere 13, çatı/yıkık kenar 19; 20–104 m), kırsal 14 (taş köy evleri, kaya),
+dağlık 6, ormanlık 4, üs bölgesi 1; arazi mevzileri bunlara eklenir (kırsalda ön yönde sırt hattında 7). **Alan planı
+değişince (yapı ekleme/taşıma) bulucu o bölge için yeniden koşulmalı.**
+
+### Denetim: `araclar/oyun-testi/dusman-siluet.mjs`
+
+- Varsayılan: bütün siluetli mevzilerde figür ayakta (`window.duvar.dusman.tanilama(true)`), tam tuval + mevzi başına
+  kırpım; `--arazi <azimut>` o yönün arazi mevzilerini de hesaplar.
+- `--catisma` (`--izli`, `--patlama`): döngü ölçümü. Başsız GTX 1650, 3840×720 film, 22 sn çatışma: 3–4 atıcı mevzi
+  tutar, aynı anda en çok 2 ayakta; kare hızı siluetsizle aynı (meskûn 42, kırsal 48, dağlık 57, ormanlık 29, üs 85
+  fps), en uzun kare ≤ 63 ms.
+- `--an`: sayfa saati test denetiminde (`cekirdek.mjs baslat({saat: true})`, Playwright `page.clock`): salvo kare
+  kare ilerletilir, doğrulma / namlu parıltısı (80 ms) / izler tam karesinde çekilir.
+- Konsol: `window.duvar.dusman.durum()`, `.ozet()`, `.mevziListesi()`.
+
+**Açık:** duvarda gözle bakılmadı (figür 25 m'de 1920 px'lik duvarda göğüs üstü ~35 px, 90 m'de ~10 px: uzak mevzide
+asıl ipucu parıltı ve izdir). Ayrı düşman modeli yok (kendi askerimizin koyu kopyası; Meshy ile üretilebilir, kredi
+ister). Atıcı yalnız doğrulup çöker: pencereden pencereye geçiş, vurulunca düşme animasyonu yok. Üs bölgesinde yapı
+mevzisi tek. İlk patlamada ~230–270 ms'lik tek kare (film görünümü; siluet kapalıyken de var, bu işten bağımsız).
